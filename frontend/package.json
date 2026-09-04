@@ -1,0 +1,26 @@
+{
+  "name": "brain-agent-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@11.19.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,green \"pnpm dev:backend\" \"pnpm dev:web\"",
+    "dev:web": "vite --host 0.0.0.0",
+    "dev:backend": "cd ../backend && DATABASE_URL_OVERRIDE=sqlite+aiosqlite:///./brain_agent_dev.db uv run --extra dev uvicorn app.main:create_app --factory --reload --host 0.0.0.0 --port 8000",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^5.2.0",
+    "pinia": "^2.2.6",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1",
+    "vue-tsc": "^2.2.0"
+  }
+}
