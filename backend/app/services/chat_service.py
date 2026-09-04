@@ -1,9 +1,11 @@
 from datetime import UTC, datetime
 from collections.abc import AsyncIterator
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.orchestrator import Orchestrator
+from app.core.logging import log_context
 from app.db.models import MessageModel
 from app.db.repository.agent_run import AgentRunRepository
 from app.db.repository.execution_event import ExecutionEventRepository
@@ -12,6 +14,9 @@ from app.db.repository.session import SessionRepository
 from app.runtime.context import AgentContext
 from app.runtime.events import ExecutionEvent
 from app.schemas.chat import ChatRequest, ChatResponse
+
+
+logger = logging.getLogger(__name__)
 
 
 class ChatService:
@@ -23,7 +28,7 @@ class ChatService:
         self.runs = AgentRunRepository(db)
         self.execution_events = ExecutionEventRepository(db)
 
-    async def chat(self, request: ChatRequest) -> ChatResponse | None:
+    async def chat(self, request: ChatRequest, owner_id: str) -> ChatResponse | None:
         session = await self.sessions.get(request.session_id)
         if session is None:
             return None
@@ -32,6 +37,7 @@ class ChatService:
         context = await self.orchestrator.execute(
             AgentContext(
                 session_id=request.session_id,
+                owner_id=owner_id,
                 user_message=request.message,
                 conversation_history=history,
             )
@@ -41,12 +47,15 @@ class ChatService:
     async def session_exists(self, session_id: str) -> bool:
         return await self.sessions.get(session_id) is not None
 
-    async def stream_chat(self, request: ChatRequest) -> AsyncIterator[ExecutionEvent]:
+    async def stream_chat(
+        self, request: ChatRequest, owner_id: str
+    ) -> AsyncIterator[ExecutionEvent]:
         session = await self.sessions.get(request.session_id)
         history = self._history(session.messages) if session else []
         await self.messages.create(request.session_id, "user", request.message)
         context = AgentContext(
             session_id=request.session_id,
+            owner_id=owner_id,
             user_message=request.message,
             conversation_history=history,
         )
@@ -61,6 +70,14 @@ class ChatService:
                 data={"response": response.model_dump(mode="json")},
             )
         except BaseException:
+            logger.exception(
+                "stream_chat_failed",
+                extra=log_context(
+                    run_id=context.run_id,
+                    session_id=context.session_id,
+                    agent="chat_service",
+                ),
+            )
             await self.db.rollback()
             raise
 

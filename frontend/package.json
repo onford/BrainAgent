@@ -9,18 +9,25 @@
     "dev:web": "vite --host 0.0.0.0",
     "dev:backend": "cd ../backend && DATABASE_URL_OVERRIDE=sqlite+aiosqlite:///./brain_agent_dev.db uv run --extra dev uvicorn app.main:create_app --factory --reload --host 0.0.0.0 --port 8000",
     "build": "vue-tsc -b && vite build",
+    "test": "vitest run",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.2.0",
+    "markdown-it": "^15.0.1",
     "pinia": "^2.2.6",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.2.0",
+    "@types/node": "^22.15.0",
+    "@vue/test-utils": "^2.4.6",
     "concurrently": "^9.2.1",
+    "jsdom": "^26.1.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.1",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.2.0"
   }
 }

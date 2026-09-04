@@ -26,3 +26,7 @@ export function fetchSessions(): Promise<Session[]> {
 export function fetchSession(sessionId: string): Promise<Session> {
   return apiRequest<Session>(`/api/sessions/${sessionId}`).then(hydrateSession)
 }
+
+export async function deleteSession(sessionId: string): Promise<void> {
+  await apiRequest<void>(`/api/sessions/${encodeURIComponent(sessionId)}`, { method: 'DELETE' })
+}

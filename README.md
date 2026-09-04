@@ -57,13 +57,24 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 cp .env.example .env
 ```
 
-然后编辑 `.env`。下面三个 LLM 配置必须填写：
+然后编辑 `.env`。LLM 配置和凭据加密主密钥都必须填写：
 
 ```dotenv
 LLM_API_KEY=your-api-key
 LLM_BASE_URL=https://api.openai.com/v1
 LLM_MODEL=gpt-4.1-mini
+BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY=your-fernet-key
 ```
+
+生成凭据加密主密钥：
+
+```bash
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n'
+```
+
+将输出完整复制到 `BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY`。这个主密钥用于加密
+GitHub token、学术 API key 等用户凭据。更换或丢失它会导致已有凭据无法解密，
+请在部署环境的 secret manager 中妥善备份，且不要提交到 Git。
 
 项目使用 OpenAI-compatible Chat Completions API。自建服务或其他兼容服务需要提供：
 
@@ -78,6 +89,12 @@ POST {LLM_BASE_URL}/chat/completions
 ```text
 LLM_API_KEY is not configured
 ```
+
+`BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY` 没有配置或格式错误时，后端也会拒绝启动。
+
+当前项目尚未接入正式登录。开发环境默认 owner 为 `local-development-user`，可通过
+`.env` 的 `DEFAULT_OWNER_ID` 修改；API 也支持 `X-Brain-Agent-Owner-ID` 请求头，供后续
+认证中间件注入可信用户 ID。生产环境接入认证前，不应向公网开放该请求头。
 
 不要将包含真实密钥的 `.env` 提交到 Git。
 
@@ -173,6 +190,10 @@ user-agent 对话。执行期间，orchestrator 的规划、Agent 调用和 obse
 请执行 EEG 数据的完整流程
 ```
 
+左侧进入 `Tool integrations` 可配置 GitHub、Semantic Scholar、OpenAlex、Crossref、
+Europe PMC、arXiv 和 Unpaywall。保存与“验证连接”是两个独立操作；secret 字段重新
+打开后只显示掩码，留空保存不会覆盖旧值。
+
 ## 6. 运行测试
 
 ```bash
@@ -187,6 +208,13 @@ uv run --extra dev pytest
 ```bash
 cd frontend
 pnpm build
+```
+
+前端测试：
+
+```bash
+cd frontend
+pnpm test
 ```
 
 ## 7. Docker 打包运行
@@ -228,6 +256,18 @@ docker compose down -v
 
 ```dotenv
 LLM_API_KEY=your-api-key
+```
+
+### 后端提示凭据加密密钥未配置
+
+重新生成并填写：
+
+```bash
+openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n'
+```
+
+```dotenv
+BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY=上一步的完整输出
 ```
 
 ### 找不到 `uv`

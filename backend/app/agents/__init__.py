@@ -5,11 +5,15 @@ from app.agents.data_preprocessing.agent import DataPreprocessingAgent
 from app.agents.data_report.agent import DataReportAgent
 from app.agents.data_survey.agent import DataSurveyAgent
 from app.agents.registry import AgentRegistry
+from app.llm.client import LLMClient
+from app.tools.registry import ToolRegistry
 
 
-def build_agent_registry() -> AgentRegistry:
+def build_agent_registry(
+    llm: LLMClient | None = None, tools: ToolRegistry | None = None
+) -> AgentRegistry:
     registry = AgentRegistry()
-    registry.register(DataSurveyAgent())
+    registry.register(DataSurveyAgent(llm, tools))
     registry.register(DataCollectionAgent())
     registry.register(DataPreprocessingAgent())
     registry.register(DataEvaluationAgent())

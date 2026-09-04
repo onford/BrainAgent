@@ -9,5 +9,6 @@ export async function apiRequest<T>(path: string, init?: RequestInit): Promise<T
     const body = await response.json().catch(() => ({ detail: response.statusText }))
     throw new Error(body.detail ?? '请求失败')
   }
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }

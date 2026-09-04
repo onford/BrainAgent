@@ -3,12 +3,15 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useChatStore } from '../stores/chat'
 import type { ChatMessage, Session, StreamActivity } from '../types/session'
+import { renderMarkdown } from '../utils/markdown'
 
 const store = useChatStore()
 const draft = ref('')
 const sidebarOpen = ref(false)
 const conversation = ref<HTMLElement | null>(null)
 const textarea = ref<HTMLTextAreaElement | null>(null)
+const copiedMessageId = ref<string | null>(null)
+let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
 const currentTitle = computed(() =>
   store.activeSession ? sessionTitle(store.activeSession) : '新对话',
@@ -93,6 +96,37 @@ async function createConversation(): Promise<void> {
   textarea.value?.focus()
 }
 
+async function removeConversation(session: Session): Promise<void> {
+  if (store.runningSessionIds.includes(session.id)) return
+  const title = sessionTitle(session)
+  if (!window.confirm(`确定删除“${title}”吗？此操作无法撤销。`)) return
+  await store.deleteSession(session.id).catch(() => undefined)
+}
+
+async function copyMessage(message: ChatMessage): Promise<void> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(message.content)
+    } else {
+      const input = document.createElement('textarea')
+      input.value = message.content
+      input.style.position = 'fixed'
+      input.style.opacity = '0'
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      input.remove()
+    }
+    copiedMessageId.value = message.id
+    if (copyResetTimer) clearTimeout(copyResetTimer)
+    copyResetTimer = setTimeout(() => {
+      copiedMessageId.value = null
+    }, 1600)
+  } catch {
+    store.error = '复制失败，请手动选择文本复制'
+  }
+}
+
 async function scrollToBottom(): Promise<void> {
   await nextTick()
   if (conversation.value) conversation.value.scrollTop = conversation.value.scrollHeight
@@ -110,7 +144,10 @@ onMounted(async () => {
   await store.initialize()
   await scrollToBottom()
 })
-onBeforeUnmount(() => window.removeEventListener('keydown', handleGlobalShortcut))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleGlobalShortcut)
+  if (copyResetTimer) clearTimeout(copyResetTimer)
+})
 </script>
 
 <template>
@@ -142,34 +179,53 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleGlobalShortcut
       </div>
 
       <nav class="session-list" aria-label="会话列表">
-        <button
+        <div
           v-for="session in store.sessions"
           :key="session.id"
-          type="button"
-          class="session-item"
+          class="session-item-shell"
           :class="{ active: store.activeSessionId === session.id }"
-          @click="chooseSession(session.id)"
         >
-          <span class="session-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M7 8h10M7 12h7m-7 8 3.2-3H18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1v3Z" /></svg>
-          </span>
-          <span class="session-copy">
-            <strong>{{ sessionTitle(session) }}</strong>
-            <small>{{ sessionPreview(session) }}</small>
-          </span>
-          <span
-            v-if="store.runningSessionIds.includes(session.id)"
-            class="session-running"
-            aria-label="运行中"
-          />
-          <time v-else>{{ timeLabel(session.updated_at) }}</time>
-        </button>
+          <button type="button" class="session-item" @click="chooseSession(session.id)">
+            <span class="session-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M7 8h10M7 12h7m-7 8 3.2-3H18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1v3Z" /></svg>
+            </span>
+            <span class="session-copy">
+              <strong>{{ sessionTitle(session) }}</strong>
+              <small>{{ sessionPreview(session) }}</small>
+            </span>
+            <span
+              v-if="store.runningSessionIds.includes(session.id)"
+              class="session-running"
+              aria-label="运行中"
+            />
+            <span
+              v-else-if="store.deletingSessionIds.includes(session.id)"
+              class="mini-spinner"
+              aria-label="正在删除"
+            />
+            <time v-else>{{ timeLabel(session.updated_at) }}</time>
+          </button>
+          <button
+            type="button"
+            class="session-delete"
+            :disabled="store.runningSessionIds.includes(session.id) || store.deletingSessionIds.includes(session.id)"
+            :aria-label="`删除会话：${sessionTitle(session)}`"
+            title="删除会话"
+            @click="removeConversation(session)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" /></svg>
+          </button>
+        </div>
         <p v-if="!store.loadingSessions && store.sessions.length === 0" class="empty-sessions">
           还没有对话。创建一个 session 开始研究。
         </p>
       </nav>
 
       <div class="sidebar-footer">
+        <RouterLink to="/settings/integrations" class="sidebar-link">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.18.37.4.7.6 1 .3.3.7.5 1.1.5h.1v4h-.1c-.4 0-.8.2-1.1.5-.2.3-.42.63-.6 1Z" /></svg>
+          Tool integrations
+        </RouterLink>
         <RouterLink to="/agents" class="sidebar-link">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20v-2.2A4.8 4.8 0 0 1 7.3 13h1.4a4.8 4.8 0 0 1 4.8 4.8V20m0-6.6a4.8 4.8 0 0 1 8 3.6v3" /></svg>
           Agent registry
@@ -245,10 +301,27 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleGlobalShortcut
                 </div>
               </details>
 
-              <div v-if="message.content" class="message-content">{{ message.content }}</div>
+              <div
+                v-if="message.content && message.role === 'assistant'"
+                class="message-content markdown-content"
+                v-html="renderMarkdown(message.content)"
+              />
+              <div v-else-if="message.content" class="message-content">{{ message.content }}</div>
               <div v-else-if="message.pending && !hasActivity(message)" class="thinking-line">
                 <span></span><span></span><span></span>
               </div>
+              <button
+                v-if="message.content"
+                type="button"
+                class="message-copy-button"
+                :class="{ copied: copiedMessageId === message.id }"
+                :aria-label="copiedMessageId === message.id ? '已复制' : '复制消息'"
+                @click="copyMessage(message)"
+              >
+                <svg v-if="copiedMessageId !== message.id" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2" /></svg>
+                <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                <span>{{ copiedMessageId === message.id ? '已复制' : '复制' }}</span>
+              </button>
             </div>
           </article>
         </div>

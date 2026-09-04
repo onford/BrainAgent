@@ -26,3 +26,9 @@ class SessionService:
     async def list(self) -> list[SessionResponse]:
         models = await self.sessions.list()
         return [SessionResponse.model_validate(model) for model in models]
+
+    async def delete(self, session_id: str) -> bool:
+        deleted = await self.sessions.delete(session_id)
+        if deleted:
+            await self.db.commit()
+        return deleted

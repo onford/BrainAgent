@@ -32,6 +32,7 @@ class Plan(BaseModel):
 class AgentContext(BaseModel):
     run_id: str = Field(default_factory=lambda: str(uuid4()))
     session_id: str
+    owner_id: str
     user_message: str
     conversation_history: list[dict[str, str]] = Field(default_factory=list)
     plan: Plan | None = None

@@ -33,3 +33,13 @@ async def get_session(
     if result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
     return result
+
+
+@router.delete("/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_session(
+    session_id: str,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> None:
+    deleted = await SessionService(db).delete(session_id)
+    if not deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")

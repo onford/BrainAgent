@@ -7,12 +7,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agents import build_agent_registry
 from app.agents.orchestrator import Orchestrator
 from app.agents.planner.agent import PlannerAgent
-from app.api.routes import agents, chat, sessions
+from app.api.routes import agents, chat, integrations, sessions
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.session import Database
 from app.llm.client import LLMClient, create_llm_client
 from app.llm.config import LLMConfig
+from app.integrations.registry import ExternalToolRegistry
+from app.integrations.security import CredentialCipher
+from app.tools.registry import ToolRegistry
 
 
 def create_app(
@@ -28,9 +31,18 @@ def create_app(
             model=app_settings.llm_model,
         )
     )
-    registry = build_agent_registry()
-    planner = PlannerAgent(llm)
-    registry.register(planner)
+    credential_cipher = CredentialCipher(
+        app_settings.brain_agent_credential_encryption_key
+    )
+    external_tool_registry = ExternalToolRegistry(
+        database,
+        credential_cipher,
+        timeout_seconds=app_settings.external_tool_timeout_seconds,
+        max_retries=app_settings.external_tool_max_retries,
+    )
+    tool_registry = ToolRegistry(external_tool_registry)
+    registry = build_agent_registry(llm, tool_registry)
+    registry.register(PlannerAgent(llm))
     orchestrator = Orchestrator(registry)
 
     @asynccontextmanager
@@ -45,6 +57,9 @@ def create_app(
     app.state.database = database
     app.state.agent_registry = registry
     app.state.orchestrator = orchestrator
+    app.state.credential_cipher = credential_cipher
+    app.state.external_tool_registry = external_tool_registry
+    app.state.tool_registry = tool_registry
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[app_settings.frontend_origin],
@@ -55,6 +70,7 @@ def create_app(
     app.include_router(chat.router, prefix="/api")
     app.include_router(agents.router, prefix="/api")
     app.include_router(sessions.router, prefix="/api")
+    app.include_router(integrations.router, prefix="/api")
 
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:

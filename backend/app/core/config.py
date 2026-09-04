@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-4.1-mini"
 
+    brain_agent_credential_encryption_key: str | None = None
+    default_owner_id: str = "local-development-user"
+    external_tool_timeout_seconds: float = 10.0
+    external_tool_max_retries: int = 2
+
     @computed_field
     @property
     def database_url(self) -> str:

@@ -29,6 +29,8 @@ services:
       LLM_API_KEY: ${LLM_API_KEY:-}
       LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
       LLM_MODEL: ${LLM_MODEL:-gpt-4.1-mini}
+      BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY: ${BRAIN_AGENT_CREDENTIAL_ENCRYPTION_KEY}
+      DEFAULT_OWNER_ID: ${DEFAULT_OWNER_ID:-local-development-user}
       FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
     ports:
       - "${BACKEND_PORT:-8000}:8000"

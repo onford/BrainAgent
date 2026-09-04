@@ -6,14 +6,24 @@ from app.core.config import Settings
 from app.main import create_app
 from tests.fakes import ScriptedLLMClient, delegate, finish, full_workflow_responses
 
+TEST_CREDENTIAL_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
+
 
 def test_chat_endpoint_executes_full_chain(tmp_path: Path) -> None:
     settings = Settings(
         database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}",
+        brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
     )
-    with TestClient(
-        create_app(settings, ScriptedLLMClient(full_workflow_responses()))
-    ) as client:
+    responses = full_workflow_responses()
+    responses.insert(
+        1,
+        {
+            "action": "finish",
+            "rationale": "测试中无需真实检索",
+            "summary": "已完成测试数据集调研。",
+        },
+    )
+    with TestClient(create_app(settings, ScriptedLLMClient(responses))) as client:
         session_response = client.post("/api/sessions")
         assert session_response.status_code == 201
         session_id = session_response.json()["id"]
@@ -71,10 +81,16 @@ def test_chat_endpoint_executes_full_chain(tmp_path: Path) -> None:
 def test_stream_chat_returns_react_events(tmp_path: Path) -> None:
     settings = Settings(
         database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'stream.db'}",
+        brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
     )
     llm = ScriptedLLMClient(
         [
             delegate("data_survey", "调研数据集"),
+            {
+                "action": "finish",
+                "rationale": "测试中无需真实检索",
+                "summary": "已完成测试数据集调研。",
+            },
             delegate("data_report", "生成报告"),
             finish("调研和报告已完成。"),
         ]
@@ -113,6 +129,7 @@ def test_stream_chat_returns_react_events(tmp_path: Path) -> None:
 def test_session_list_is_most_recent_first_and_contains_conversation(tmp_path: Path) -> None:
     settings = Settings(
         database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'sessions.db'}",
+        brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
     )
     llm = ScriptedLLMClient([finish("这是第一段对话的回答。")])
     with TestClient(create_app(settings, llm)) as client:
@@ -132,3 +149,37 @@ def test_session_list_is_most_recent_first_and_contains_conversation(tmp_path: P
             "assistant",
         ]
         assert sessions[0]["messages"][-1]["content"] == "这是第一段对话的回答。"
+
+
+def test_delete_session_removes_messages_and_returns_404_afterwards(
+    tmp_path: Path,
+) -> None:
+    settings = Settings(
+        database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'delete-session.db'}",
+        brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
+    )
+    with TestClient(create_app(settings, ScriptedLLMClient([finish("回答")]))) as client:
+        session_id = client.post("/api/sessions").json()["id"]
+        response = client.post(
+            "/api/chat",
+            json={"session_id": session_id, "message": "准备删除的消息"},
+        )
+        assert response.status_code == 200
+
+        deleted = client.delete(f"/api/sessions/{session_id}")
+
+        assert deleted.status_code == 204
+        assert client.get(f"/api/sessions/{session_id}").status_code == 404
+        assert all(
+            session["id"] != session_id
+            for session in client.get("/api/sessions").json()
+        )
+
+
+def test_delete_missing_session_returns_404(tmp_path: Path) -> None:
+    settings = Settings(
+        database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'missing-session.db'}",
+        brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
+    )
+    with TestClient(create_app(settings, ScriptedLLMClient([]))) as client:
+        assert client.delete("/api/sessions/missing").status_code == 404

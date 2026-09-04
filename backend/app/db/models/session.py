@@ -18,3 +18,8 @@ class SessionModel(TimestampMixin, Base):
         lazy="selectin",
         order_by="MessageModel.created_at",
     )
+    agent_runs: Mapped[list["AgentRunModel"]] = relationship(  # type: ignore[name-defined]
+        back_populates="session",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )

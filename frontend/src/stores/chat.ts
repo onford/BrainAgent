@@ -1,7 +1,11 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { streamChat } from '../api/chat'
-import { createSession as createSessionRequest, fetchSessions } from '../api/sessions'
+import {
+  createSession as createSessionRequest,
+  deleteSession as deleteSessionRequest,
+  fetchSessions,
+} from '../api/sessions'
 import type { ChatResponse, ExecutionEvent } from '../types/agent'
 import type { ChatMessage, Session, StreamActivity } from '../types/session'
 import { activityDetail, stringifyValue } from '../utils/activity'
@@ -15,6 +19,7 @@ export const useChatStore = defineStore('chat', () => {
   const activeSessionId = ref<string | null>(null)
   const loadingSessions = ref(false)
   const runningSessionIds = ref<string[]>([])
+  const deletingSessionIds = ref<string[]>([])
   const error = ref<string | null>(null)
 
   const activeSession = computed(
@@ -70,6 +75,30 @@ export const useChatStore = defineStore('chat', () => {
     if (index > 0) {
       const [session] = sessions.value.splice(index, 1)
       sessions.value.unshift(session)
+    }
+  }
+
+  async function deleteSession(sessionId: string): Promise<void> {
+    if (
+      runningSessionIds.value.includes(sessionId)
+      || deletingSessionIds.value.includes(sessionId)
+    ) return
+    const index = sessions.value.findIndex((session) => session.id === sessionId)
+    if (index < 0) return
+
+    error.value = null
+    deletingSessionIds.value.push(sessionId)
+    try {
+      await deleteSessionRequest(sessionId)
+      sessions.value.splice(index, 1)
+      if (activeSessionId.value === sessionId) {
+        activeSessionId.value = sessions.value[index]?.id ?? sessions.value[index - 1]?.id ?? null
+      }
+    } catch (reason) {
+      error.value = reason instanceof Error ? reason.message : '无法删除会话'
+      throw reason
+    } finally {
+      deletingSessionIds.value = deletingSessionIds.value.filter((id) => id !== sessionId)
     }
   }
 
@@ -155,12 +184,14 @@ export const useChatStore = defineStore('chat', () => {
     activeMessages,
     loadingSessions,
     runningSessionIds,
+    deletingSessionIds,
     isStreaming,
     currentAgent,
     error,
     initialize,
     newSession,
     selectSession,
+    deleteSession,
     submit,
   }
 })
