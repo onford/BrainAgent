@@ -33,7 +33,8 @@ class OpenAICompatibleClient(LLMClient):
             "messages": messages,
             "response_format": {"type": "json_object"},
         }
-        async with httpx.AsyncClient(timeout=60) as client:
+        timeout = httpx.Timeout(self.config.timeout_seconds, connect=10.0)
+        async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
                 f"{self.config.base_url.rstrip('/')}/chat/completions",
                 headers=headers,

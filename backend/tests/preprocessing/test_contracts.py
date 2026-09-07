@@ -134,7 +134,8 @@ def test_fit_scope_and_dag_are_checked_before_submit(service, dataset):
             parameters=PARAMETERS,
         ),
     )
-    assert "topologically" in plan.screening[0].reasons[0]
+    assert plan.screening[0].status == "blocked" and not plan.records
+    assert "invalid step dependencies: filter" in plan.screening[0].reasons[0]
 
 
 def test_draft_cannot_be_forged_validated(service):

@@ -30,6 +30,7 @@ def create_app(
             api_key=app_settings.llm_api_key,
             base_url=app_settings.llm_base_url,
             model=app_settings.llm_model,
+            timeout_seconds=app_settings.llm_timeout_seconds,
         )
     )
     credential_cipher = CredentialCipher(

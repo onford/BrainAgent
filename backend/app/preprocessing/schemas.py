@@ -125,14 +125,14 @@ class Step(Contract):
     evidence_indices: list[int] = Field(min_length=1)
 
 
-class MethodSpec(Contract):
+class MethodDraft(Contract):
+    """Model-authored recipe; evidence indices refer to the supplied source list."""
     id: str = Field(pattern=r"^[a-z][a-z0-9_-]+$")
     version: str = Field(min_length=1)
     title: str
     source: Literal["classic", "survey_literature"]
     status: Literal["draft", "validated", "retired"] = "draft"
     mechanism: str = Field(min_length=1)
-    evidence: list[Evidence] = Field(min_length=1)
     recipe: list[Step] = Field(min_length=1)
     output: str
     applicability: dict[str, Any] = Field(default_factory=dict)
@@ -141,6 +141,10 @@ class MethodSpec(Contract):
     validation: list[Ref] = Field(default_factory=list)
     # Exact parameter profiles actually exercised by validation runs.
     validated_profiles: list[str] = Field(default_factory=list)
+
+
+class MethodSpec(MethodDraft):
+    evidence: list[Evidence] = Field(min_length=1)
 
 
 class RepositoryEvidence(Contract):

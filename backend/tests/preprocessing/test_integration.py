@@ -185,11 +185,18 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
         == "paper-1"
     )
     method = baseline_methods()[0]
-    service.methods.llm = ScriptedLLMClient([method.model_dump(mode="json")])
+    service.methods.llm = ScriptedLLMClient([method.model_dump(mode="json", exclude={"evidence"})])
     result = await service.methods.intake(OWNER, bundle)
     assert not result["supplement_requests"]
     extracted = service.store.get(OWNER, result["methods"][0], "method")
     assert extracted["source"] == "survey_literature" and extracted["status"] == "draft"
+    assert extracted["evidence"][0]["text"] == evidence.text
+    assert extracted["evidence"][0]["artifact_ref"] == fulltext.model_dump()
+    extraction_input = json.loads(service.methods.llm.messages_seen[0][1]["content"])
+    assert extraction_input["indexed_evidence"][0]["index"] == 0
+    filter_contract = next(c for c in extraction_input["enabled_operations"] if c["op"] == "filter")
+    assert "l_freq" in filter_contract["parameters"]["required"]
+    assert filter_contract["parameters"]["additionalProperties"] is False
     plan_ref, plan = service.plan(
         OWNER,
         PlanRequest(
@@ -205,6 +212,35 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
     result = await service.methods.intake(OWNER, bundle)
     assert result["methods"] == []
     assert result["supplement_requests"][0]["paper_id"] == "paper-1"
+
+
+@pytest.mark.asyncio
+async def test_invalid_model_mapping_is_retained_as_blocked_draft(service, dataset):
+    evidence = Evidence(source_url="fixture://paper", locator="Methods", text="Filter then reference.", source_version="1")
+    paper = Paper(
+        paper_id="invalid-mapping", title="Mapping regression", survey_bucket="preprocessing_papers",
+        relation_to_dataset="same modality", inclusion_reason="regression test", landing_url=evidence.source_url,
+        fulltext_ref=service.store.put(OWNER, "evidence", {"content": evidence.text}), evidence=[evidence],
+    )
+    method = baseline_methods()[0].model_dump(mode="json", exclude={"evidence"})
+    method["recipe"][0]["params"] = {"cutoff_hz": 1, "picks": ["$eeg_channels"]}
+    method["recipe"][1]["input"] = "future_step"
+    method["recipe"][1]["evidence_indices"] = [1]
+    method["output"] = "Filtered EEG in prose"
+    service.methods.llm = ScriptedLLMClient([method])
+    result = await service.methods.intake(OWNER, SurveyLiteratureBundle(
+        survey_run_id="mapping-test", dataset_id="synthetic", dataset_version="1", papers=[paper],
+    ))
+    extracted = service.store.get(OWNER, result["methods"][0], "method")
+    assert any(c.startswith("parameter contract: filter") for c in extracted["checks"])
+    assert "collection binding must replace the whole parameter value: filter.picks" in extracted["checks"]
+    assert "invalid step dependencies: reference" in extracted["checks"]
+    assert "missing parameter/step evidence: reference" in extracted["checks"]
+    assert "method output must reference a recipe step id" in extracted["checks"]
+    _, plan = service.plan(OWNER, PlanRequest(
+        input_ref=service.register_input(OWNER, dataset), methods=result["methods"], mode="validation", parameters=PARAMETERS,
+    ))
+    assert plan.screening[0].status == "blocked" and plan.records == []
 
 
 @pytest.mark.asyncio
