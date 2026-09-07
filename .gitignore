@@ -12,4 +12,5 @@ dist/
 .pnpm-store/
 .DS_Store
 workspace/
+backend/logs/
 *.db

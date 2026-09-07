@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from urllib.parse import quote_plus
 
 from pydantic import computed_field
@@ -31,6 +32,9 @@ class Settings(BaseSettings):
     default_owner_id: str = "local-development-user"
     external_tool_timeout_seconds: float = 10.0
     external_tool_max_retries: int = 2
+    log_dir: Path = Path(__file__).resolve().parents[2] / "logs"
+    log_max_bytes: int = 10 * 1024 * 1024
+    log_backup_count: int = 5
 
     @computed_field
     @property

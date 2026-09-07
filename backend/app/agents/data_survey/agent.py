@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from app.agents.base import BaseAgent
 from app.agents.data_survey.prompt import DATA_SURVEY_SYSTEM_PROMPT
 from app.llm.client import LLMClient
-from app.core.logging import log_context
+from app.core.logging import log_context, log_scope
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult, Artifact
 from app.tools.registry import ToolRegistry
@@ -107,18 +107,19 @@ class DataSurveyAgent(BaseAgent):
                 step=task.step,
             )
             try:
-                decision = await self.llm.structured_output(
-                    [
-                        {"role": "system", "content": DATA_SURVEY_SYSTEM_PROMPT},
-                        {
-                            "role": "user",
-                            "content": self._decision_context(
-                                task, context, catalog, tool_calls
-                            ),
-                        },
-                    ],
-                    SurveyDecision,
-                )
+                with log_scope(**log_extra):
+                    decision = await self.llm.structured_output(
+                        [
+                            {"role": "system", "content": DATA_SURVEY_SYSTEM_PROMPT},
+                            {
+                                "role": "user",
+                                "content": self._decision_context(
+                                    task, context, catalog, tool_calls
+                                ),
+                            },
+                        ],
+                        SurveyDecision,
+                    )
             except Exception:
                 logger.exception("survey_decision_failed", extra=log_extra)
                 raise
@@ -175,10 +176,17 @@ class DataSurveyAgent(BaseAgent):
                     extra=log_extra,
                 )
                 result = await self.tools.execute(tool_name, context, **arguments)
+                result_count = (
+                    result.output.get("result_count", "-")
+                    if isinstance(result.output, dict)
+                    else "-"
+                )
                 logger.info(
-                    "survey_tool_call_completed tool=%s success=%s error_code=%s duration_ms=%.1f",
+                    "survey_tool_call_completed tool=%s success=%s result_count=%s "
+                    "error_code=%s duration_ms=%.1f",
                     tool_name,
                     result.success,
+                    result_count,
                     result.metadata.get("error_code", "-"),
                     (perf_counter() - tool_started_at) * 1000,
                     extra=log_extra,
