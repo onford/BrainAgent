@@ -155,7 +155,7 @@ class Orchestrator:
             logger.info("agent_execution_started", extra=agent_log_extra)
             try:
                 result = await agent.run(
-                    AgentTask(instruction=step.task, step=step.step), context
+                    AgentTask(instruction=step.task, step=step.step, inputs=decision.inputs), context
                 )
             except Exception:
                 logger.exception("agent_execution_failed", extra=agent_log_extra)
@@ -165,6 +165,15 @@ class Orchestrator:
                     error="Agent 执行失败，请查看后端日志。",
                 )
             context.record_result(result)
+            preprocessing_state = result.metadata.get("execution_status") if step.agent == "data_preprocessing" else None
+            if result.success and preprocessing_state in ("submitted", "queued", "running", "interrupted", "needs_input", "planned", "methods_drafted", "partial", "failed", "cancelled"):
+                step.status = StepStatus.SUBMITTED if preprocessing_state in ("submitted", "queued", "running") else StepStatus.BLOCKED
+                context.status = RunStatus.COMPLETED
+                context.current_step = None
+                context.final_answer = "预处理任务已提交，可在任务卡片查看进度；完成后再进入评价。" if step.status == StepStatus.SUBMITTED else "预处理尚未完成，请查看输入缺口、计划或执行记录。"
+                yield context.emit("observation", context.final_answer, step.agent, {"result": result.model_dump(mode="json"), "step": step.model_dump(mode="json")})
+                yield context.emit("run_completed", "已返回当前预处理状态", self.planner.name, {"final_answer": context.final_answer})
+                return
             if not result.success:
                 logger.error(
                     "agent_returned_failure error=%s duration_ms=%.1f",

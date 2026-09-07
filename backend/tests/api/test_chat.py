@@ -9,7 +9,7 @@ from tests.fakes import ScriptedLLMClient, delegate, finish, full_workflow_respo
 TEST_CREDENTIAL_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 
 
-def test_chat_endpoint_executes_full_chain(tmp_path: Path) -> None:
+def test_chat_stops_before_evaluation_without_real_preprocessing_inputs(tmp_path: Path) -> None:
     settings = Settings(
         database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}",
         brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
@@ -41,19 +41,15 @@ def test_chat_endpoint_executes_full_chain(tmp_path: Path) -> None:
             "data_survey",
             "data_collection",
             "data_preprocessing",
-            "data_evaluation",
-            "data_report",
-            "data_delivery",
         ]
         assert [result["agent_name"] for result in body["results"]] == [
             "data_survey",
             "data_collection",
             "data_preprocessing",
-            "data_evaluation",
-            "data_report",
-            "data_delivery",
         ]
-        assert "占位产物" in body["final_answer"]
+        assert body["results"][-1]["output"]["execution_status"] == "needs_input"
+        assert body["plan"]["steps"][-1]["status"] == "blocked"
+        assert "尚未完成" in body["final_answer"]
 
         sessions = client.get("/api/sessions")
         assert sessions.status_code == 200

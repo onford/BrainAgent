@@ -1,5 +1,5 @@
 export type RunStatus = 'pending' | 'planning' | 'running' | 'completed' | 'failed' | 'cancelled'
-export type StepStatus = 'pending' | 'running' | 'completed' | 'failed'
+export type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'submitted' | 'blocked'
 
 export interface PlanStep {
   step: number

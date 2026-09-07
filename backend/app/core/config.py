@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     default_owner_id: str = "local-development-user"
     external_tool_timeout_seconds: float = 10.0
     external_tool_max_retries: int = 2
+    preprocessing_root: str = "workspace/preprocessing"
+    preprocessing_input_roots: list[str] = []
 
     @computed_field
     @property

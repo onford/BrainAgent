@@ -14,6 +14,7 @@ from app.core.logging import log_context
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult, Artifact
 from app.tools.registry import ToolRegistry
+from app.preprocessing.schemas import SurveyLiteratureBundle
 
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class SurveyDecision(BaseModel):
     tool_name: str | None = None
     arguments: dict[str, Any] = Field(default_factory=dict)
     summary: str | None = None
+    literature_bundle: SurveyLiteratureBundle | None = None
 
     @model_validator(mode="after")
     def validate_action_fields(self) -> "SurveyDecision":
@@ -50,12 +52,18 @@ class DataSurveyAgent(BaseAgent):
         tools: ToolRegistry | None = None,
         *,
         max_tool_calls: int = 8,
+        preprocessing=None,
     ) -> None:
         self.llm = llm
         self.tools = tools
         self.max_tool_calls = max(1, max_tool_calls)
+        self.preprocessing = preprocessing
 
     async def run(self, task: AgentTask, context: AgentContext) -> AgentResult:
+        if task.inputs.get("literature_bundle") and self.preprocessing:
+            bundle = SurveyLiteratureBundle.model_validate(task.inputs["literature_bundle"])
+            ref = self.preprocessing.register_bundle(context.owner_id, bundle)
+            return AgentResult(agent_name=self.name, success=True, output={"literature_ref": ref.model_dump(), "survey_run_id": bundle.survey_run_id}, observations=["已发布完整文献证据包供 Preprocess 接入。"])
         if self.llm is not None and self.tools is not None:
             return await self._run_with_tools(task, context)
 
@@ -137,6 +145,9 @@ class DataSurveyAgent(BaseAgent):
                         "每项事实保留可核查来源，不把文献参数写成已执行参数。"
                     ),
                 }
+                if decision.literature_bundle and self.preprocessing:
+                    ref = self.preprocessing.register_bundle(context.owner_id, decision.literature_bundle)
+                    output["literature_ref"] = ref.model_dump()
                 result = AgentResult(
                     agent_name=self.name,
                     success=True,
@@ -270,6 +281,7 @@ class DataSurveyAgent(BaseAgent):
             prior_results = prior_results[-40_000:]
         return (
             f"Assigned task: {task.instruction}\n"
+            f"Structured upstream inputs and supplement requests: {json.dumps(task.inputs, ensure_ascii=False)}\n"
             f"Original user request: {context.user_message}\n"
             f"Available tool catalog: {json.dumps(catalog, ensure_ascii=False)}\n"
             f"Remaining tool calls: {max(0, self.max_tool_calls - len(tool_calls))}\n"

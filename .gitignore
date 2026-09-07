@@ -1,5 +1,7 @@
 .env
 .venv/
+.venv-eeg/
+.local/
 __pycache__/
 .pytest_cache/
 *.py[cod]
@@ -12,4 +14,5 @@ dist/
 .pnpm-store/
 .DS_Store
 workspace/
+data/
 *.db

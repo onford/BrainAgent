@@ -1,0 +1,3 @@
+*.py text eol=lf
+backend/app/preprocessing/units/catalog.json text eol=lf
+docs/sources/* -text -diff

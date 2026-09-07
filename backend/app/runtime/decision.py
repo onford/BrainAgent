@@ -1,6 +1,7 @@
 from enum import StrEnum
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
+from typing import Any
 
 
 class DecisionAction(StrEnum):
@@ -15,6 +16,7 @@ class AgentDecision(BaseModel):
     rationale: str
     agent_name: str | None = None
     instruction: str | None = None
+    inputs: dict[str, Any] = Field(default_factory=dict)
     final_answer: str | None = None
 
     @model_validator(mode="after")

@@ -7,7 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.agents import build_agent_registry
 from app.agents.orchestrator import Orchestrator
 from app.agents.planner.agent import PlannerAgent
-from app.api.routes import agents, chat, integrations, sessions
+from app.api.routes import agents, chat, integrations, sessions, preprocessing
+from app.preprocessing.service import PreprocessingService
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.session import Database
@@ -40,8 +41,9 @@ def create_app(
         timeout_seconds=app_settings.external_tool_timeout_seconds,
         max_retries=app_settings.external_tool_max_retries,
     )
-    tool_registry = ToolRegistry(external_tool_registry)
-    registry = build_agent_registry(llm, tool_registry)
+    preprocessing_service = PreprocessingService(app_settings.preprocessing_root, app_settings.preprocessing_input_roots, llm)
+    tool_registry = ToolRegistry(external_tool_registry, evidence_store=preprocessing_service.store)
+    registry = build_agent_registry(llm, tool_registry, preprocessing_service)
     registry.register(PlannerAgent(llm))
     orchestrator = Orchestrator(registry)
 
@@ -60,6 +62,7 @@ def create_app(
     app.state.credential_cipher = credential_cipher
     app.state.external_tool_registry = external_tool_registry
     app.state.tool_registry = tool_registry
+    app.state.preprocessing = preprocessing_service
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[app_settings.frontend_origin],
@@ -71,6 +74,7 @@ def create_app(
     app.include_router(agents.router, prefix="/api")
     app.include_router(sessions.router, prefix="/api")
     app.include_router(integrations.router, prefix="/api")
+    app.include_router(preprocessing.router, prefix="/api")
 
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:
