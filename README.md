@@ -1,5 +1,7 @@
 # Brain Agent
 
+Data Preprocess 首版已接入真实 EEG 执行。功能范围、上游协议、独立 Worker 和验收脚本见 [实现与运行说明](docs/data-preprocessing-implementation.md)。EEG 路径使用 Python 3.12，并安装 `--extra eeg`；原有对话开发环境可单独使用。
+
 ## 1. 开发环境要求
 
 日常开发不需要 Docker，也不需要本机安装 MySQL。开发环境使用 SQLite，运行时会自动创建 `backend/brain_agent_dev.db`。

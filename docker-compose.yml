@@ -33,6 +33,8 @@ services:
       DEFAULT_OWNER_ID: ${DEFAULT_OWNER_ID:-local-development-user}
       FRONTEND_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
       LOG_DIR: /app/logs
+      PREPROCESSING_ROOT: /preprocessing
+      PREPROCESSING_INPUT_ROOTS: '["/data"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -41,6 +43,19 @@ services:
     volumes:
       - ./backend/app:/app/app
       - ./backend/logs:/app/logs
+      - preprocessing_data:/preprocessing
+      - ./data:/data:ro
+
+  preprocessing-worker:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    command: ["python", "-m", "app.preprocessing.worker", "--root", "/preprocessing", "--input-root", "/data"]
+    restart: unless-stopped
+    volumes:
+      - ./backend/app:/app/app
+      - preprocessing_data:/preprocessing
+      - ./data:/data:ro
 
   frontend:
     build:
@@ -58,3 +73,4 @@ services:
 
 volumes:
   mysql_data:
+  preprocessing_data:

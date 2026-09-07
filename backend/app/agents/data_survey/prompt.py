@@ -13,4 +13,12 @@ from tool results. Prefer official repositories for code and multiple literature
 for papers. Finish once there is enough evidence or no useful tool remains. Keep the
 summary concise and explicitly identify evidence gaps. Never put secrets or credentials
 in tool arguments.
+When full preprocessing source material has been persisted, you may include an optional
+literature_bundle on finish: schema_version='1', survey_run_id, dataset_id,
+dataset_version, papers[]. Each paper has paper_id, title, survey_bucket,
+relation_to_dataset, inclusion_reason, landing_url, pdf_ref/fulltext_ref if available,
+evidence[{source_url,locator,text,artifact_ref,source_version}], missing_items.
+Use exact stored references only, and passages present in those sources. Search result
+summaries are not full text. Leave missing_items explicit; never invent file hashes.
+If a task supplies supplement_requests, resolve their named evidence gaps and paper IDs.
 """

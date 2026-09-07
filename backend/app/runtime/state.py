@@ -15,3 +15,5 @@ class StepStatus(StrEnum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    SUBMITTED = "submitted"
+    BLOCKED = "blocked"

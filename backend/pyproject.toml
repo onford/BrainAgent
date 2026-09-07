@@ -15,6 +15,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+eeg = [
+  "mne==1.10.2", "mne-bids==0.17.0", "numpy==1.26.4",
+  "scipy==1.15.3", "scikit-learn==1.6.1", "pandas==2.2.3",
+  "pybv==0.7.6", "h5io==0.2.5", "h5py==3.13.0", "portalocker==3.2.0",
+]
 dev = [
   "aiosqlite>=0.20,<1",
   "pytest>=8,<9",
@@ -25,6 +30,9 @@ dev = [
 asyncio_mode = "auto"
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+extend-exclude = ["app/preprocessing/units/source"]
 
 [build-system]
 requires = ["hatchling"]

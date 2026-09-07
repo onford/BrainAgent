@@ -4,6 +4,14 @@ import { RouterLink } from 'vue-router'
 import { useChatStore } from '../stores/chat'
 import type { ChatMessage, Session, StreamActivity } from '../types/session'
 import { renderMarkdown } from '../utils/markdown'
+import PreprocessingCard from '../components/PreprocessingCard.vue'
+
+function preprocessingOutputs(message: ChatMessage) {
+  return (message.activities ?? []).flatMap((activity) => {
+    const result = activity.data?.result as { agent_name?: string; output?: Record<string, unknown> } | undefined
+    return activity.event_type === 'observation' && result?.agent_name === 'data_preprocessing' && result.output ? [result.output] : []
+  })
+}
 
 const store = useChatStore()
 const draft = ref('')
@@ -300,6 +308,8 @@ onBeforeUnmount(() => {
                   </div>
                 </div>
               </details>
+
+              <PreprocessingCard v-for="(output, index) in preprocessingOutputs(message)" :key="index" :output="output" />
 
               <div
                 v-if="message.content && message.role === 'assistant'"

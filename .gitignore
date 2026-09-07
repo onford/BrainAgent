@@ -1,5 +1,7 @@
 .env
 .venv/
+.venv-eeg/
+.local/
 __pycache__/
 .pytest_cache/
 *.py[cod]
@@ -13,4 +15,5 @@ dist/
 .DS_Store
 workspace/
 backend/logs/
+data/
 *.db

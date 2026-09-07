@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     log_dir: Path = Path(__file__).resolve().parents[2] / "logs"
     log_max_bytes: int = 10 * 1024 * 1024
     log_backup_count: int = 5
+    preprocessing_root: str = "workspace/preprocessing"
+    preprocessing_input_roots: list[str] = []
 
     @computed_field
     @property

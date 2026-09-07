@@ -20,6 +20,7 @@ from app.integrations.registry import ExternalToolRegistry, ToolAvailability
 from app.runtime.context import AgentContext
 from app.tools.base import BaseTool, ToolResult
 from app.tools.output import normalize_tool_output
+from app.tools.evidence import sanitize_evidence
 
 
 logger = logging.getLogger(__name__)
@@ -28,9 +29,22 @@ logger = logging.getLogger(__name__)
 class ToolRegistry:
     """Unified facade for local executable tools and user-scoped integrations."""
 
-    def __init__(self, external: ExternalToolRegistry | None = None) -> None:
+    def __init__(
+        self, external: ExternalToolRegistry | None = None, evidence_store=None
+    ) -> None:
         self._tools: dict[str, BaseTool] = {}
         self._external = external
+        self._evidence_store = evidence_store
+
+    def _save_evidence(self, context, name, output):
+        if self._evidence_store is None:
+            return {}
+        ref = self._evidence_store.put(
+            context.owner_id,
+            "evidence",
+            {"tool": name, "content": sanitize_evidence(output)},
+        )
+        return {"evidence_ref": ref.model_dump()}
 
     def register(self, tool: BaseTool) -> None:
         if tool.name in self._tools:
@@ -95,7 +109,8 @@ class ToolRegistry:
         if name in self._tools:
             result = await self._tools[name].execute(**kwargs)
             if result.success:
-                result.output = normalize_tool_output(name, result.output)
+                result.metadata.update(self._save_evidence(context, name, result.output))
+                result.output = normalize_tool_output(name, sanitize_evidence(result.output))
             else:
                 logger.warning(
                     "local_tool_call_failed error=%s",
@@ -127,7 +142,9 @@ class ToolRegistry:
             query = str(kwargs.pop("query"))
             output = await client.search(query, **kwargs)
             normalized_output = normalize_tool_output(
-                name, output, limit=max(1, min(int(kwargs.get("limit", 5)), 5))
+                name,
+                sanitize_evidence(output),
+                limit=max(1, min(int(kwargs.get("limit", 5)), 5)),
             )
             result_count = (
                 normalized_output.get("result_count", "-")
@@ -145,7 +162,11 @@ class ToolRegistry:
             return ToolResult(
                 success=True,
                 output=normalized_output,
-                metadata={"tool": name, "kind": "external"},
+                metadata={
+                    "tool": name,
+                    "kind": "external",
+                    **self._save_evidence(context, name, output),
+                },
             )
         except Exception as exc:
             error_code, safe_error = self._safe_error(exc)

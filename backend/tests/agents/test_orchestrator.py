@@ -11,7 +11,7 @@ from tests.fakes import ScriptedLLMClient, finish, full_workflow_responses
 
 
 @pytest.mark.asyncio
-async def test_full_agent_chain() -> None:
+async def test_chain_stops_when_real_preprocessing_inputs_are_missing() -> None:
     registry = build_agent_registry()
     registry.register(PlannerAgent(ScriptedLLMClient(full_workflow_responses())))
     orchestrator = Orchestrator(registry)
@@ -23,13 +23,11 @@ async def test_full_agent_chain() -> None:
         "data_survey",
         "data_collection",
         "data_preprocessing",
-        "data_evaluation",
-        "data_report",
-        "data_delivery",
     ]
-    assert context.shared_memory["data_evaluation"]["input_available"] is True
+    assert "data_evaluation" not in context.shared_memory
+    assert context.shared_memory["data_preprocessing"]["execution_status"] == "needs_input"
     assert context.final_answer is not None
-    assert [event.event_type for event in context.events].count("thought") == 7
+    assert [event.event_type for event in context.events].count("thought") == 3
 
 
 @pytest.mark.asyncio

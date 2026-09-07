@@ -24,11 +24,11 @@ class AgentRunRepository:
             run_id=run_id,
             session_id=session_id,
             agent_name=result.agent_name,
-            status="completed" if result.success else "failed",
+            status=result.metadata.get("execution_status", "completed" if result.success else "failed"),
             input={"instruction": instruction},
             output=output,
             error=result.error,
-            finished_at=finished_at,
+            finished_at=None if result.metadata.get("execution_status") in ("submitted", "queued", "running") else finished_at,
         )
         self.db.add(model)
         await self.db.flush()
