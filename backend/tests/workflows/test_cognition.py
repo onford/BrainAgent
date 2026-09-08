@@ -419,6 +419,12 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
                 ) == {"f1", "f2", "f3"}
                 if self.calls.count("CollectionReview") == 1:
                     self.survey_hash = file_hash(folder / "survey/research.json")
+                    value.task_mappings[0].status = "unresolved"
+                    value.task_mappings[0].finding_ids = []
+                    value.limitations = ["Run/task mapping is unknown"]
+                if self.calls.count("CollectionReview") == 2:
+                    value.task_mappings[0].status = "unresolved"
+                    value.task_mappings[0].finding_ids = []
                     value.compatible = False
                     value.conflicts = ["需要核对运行映射"]
             return value
@@ -436,7 +442,7 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
     service.start(OWNER, state["id"])
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
-    assert llm.calls.count("CollectionReview") == 2
+    assert llm.calls.count("CollectionReview") == 3
     assert (folder / "collection/research.json").exists()
     assert file_hash(folder / "survey/research.json") == llm.survey_hash
 
