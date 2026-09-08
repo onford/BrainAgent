@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
+import { groupArtifactFiles } from '../utils/artifacts'
 
 type Stage = { name: string; label: string; status: string; error?: string }
 type Workflow = { id: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
@@ -29,7 +30,7 @@ const artifactGroups = computed(() => {
   }
   const order = [...Object.keys(names), 'workflow']
   return [...groups].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
-    .map(([key, files]) => ({key, label: names[key] ?? '运行记录与数据包', files}))
+    .map(([key, files]) => ({key, label: names[key] ?? '运行记录与数据包', files, families: groupArtifactFiles(files)}))
 })
 function fileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`
@@ -109,14 +110,22 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
           <section v-if="current.status==='completed'" class="panel"><h2>报告预览</h2><iframe :src="fileUrl('report/report.html',false)" title="EEG 训练数据报告" sandbox="allow-same-origin" /></section>
           <section class="panel files-panel" aria-label="全部产出文件">
             <div class="section-heading"><h2>全部产出文件</h2><span class="badge">{{current.artifacts.length}} 个文件</span></div>
-            <p class="hint">按模块整理，点击文件名下载。流程执行时会逐步加入已生成的记录。</p>
+            <p class="hint">按模块整理，同类文件默认收起，展开后可逐个下载。流程执行时会逐步加入已生成的记录。</p>
             <a v-if="current.artifacts.some(a => a.name === 'process/index.json')" :href="fileUrl('process/index.json')">查看结构化流程索引</a>
             <p v-if="!current.artifacts.length" class="hint">尚无产出文件。</p>
-            <details v-for="group in artifactGroups" :key="group.key" class="file-group" open>
+            <details v-for="group in artifactGroups" :key="current.id+group.key" class="file-group" open>
               <summary>{{group.label}} <span>{{group.files.length}} 个文件</span></summary>
-              <ul><li v-for="artifact in group.files" :key="artifact.name">
-                <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
-              </li></ul>
+              <template v-for="family in group.families" :key="family.key">
+                <ul v-if="family.files.length === 1" class="single-file"><li v-for="artifact in family.files" :key="artifact.name">
+                  <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
+                </li></ul>
+                <details v-else class="file-family">
+                  <summary :title="family.key">{{family.label}} <span>{{family.files.length}} 个文件 · {{fileSize(family.bytes)}}</span></summary>
+                  <ul><li v-for="artifact in family.files" :key="artifact.name">
+                    <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
+                  </li></ul>
+                </details>
+              </template>
             </details>
           </section>
           <details class="panel records"><summary>执行日志</summary><ul><li v-for="event in current.events" :key="event.time+event.agent">{{new Date(event.time).toLocaleTimeString('zh-CN')}} · {{event.message}}</li></ul></details>
@@ -137,4 +146,8 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
 .file-group li { display: flex; align-items: baseline; gap: 14px; padding: 6px 0; font-size: 13px; }
 .file-group a { overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 3px; }
 .file-group small { flex-shrink: 0; margin-left: auto; color: #62766a; white-space: nowrap; }
+.file-group .single-file { margin: 4px 0 0; }
+.file-family { margin-top: 8px; padding: 8px 12px; border: 1px solid #e4ece6; border-radius: 8px; background: #f8faf8; }
+.file-family summary { font-size: 13px; overflow-wrap: anywhere; }
+.file-family[open] > summary { padding-bottom: 8px; border-bottom: 1px solid #e4ece6; }
 </style>

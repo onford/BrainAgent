@@ -86,4 +86,37 @@ describe('WorkflowsView', () => {
     expect(wrapper.findAll('.file-group').every(group => group.attributes('open') !== undefined)).toBe(true)
     wrapper.unmount()
   })
+
+  it('collapses repeated files and preserves the expanded group when polling adds another record', async () => {
+    vi.useFakeTimers()
+    const file = (run: string) => ({
+      name: `collection/bids/sub-001/eeg/sub-001_task-mi_run-${run}_eeg.eeg`, bytes: 1024, sha256: null,
+    })
+    let state = {...workflow('running'), artifacts: [file('04'), file('08')]}
+    request.mockImplementation(async (path: string) => {
+      if (path.endsWith('/sources')) return {allowed_roots: []}
+      if (path === '/api/workflows') return [state]
+      return state
+    })
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      const group = wrapper.get('.file-family')
+      expect(group.attributes('open')).toBeUndefined()
+      expect(group.get('summary').text()).toContain('2 个文件')
+      await group.get('summary').trigger('click')
+      expect(group.attributes('open')).toBeDefined()
+      state = {...state, artifacts: [...state.artifacts, file('12')]}
+      await vi.advanceTimersByTimeAsync(2000)
+      await flushPromises()
+      expect(wrapper.get('.file-family').attributes('open')).toBeDefined()
+      expect(wrapper.findAll('.file-family a')).toHaveLength(3)
+      expect(wrapper.get('.file-family summary').text()).toContain('3 个文件')
+      await wrapper.get('.file-family summary').trigger('click')
+      expect(wrapper.get('.file-family').attributes('open')).toBeUndefined()
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
+  })
 })
