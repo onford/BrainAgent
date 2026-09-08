@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
-import { groupArtifactFiles } from '../utils/artifacts'
+import { artifactDescription, groupArtifactFiles } from '../utils/artifacts'
 
 type Stage = { name: string; label: string; status: string; error?: string }
 type Workflow = { id: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
@@ -117,12 +117,12 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
               <summary>{{group.label}} <span>{{group.files.length}} 个文件</span></summary>
               <template v-for="family in group.families" :key="family.key">
                 <ul v-if="family.files.length === 1" class="single-file"><li v-for="artifact in family.files" :key="artifact.name">
-                  <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
+                  <div class="file-copy"><a :href="fileUrl(artifact.name)">{{artifact.name}}</a><span class="file-description">{{artifactDescription(artifact.name)}}</span></div><small>{{fileSize(artifact.bytes)}}</small>
                 </li></ul>
                 <details v-else class="file-family">
-                  <summary :title="family.key">{{family.label}} <span>{{family.files.length}} 个文件 · {{fileSize(family.bytes)}}</span></summary>
+                  <summary :title="family.key">{{family.label}} <span class="file-description">{{family.description}}</span><span>{{family.files.length}} 个文件 · {{fileSize(family.bytes)}}</span></summary>
                   <ul><li v-for="artifact in family.files" :key="artifact.name">
-                    <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
+                    <div class="file-copy"><a :href="fileUrl(artifact.name)">{{artifact.name}}</a><span class="file-description">{{artifactDescription(artifact.name)}}</span></div><small>{{fileSize(artifact.bytes)}}</small>
                   </li></ul>
                 </details>
               </template>
@@ -150,4 +150,6 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
 .file-family { margin-top: 8px; padding: 8px 12px; border: 1px solid #e4ece6; border-radius: 8px; background: #f8faf8; }
 .file-family summary { font-size: 13px; overflow-wrap: anywhere; }
 .file-family[open] > summary { padding-bottom: 8px; border-bottom: 1px solid #e4ece6; }
+.file-copy { min-width: 0; overflow-wrap: anywhere; }
+.file-group .file-description { margin-left: 8px; color: #6b776f; font-size: 12px; font-weight: 400; line-height: 1.6; }
 </style>
