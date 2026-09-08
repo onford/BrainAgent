@@ -12,8 +12,32 @@ from app.workflows.service import WorkflowService
 from tests.workflows.fakes import Reader, WorkflowLLM, workflow_service
 from tests.workflows.test_workflow import source as source_fixture, finish, OWNER
 from app.agents import build_agent_registry
+from app.workflows.planning_contracts import design_contract
 
 source = source_fixture
+
+
+@pytest.mark.asyncio
+async def test_operation_schema_binds_channels_events_and_window():
+    request = {"tmin": 0.0, "tmax": 2.0}
+    schema = design_contract(["f1", "f2", "f3"], request)
+    design = await WorkflowLLM().structured_output(
+        [{}, {"content": json.dumps({"request": request, "compiler_feedback": []})}],
+        schema,
+    )
+    output = design.model_dump()
+    epoch = output["candidates"][0]["steps"][-1]
+    epoch["params"]["picks"] = ["eeg"]
+    with pytest.raises(ValueError, match="literal_error"):
+        schema.model_validate(output)
+    epoch["params"]["picks"] = "$eeg_channels"
+    epoch["params"]["event_id"] = {"left_hand": 1, "right_hand": 2}
+    with pytest.raises(ValueError, match="literal_error"):
+        schema.model_validate(output)
+    epoch["params"]["event_id"] = "$event_id"
+    epoch["params"]["tmax"] = 3
+    with pytest.raises(ValueError, match="literal_error"):
+        schema.model_validate(output)
 
 
 @pytest.mark.asyncio
@@ -75,6 +99,11 @@ async def test_invented_quote_or_unread_paper_rejected():
     changed.facts[0].quote = "This invented quote does not appear in the source."
     with pytest.raises(ValueError, match="verbatim"):
         WorkflowCognition.validate_findings(changed, sources)
+
+    # Reflow may change whitespace, but accepted evidence keeps the exact source.
+    sources.documents[0].text = sources.documents[0].text.replace("64 EEG", "64\nEEG")
+    WorkflowCognition.validate_findings(findings, sources)
+    assert "64\nEEG" in findings.facts[0].quote
     changed = deepcopy(findings)
     changed.literature[0].source_id = "missing"
     with pytest.raises(ValueError, match="read paper"):
