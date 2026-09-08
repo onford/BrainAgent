@@ -146,8 +146,6 @@ def render_report(folder):
         if data.local_inspection
         else []
     )
-    # This small projection is the template input, not another process archive.
-    write_readable(folder / "report.json", data.model_dump(mode="json"))
     titles = {
         "subjects": "被试数",
         "recordings": "记录数",
@@ -185,6 +183,16 @@ def render_report(folder):
         else:
             description = "; ".join(f"{k}={v}" for k, v in p.items())
         recipe.append([i + 1, operations.get(step.op, step.op), description])
+    method_reasoning = (
+        "实际处理顺序："
+        + " → ".join(row[1] for row in recipe)
+        + "。参数见上表；本轮随机选择候选，未进行质量排名。"
+    )
+    if data.narrative:
+        # Free model prose must not override the executed step order. The raw
+        # interpretation remains available in narrative.json and decisions.json.
+        data.narrative.method_reasoning = method_reasoning
+    write_readable(folder / "report.json", data.model_dump(mode="json"))
     template = Template(
         (Path(__file__).parent / "templates/report.html").read_text(encoding="utf-8")
     )
@@ -291,11 +299,7 @@ def render_report(folder):
         data_interpretation=escape(
             data.narrative.data_interpretation if data.narrative else ""
         ),
-        method_reasoning=escape(
-            data.narrative.method_reasoning
-            if data.narrative
-            else "参数依据见方法记录。"
-        ),
+        method_reasoning=escape(method_reasoning),
         finding_rows=rows(
             [[f.topic, f.statement, f.source_id] for f in data.research.facts]
             if data.research

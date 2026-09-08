@@ -174,6 +174,18 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     summary["records"][0]["shape"][0] += 1
     with pytest.raises(ValueError, match="shape"):
         PreprocessingOutput.model_validate(summary)
+    from app.workflows.reporting import render_report
+
+    path = folder / "report/narrative.json"
+    narrative = json.loads(path.read_text(encoding="utf-8"))
+    narrative["method_reasoning"] = "错误地声称首先重采样"
+    path.write_text(json.dumps(narrative, ensure_ascii=False), encoding="utf-8")
+    render_report(folder / "report")
+    html = (folder / "report/report.html").read_text(encoding="utf-8")
+    projection = json.loads((folder / "report/report.json").read_text(encoding="utf-8"))
+    assert "错误地声称首先重采样" not in html
+    assert "实际处理顺序：带通滤波 → 平均参考 → 事件分段" in html
+    assert projection["narrative"]["method_reasoning"] in html
 
 
 @pytest.mark.asyncio
