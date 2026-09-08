@@ -471,6 +471,16 @@ class WorkflowCognition:
             for t in catalog
             if t["available"] and t.get("category") in {"literature", "code"}
         }
+
+        def validate_review(value):
+            if value.compatible and value.conflicts:
+                raise ValueError(
+                    "compatible=true requires an empty conflicts list. conflicts contains only "
+                    "blocking task/run/label or conversion contradictions. Nonblocking metadata "
+                    "differences belong in limitations. Compare against the current adapter_profile, "
+                    "not superseded values mentioned in historical research conflicts."
+                )
+
         for iteration in range(3):
             # Runtime enum constrains references in the model's actual output
             # schema. Persisted file shape remains the same across datasets.
@@ -479,6 +489,12 @@ class WorkflowCognition:
                 "CollectionReview",
                 __base__=CollectionReview,
                 supporting_facts=(list[Literal[ids]], Field(min_length=1)),
+                conflicts=(
+                    list[str],
+                    Field(
+                        description="Blocking task/run/label or conversion contradictions only; must be empty when compatible=true. Metadata differences belong in limitations."
+                    ),
+                ),
             )
             review = await self.ask(
                 "核对任务、标签与接入适用性",
@@ -493,6 +509,7 @@ class WorkflowCognition:
                 "Review ONLY the selected local subjects/runs, not all tasks in the dataset. Unselected execution or both-hands/feet tasks are outside scope, not incompatibilities. "
                 "supporting_facts contains exact finding IDs from its enum, never sentences. Unknown mapping needs more evidence; known contradictory labels block conversion. "
                 "Unknown demographics/hardware metadata are limitations, not exclusions. Do not treat a general multi-task dataset description as a contradiction with a scoped adapter.",
+                validate_review,
             )
             self.save("collection/review.json", review)
             if review.compatible and not review.conflicts:

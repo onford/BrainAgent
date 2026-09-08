@@ -285,3 +285,38 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
     assert llm.calls.count("CollectionReview") == 2
     assert (folder / "collection/research.json").exists()
     assert file_hash(folder / "survey/research.json") == llm.survey_hash
+
+
+@pytest.mark.asyncio
+async def test_nonblocking_metadata_conflict_is_corrected_before_collection(
+    source, tmp_path
+):
+    class ReviewLLM(WorkflowLLM):
+        async def structured_output(self, messages, model):
+            result = await super().structured_output(messages, model)
+            if (
+                model.__name__ == "CollectionReview"
+                and self.calls.count("CollectionReview") == 1
+            ):
+                result.compatible = True
+                result.conflicts = ["Publisher attribution differs"]
+            return result
+
+    llm = ReviewLLM()
+    prep = PreprocessingService(tmp_path / "prep")
+    service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
+    service.registry = build_agent_registry(preprocessing=prep, workflow=service)
+    state = service.create(
+        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+    )
+    result = await finish(service, state["id"])
+    assert result["status"] == "completed", result["error"]
+    assert llm.calls.count("CollectionReview") == 2
+    decisions = json.loads(
+        (service.folder(state["id"]) / "collection/decisions.json").read_text(
+            encoding="utf-8"
+        )
+    )["records"]
+    assert decisions[0]["status"] == "rejected"
+    assert "compatible=true requires" in decisions[0]["error"]
+    assert decisions[1]["status"] == "accepted"
