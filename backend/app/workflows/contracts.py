@@ -184,13 +184,12 @@ class PreprocessingOutput(Contract):
         for record in completed:
             if (
                 record.error
-                or not record.artifact_root
                 or record.shape is None
                 or record.events_before is None
                 or record.events_retained is None
             ):
                 raise ValueError(
-                    "completed records require output shape, event counts and artifact location"
+                    "completed records require output shape and event counts"
                 )
             if (
                 len(record.shape) != 3

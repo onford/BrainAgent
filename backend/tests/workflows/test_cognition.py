@@ -162,6 +162,10 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     assert any(a["name"] == "survey/sources.json" and a["sha256"] for a in artifacts)
     from app.workflows.contracts import PreprocessingOutput
 
+    legacy = deepcopy(result["outputs"]["data_preprocessing"])
+    for record in legacy["records"]:
+        record.pop("artifact_root", None)
+    PreprocessingOutput.model_validate(legacy)
     summary = deepcopy(result["outputs"]["data_preprocessing"])
     summary["completed"] += 1
     with pytest.raises(ValueError, match="counts"):
