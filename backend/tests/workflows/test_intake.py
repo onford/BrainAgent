@@ -57,6 +57,33 @@ def collect(source, tmp_path):
     return result, tmp_path / "collection"
 
 
+def test_subsample_annotations_keep_exact_seconds_and_integer_markers(
+    source, tmp_path, monkeypatch
+):
+    import mne
+
+    reader = mne.io.read_raw_edf
+
+    def read(*args, **kwargs):
+        raw = reader(*args, **kwargs)
+        raw.resample(128, verbose="ERROR")
+        raw.set_annotations(
+            mne.Annotations([1, 4.38, 8.38], [1, 2, 2], ["T0", "T1", "T2"])
+        )
+        return raw
+
+    monkeypatch.setattr(mne.io, "read_raw_edf", read)
+    _, folder = collect(source, tmp_path)
+    data = PreprocessInput.model_validate(load(folder, "input.json"))
+    for record in data.collection.records:
+        _, events, mapping = read_record(
+            folder / "bids", record, data.survey.event_id, data.survey.context_event_id
+        )
+        assert events[:, 0].tolist() == [round(4.38 * 128), round(8.38 * 128)]
+        assert [row["original_onset_s"] for row in mapping] == [4.38, 8.38]
+        assert all(abs(row["quantization_error_s"]) > 0 for row in mapping)
+
+
 def test_complete_events_are_preserved_but_context_is_not_training(
     source, tmp_path, monkeypatch
 ):

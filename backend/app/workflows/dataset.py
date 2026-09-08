@@ -412,16 +412,29 @@ def collect(survey, folder, workflow_id, service, owner):
 
         event_path = vhdr.parent / vhdr.name.replace("eeg.vhdr", "events.tsv")
         with event_path.open(encoding="utf-8-sig", newline="") as stream:
-            target_events = list(csv.DictReader(stream, delimiter="\t"))
+            reader = csv.DictReader(stream, delimiter="\t")
+            event_columns = reader.fieldnames
+            target_events = list(reader)
         expected_events = [e for e in event_mapping if e["object_key"] == item["id"]]
         if len(target_events) != len(expected_events) or any(
             row["trial_type"] != expected["target_label"]
-            or abs(float(row["onset"]) - expected["onset_s"]) > 1e-6
+            or abs(float(row["onset"]) - expected["source_sample"] / item["sfreq"])
+            > 1e-6
+            or int(row["sample"]) != expected["source_sample"]
             or abs(float(row["duration"]) - expected["duration_s"]) > 1e-6
             or int(row["value"]) != expected["target_code"]
             for row, expected in zip(target_events, expected_events)
         ):
             raise ValueError("standardized events differ from source annotations")
+        # BrainVision markers use integer samples; EDF annotations can be between
+        # samples. Preserve their exact seconds in the authoritative BIDS sidecar
+        # after checking that the exported markers use the correct sample grid.
+        for row, expected in zip(target_events, expected_events):
+            row["onset"] = expected["onset_s"]
+        with event_path.open("w", encoding="utf-8", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=event_columns, delimiter="\t")
+            writer.writeheader()
+            writer.writerows(target_events)
         if (
             converted.ch_names != raw.ch_names
             or converted.n_times != raw.n_times
