@@ -35,6 +35,8 @@ services:
       LOG_DIR: /app/logs
       PREPROCESSING_ROOT: /preprocessing
       PREPROCESSING_INPUT_ROOTS: '["/data"]'
+      WORKFLOW_ROOT: /workflows
+      WORKFLOW_INPUT_ROOTS: '["/data"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -44,17 +46,19 @@ services:
       - ./backend/app:/app/app
       - ./backend/logs:/app/logs
       - preprocessing_data:/preprocessing
+      - workflow_data:/workflows
       - ./data:/data:ro
 
   preprocessing-worker:
     build:
       context: .
       dockerfile: docker/backend/Dockerfile
-    command: ["python", "-m", "app.preprocessing.worker", "--root", "/preprocessing", "--input-root", "/data"]
+    command: ["python", "-m", "app.preprocessing.worker", "--root", "/preprocessing", "--input-root", "/data", "--input-root", "/workflows"]
     restart: unless-stopped
     volumes:
       - ./backend/app:/app/app
       - preprocessing_data:/preprocessing
+      - workflow_data:/workflows
       - ./data:/data:ro
 
   frontend:
@@ -74,3 +78,4 @@ services:
 volumes:
   mysql_data:
   preprocessing_data:
+  workflow_data:

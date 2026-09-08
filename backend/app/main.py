@@ -17,6 +17,8 @@ from app.llm.config import LLMConfig
 from app.integrations.registry import ExternalToolRegistry
 from app.integrations.security import CredentialCipher
 from app.tools.registry import ToolRegistry
+from app.workflows.service import WorkflowService
+from app.api.routes import workflows
 
 
 def create_app(
@@ -48,7 +50,9 @@ def create_app(
     )
     preprocessing_service = PreprocessingService(app_settings.preprocessing_root, app_settings.preprocessing_input_roots, llm)
     tool_registry = ToolRegistry(external_tool_registry, evidence_store=preprocessing_service.store)
-    registry = build_agent_registry(llm, tool_registry, preprocessing_service)
+    workflow_service = WorkflowService(app_settings.workflow_root, app_settings.workflow_input_roots, preprocessing_service)
+    registry = build_agent_registry(llm, tool_registry, preprocessing_service, workflow_service)
+    workflow_service.registry = registry
     registry.register(PlannerAgent(llm))
     orchestrator = Orchestrator(registry)
 
@@ -56,7 +60,9 @@ def create_app(
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         if app_settings.db_create_tables:
             await database.create_tables()
+        await workflow_service.resume()
         yield
+        await workflow_service.close()
         await database.dispose()
 
     app = FastAPI(title=app_settings.app_name, version="0.1.0", lifespan=lifespan)
@@ -68,6 +74,7 @@ def create_app(
     app.state.external_tool_registry = external_tool_registry
     app.state.tool_registry = tool_registry
     app.state.preprocessing = preprocessing_service
+    app.state.workflows = workflow_service
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[app_settings.frontend_origin],
@@ -80,6 +87,7 @@ def create_app(
     app.include_router(sessions.router, prefix="/api")
     app.include_router(integrations.router, prefix="/api")
     app.include_router(preprocessing.router, prefix="/api")
+    app.include_router(workflows.router, prefix="/api")
 
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:

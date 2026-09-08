@@ -10,11 +10,14 @@ class DataPreprocessingAgent(BaseAgent):
     name = "data_preprocessing"
     description = "Plans or submits real EEG preprocessing using upstream references; reports durable job status."
 
-    def __init__(self, service=None):
+    def __init__(self, service=None, workflow=None):
         self.service = service
+        self.workflow = workflow
 
     async def run(self, task: AgentTask, context: AgentContext) -> AgentResult:
         inputs = task.inputs
+        if self.workflow and inputs.get("action") == "workflow_stage":
+            return await self.workflow.execute_stage(self.name, context.owner_id, inputs["workflow_id"])
         if self.service is None or not inputs:
             return AgentResult(
                 agent_name=self.name,

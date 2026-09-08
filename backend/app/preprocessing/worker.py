@@ -123,7 +123,7 @@ def main():
     settings = get_settings()
     worker = Worker(
         Storage(args.root or settings.preprocessing_root),
-        [Path(p) for p in (args.input_root or settings.preprocessing_input_roots)],
+        [Path(p) for p in (args.input_root or [*settings.preprocessing_input_roots, settings.workflow_root])],
     )
     try:
         worker.run_once() if args.once else worker.run_forever()

@@ -10,13 +10,13 @@ from app.tools.registry import ToolRegistry
 
 
 def build_agent_registry(
-    llm: LLMClient | None = None, tools: ToolRegistry | None = None, preprocessing=None
+    llm: LLMClient | None = None, tools: ToolRegistry | None = None, preprocessing=None, workflow=None
 ) -> AgentRegistry:
     registry = AgentRegistry()
-    registry.register(DataSurveyAgent(llm, tools, preprocessing=preprocessing))
-    registry.register(DataCollectionAgent())
-    registry.register(DataPreprocessingAgent(preprocessing))
-    registry.register(DataEvaluationAgent())
-    registry.register(DataReportAgent())
-    registry.register(DataDeliveryAgent())
+    registry.register(DataSurveyAgent(llm, tools, preprocessing=preprocessing, workflow=workflow))
+    registry.register(DataCollectionAgent(workflow))
+    registry.register(DataPreprocessingAgent(preprocessing, workflow))
+    registry.register(DataEvaluationAgent(workflow))
+    registry.register(DataReportAgent(workflow))
+    registry.register(DataDeliveryAgent(workflow))
     return registry

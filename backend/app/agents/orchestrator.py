@@ -172,6 +172,14 @@ class Orchestrator:
                     error="Agent 执行失败，请查看后端日志。",
                 )
             context.record_result(result)
+            if result.success and result.metadata.get("workflow_status") == "queued":
+                step.status = StepStatus.SUBMITTED
+                context.status = RunStatus.COMPLETED
+                context.current_step = None
+                context.final_answer = f"数据流程已启动，可在[数据流程页面]({result.output['workflow_url']})查看六个模块的进度、报告和训练数据。"
+                yield context.emit("observation", context.final_answer, step.agent, {"result":result.model_dump(mode="json"),"step":step.model_dump(mode="json")})
+                yield context.emit("run_completed", "后台数据流程已提交", self.planner.name, {"final_answer":context.final_answer})
+                return
             preprocessing_state = result.metadata.get("execution_status") if step.agent == "data_preprocessing" else None
             if result.success and preprocessing_state in ("submitted", "queued", "running", "interrupted", "needs_input", "planned", "methods_drafted", "partial", "failed", "cancelled"):
                 step.status = StepStatus.SUBMITTED if preprocessing_state in ("submitted", "queued", "running") else StepStatus.BLOCKED
