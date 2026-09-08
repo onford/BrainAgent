@@ -194,49 +194,55 @@ def validate_verification(agent, value, sources, local):
             )
     elif publication.source_id is not None:
         raise ValueError("not_identified publication must have source_id=null")
+    problems = []
     for row in value.comparisons:
-        if not set(row.local_fact_ids) <= local_facts.keys() or any(
-            local_facts[i].field != row.field for i in row.local_fact_ids
-        ):
-            raise ValueError(
-                f"{row.field}: local IDs must refer to observed facts for that exact field"
-            )
-        # The model cannot hide observed records by omitting their local IDs.
-        row.local_fact_ids = [f.id for f in local.facts if f.field == row.field]
-        for side, kinds in (
-            (row.official_sources, {"official", "documentation", "code"}),
-            (row.official_paper, {"paper"}),
-        ):
-            if not set(side.finding_ids) <= facts.keys():
-                raise ValueError(f"{row.field}: unknown finding IDs")
-            if side.statement is not None and not side.finding_ids:
-                raise ValueError(
-                    f"{row.field}: source statement requires evidence, otherwise use null"
-                )
-            if any(
-                docs[facts[i].source_id].kind not in kinds for i in side.finding_ids
+        try:
+            if not set(row.local_fact_ids) <= local_facts.keys() or any(
+                local_facts[i].field != row.field for i in row.local_fact_ids
             ):
                 raise ValueError(
-                    f"{row.field}: evidence assigned to the wrong comparison column"
+                    f"{row.field}: local IDs must refer to observed facts for that exact field"
                 )
-        if row.official_paper.finding_ids and (
-            publication.role != "dataset_paper"
-            or any(
-                facts[i].source_id != publication.source_id
-                for i in row.official_paper.finding_ids
-            )
-        ):
-            raise ValueError(
-                "official-paper comparison cannot use a methods/acquisition-system paper as dataset authority"
-            )
-        if row.status == "consistent" and not (
-            row.local_fact_ids
-            and row.official_sources.finding_ids
-            and row.official_paper.finding_ids
-        ):
-            raise ValueError(
-                f"{row.field}: consistent requires all three sides; use partial/unverifiable for missing evidence"
-            )
+            # The model cannot hide observed records by omitting their local IDs.
+            row.local_fact_ids = [f.id for f in local.facts if f.field == row.field]
+            for side, kinds in (
+                (row.official_sources, {"official", "documentation", "code"}),
+                (row.official_paper, {"paper"}),
+            ):
+                if not set(side.finding_ids) <= facts.keys():
+                    raise ValueError(f"{row.field}: unknown finding IDs")
+                if side.statement is not None and not side.finding_ids:
+                    raise ValueError(
+                        f"{row.field}: source statement requires evidence, otherwise use null"
+                    )
+                if any(
+                    docs[facts[i].source_id].kind not in kinds for i in side.finding_ids
+                ):
+                    raise ValueError(
+                        f"{row.field}: evidence assigned to the wrong comparison column"
+                    )
+            if row.official_paper.finding_ids and (
+                publication.role != "dataset_paper"
+                or any(
+                    facts[i].source_id != publication.source_id
+                    for i in row.official_paper.finding_ids
+                )
+            ):
+                raise ValueError(
+                    "official-paper comparison cannot use a methods/acquisition-system paper as dataset authority"
+                )
+            if row.status == "consistent" and not (
+                row.local_fact_ids
+                and row.official_sources.finding_ids
+                and row.official_paper.finding_ids
+            ):
+                raise ValueError(
+                    f"{row.field}: consistent requires all three sides; use partial/unverifiable for missing evidence"
+                )
+        except ValueError as exc:
+            problems.append(str(exc))
+    if problems:
+        raise ValueError("; ".join(problems))
 
 
 def validate_screening(agent, value, sources):

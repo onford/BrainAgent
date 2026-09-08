@@ -69,8 +69,12 @@ async def test_three_way_comparison_requires_actual_local_and_official_paper_evi
     row.official_sources.statement = "160 Hz"
     row.official_sources.finding_ids = ["f1"]
     row.status = "consistent"
-    with pytest.raises(ValueError, match="all three sides"):
+    other = next(r for r in verification.comparisons if r.field == "channels")
+    other.status = "consistent"
+    with pytest.raises(ValueError, match="all three sides") as error:
         validate_verification(agent, verification, sources, local)
+    assert "channels:" in str(error.value) and "sampling_rate:" in str(error.value)
+    other.status = "unverifiable"
     row.status = "partial"
     row.official_paper.statement = "Acquisition-system methods"
     row.official_paper.finding_ids = ["f3"]
