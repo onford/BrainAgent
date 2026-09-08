@@ -1,6 +1,5 @@
 """EEGMMIDB adapter: source inspection and conversion have separate outputs."""
 
-import csv
 import json
 from collections import Counter
 from pathlib import Path
@@ -14,6 +13,7 @@ from app.preprocessing.schemas import (
 )
 from app.preprocessing.storage import file_hash, within
 from .records import write_readable as write_json
+from .formats import write_table as write_tsv
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
@@ -54,16 +54,6 @@ PROFILE = {
     ],
     "literature_status": "versioned dataset references; automatic full-text review not performed",
 }
-
-
-def write_tsv(path, rows, fields):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(
-            f, fieldnames=fields, delimiter="\t", extrasaction="ignore"
-        )
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def allowed_source(request, allowed_roots, output_roots):

@@ -11,7 +11,13 @@ from app.preprocessing.storage import file_hash, within, write_json
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult
 from . import artifacts, dataset, outputs
-from .records import publish_stage, validate_stage, write_index, write_readable
+from .records import (
+    check_format,
+    publish_stage,
+    validate_stage,
+    write_index,
+    write_readable,
+)
 from .contracts import STAGE_CONTRACTS
 from .schemas import STAGES, STAGE_LABELS, WorkflowRequest
 
@@ -290,6 +296,7 @@ class WorkflowService:
     async def execute_stage(self, name, owner, identity):
         state = self.get(owner, identity)
         folder = self.folder(identity)
+        check_format(folder)
         request = WorkflowRequest.model_validate(state["request"])
         if name == "data_survey":
             root = dataset.allowed_source(

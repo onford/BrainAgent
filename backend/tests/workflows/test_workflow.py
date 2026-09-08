@@ -347,6 +347,9 @@ async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
         )
     )
     assert manifest["split_counts"] == {"train": 4, "validation": 0, "test": 0}
+    assert np.load(
+        service.folder(state["id"]) / "delivery/split.npy", allow_pickle=False
+    ).dtype == np.dtype("<U10")
     assert any("分组为空" in s for s in manifest["limitations"])
     # A legacy persisted run resumes with the original numeric attempts intact.
     result.pop("schema_version")
@@ -362,11 +365,21 @@ async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
     prep_output = result["outputs"]["data_preprocessing"]
     prep_output.pop("methods")
     prep_output.pop("records")
+    (service.folder(state["id"]) / "delivery/leftover.json").write_text(
+        "{}", encoding="utf-8"
+    )
     service.save(result)
     service.retry(OWNER, state["id"])
     upgraded = await finish(service, state["id"])
     assert upgraded["status"] == "completed", upgraded["error"]
     assert upgraded["schema_version"] == "1"
+    with zipfile.ZipFile(service.folder(state["id"]) / "training-data.zip") as archive:
+        assert "output.json" not in archive.namelist()
+        assert "leftover.json" not in archive.namelist()
+        upgraded_manifest = json.loads(archive.read("manifest.json"))
+        assert set(archive.namelist()) == {
+            a["name"] for a in upgraded_manifest["files"]
+        } | {"manifest.json"}
     assert all(
         r["attempt"] == 1
         for r in prep.store.status(OWNER, upgraded["preprocessing_job"]).records

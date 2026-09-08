@@ -10,6 +10,7 @@ from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import file_hash
 from .records import write_readable as write_json
 from .dataset import check_sources, write_tsv
+from .formats import ARRAY_FORMATS, PROVENANCE_FILES, delivery_members
 
 
 def choose(result, plan, store, seed):
@@ -120,14 +121,14 @@ def deliver(state, folder, store):
         arrays.append(values.astype(np.float32))
         provenance = folder / "provenance" / r["record_id"]
         provenance.mkdir(parents=True, exist_ok=True)
-        for name in ["provenance.json", "events.json", "delta.json"]:
+        for name in PROVENANCE_FILES:
             shutil.copy2(artifacts[name], provenance / name)
     if not arrays:
         raise ValueError("没有可交付的 Epoch")
     X, y, subjects = (
         np.concatenate(arrays),
         np.asarray(labels, dtype=np.int64),
-        np.asarray(groups),
+        np.asarray(groups, dtype=ARRAY_FORMATS["subjects.npy"]["dtype"]),
     )
     unique = sorted(set(groups))
     random.Random(state["request"]["seed"]).shuffle(unique)
@@ -136,11 +137,17 @@ def deliver(state, folder, store):
         roles[unique[-1]] = "test"
     if len(unique) >= 3:
         roles[unique[-2]] = "validation"
-    splits = np.asarray([roles[s] for s in groups])
+    splits = np.asarray(
+        [roles[s] for s in groups], dtype=ARRAY_FORMATS["split.npy"]["dtype"]
+    )
     for row, split in zip(rows, splits):
         row["split"] = str(split)
     folder.mkdir(parents=True, exist_ok=True)
     for name, value in {"X": X, "y": y, "subjects": subjects, "split": splits}.items():
+        if value.dtype != np.dtype(
+            ARRAY_FORMATS[f"{name}.npy"]["dtype"]
+        ) or value.ndim != len(ARRAY_FORMATS[f"{name}.npy"]["axes"]):
+            raise ValueError(f"{name}.npy does not match the training array format")
         np.save(folder / f"{name}.npy", value, allow_pickle=False)
         reread = np.load(folder / f"{name}.npy", allow_pickle=False)
         if not np.array_equal(reread, value):
@@ -224,10 +231,12 @@ X_train, y_train = X[split == 'train'], y[split == 'train']
     missing_splits = sorted({"train", "validation", "test"} - set(splits))
     if missing_splits:
         limitations.append("被试数不足，以下分组为空：" + ", ".join(missing_splits))
+    members = delivery_members(folder, [r["record_id"] for r in result_records])
+    counts = Counter(map(str, y))
     manifest = {
         "workflow_id": state["id"],
         "shape": list(X.shape),
-        "classes": dict(Counter(map(str, y))),
+        "classes": {label: counts[label] for label in ["0", "1"]},
         "split_counts": {
             role: int(np.sum(splits == role))
             for role in ["train", "validation", "test"]
@@ -243,17 +252,15 @@ X_train, y_train = X[split == 'train'], y[split == 'train']
                 "sha256": file_hash(p),
                 "bytes": p.stat().st_size,
             }
-            for p in sorted(folder.rglob("*"))
-            if p.is_file() and p.name != "manifest.json"
+            for p in members
         ],
         "limitations": limitations,
     }
     write_json(folder / "manifest.json", manifest)
     archive = folder.parent / "training-data.zip"
     with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        for p in sorted(folder.rglob("*")):
-            if p.is_file():
-                z.write(p, p.relative_to(folder).as_posix())
+        for p in [*members, folder / "manifest.json"]:
+            z.write(p, p.relative_to(folder).as_posix())
     with zipfile.ZipFile(archive) as z:
         if z.testzip() is not None:
             raise ValueError("交付压缩包完整性校验失败")
