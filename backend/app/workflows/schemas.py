@@ -1,0 +1,47 @@
+from typing import Literal
+
+from pydantic import Field, model_validator
+
+from app.preprocessing.schemas import Contract
+
+STAGES = (
+    "data_survey",
+    "data_collection",
+    "data_preprocessing",
+    "data_evaluation",
+    "data_report",
+    "data_delivery",
+)
+STAGE_LABELS = (
+    "数据调研",
+    "数据接入",
+    "数据预处理",
+    "结果选择",
+    "数据报告",
+    "数据交付",
+)
+
+
+class WorkflowRequest(Contract):
+    source_root: str
+    adapter: Literal["eegmmidb"] = "eegmmidb"
+    subjects: list[str] = Field(default_factory=list, max_length=12)
+    max_subjects: int = Field(default=3, ge=1, le=12)
+    runs: list[Literal[4, 8, 12]] = Field(default_factory=lambda: [4, 8], min_length=1)
+    seed: int = Field(default=42, ge=0, le=2**32 - 1)
+    tmin: float = Field(default=0, ge=0)
+    tmax: float = Field(default=2, gt=0, le=4)
+
+    @model_validator(mode="after")
+    def valid(self):
+        import re
+
+        if self.tmin >= self.tmax:
+            raise ValueError("tmin must precede tmax")
+        if len(set(self.subjects)) != len(self.subjects) or any(
+            not re.fullmatch(r"S\d{3}", s) for s in self.subjects
+        ):
+            raise ValueError("subjects must be unique EEGMMIDB IDs such as S001")
+        if len(set(self.runs)) != len(self.runs):
+            raise ValueError("runs must be unique")
+        return self

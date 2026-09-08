@@ -186,7 +186,7 @@ class SurveyLiteratureBundle(Contract):
 class PlanRequest(Contract):
     input_ref: Ref
     methods: list[Ref] = Field(min_length=1)
-    mode: Literal["production", "validation"] = "production"
+    mode: Literal["production", "validation", "exploratory"] = "production"
     parameters: dict[str, Any] = Field(default_factory=dict)
     max_candidates: int = Field(default=3, ge=1, le=32)
     selection: Literal["all", "diverse"] = "diverse"

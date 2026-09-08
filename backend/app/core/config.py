@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     log_backup_count: int = 5
     preprocessing_root: str = "workspace/preprocessing"
     preprocessing_input_roots: list[str] = []
+    workflow_root: str = "workspace/workflows"
+    workflow_input_roots: list[str] = []
 
     @computed_field
     @property

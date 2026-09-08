@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EEG 训练数据报告</title>
+  <style>
+    body { font:16px/1.7 system-ui,sans-serif; color:#243832; background:#f4f7f5; margin:0 }
+    main { max-width:960px; margin:36px auto; padding:42px; background:white; border-radius:16px }
+    h1 { font-size:32px; line-height:1.3 }
+    h2 { font-size:22px; margin-top:34px }
+    .eyebrow { color:#437960 }
+    .numbers { display:flex; gap:40px; margin:28px 0 }
+    .numbers strong { display:block; font-size:32px }
+    .numbers span { color:#63766c }
+    table { border-collapse:collapse; width:100%; font-size:14px; overflow-wrap:anywhere }
+    th,td { padding:12px; text-align:left; border-bottom:1px solid #dce6df }
+    th { background:#edf4ef }
+    a { color:#216b4a }
+    p { max-width:850px }
+    @media(max-width:650px) {
+      main { margin:0; padding:20px }
+      h1 { font-size:26px }
+      .numbers { gap:20px }
+      th,td { padding:7px }
+    }
+    @media print {
+      body { background:white }
+      main { margin:0; padding:0 }
+      h2 { break-after:avoid }
+      tr { break-inside:avoid }
+    }
+  </style>
+</head>
+<body><main>{{content}}</main></body>
+</html>

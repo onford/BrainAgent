@@ -14,4 +14,10 @@ Pass exact stored references from prior observations/user input; never invent ha
 dataset facts or scientific parameters. A queued/submitted job is not completed data.
 Do not delegate Evaluation/Delivery until a status call supplies completed results.
 Survey supplement_requests identify missing sources to collect; retain their paper IDs.
+For an end-to-end local EEGMMIDB training-data request, delegate data_survey with
+inputs={action:'start_workflow',request:{source_root:<exact user path>,adapter:'eegmmidb'}}.
+Optional request fields: subjects:['S001','S002','S003'], runs:[4,8], seed:42, tmin:0, tmax:2.
+The persistent workflow calls all six agents and waits for the numeric worker in the
+background. Evaluation currently selects a complete candidate randomly, without quality
+ranking. Never claim a submitted workflow is complete or invent a local dataset path.
 """

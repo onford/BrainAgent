@@ -53,13 +53,21 @@ class DataSurveyAgent(BaseAgent):
         *,
         max_tool_calls: int = 8,
         preprocessing=None,
+        workflow=None,
     ) -> None:
         self.llm = llm
         self.tools = tools
         self.max_tool_calls = max(1, max_tool_calls)
         self.preprocessing = preprocessing
+        self.workflow = workflow
 
     async def run(self, task: AgentTask, context: AgentContext) -> AgentResult:
+        if self.workflow and task.inputs.get("action") == "workflow_stage":
+            return await self.workflow.execute_stage(self.name, context.owner_id, task.inputs["workflow_id"])
+        if self.workflow and task.inputs.get("action") == "start_workflow":
+            from app.workflows.schemas import WorkflowRequest
+            state = self.workflow.create(context.owner_id, WorkflowRequest.model_validate(task.inputs["request"]))
+            return AgentResult(agent_name=self.name, success=True, output={"workflow_id":state["id"],"workflow_status":state["status"],"workflow_url":f"/workflows?id={state['id']}"}, metadata={"workflow_status":"queued"})
         if task.inputs.get("literature_bundle") and self.preprocessing:
             bundle = SurveyLiteratureBundle.model_validate(task.inputs["literature_bundle"])
             ref = self.preprocessing.register_bundle(context.owner_id, bundle)
