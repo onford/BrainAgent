@@ -16,6 +16,14 @@
     table { border-collapse:collapse; width:100%; font-size:14px; overflow-wrap:anywhere }
     th,td { padding:12px; text-align:left; border-bottom:1px solid #dce6df }
     th { background:#edf4ef }
+    .comparison { table-layout:fixed }
+    .comparison th:nth-child(1) { width:7% }
+    .comparison th:nth-child(2) { width:24% }
+    .comparison th:nth-child(3) { width:17% }
+    .comparison th:nth-child(4) { width:16% }
+    .comparison th:nth-child(5) { width:8% }
+    .comparison th:nth-child(6) { width:28% }
+    td { vertical-align:top }
     a { color:#216b4a }
     p { max-width:850px }
     @media(max-width:650px) {
@@ -47,6 +55,12 @@
   <h2>接入与保留</h2>
   <p>$data_interpretation</p>
   <table><thead><tr><th>统计</th><th>接入前</th><th>接入后</th></tr></thead><tbody>$statistics_rows</tbody></table>
+  <p>$intake_policy</p>
+  <p>$standardization</p>
+  <table><thead><tr><th>检查类别</th><th>一致</th><th>不一致</th><th>部分或待核查</th></tr></thead><tbody>$intake_rows</tbody></table>
+  <p>检查对象、依据、处理动作和代码版本见接入记录；未知统计以“未取得”表示。</p>
+  <h3>文献报告的排除对象</h3>
+  <table><thead><tr><th>文献条目</th><th>报告编号</th><th>本轮匹配对象</th><th>处理</th><th>原因</th></tr></thead><tbody>$exclusion_claim_rows</tbody></table>
   <h2>预处理</h2>
   <p>选择的方法：$method_title</p>
   <table><thead><tr><th>顺序</th><th>操作</th><th>参数</th></tr></thead><tbody>$recipe_rows</tbody></table>
@@ -59,7 +73,7 @@
   <h2>调研结论</h2>
   <h3>数据信息三方核对</h3>
   <p>$official_publication</p>
-  <table><thead><tr><th>字段</th><th>本地实际文件</th><th>官网 / 仓库</th><th>官方数据集论文</th><th>状态</th><th>对比说明</th></tr></thead><tbody>$verification_rows</tbody></table>
+  <table class="comparison"><thead><tr><th>字段</th><th>本地实际文件</th><th>官网 / 仓库</th><th>官方数据集论文</th><th>状态</th><th>对比说明</th></tr></thead><tbody>$verification_rows</tbody></table>
   <h3>方法文献与仓库</h3>
   <ul>$literature_criteria</ul>
   <table><thead><tr><th>用途分类</th><th>类型</th><th>下游用途</th><th>覆盖状态</th><th>说明</th></tr></thead><tbody>$literature_coverage_rows</tbody></table>

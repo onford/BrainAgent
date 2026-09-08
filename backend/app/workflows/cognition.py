@@ -345,6 +345,12 @@ class WorkflowCognition:
             raise ValueError("; ".join(problems))
 
     async def collection_review(self, survey):
+        from .intake import literature_matches
+
+        discussion = self.survey_context({"dataset_discussion"}).get(
+            "literature_for_this_stage", []
+        )
+        entries = {e["id"]: e for e in discussion}
         prefix = self.research_prefix()
         findings = self.load(prefix + "/research.json", ResearchFindings)
         sources = self.load(prefix + "/sources.json", ResearchSources)
@@ -356,6 +362,36 @@ class WorkflowCognition:
         }
 
         def validate_review(value):
+            for claim in value.literature_exclusions:
+                entry = entries.get(claim.entry_id)
+                if entry is None or not set(claim.finding_ids) <= {
+                    f["id"] for f in entry["findings"]
+                }:
+                    raise ValueError(
+                        "literature exclusions must cite findings of an included dataset-discussion entry"
+                    )
+                if claim.object_type == "subject":
+                    text = " ".join(
+                        f["quote"]
+                        for f in entry["findings"]
+                        if f["id"] in claim.finding_ids
+                    )
+                    numbers = {
+                        int(x) for x in re.findall(r"\b\d{1,3}\b|(?<=S)\d{3}\b", text)
+                    }
+                    for identity in claim.reported_ids:
+                        if (
+                            not re.fullmatch(r"(?:S|sub-)?\d{1,3}", identity)
+                            or int(re.sub(r"\D", "", identity)) not in numbers
+                        ):
+                            raise ValueError(
+                                "subject exclusions must list explicit subject numbers present in their quoted evidence; keep ambiguous objects unspecified"
+                            )
+            required = {e["id"] for e in discussion if e.get("exclusions")}
+            if not required <= {c.entry_id for c in value.literature_exclusions}:
+                raise ValueError(
+                    "extract the reported exclusion objects for every discussion entry that records exclusions"
+                )
             if value.compatible and value.conflicts:
                 raise ValueError(
                     "compatible=true requires an empty conflicts list. conflicts contains only "
@@ -388,15 +424,21 @@ class WorkflowCognition:
                     "local_records": survey["records"],
                     **self.survey_context({"dataset_discussion"}),
                     "research": findings.model_dump(),
-                    "conversion": "ONLY selected EEGMMIDB R04/R08/R12 left/right imagery. T1=left_hand, T2=right_hand; EEG channels standardized, standard_1005 montage, BIDS BrainVision. Only unreadable/nonfinite records excluded.",
+                    "conversion": "ONLY selected EEGMMIDB R04/R08/R12 left/right imagery. Preserve all T0/T1/T2 events in BIDS; rest is context outside training. Channel names standardized, explicitly labeled standard_1005 TEMPLATE coordinates. Confirmed structural failures are excluded; metadata unknowns and literature claims retain flags.",
                 },
                 "Review ONLY the selected local subjects/runs, not all tasks in the dataset. Unselected execution or both-hands/feet tasks are outside scope, not incompatibilities. "
                 "supporting_facts contains exact finding IDs from its enum, never sentences. Unknown mapping needs more evidence; known contradictory labels block conversion. "
-                "Unknown demographics/hardware metadata are limitations, not exclusions. Do not treat a general multi-task dataset description as a contradiction with a scoped adapter.",
+                "Unknown demographics/hardware metadata are limitations, not exclusions. Do not treat a general multi-task dataset description as a contradiction with a scoped adapter. "
+                "Extract literature_exclusions from included dataset-discussion entries: entry_id, explicit object type/IDs, finding_ids and reported reason. Do not infer subject numbers from other numeric parameters. "
+                "Preserve ambiguous claims as unspecified with no IDs. Local matching and disposition are done by code; literature claims never directly authorize exclusions.",
                 validate_review,
             )
             self.save("collection/review.json", review)
             if review.compatible and not review.conflicts:
+                self.save(
+                    "collection/literature-exclusions.json",
+                    literature_matches(review, survey),
+                )
                 return review
             if iteration == 2:
                 break

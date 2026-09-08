@@ -8,6 +8,8 @@ from app.preprocessing.storage import file_hash
 from .contracts import ProcessData, ProcessIndex, ReportData, STAGE_CONTRACTS
 from .cognition_contracts import ResearchFindings, ReportNarrative, ResearchSources
 from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
+from .collection_contracts import IntakeAudit, LiteratureExclusions, Standardization
+from .contracts import Statistics
 from .formats import (
     ARRAY_FORMATS,
     FORMAT_VERSION,
@@ -187,7 +189,7 @@ def report_data(folder):
         runs=index.request.runs,
         sfreq=survey.profile.expected_sfreq,
         channel_count=survey.profile.expected_eeg_channels,
-        before=survey.statistics,
+        before=optional("collection/pre-screen.json", Statistics) or survey.statistics,
         after=collection.statistics,
         method=method,
         records=[r for r in prep.records if r.method_id == method.ref.id],
@@ -201,6 +203,11 @@ def report_data(folder):
         verification=optional("survey/verification.json", DatasetVerification),
         literature=optional("survey/literature.json", LiteratureReview),
         local_inspection=optional("survey/local-inspection.json", LocalInspection),
+        intake=optional("collection/audit.json", IntakeAudit),
+        literature_exclusions=optional(
+            "collection/literature-exclusions.json", LiteratureExclusions
+        ),
+        standardization=optional("collection/standardization.json", Standardization),
         limitations=[
             collection.validation,
             *collection.adaptations,

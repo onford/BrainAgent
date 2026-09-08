@@ -8,6 +8,7 @@ from app.preprocessing.schemas import Contract, Ref, Step
 from .schemas import WorkflowRequest
 from .cognition_contracts import ResearchFindings, ReportNarrative
 from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
+from .collection_contracts import IntakeAudit, LiteratureExclusions, Standardization
 
 Count = Annotated[int, Field(ge=0)]
 
@@ -15,9 +16,17 @@ Count = Annotated[int, Field(ge=0)]
 class Statistics(Contract):
     subjects: Count
     recordings: Count
-    trials: Count
-    duration_s: float = Field(ge=0)
+    trials: Count | None
+    duration_s: float | None = Field(ge=0)
     unknown_recordings: Count
+    sessions: Count | None = None
+    runs: Count | None = None
+    channels: Count | None = None
+    channel_observations: Count | None = None
+    events: Count | None = None
+    rest_segments: Count | None = None
+    files: Count | None = None
+    behavior_records: Count | None = None
 
 
 class Citation(Contract):
@@ -67,6 +76,7 @@ class ReadableRecord(SourceRecord):
 class ExcludedRecord(SourceRecord):
     status: Literal["excluded"]
     reason: str = Field(min_length=1)
+    sha256: str | None = None
 
 
 class InspectionCheck(Contract):
@@ -244,6 +254,9 @@ class ReportData(Contract):
     verification: DatasetVerification | None = None
     literature: LiteratureReview | None = None
     local_inspection: LocalInspection | None = None
+    intake: IntakeAudit | None = None
+    literature_exclusions: LiteratureExclusions | None = None
+    standardization: Standardization | None = None
 
 
 STAGE_CONTRACTS = {

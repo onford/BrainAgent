@@ -16,6 +16,7 @@ from .records import write_readable as write_json
 from .formats import write_table as write_tsv
 from .cognition_contracts import ResearchFindings, ResearchSources
 from .survey_contracts import LocalFact, LocalInspection
+from .intake import Audit, table
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
@@ -138,14 +139,16 @@ def inspect(root, request, folder):
                 "source_path": relative,
             }
             try:
-                if path.is_symlink():
+                original = root / relative
+                if (
+                    original.is_symlink()
+                    or original.parent.is_symlink()
+                    or getattr(original.parent, "is_junction", lambda: False)()
+                ):
                     raise ValueError("源文件需要为实际文件")
+                record["sha256"] = file_hash(path)
                 with mne.io.read_raw_edf(path, preload=False, verbose="ERROR") as raw:
                     counts = dict(Counter(str(v) for v in raw.annotations.description))
-                    if not {"T1", "T2"} <= counts.keys():
-                        raise ValueError("记录缺少左右手类别标签")
-                    if raw.info["sfreq"] != 160 or len(raw.ch_names) != 64:
-                        raise ValueError("采样率或通道数与 EEGMMIDB 配置不一致")
                     channel_set = next(
                         (k for k, v in channel_sets.items() if v == raw.ch_names), None
                     )
@@ -158,7 +161,7 @@ def inspect(root, request, folder):
                         channel_set=channel_set,
                         duration_s=raw.n_times / raw.info["sfreq"],
                         event_counts=counts,
-                        task_trials=counts["T1"] + counts["T2"],
+                        task_trials=counts.get("T1", 0) + counts.get("T2", 0),
                         sha256=file_hash(path),
                         status="readable",
                     )
@@ -233,9 +236,25 @@ def summarize(records, *, include_excluded=False):
     return {
         "subjects": len({r["subject"] for r in readable}),
         "recordings": len(readable),
-        "trials": sum(r.get("task_trials", 0) for r in readable),
-        "duration_s": sum(r.get("duration_s", 0) for r in readable),
+        "trials": sum(r["task_trials"] for r in readable)
+        if all("task_trials" in r for r in readable)
+        else None,
+        "duration_s": sum(r["duration_s"] for r in readable)
+        if all("duration_s" in r for r in readable)
+        else None,
         "unknown_recordings": sum("samples" not in r for r in readable),
+        "sessions": None,
+        "runs": len({(r["subject"], r["run"]) for r in readable}),
+        "channels": None,
+        "channel_observations": None,
+        "events": sum(sum(r.get("event_counts", {}).values()) for r in readable)
+        if all("event_counts" in r for r in readable)
+        else None,
+        "rest_segments": sum(r.get("event_counts", {}).get("T0", 0) for r in readable)
+        if all("event_counts" in r for r in readable)
+        else None,
+        "files": sum(bool(r.get("sha256")) for r in readable),
+        "behavior_records": None,
     }
 
 
@@ -258,40 +277,74 @@ def collect(survey, folder, workflow_id, service, owner):
     bids_root = folder / "bids"
     root = Path(survey["source_root"])
     records, mapping, excluded = [], [], []
-    checks = list(survey["checks"])
-    kept = []
-    for item in survey["records"]:
-        if item["status"] == "excluded":
-            excluded.append({"object_key": item["id"], "reason": item["reason"]})
-            continue
+    folder.mkdir(parents=True, exist_ok=True)
+    audit = Audit(folder, survey)
+    kept, excluded = audit.scan()
+    post = screening_statistics(survey, kept, excluded, folder)
+    table(folder, "exclusions.tsv", excluded)
+    integrity = {
+        r["source_path"]: r["sha256"] for r in survey["records"] if r.get("sha256")
+    }
+    write_json(
+        folder / "source-integrity.json",
+        {
+            "scope": "所选记录中实际存在的源 EDF；读取前后按同一清单核验",
+            "files": integrity,
+            "checked_after": False,
+            "unchanged": False,
+        },
+    )
+    channel_mapping, event_mapping = [], []
+    for item in kept:
         path = within(root, item["source_path"])
         # Only inspection failures are excluded. Conversion errors fail the stage,
         # rather than silently leaving partial BIDS file groups in the selection.
         raw = mne.io.read_raw_edf(path, preload=True, verbose="ERROR")
-        if not np.isfinite(raw.get_data()).all():
-            excluded.append({"object_key": item["id"], "reason": "nonfinite signal"})
-            checks.append(
-                {
-                    "object_key": item["id"],
-                    "check_category": "dimensions_units_values",
-                    "status": "不一致",
-                    "severity": "structural-hard-fail",
-                    "action": "排除",
-                    "observed_evidence": "nonfinite signal",
-                }
-            )
-            continue
+        source_names = list(raw.ch_names)
+        original_annotations = raw.annotations.copy()
         mne.datasets.eegbci.standardize(raw)
         raw.set_montage("standard_1005", on_missing="raise", verbose="ERROR")
-        take = np.isin(raw.annotations.description, ["T1", "T2"])
+        event_names = {"T0": "rest", "T1": "left_hand", "T2": "right_hand"}
+        standard_event_id = {**EVENT_ID, "rest": 3}
         raw.set_annotations(
             mne.Annotations(
-                raw.annotations.onset[take],
-                raw.annotations.duration[take],
-                [
-                    "left_hand" if v == "T1" else "right_hand"
-                    for v in raw.annotations.description[take]
-                ],
+                original_annotations.onset - raw.first_time,
+                original_annotations.duration,
+                [event_names[v] for v in original_annotations.description],
+            )
+        )
+        channel_mapping.extend(
+            {
+                "object_key": item["id"],
+                "source_index": i,
+                "source_name": source_name,
+                "target_name": raw.ch_names[i],
+                "channel_type": raw.get_channel_types()[i],
+                "decoded_unit": "V",
+                "coordinate_source": "standard_1005 template; not individual digitization",
+            }
+            for i, source_name in enumerate(source_names)
+        )
+        event_mapping.extend(
+            {
+                "object_key": item["id"],
+                "source_index": i,
+                "source_label": str(label),
+                "target_label": event_names[label],
+                "target_code": standard_event_id[event_names[label]],
+                "onset_s": float(onset - raw.first_time),
+                "duration_s": float(duration),
+                "source_sample": int(
+                    round((onset - raw.first_time) * raw.info["sfreq"])
+                ),
+                "training_selected": label in {"T1", "T2"},
+            }
+            for i, (onset, duration, label) in enumerate(
+                zip(
+                    original_annotations.onset,
+                    original_annotations.duration,
+                    original_annotations.description,
+                )
             )
         )
         bids = BIDSPath(
@@ -306,13 +359,15 @@ def collect(survey, folder, workflow_id, service, owner):
             bids,
             format="BrainVision",
             allow_preload=True,
-            event_id=EVENT_ID,
+            event_id=standard_event_id,
             overwrite=True,
             verbose="ERROR",
         )
         vhdr = bids.copy().update(suffix="eeg", extension=".vhdr").fpath
         meta = json.loads(vhdr.with_suffix(".json").read_text(encoding="utf-8"))
         meta["EEGReference"] = "n/a"
+        meta["Manufacturer"] = "n/a"
+        meta["HardwareFilters"] = "n/a"
         write_json(vhdr.with_suffix(".json"), meta)
         converted = mne.io.read_raw_brainvision(vhdr, preload=True, verbose="ERROR")
         error = float(np.max(np.abs(converted.get_data() - raw.get_data())))
@@ -330,7 +385,6 @@ def collect(survey, folder, workflow_id, service, owner):
                 reference="n/a",
             )
         )
-        kept.append(item)
         mapping.append(
             {
                 "object_key": item["id"],
@@ -338,21 +392,73 @@ def collect(survey, folder, workflow_id, service, owner):
                 "source_sha256": item["sha256"],
                 "target": vhdr.relative_to(bids_root).as_posix(),
                 "roundtrip_max_error_V": error,
+                "target_sha256": file_hash(vhdr),
             }
         )
-        checks.append(
-            {
-                "object_key": item["id"],
-                "check_category": "format_readability",
-                "status": "一致",
-                "severity": "information-only",
-                "action": "建立工作副本",
-                "observed_evidence": f"roundtrip max error {error} V",
-            }
+        import csv
+
+        event_path = vhdr.parent / vhdr.name.replace("eeg.vhdr", "events.tsv")
+        with event_path.open(encoding="utf-8-sig", newline="") as stream:
+            target_events = list(csv.DictReader(stream, delimiter="\t"))
+        expected_events = [e for e in event_mapping if e["object_key"] == item["id"]]
+        if len(target_events) != len(expected_events) or any(
+            row["trial_type"] != expected["target_label"]
+            or abs(float(row["onset"]) - expected["onset_s"]) > 1e-6
+            or abs(float(row["duration"]) - expected["duration_s"]) > 1e-6
+            or int(row["value"]) != expected["target_code"]
+            for row, expected in zip(target_events, expected_events)
+        ):
+            raise ValueError("standardized events differ from source annotations")
+        if (
+            converted.ch_names != raw.ch_names
+            or converted.n_times != raw.n_times
+            or converted.info["sfreq"] != raw.info["sfreq"]
+        ):
+            raise ValueError("standardized channel/time identity differs from source")
+        audit.add(
+            "raw_processed",
+            item["id"],
+            "信号往返误差受限；通道、采样点、采样率和全部事件一致",
+            f"max_error_V={error}; events={len(target_events)}; mapping.tsv, channel-mapping.tsv, event-mapping.tsv",
+            action="建立工作副本",
         )
+    if records:
+        audit.checks = [
+            c
+            for c in audit.checks
+            if not (
+                c.check_category == "raw_processed"
+                and c.object_key == "dataset/selection"
+            )
+        ]
+    audit.save()
+    table(folder, "channel-mapping.tsv", channel_mapping)
+    table(folder, "event-mapping.tsv", event_mapping)
     if not records:
         raise ValueError("没有通过基础读取检查的记录")
     check_sources(survey)
+    for path in bids_root.rglob("*coordsystem.json"):
+        metadata = json.loads(path.read_text(encoding="utf-8"))
+        metadata["EEGCoordinateSystemDescription"] = (
+            "MNE standard_1005 template transformed to head coordinates; not individual digitization. "
+            + metadata.get("EEGCoordinateSystemDescription", "")
+        )
+        write_json(path, metadata)
+    description_path = bids_root / "dataset_description.json"
+    description = json.loads(description_path.read_text(encoding="utf-8"))
+    description["Name"] = survey["profile"]["name"]
+    if survey["profile"]["license"] != "unknown":
+        description["License"] = survey["profile"]["license"]
+    write_json(description_path, description)
+    write_json(
+        folder / "source-integrity.json",
+        {
+            "scope": "所选记录中实际存在的源 EDF；读取前后按同一清单核验",
+            "files": integrity,
+            "checked_after": True,
+            "unchanged": True,
+        },
+    )
     inventory = {
         p.relative_to(bids_root).as_posix(): file_hash(p)
         for p in bids_root.rglob("*")
@@ -401,8 +507,9 @@ def collect(survey, folder, workflow_id, service, owner):
             survey_run_id=workflow_id,
             task="left_right_motor_imagery",
             event_id=EVENT_ID,
+            context_event_id={"rest": 3},
             processing_history=[
-                "EDF to BrainVision; channel names standardized; task annotations selected; template electrode coordinates"
+                "EDF to BrainVision; channel names standardized; all source annotations preserved; template electrode coordinates"
             ],
             facts=facts,
         ),
@@ -421,50 +528,24 @@ def collect(survey, folder, workflow_id, service, owner):
     )
     ref = service.register_input(owner, data)
     write_json(folder / "input.json", data.model_dump(mode="json"))
-    pre, post = survey["statistics"], summarize(kept)
-    write_json(folder / "pre-screen.json", pre)
-    write_json(folder / "post-screen.json", post)
-    write_tsv(
-        folder / "delta.tsv",
-        [
-            {
-                "metric": k,
-                "before": pre[k],
-                "after": post[k],
-                "change": post[k] - pre[k],
-            }
-            for k in pre
-        ],
-        ["metric", "before", "after", "change"],
+    table(folder, "mapping.tsv", mapping)
+    write_json(
+        folder / "standardization.json",
+        {
+            "standard": "BIDS-EEG",
+            "version": description["BIDSVersion"],
+            "writer": "mne-bids " + audit.provenance.versions["mne-bids"],
+            "supported_scope": "EEGMMIDB EDF，所选左右手运动想象记录；BrainVision BIDS 工作副本",
+            "unsupported_modalities": ["BIDS-iEEG (eCoG/sEEG)", "NWB"],
+            "validation": "信号往返、通道/时间一致性、完整事件映射、文件组/根元数据及输入合同检查",
+            "official_validator": "not_run",
+            "coordinate_source": "standard_1005 template, not individual digitization",
+            "source_events": len(event_mapping),
+            "standardized_events": len(event_mapping),
+            "training_events": sum(e["training_selected"] for e in event_mapping),
+            "file_count": len(inventory),
+        },
     )
-    write_tsv(
-        folder / "mapping.tsv",
-        mapping,
-        ["object_key", "source", "source_sha256", "target", "roundtrip_max_error_V"],
-    )
-    for check in checks:
-        check.setdefault(
-            "expected_statement",
-            "EEGMMIDB profile: readable EDF, 64 EEG channels, 160 Hz, T1/T2 imagery events",
-        )
-        check["provenance"] = (
-            f"workflow={workflow_id}; adapter=eegmmidb-v1; output={folder}"
-        )
-    write_tsv(
-        folder / "anomalies.tsv",
-        checks,
-        [
-            "check_category",
-            "object_key",
-            "expected_statement",
-            "observed_evidence",
-            "status",
-            "severity",
-            "action",
-            "provenance",
-        ],
-    )
-    write_tsv(folder / "exclusions.tsv", excluded, ["object_key", "reason"])
     return {
         "input_ref": ref.model_dump(),
         "standardized_root": str(bids_root),
@@ -474,7 +555,44 @@ def collect(survey, folder, workflow_id, service, owner):
         "validation": "BrainVision roundtrip and bounded BIDS input contract; full official BIDS validation not run",
         "adaptations": [
             "Channel names standardized; standard_1005 template positions are not individual digitizations",
-            "T0 rest annotations excluded from training event table; source EDF retained",
+            "All T0/T1/T2 annotations preserved in BIDS; rest is explicit context outside training events",
             "Scientific artifact screening not applied",
         ],
     }
+
+
+def screening_statistics(survey, kept, excluded, folder):
+    pre, post = summarize(survey["records"], include_excluded=True), summarize(kept)
+    for stats, items in ((pre, survey["records"]), (post, kept)):
+        if all("channel_set" in r for r in items):
+            stats["channels"] = len(
+                {n for r in items for n in survey["channel_sets"][r["channel_set"]]}
+            )
+            stats["channel_observations"] = sum(
+                len(survey["channel_sets"][r["channel_set"]]) for r in items
+            )
+    reason = (
+        "; ".join(f"{r['object_key']}: {r['reason']}" for r in excluded)
+        or "没有结构性排除；统计范围保持一致"
+    )
+    table(
+        folder,
+        "delta.tsv",
+        [
+            {
+                "metric": k,
+                "before": pre[k],
+                "after": post[k],
+                "change": post[k] - pre[k]
+                if pre[k] is not None and post[k] is not None
+                else None,
+                "reason": "资料未提供或未解析，数量未知；" + reason
+                if pre[k] is None or post[k] is None
+                else reason,
+            }
+            for k in pre
+        ],
+    )
+    write_json(folder / "pre-screen.json", pre)
+    write_json(folder / "post-screen.json", post)
+    return post

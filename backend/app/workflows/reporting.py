@@ -136,6 +136,8 @@ def literature_rows(review):
 
 
 def render_report(folder):
+    from .collection_contracts import CATEGORY_LABELS
+
     data = report_data(folder.parent)
     # This small projection is the template input, not another process archive.
     write_readable(folder / "report.json", data.model_dump(mode="json"))
@@ -145,6 +147,14 @@ def render_report(folder):
         "trials": "任务 Trial 数",
         "duration_s": "已读取时长（秒）",
         "unknown_recordings": "无法读取统计的记录数",
+        "sessions": "显式 Session 数",
+        "runs": "被试 × Run 记录数",
+        "channels": "不同通道名称数",
+        "channel_observations": "各记录通道数合计",
+        "events": "全部事件数",
+        "rest_segments": "静息段数",
+        "files": "对应的原始 EDF 数",
+        "behavior_records": "行为记录数",
     }
     operations = {"filter": "带通滤波", "reference": "平均参考", "epoch": "事件分段"}
     recipe = []
@@ -165,6 +175,60 @@ def render_report(folder):
         (Path(__file__).parent / "templates/report.html").read_text(encoding="utf-8")
     )
     document = template.substitute(
+        intake_policy=escape(
+            data.intake.policy if data.intake else "此历史运行未记录完整接入检查"
+        ),
+        standardization=escape(
+            (
+                data.standardization.supported_scope
+                + "；"
+                + data.standardization.validation
+                + "。完整官方 BIDS validator 未运行。"
+            )
+            if data.standardization
+            else "此历史运行未记录标准化验证范围"
+        ),
+        intake_rows=rows(
+            [
+                [
+                    label,
+                    sum(
+                        c.check_category == category and c.status == "一致"
+                        for c in data.intake.checks
+                    ),
+                    sum(
+                        c.check_category == category and c.status == "不一致"
+                        for c in data.intake.checks
+                    ),
+                    sum(
+                        c.check_category == category
+                        and c.status not in {"一致", "不一致"}
+                        for c in data.intake.checks
+                    ),
+                ]
+                for category, label in CATEGORY_LABELS.items()
+            ]
+            if data.intake
+            else []
+        ),
+        exclusion_claim_rows=rows(
+            [
+                [
+                    c.entry_id,
+                    ", ".join(c.reported_ids) or "未明确",
+                    ", ".join(c.local_objects)
+                    or {
+                        "outside_selection": "不在本轮范围",
+                        "unresolved": "尚不能定位",
+                    }.get(c.match_status, ""),
+                    c.action,
+                    c.reason,
+                ]
+                for c in data.literature_exclusions.records
+            ]
+            if data.literature_exclusions
+            else []
+        ),
         verification_rows=rows(
             [
                 [
@@ -244,7 +308,13 @@ def render_report(folder):
         ),
         statistics_rows=rows(
             [
-                [titles[k], value, data.after.model_dump()[k]]
+                [
+                    titles[k],
+                    value if value is not None else "未取得",
+                    data.after.model_dump()[k]
+                    if data.after.model_dump()[k] is not None
+                    else "未取得",
+                ]
                 for k, value in data.before.model_dump().items()
             ]
         ),

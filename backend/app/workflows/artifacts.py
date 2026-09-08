@@ -13,7 +13,32 @@ STAGE_FOLDERS = {
     "data_delivery": "delivery",
 }
 LIVE_FILES = {"workflow.json", "process/index.json"}
-COGNITIVE_FILES = {"decisions.json", "sources.json", "research-plan.json", "research.json", "review.json", "design.json", "revisions.json", "narrative.json", "verification.json", "literature.json", "local-inspection.json", "directory-tree.txt"}
+COGNITIVE_FILES = {
+    "decisions.json",
+    "sources.json",
+    "research-plan.json",
+    "research.json",
+    "review.json",
+    "design.json",
+    "revisions.json",
+    "narrative.json",
+    "verification.json",
+    "literature.json",
+    "local-inspection.json",
+    "directory-tree.txt",
+}
+COGNITIVE_FILES.update(
+    {
+        "audit.json",
+        "literature-exclusions.json",
+        "source-integrity.json",
+        "pre-screen.json",
+        "post-screen.json",
+        "delta.tsv",
+        "anomalies.tsv",
+        "exclusions.tsv",
+    }
+)
 
 
 def local_files(folder, state, previous=()):
@@ -42,7 +67,8 @@ def local_files(folder, state, previous=()):
                 "name": name,
                 "bytes": path.stat().st_size,
                 "sha256": None
-                if name in LIVE_FILES or (path.name in COGNITIVE_FILES and relative.parts[0] not in finished)
+                if name in LIVE_FILES
+                or (path.name in COGNITIVE_FILES and relative.parts[0] not in finished)
                 else (known.get(name, {}).get("sha256") or file_hash(path)),
             }
         )

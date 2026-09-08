@@ -39,7 +39,15 @@ from .survey_contracts import (
     SurveyPlan,
 )
 
-FORMAT_VERSION = "3"
+from .collection_contracts import (
+    IntakeAudit,
+    IntakeCheck,
+    LiteratureExclusions,
+    SourceIntegrity,
+    Standardization,
+)
+
+FORMAT_VERSION = "4"
 ARRAY_FORMATS = {
     "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
     "y.npy": {
@@ -68,9 +76,18 @@ class TriggerRow(Contract):
 
 class DeltaRow(Contract):
     metric: str
-    before: float
-    after: float
-    change: float
+    before: float | None
+    after: float | None
+    change: float | None
+    reason: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def nullable_tsv_numbers(cls, value):
+        return {
+            k: None if k in {"before", "after", "change"} and v == "" else v
+            for k, v in value.items()
+        }
 
 
 class MappingRow(Contract):
@@ -79,17 +96,32 @@ class MappingRow(Contract):
     source_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     target: str
     roundtrip_max_error_V: float = Field(ge=0)
+    target_sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
-class AnomalyRow(Contract):
-    check_category: str
+AnomalyRow = IntakeCheck
+
+
+class ChannelMappingRow(Contract):
     object_key: str
-    expected_statement: str
-    observed_evidence: str
-    status: str
-    severity: str
-    action: str
-    provenance: str
+    source_index: Count
+    source_name: str
+    target_name: str
+    channel_type: str
+    decoded_unit: str
+    coordinate_source: str
+
+
+class EventMappingRow(Contract):
+    object_key: str
+    source_index: Count
+    source_label: str
+    target_label: str
+    target_code: int
+    onset_s: float
+    duration_s: float
+    source_sample: Count
+    training_selected: bool
 
 
 class ExclusionRow(Contract):
@@ -116,6 +148,8 @@ TABLE_MODELS = {
     "anomalies.tsv": AnomalyRow,
     "exclusions.tsv": ExclusionRow,
     "trial-index.tsv": TrialRow,
+    "channel-mapping.tsv": ChannelMappingRow,
+    "event-mapping.tsv": EventMappingRow,
 }
 
 
@@ -185,6 +219,10 @@ JSON_MODELS = {
     "survey/research.json": ResearchFindings,
     "survey/sources.json": ResearchSources,
     "collection/review.json": CollectionReview,
+    "collection/audit.json": IntakeAudit,
+    "collection/literature-exclusions.json": LiteratureExclusions,
+    "collection/source-integrity.json": SourceIntegrity,
+    "collection/standardization.json": Standardization,
     "collection/research.json": ResearchFindings,
     "collection/sources.json": ResearchSources,
     "preprocessing/design.json": MethodDesign,

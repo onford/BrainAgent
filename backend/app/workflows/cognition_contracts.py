@@ -5,6 +5,7 @@ from typing import Any, Literal
 from pydantic import Field, model_validator
 
 from app.preprocessing.schemas import Contract, Scope
+from .collection_contracts import ReportedExclusion
 
 Bucket = Literal[
     "dataset",
@@ -115,7 +116,17 @@ class ResearchAction(Contract):
     url: str | None = None
     kind: Literal["official", "paper", "code", "documentation"] = "paper"
     purpose: Literal["dataset_verification", "literature_review"] | None = None
-    target: Literal["official_sources", "official_publication", "usage_analysis", "usage_algorithm", "dataset_discussion", "preprocessing_methods"] | None = None
+    target: (
+        Literal[
+            "official_sources",
+            "official_publication",
+            "usage_analysis",
+            "usage_algorithm",
+            "dataset_discussion",
+            "preprocessing_methods",
+        ]
+        | None
+    ) = None
     medium: Literal["official", "paper", "repository"] | None = None
 
     @model_validator(mode="after")
@@ -148,6 +159,7 @@ class CollectionReview(Contract):
     supporting_facts: list[str] = Field(min_length=1)
     conflicts: list[str]
     limitations: list[str]
+    literature_exclusions: list["ReportedExclusion"] = Field(default_factory=list)
 
 
 class PlannedStep(Contract):

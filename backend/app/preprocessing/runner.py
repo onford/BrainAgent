@@ -133,7 +133,10 @@ def run_record(
         if file_hash(dst) != expected:
             raise ValueError("work copy checksum mismatch")
     raw, events, event_map = read_record(
-        work, record, plan.input_snapshot.survey.event_id
+        work,
+        record,
+        plan.input_snapshot.survey.event_id,
+        plan.input_snapshot.survey.context_event_id,
     )
     input_state = state(raw)
     nodes = {"raw": {"data": raw, "model": None, "artifacts": {}}}

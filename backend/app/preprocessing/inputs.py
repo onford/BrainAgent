@@ -90,7 +90,7 @@ def validate_input(
     return root
 
 
-def read_record(root: Path, record: RecordSpec, event_id: dict):
+def read_record(root: Path, record: RecordSpec, event_id: dict, context_event_id=None):
     import numpy as np
     from mne_bids import get_bids_path_from_fname, read_raw_bids
 
@@ -127,10 +127,11 @@ def read_record(root: Path, record: RecordSpec, event_id: dict):
             delimiter="\t",
         )
     )
-    events, mapping = [], []
+    events, mapping, all_samples = [], [], []
+    known_events = {**(context_event_id or {}), **event_id}
     for i, row in enumerate(rows):
         label = row.get("trial_type")
-        if label not in event_id:
+        if label not in known_events:
             raise ValueError(f"Survey does not define event meaning: {label}")
         onset = float(row["onset"])
         duration = float(row["duration"])
@@ -144,8 +145,14 @@ def read_record(root: Path, record: RecordSpec, event_id: dict):
             raise ValueError("event outside recording")
         if row.get("sample", "n/a") != "n/a" and abs(float(row["sample"]) - sample) > 0:
             raise ValueError("events.tsv sample/onset mismatch")
-        if row.get("value", "n/a") != "n/a" and float(row["value"]) != event_id[label]:
+        if (
+            row.get("value", "n/a") != "n/a"
+            and float(row["value"]) != known_events[label]
+        ):
             raise ValueError("events.tsv code differs from Survey")
+        all_samples.append(sample)
+        if label not in event_id:
+            continue  # Explicitly declared context remains in BIDS, outside training epochs.
         events.append([sample + raw.first_samp, 0, event_id[label]])
         mapping.append(
             {
@@ -161,6 +168,6 @@ def read_record(root: Path, record: RecordSpec, event_id: dict):
             }
         )
     event_array = np.asarray(events, dtype=int).reshape(-1, 3)
-    if len(events) > 1 and np.any(np.diff(event_array[:, 0]) <= 0):
+    if len(all_samples) > 1 and np.any(np.diff(all_samples) <= 0):
         raise ValueError("events must have unique increasing samples")
     return raw, event_array, mapping

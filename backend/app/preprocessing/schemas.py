@@ -67,6 +67,7 @@ class SurveySnapshot(Contract):
     survey_run_id: str
     task: str
     event_id: dict[str, int]
+    context_event_id: dict[str, int] = Field(default_factory=dict)
     processing_history: list[str]
     facts: list[Evidence] = Field(min_length=1)
     unresolved: list[str] = Field(default_factory=list)
@@ -104,9 +105,12 @@ class PreprocessInput(Contract):
             raise ValueError("selection contains unknown recordings")
         if not s.task or s.unresolved:
             raise ValueError("Survey requires a task and resolved blocking facts")
-        if any(type(v) is not int or v <= 0 for v in s.event_id.values()):
+        if set(s.event_id) & set(s.context_event_id):
+            raise ValueError("training and context event labels must be disjoint")
+        codes = [*s.event_id.values(), *s.context_event_id.values()]
+        if any(type(v) is not int or v <= 0 for v in codes):
             raise ValueError("event codes must be positive integers")
-        if len(s.event_id.values()) != len(set(s.event_id.values())):
+        if len(codes) != len(set(codes)):
             raise ValueError("event codes must be unique")
         return self
 
@@ -127,6 +131,7 @@ class Step(Contract):
 
 class MethodDraft(Contract):
     """Model-authored recipe; evidence indices refer to the supplied source list."""
+
     id: str = Field(pattern=r"^[a-z][a-z0-9_-]+$")
     version: str = Field(min_length=1)
     title: str
