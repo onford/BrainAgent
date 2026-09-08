@@ -39,7 +39,7 @@ async def create(
 
 @router.get("/{identity}")
 def get(identity: str, request: Request, user=Depends(get_current_user)):
-    return checked(request.app.state.workflows.get, user.owner_id, identity)
+    return checked(request.app.state.workflows.describe, user.owner_id, identity)
 
 
 @router.post("/{identity}/retry")

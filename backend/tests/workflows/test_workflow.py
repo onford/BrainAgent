@@ -4,6 +4,7 @@ import asyncio
 import csv
 import hashlib
 import json
+import shutil
 from pathlib import Path
 import zipfile
 
@@ -23,6 +24,8 @@ from app.preprocessing.storage import file_hash
 from app.preprocessing.worker import Worker
 from app.workflows import dataset, outputs
 from app.workflows.schemas import WorkflowRequest
+from app.workflows.contracts import STAGE_CONTRACTS, SurveyOutput
+from app.workflows.records import load_stage, publish_stage, report_data
 from app.workflows.service import WorkflowService
 from app.workflows.templates.train_example import train
 from tests.fakes import ScriptedLLMClient
@@ -91,12 +94,52 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     assert failed["status"] == "failed" and failed["stages"][4]["status"] == "failed"
     job_id = failed["preprocessing_job"]
     assert prep.store.status(OWNER, job_id).completed == 6
+    failed_files = {
+        a["name"] for a in service.describe(OWNER, state["id"])["artifacts"]
+    }
+    assert "survey/survey.json" in failed_files
+    assert any(n.startswith("collection/bids/") for n in failed_files)
+    assert any(
+        n.startswith("preprocessing/runs/") and n.endswith("provenance.json")
+        for n in failed_files
+    )
     service.retry(OWNER, state["id"])
     completed = await finish(service, state["id"])
     assert completed["status"] == "completed"
     assert all(s["status"] == "completed" for s in completed["stages"])
     assert all(r["attempt"] == 1 for r in prep.store.status(OWNER, job_id).records)
     folder = service.folder(state["id"])
+    index = json.loads((folder / "process/index.json").read_text(encoding="utf-8"))
+    for stage in index["stages"]:
+        assert stage["data_path"] == STAGE_CONTRACTS[stage["name"]][1]
+        load_stage(folder, stage["name"])
+    survey_text = (folder / "survey/survey.json").read_text(encoding="utf-8")
+    assert '\n  "profile": {' in survey_text
+    assert len(json.loads(survey_text)["channel_sets"]) == 1
+    disk_state = json.loads((folder / "workflow.json").read_text(encoding="utf-8"))
+    assert disk_state["outputs"]["data_survey"] == "survey/survey.json"
+    view = report_data(folder)
+    assert (
+        view.after.trials == 12 and sum(r.events_retained for r in view.records) == 12
+    )
+    # Reproduce the report from process records alone, with no live DB.
+    projection = tmp_path / "standalone-report"
+    for relative in [
+        "process/index.json",
+        *[STAGE_CONTRACTS[n][1] for n in STAGE_CONTRACTS][:4],
+    ]:
+        destination = projection / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(folder / relative, destination)
+    survey_data = json.loads(
+        (projection / "survey/survey.json").read_text(encoding="utf-8")
+    )
+    survey_data["profile"]["name"] = "<script>dataset</script>"
+    publish_stage(projection, "data_survey", survey_data)
+    outputs.report({}, projection / "report", None)
+    rendered = (projection / "report/report.html").read_text(encoding="utf-8")
+    assert "&lt;script&gt;dataset&lt;/script&gt;" in rendered
+    assert "<script>dataset</script>" not in rendered
     delivery = folder / "delivery"
     X, y, groups, splits = [
         np.load(delivery / f"{name}.npy", allow_pickle=False)
@@ -144,7 +187,31 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     with TestClient(create_app(settings, ScriptedLLMClient([]))) as client:
         prefix = f"/api/workflows/{state['id']}"
         headers = {"X-Brain-Agent-Owner-ID": OWNER}
-        assert client.get(prefix, headers=headers).json()["status"] == "completed"
+        described = client.get(prefix, headers=headers).json()
+        assert described["status"] == "completed"
+        names = {a["name"] for a in described["artifacts"]}
+        expected_local = {
+            p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()
+        }
+        assert expected_local <= names
+        assert any(n.startswith("delivery/provenance/") for n in names)
+        worker_entries = [
+            a
+            for a in described["artifacts"]
+            if a["name"].startswith("preprocessing/runs/")
+        ]
+        expected_worker = {
+            "preprocessing/" + a["path"]
+            for r in result.records
+            for a in r["result"]["artifacts"]
+        }
+        assert {a["name"] for a in worker_entries} == expected_worker
+        for entry in worker_entries:
+            response = client.get(
+                prefix + "/artifacts/" + entry["name"], headers=headers
+            )
+            assert response.status_code == 200
+            assert hashlib.sha256(response.content).hexdigest() == entry["sha256"]
         assert (
             client.get(prefix, headers={"X-Brain-Agent-Owner-ID": "other"}).status_code
             == 404
@@ -192,6 +259,45 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     assert len(remaining["eligible_candidates"]) == 1
     assert remaining["selected_method_ref"] != selection["selected_method_ref"]
     await service.close()
+
+
+@pytest.mark.asyncio
+async def test_invalid_agent_output_cannot_complete_or_publish(source, tmp_path):
+    from app.runtime.result import AgentResult
+
+    class InvalidAgent:
+        async def run(self, task, context):
+            return AgentResult(
+                agent_name="data_survey", success=True, output={"summary": "looks fine"}
+            )
+
+    class Registry:
+        def get(self, name):
+            return InvalidAgent()
+
+    prep = PreprocessingService(tmp_path / "preprocessing")
+    service = WorkflowService(tmp_path / "workflows", [source], prep)
+    service.registry = Registry()
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
+    await service.tasks[state["id"]]
+    state = service.get(OWNER, state["id"])
+    assert state["status"] == "failed" and state["outputs"] == {}
+    assert state["stages"][0]["status"] == "failed"
+    assert not (service.folder(state["id"]) / "survey/survey.json").exists()
+
+
+def test_survey_contract_rejects_extra_fields_and_dangling_channels(source, tmp_path):
+    survey = dataset.inspect(
+        source, WorkflowRequest(source_root=str(source), runs=[4]), tmp_path / "survey"
+    )
+    SurveyOutput.model_validate(survey)
+    with pytest.raises(ValueError):
+        publish_stage(
+            tmp_path, "data_survey", {**survey, "extra_narrative": "redundant"}
+        )
+    survey["records"][0]["channel_set"] = "missing"
+    with pytest.raises(ValueError, match="unknown channel set"):
+        SurveyOutput.model_validate(survey)
 
 
 def test_source_changed_after_survey_is_rejected(source, tmp_path):
@@ -242,4 +348,27 @@ async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
     )
     assert manifest["split_counts"] == {"train": 4, "validation": 0, "test": 0}
     assert any("分组为空" in s for s in manifest["limitations"])
+    # A legacy persisted run resumes with the original numeric attempts intact.
+    result.pop("schema_version")
+    result["status"] = "failed"
+    result["stages"][4]["status"] = "failed"
+    result["stages"][5]["status"] = "pending"
+    result["outputs"].pop("data_report")
+    result["outputs"].pop("data_delivery")
+    survey = result["outputs"]["data_survey"]
+    channels = survey.pop("channel_sets")
+    for record in survey["records"]:
+        record["channels"] = channels[record.pop("channel_set")]
+    prep_output = result["outputs"]["data_preprocessing"]
+    prep_output.pop("methods")
+    prep_output.pop("records")
+    service.save(result)
+    service.retry(OWNER, state["id"])
+    upgraded = await finish(service, state["id"])
+    assert upgraded["status"] == "completed", upgraded["error"]
+    assert upgraded["schema_version"] == "1"
+    assert all(
+        r["attempt"] == 1
+        for r in prep.store.status(OWNER, upgraded["preprocessing_job"]).records
+    )
     await service.close()

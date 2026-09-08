@@ -4,7 +4,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
 
 type Stage = { name: string; label: string; status: string; error?: string }
-type Workflow = { id: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string}[] }
+type Workflow = { id: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
 const route = useRoute(), router = useRouter()
 const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
 const roots = ref<string[]>([]), source = ref(''), count = ref(3), busy = ref(false), error = ref('')
@@ -16,6 +16,26 @@ const active = computed(() => current.value && ['queued','running','interrupted'
 const delivered = computed(() => current.value?.outputs.data_delivery)
 const sourceSummary = computed(() => current.value?.outputs.data_survey)
 const completedCount = computed(() => current.value?.stages.filter(s => s.status==='completed').length ?? 0)
+const artifactGroups = computed(() => {
+  const names: Record<string, string> = {
+    process: '流程索引与结构定义', survey: '数据调研', collection: '数据接入与标准副本',
+    preprocessing: '预处理 · 全部候选', evaluation: '结果选择', report: '数据报告', delivery: '训练数据与溯源',
+  }
+  const groups = new Map<string, Workflow['artifacts']>()
+  for (const artifact of current.value?.artifacts ?? []) {
+    const key = artifact.name.includes('/') ? artifact.name.split('/')[0]! : 'workflow'
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key)!.push(artifact)
+  }
+  const order = [...Object.keys(names), 'workflow']
+  return [...groups].sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
+    .map(([key, files]) => ({key, label: names[key] ?? '运行记录与数据包', files}))
+})
+function fileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 ** 2) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1024 ** 2).toFixed(1)} MB`
+}
 function fileUrl(name: string, download = true) {
   return apiUrl(`/api/workflows/${current.value!.id}/artifacts/${name.split('/').map(encodeURIComponent).join('/')}?download=${download}`)
 }
@@ -87,7 +107,19 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
           </section>
           <section v-if="delivered" class="panel delivery-panel"><div class="section-heading"><h2>训练数据已就绪</h2><span class="badge">随机选择候选</span></div><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>EEG 通道</span></div><div><strong>{{delivered.shape[2]}}</strong><span>每段时间点</span></div></div><p>训练 / 验证 / 测试按被试分组。候选方法随机选择，本轮未进行质量排名。</p><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">下载训练数据包</a><a :href="fileUrl('report/report.html',false)" target="_blank" rel="noopener">打开报告</a><a :href="fileUrl('delivery/manifest.json')">下载数据清单</a></div><p class="hint">数据包包含 X、y、分组、通道信息、原始事件映射与复现记录。</p></section>
           <section v-if="current.status==='completed'" class="panel"><h2>报告预览</h2><iframe :src="fileUrl('report/report.html',false)" title="EEG 训练数据报告" sandbox="allow-same-origin" /></section>
-          <details class="panel records"><summary>过程记录与文件</summary><ul><li v-for="event in current.events" :key="event.time+event.agent">{{new Date(event.time).toLocaleTimeString('zh-CN')}} · {{event.message}}</li></ul><ul><li v-for="artifact in current.artifacts.filter(a=>!a.name.startsWith('delivery/provenance/'))" :key="artifact.name"><a :href="fileUrl(artifact.name)">{{artifact.name}}</a></li></ul></details>
+          <section class="panel files-panel" aria-label="全部产出文件">
+            <div class="section-heading"><h2>全部产出文件</h2><span class="badge">{{current.artifacts.length}} 个文件</span></div>
+            <p class="hint">按模块整理，点击文件名下载。流程执行时会逐步加入已生成的记录。</p>
+            <a v-if="current.artifacts.some(a => a.name === 'process/index.json')" :href="fileUrl('process/index.json')">查看结构化流程索引</a>
+            <p v-if="!current.artifacts.length" class="hint">尚无产出文件。</p>
+            <details v-for="group in artifactGroups" :key="group.key" class="file-group" open>
+              <summary>{{group.label}} <span>{{group.files.length}} 个文件</span></summary>
+              <ul><li v-for="artifact in group.files" :key="artifact.name">
+                <a :href="fileUrl(artifact.name)">{{artifact.name}}</a><small>{{fileSize(artifact.bytes)}}</small>
+              </li></ul>
+            </details>
+          </section>
+          <details class="panel records"><summary>执行日志</summary><ul><li v-for="event in current.events" :key="event.time+event.agent">{{new Date(event.time).toLocaleTimeString('zh-CN')}} · {{event.message}}</li></ul></details>
         </template>
         <section v-else class="panel empty"><h2>选择数据，开始处理</h2><p>流程会读取数据、创建标准副本、运行候选预处理、随机选择结果，并生成报告和训练数据包。</p></section>
       </section>
@@ -97,4 +129,12 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
 
 <style scoped>
 .workflow-page{min-height:100vh;background:#f4f7f5;color:#213b2d;padding:28px 5vw;font:15px/1.6 system-ui,sans-serif}header{display:flex;justify-content:space-between}a{color:#246b4c}h1{font-size:34px;line-height:1.25;margin:8px 0}h2{font-size:19px;margin:0 0 14px}.intro{margin:32px 0}.intro p{color:#607267}.eyebrow{font-size:12px;letter-spacing:.12em}.workspace-grid{display:grid;grid-template-columns:280px minmax(0,1fr);gap:26px;max-width:1320px}.panel{background:white;border:1px solid #dce6df;border-radius:14px;padding:24px;margin-bottom:22px}label{display:block;margin:16px 0}input{box-sizing:border-box;display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #bdccbf;border-radius:7px;font:inherit}button{cursor:pointer;border:1px solid #bdccbf;background:white;padding:8px 12px;border-radius:7px;font:inherit}button:disabled{opacity:.5;cursor:wait}.primary{display:inline-block;background:#256648;color:white;border:0;border-radius:8px;padding:10px 15px;text-decoration:none}.hint{font-size:13px;color:#62766a}.section-heading{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.badge{font-size:12px;border-radius:20px;background:#eaf2ec;padding:4px 10px;align-self:start}.history{padding:0 8px}.history button{display:block;width:100%;text-align:left;margin-bottom:10px}.history span{display:block;color:#66756c;font-size:12px}.history .chosen{background:#e5eee7;border-color:#58906b}progress{width:100%;height:7px;accent-color:#36875c}.stages{list-style:none;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:24px 0}.stages li{display:flex;gap:10px;align-items:start}.stage-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#edf1ee;flex-shrink:0}.completed .stage-number{background:#d9efdf;color:#23653a}.running .stage-number{background:#246b4c;color:white}.stages small{display:block;color:#748278}.stats{display:flex;gap:46px;margin:18px 0}.stats strong{font-size:32px;display:block}.stats span{font-size:13px;color:#607568}.download-actions{display:flex;gap:20px;align-items:center;flex-wrap:wrap}.error{color:#9a3627;overflow-wrap:anywhere}iframe{border:0;width:100%;height:650px}.records summary{cursor:pointer}.records ul{font-size:13px;overflow-wrap:anywhere}.empty{min-height:220px;display:flex;flex-direction:column;justify-content:center}@media(max-width:950px){.workspace-grid{grid-template-columns:1fr}.stages{grid-template-columns:repeat(2,minmax(0,1fr))}.history{display:none}h1{font-size:28px}.workflow-page{padding:20px}.stats{gap:20px}}
+.files-panel { min-width: 0; }
+.file-group { margin-top: 18px; border-top: 1px solid #e4ece6; padding-top: 12px; }
+.file-group summary { cursor: pointer; font-weight: 600; }
+.file-group summary span { font-size: 12px; font-weight: 400; color: #62766a; margin-left: 8px; }
+.file-group ul { padding: 0; list-style: none; margin: 10px 0 0; }
+.file-group li { display: flex; align-items: baseline; gap: 14px; padding: 6px 0; font-size: 13px; }
+.file-group a { overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 3px; }
+.file-group small { flex-shrink: 0; margin-left: auto; color: #62766a; white-space: nowrap; }
 </style>

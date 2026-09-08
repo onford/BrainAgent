@@ -28,6 +28,31 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 ## 各模块的实际工作
 
+运行页的“全部产出文件”按模块列出文件名、大小和下载链接，包括 BIDS 标准副本、两种候选的全部处理记录及交付溯源。模块完成后即可下载已有产物；Worker 完成的记录会在轮询时加入，失败及历史尝试的诊断文件也保留入口。原始数据和 Worker 临时输入副本不作为重复产物列出。下载继续检查所属用户和文件哈希。旧版已完成运行会补齐文件入口，保留原报告；旧版未完成运行续跑时转为结构协议，并复用已有数值结果。
+
+## 过程结构与报告模板
+
+过程输出由 `backend/app/workflows/contracts.py` 定义 Pydantic 模型，在 Agent 返回处和流程接收处校验。缺失必需字段、附加未声明字段、悬空通道引用或不在候选集合中的选择都会使当前模块失败，无法被标记为完成或传给下游。无需用提示词维持输出格式。
+
+每次运行的 `process/schema.json` 导出同源 JSON Schema。`process/index.json` 保存请求、阶段状态、结构记录路径及 schema 引用；路径以本次运行目录为基准。各模块只保存一份主记录：
+
+| 模块 | 主记录 | 主要内容 |
+|---|---|---|
+| 调研 | `survey/survey.json` | 数据集资料、公共通道表、逐记录读取结果、统计、来源、未确定字段 |
+| 接入 | `collection/collection.json` | 标准副本引用、保留统计、排除原因、验证范围、格式适配 |
+| 预处理 | `preprocessing/summary.json` | 候选方法与参数、逐记录状态/尝试次数/事件数/数组形状、产物目录 |
+| 选择 | `evaluation/selection.json` | 完整候选、排除候选、随机种子及所选方法 |
+| 报告 | `report/output.json` | 报告入口和格式 |
+| 交付 | `delivery/output.json` | 数据包入口、形状、类别、分组和完整性结果 |
+
+主记录使用缩进 JSON；相同的通道列表只保存一次，逐记录引用通道表。`workflow.json` 保存调度状态、事件和主记录路径，不再嵌入整份模块数据。TSV 适合逐行查看文件清单、事件映射和筛选变化；数值执行的原始证据仍可逐文件下载。
+
+报告生成链路为：**已校验的模块 JSON → ReportData 字段摘取 → HTML 模板**。`report/report.json` 是精简的模板输入，`backend/app/workflows/templates/report.html` 负责章节和样式，`reporting.py` 负责转义及表格填充。报告生成不访问数值数据库、不重新计算过程统计。可仅复制索引和前四个模块主记录来重建报告；之后更换用户提供的模板时可复用这些结构化数据。
+
+`delivery/output.json` 是数据包封装完成后的模块回执，位于压缩包外；包内完整文件列表和哈希以 `delivery/manifest.json` 为准。
+
+## 模块职责
+
 | 模块 | 输入与产物 |
 |---|---|
 | Data Survey | 使用版本化 EEGMMIDB 资料配置，扫描本地 EDF 清单；检查选定记录的采样率、通道、事件、时长和哈希；保存来源、Trigger 表和未确定字段 |

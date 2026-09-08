@@ -64,4 +64,26 @@ describe('WorkflowsView', () => {
     expect(wrapper.text()).toContain('训练数据已就绪')
     wrapper.unmount()
   })
+
+  it('shows every artifact while a workflow is incomplete, including all provenance and candidates', async () => {
+    const state = {
+      ...workflow('failed'),
+      artifacts: ['survey/survey.json', 'collection/bids/sub-001/file.vhdr',
+        'preprocessing/runs/job/r0000/a1/provenance.json', 'preprocessing/runs/job/r0001/a1/events.json',
+        'delivery/provenance/S001R04/delta.json', 'process/index.json'].map(name => ({name, bytes: 2048, sha256: 'abc'})),
+    }
+    request.mockImplementation(async (path: string) => {
+      if (path.endsWith('/sources')) return {allowed_roots: []}
+      if (path === '/api/workflows') return [state]
+      return state
+    })
+    const wrapper = mount(WorkflowsView)
+    await flushPromises()
+    const links = wrapper.findAll('.file-group a')
+    expect(links).toHaveLength(state.artifacts.length)
+    expect(links.map(link => link.text()).sort()).toEqual(state.artifacts.map(a => a.name).sort())
+    expect(wrapper.get('.files-panel').text()).toContain('6 个文件')
+    expect(wrapper.findAll('.file-group').every(group => group.attributes('open') !== undefined)).toBe(true)
+    wrapper.unmount()
+  })
 })

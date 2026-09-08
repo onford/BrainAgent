@@ -10,7 +10,9 @@ from app.preprocessing.schemas import PlanRequest, Ref
 from app.preprocessing.storage import file_hash, within, write_json
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult
-from . import dataset, outputs
+from . import artifacts, dataset, outputs
+from .records import publish_stage, validate_stage, write_index, write_readable
+from .contracts import STAGE_CONTRACTS
 from .schemas import STAGES, STAGE_LABELS, WorkflowRequest
 
 
@@ -27,6 +29,7 @@ class WorkflowService:
         self.preprocessing = preprocessing
         self.registry = None
         self.tasks = {}
+        self.artifact_cache = {}
         self.root.mkdir(parents=True, exist_ok=True)
         if self.root not in preprocessing.allowed_roots:
             preprocessing.allowed_roots.append(self.root)
@@ -43,18 +46,59 @@ class WorkflowService:
         state = json.loads(path.read_text(encoding="utf-8"))
         if state["owner"] != owner:
             raise KeyError("workflow not found")
+        if state.get("schema_version") == "1":
+            state["outputs"] = {
+                name: validate_stage(
+                    name,
+                    json.loads(
+                        within(
+                            self.folder(identity), STAGE_CONTRACTS[name][1]
+                        ).read_text(encoding="utf-8")
+                    ),
+                )
+                for name in state["outputs"]
+            }
         return state
 
     def save(self, state):
         state["updated_at"] = now()
-        write_json(self.folder(state["id"]) / "workflow.json", state)
+        if state.get("schema_version") == "1":
+            write_index(self.folder(state["id"]), state)
+        state["artifacts"] = artifacts.local_files(
+            self.folder(state["id"]), state, state.get("artifacts", [])
+        )
+        snapshot = dict(state)
+        if state.get("schema_version") == "1":
+            snapshot["outputs"] = {
+                name: STAGE_CONTRACTS[name][1] for name in state["outputs"]
+            }
+        write_json(self.folder(state["id"]) / "workflow.json", snapshot)
+
+    def describe(self, owner, identity):
+        state = self.get(owner, identity)
+        # Older runs omitted BIDS. Discover those once, preserving saved hashes.
+        known = {a["name"]: a for a in self.artifact_cache.get(identity, [])}
+        known.update({a["name"]: a for a in state["artifacts"]})
+        entries = artifacts.local_files(self.folder(identity), state, known.values())
+        state["artifacts"] = sorted(
+            entries
+            + artifacts.worker_files(
+                self.preprocessing.store,
+                owner,
+                state.get("preprocessing_job"),
+                known.values(),
+            ),
+            key=lambda a: a["name"],
+        )
+        self.artifact_cache[identity] = state["artifacts"]
+        return state
 
     def list(self, owner):
         records = []
         for path in self.root.glob("*/workflow.json"):
             state = json.loads(path.read_text(encoding="utf-8"))
             if state["owner"] == owner:
-                records.append(state)
+                records.append(self.get(owner, state["id"]))
         return sorted(records, key=lambda s: s["created_at"], reverse=True)
 
     def create(self, owner, request, *, start=True):
@@ -62,6 +106,7 @@ class WorkflowService:
             request, self.input_roots, [self.root, self.preprocessing.store.root]
         )
         state = {
+            "schema_version": "1",
             "id": uuid4().hex,
             "owner": owner,
             "status": "queued",
@@ -129,6 +174,8 @@ class WorkflowService:
             metadata={"workflow_id": identity},
         )
         try:
+            if state.get("schema_version") != "1":
+                await self.upgrade_records(state)
             state["status"] = "running"
             self.save(state)
             for stage in state["stages"]:
@@ -137,6 +184,18 @@ class WorkflowService:
                     context.shared_memory[name] = state["outputs"][name]
                     continue
                 stage.update(status="running", started_at=now(), error=None)
+                # Files from a failed attempt may be replaced by this stage.
+                prefix = artifacts.STAGE_FOLDERS[name] + "/"
+                state["artifacts"] = [
+                    a for a in state["artifacts"] if not a["name"].startswith(prefix)
+                ]
+                if name == "data_delivery":
+                    state["artifacts"] = [
+                        a
+                        for a in state["artifacts"]
+                        if a["name"] != "training-data.zip"
+                    ]
+                self.artifact_cache.pop(identity, None)
                 self.event(state, name, "running", stage["label"] + "开始")
                 self.save(state)
                 result = await self.registry.get(name).run(
@@ -148,6 +207,11 @@ class WorkflowService:
                 )
                 if not result.success:
                     raise ValueError(result.error or f"{name} failed")
+                # Validate every agent result at the orchestration boundary too.
+                # Invalid/missing fields cannot enter shared memory or complete a stage.
+                result.output = publish_stage(
+                    self.folder(identity), name, result.output
+                )
                 context.record_result(result)
                 # A stage may persist its background preprocessing job before waiting.
                 latest = self.get(owner, identity)
@@ -158,18 +222,6 @@ class WorkflowService:
                 self.event(state, name, "completed", stage["label"] + "完成")
                 self.save(state)
             state["status"] = "completed"
-            folder = self.folder(identity)
-            state["artifacts"] = [
-                {
-                    "name": p.relative_to(folder).as_posix(),
-                    "bytes": p.stat().st_size,
-                    "sha256": file_hash(p),
-                }
-                for p in sorted(folder.rglob("*"))
-                if p.is_file()
-                and p.name != "workflow.json"
-                and not p.is_relative_to(folder / "collection/bids")
-            ]
             self.save(state)
         except asyncio.CancelledError:
             state.update(status="interrupted", error="服务中断，重新启动后继续")
@@ -195,6 +247,45 @@ class WorkflowService:
                 state["preprocessing_job"] = latest["preprocessing_job"]
             self.save(state)
         return state
+
+    async def upgrade_records(self, state):
+        """On resuming a legacy run, retain numeric work and rebuild its records."""
+        folder = self.folder(state["id"])
+        for stage in state["stages"]:
+            name = stage["name"]
+            if stage["status"] != "completed":
+                continue
+            if name in {"data_report", "data_delivery"}:
+                stage["status"] = "pending"
+                state["outputs"].pop(name, None)
+                continue
+            value = state["outputs"][name]
+            if name == "data_survey" and "channel_sets" not in value:
+                value["channel_sets"] = {}
+                for record in value["records"]:
+                    channels = record.pop("channels", None)
+                    if channels is not None:
+                        key = next(
+                            (
+                                k
+                                for k, v in value["channel_sets"].items()
+                                if v == channels
+                            ),
+                            None,
+                        )
+                        key = key or f"channels_{len(value['channel_sets']) + 1}"
+                        value["channel_sets"][key] = channels
+                        record["channel_set"] = key
+            elif name == "data_preprocessing":
+                value = await self.preprocess(
+                    state, WorkflowRequest.model_validate(state["request"])
+                )
+            state["outputs"][name] = publish_stage(folder, name, value)
+            prefix = artifacts.STAGE_FOLDERS[name] + "/"
+            state["artifacts"] = [
+                a for a in state["artifacts"] if not a["name"].startswith(prefix)
+            ]
+        state["schema_version"] = "1"
 
     async def execute_stage(self, name, owner, identity):
         state = self.get(owner, identity)
@@ -227,7 +318,6 @@ class WorkflowService:
             value = await asyncio.to_thread(
                 outputs.choose, result, plan, self.preprocessing.store, request.seed
             )
-            write_json(folder / "evaluation/selection.json", value)
         elif name == "data_report":
             value = await asyncio.to_thread(
                 outputs.report, state, folder / "report", self.preprocessing.store
@@ -241,7 +331,7 @@ class WorkflowService:
         return AgentResult(
             agent_name=name,
             success=True,
-            output=value,
+            output=validate_stage(name, value),
             metadata={"workflow_id": identity, "stage_status": "completed"},
         )
 
@@ -283,7 +373,7 @@ class WorkflowService:
                     max_candidates=2,
                 ),
             )
-            write_json(
+            write_readable(
                 self.folder(state["id"]) / "preprocessing/plan.json",
                 plan.model_dump(mode="json"),
             )
@@ -308,24 +398,67 @@ class WorkflowService:
                     ]
                 )
             )
-        write_json(
+        write_readable(
             self.folder(state["id"]) / "preprocessing/result.json",
             result.model_dump(mode="json"),
         )
+        plan = self.preprocessing.store.get(owner, result.plan_ref, "plan")
+        record_positions = {
+            (r["method_ref"]["id"], r["record_id"]): i
+            for i, r in enumerate(plan["records"])
+        }
+        methods = []
+        for ref in plan["request"]["methods"]:
+            method = self.preprocessing.store.get(
+                owner, Ref.model_validate(ref), "method"
+            )
+            methods.append(
+                {"ref": ref, "title": method["title"], "recipe": method["recipe"]}
+            )
         return {
             "execution_status": result.status,
             "job_id": result.job_id,
             "plan_ref": result.plan_ref.model_dump(),
             "completed": result.completed,
             "total": result.total,
+            "methods": methods,
+            "records": [
+                {
+                    "record_id": r["record_id"],
+                    "method_id": r["method_id"],
+                    "status": r["status"],
+                    "attempt": r["attempt"],
+                    "artifact_root": (
+                        f"preprocessing/runs/{result.job_id}/"
+                        f"r{record_positions[(r['method_id'], r['record_id'])]:04}/a{r['attempt']}"
+                    ),
+                    **(
+                        {
+                            "events_before": r["result"]["delta"]["events_before"],
+                            "events_retained": r["result"]["delta"]["events_retained"],
+                            "shape": r["result"]["delta"]["after"]["shape"],
+                        }
+                        if r.get("result")
+                        else {"error": r.get("error")}
+                    ),
+                }
+                for r in result.records
+            ],
         }
 
     def artifact(self, owner, identity, name):
-        state = self.get(owner, identity)
+        state = self.describe(owner, identity)
         entry = next((a for a in state["artifacts"] if a["name"] == name), None)
         if entry is None:
             raise KeyError("artifact not found")
-        path = within(self.folder(identity), name)
-        if not path.is_file() or file_hash(path) != entry["sha256"]:
+        if name.startswith("preprocessing/runs/"):
+            path = within(
+                self.preprocessing.store.root, name.removeprefix("preprocessing/")
+            )
+        else:
+            path = within(self.folder(identity), name)
+        if not path.is_file() or (
+            entry["sha256"] and file_hash(path) != entry["sha256"]
+        ):
             raise ValueError("产物完整性核验失败")
         return path

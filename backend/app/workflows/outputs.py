@@ -1,4 +1,3 @@
-import html
 import json
 import random
 import shutil
@@ -8,7 +7,8 @@ from pathlib import Path
 
 from app.preprocessing.runner import verify_result
 from app.preprocessing.schemas import Ref
-from app.preprocessing.storage import file_hash, write_json
+from app.preprocessing.storage import file_hash
+from .records import write_readable as write_json
 from .dataset import check_sources, write_tsv
 
 
@@ -48,147 +48,9 @@ def choose(result, plan, store, seed):
 
 
 def report(state, folder, store):
-    stages = state["outputs"]
-    survey, collection, evaluation = (
-        stages[k] for k in ["data_survey", "data_collection", "data_evaluation"]
-    )
-    profile = survey["profile"]
-    method = store.get(
-        state["owner"], Ref.model_validate(evaluation["selected_method_ref"]), "method"
-    )
+    from .reporting import render_report
 
-    def escape(value):
-        return html.escape(str(value), quote=True)
-
-    def table(headers, rows):
-        return (
-            "<table><thead><tr>"
-            + "".join(f"<th>{escape(h)}</th>" for h in headers)
-            + "</tr></thead><tbody>"
-            + "".join(
-                "<tr>" + "".join(f"<td>{escape(v)}</td>" for v in row) + "</tr>"
-                for row in rows
-            )
-            + "</tbody></table>"
-        )
-
-    stat = collection["statistics"]
-    body = f"<p class='eyebrow'>EEG · 训练数据报告</p><h1>{escape(profile['name'])}</h1><p>左右手运动想象 · 版本 {escape(profile['version'])}</p>"
-    body += (
-        "<div class='numbers'>"
-        + "".join(
-            f"<div><strong>{escape(value)}</strong><span>{label}</span></div>"
-            for label, value in [
-                ("被试", stat["subjects"]),
-                ("记录", stat["recordings"]),
-                ("输入任务 Trial", stat["trials"]),
-            ]
-        )
-        + "</div>"
-    )
-    body += "<h2>数据与任务</h2>" + table(
-        ["项目", "内容"],
-        [
-            ["用途", "模型训练"],
-            ["任务", "左手 / 右手运动想象"],
-            ["采集", "64 EEG 通道，160 Hz"],
-            ["事件", "T1 → left_hand；T2 → right_hand；T0 为休息"],
-            [
-                "范围",
-                ", ".join(survey["selected_subjects"])
-                + "；Run "
-                + ", ".join(map(str, state["request"]["runs"])),
-            ],
-            ["许可", profile["license"]],
-        ],
-    )
-    stat_names = {
-        "subjects": "被试数",
-        "recordings": "记录数",
-        "trials": "已读取的任务 Trial 数",
-        "duration_s": "已读取的时长（秒）",
-        "unknown_recordings": "无法读取统计的记录数",
-    }
-    body += "<h2>接入与保留</h2>" + table(
-        ["统计", "接入前", "接入后"],
-        [[stat_names.get(k, k), survey["statistics"][k], stat[k]] for k in stat],
-    )
-    body += "<p>已检查可读性、标签、采样率、通道数、有限值、格式转换误差和文件完整性。电极位置采用标准模板；采集参考信息未提供。未实施完整信号异常筛查。</p>"
-    body += "<h2>预处理</h2><p>选择的方法：" + escape(method["title"]) + "</p>"
-    descriptions = {
-        "filter": "四阶 Butterworth 零相位带通",
-        "reference": "EEG 平均参考",
-        "epoch": "按任务事件分段",
-    }
-
-    def describe(step):
-        p = step["params"]
-        if step["op"] == "filter":
-            return f"{p['l_freq']:g}–{p['h_freq']:g} Hz；全部 EEG 通道"
-        if step["op"] == "reference":
-            return "使用 EEG 通道计算平均参考"
-        if step["op"] == "epoch":
-            return f"任务开始后 {p['tmin']:g}–{p['tmax']:g} 秒；保留左右手标签"
-        return json.dumps(p, ensure_ascii=False)
-
-    body += table(
-        ["顺序", "操作", "参数"],
-        [
-            [i + 1, descriptions.get(s["op"], s["op"]), describe(s)]
-            for i, s in enumerate(method["recipe"])
-        ],
-    )
-    body += "<p>参数来自工程训练预设，不作为数据集作者推荐配置。</p>"
-    prep = stages["data_preprocessing"]
-    results = store.status(state["owner"], prep["job_id"])
-    rows = [
-        [
-            r["record_id"],
-            r["result"]["delta"]["events_before"],
-            r["result"]["delta"]["events_retained"],
-            r["result"]["delta"]["after"]["shape"],
-        ]
-        for r in sorted(results.records, key=lambda r: r["record_id"])
-        if r["method_id"] == evaluation["selected_method_ref"]["id"] and r["result"]
-    ]
-    body += table(["记录", "任务事件", "输出 Epoch", "数组形状"], rows)
-    body += (
-        "<h2>结果选择</h2><p>"
-        + escape(evaluation["reason"])
-        + f" 随机种子：{state['request']['seed']}。</p>"
-    )
-    body += "<h2>训练数据说明</h2><p>X 按 Epoch × 通道 × 时间点组织，单位为 V；y 为从 0 开始的类别编号。训练、验证和测试按被试分组划分，同一被试不会跨组。数据量不足时保留空的验证或测试组，并在数据清单中说明。</p>"
-    body += (
-        "<h2>来源与限制</h2><ul>"
-        + "".join(
-            f"<li><a href='{escape(r['url'])}'>{escape(r['title'])}</a></li>"
-            for r in profile["references"]
-        )
-        + "</ul>"
-    )
-    body += "<p>调研采用带版本的已核对数据集资料和本地文件证据，未自动完成全文文献综述。人口学、健康状况、采集参考和硬件滤波仍待补充。该报告不提供质量优劣或模型效果结论。</p>"
-    document = (
-        (Path(__file__).parent / "templates/report.html")
-        .read_text(encoding="utf-8")
-        .replace("{{content}}", body)
-    )
-    folder.mkdir(parents=True, exist_ok=True)
-    (folder / "report.html").write_text(document, encoding="utf-8")
-    write_json(
-        folder / "report.json",
-        {
-            "dataset": profile,
-            "statistics": stat,
-            "method": method,
-            "selection": evaluation,
-            "record_counts": rows,
-        },
-    )
-    return {
-        "report_path": "report/report.html",
-        "format": "HTML",
-        "quality_evaluated": False,
-    }
+    return render_report(folder)
 
 
 def deliver(state, folder, store):

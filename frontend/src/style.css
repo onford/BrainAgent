@@ -21,7 +21,7 @@
 
 * { box-sizing: border-box; }
 html, body, #app { width: 100%; min-width: 320px; min-height: 100%; margin: 0; }
-body { min-height: 100vh; overflow: hidden; background: var(--canvas); }
+body { min-height: 100vh; overflow-x: hidden; overflow-y: auto; background: var(--canvas); }
 button, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { color: inherit; }

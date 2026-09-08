@@ -12,7 +12,8 @@ from app.preprocessing.schemas import (
     RecordSpec,
     SurveySnapshot,
 )
-from app.preprocessing.storage import file_hash, within, write_json
+from app.preprocessing.storage import file_hash, within
+from .records import write_readable as write_json
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
@@ -87,7 +88,7 @@ def inspect(root, request, folder):
     chosen = request.subjects or subjects[: request.max_subjects]
     if not chosen:
         raise ValueError("没有找到 EEGMMIDB EDF 记录")
-    records, checks = [], []
+    records, checks, channel_sets = [], [], {}
     inventory = [
         {"path": p.relative_to(root).as_posix(), "bytes": p.stat().st_size}
         for p in all_edf
@@ -111,10 +112,16 @@ def inspect(root, request, folder):
                         raise ValueError("记录缺少左右手类别标签")
                     if raw.info["sfreq"] != 160 or len(raw.ch_names) != 64:
                         raise ValueError("采样率或通道数与 EEGMMIDB 配置不一致")
+                    channel_set = next(
+                        (k for k, v in channel_sets.items() if v == raw.ch_names), None
+                    )
+                    if channel_set is None:
+                        channel_set = f"channels_{len(channel_sets) + 1}"
+                        channel_sets[channel_set] = list(raw.ch_names)
                     record.update(
                         sfreq=float(raw.info["sfreq"]),
                         samples=int(raw.n_times),
-                        channels=raw.ch_names,
+                        channel_set=channel_set,
                         duration_s=raw.n_times / raw.info["sfreq"],
                         event_counts=counts,
                         task_trials=counts["T1"] + counts["T2"],
@@ -140,6 +147,7 @@ def inspect(root, request, folder):
         "available_subjects": len(subjects),
         "available_recordings": len(inventory),
         "selected_subjects": chosen,
+        "channel_sets": channel_sets,
         "records": records,
         "checks": checks,
         "statistics": summarize(records, include_excluded=True),
@@ -157,7 +165,6 @@ def inspect(root, request, folder):
         ],
         "scope": "selected subjects and imagery runs; unselected recordings are outside this workflow",
     }
-    write_json(folder / "survey.json", result)
     write_tsv(folder / "source-inventory.tsv", inventory, ["path", "bytes"])
     write_tsv(
         folder / "triggers.tsv",
