@@ -36,6 +36,7 @@ class PageText(HTMLParser):
         self.hidden = 0
         self.title, self.in_title = "", False
         self.article_title, self.in_article_title = "", False
+        self.lists = []
 
     def handle_starttag(self, tag, attrs):
         if tag in {"script", "style", "noscript"}:
@@ -44,6 +45,26 @@ class PageText(HTMLParser):
             self.in_title = True
         if tag == "article-title" and not self.article_title:
             self.in_article_title = True
+        if not self.hidden and tag in {"ol", "ul"}:
+            attributes = dict(attrs)
+            start = attributes.get("start", "1")
+            # A reversed list without start depends on its eventual item count.
+            counter = (
+                int(start)
+                if tag == "ol"
+                and re.fullmatch(r"-?\d+", start or "")
+                and ("reversed" not in attributes or "start" in attributes)
+                else None
+            )
+            self.lists.append([counter, -1 if "reversed" in attributes else 1])
+        if not self.hidden and tag == "li" and self.lists:
+            counter = self.lists[-1]
+            value = dict(attrs).get("value")
+            if counter[0] is not None:
+                if value is not None and re.fullmatch(r"-?\d+", value):
+                    counter[0] = int(value)
+                self.parts.append(f"{counter[0]}.")
+                counter[0] += counter[1]
         if tag in {"a", "ext-link"}:
             attributes = dict(attrs)
             href = attributes.get("href") or attributes.get("xlink:href", "")
@@ -52,6 +73,8 @@ class PageText(HTMLParser):
                 self.links.append(url)
 
     def handle_endtag(self, tag):
+        if not self.hidden and tag in {"ol", "ul"} and self.lists:
+            self.lists.pop()
         if tag in {"script", "style", "noscript"}:
             self.hidden = max(0, self.hidden - 1)
         if tag == "title":
