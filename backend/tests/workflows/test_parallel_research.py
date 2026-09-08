@@ -152,7 +152,17 @@ async def test_research_budget_counts_actions_not_batches(tmp_path):
             if model.__name__ == "ResearchBatch":
                 remaining = json.loads(messages[1]["content"])["remaining_actions"]
                 self.remaining.append(remaining)
-                return model(actions=actions(min(4, remaining)))
+                return model(
+                    actions=[
+                        a.model_dump()
+                        | {
+                            "purpose": "dataset_verification",
+                            "target": "official_sources",
+                            "medium": "official",
+                        }
+                        for a in actions(min(4, remaining))
+                    ]
+                )
             return await super().structured_output(messages, model)
 
     llm = BatchLLM()
@@ -160,9 +170,20 @@ async def test_research_budget_counts_actions_not_batches(tmp_path):
     from tests.workflows.fakes import ResearchTools
 
     agent.tools = ResearchTools()
-    survey = {k: {} for k in ("profile", "statistics", "checks", "records", "evidence")}
-    with pytest.raises(ValueError, match="调研动作达到上限"):
-        await agent.research(survey)
+    from app.workflows.survey_research import retrieve
+    from app.workflows.survey_contracts import SurveyPlan
+
+    plan = await llm.structured_output([{}, {"content": "{}"}], SurveyPlan)
+    missing = await retrieve(
+        agent,
+        plan,
+        {},
+        ResearchSources(documents=[], observations=[]),
+        await agent.tools.catalog(None),
+        "dataset_verification",
+        18,
+    )
+    assert missing
     assert llm.remaining == [18, 14, 10, 6, 2]
     saved = ResearchSources.model_validate_json(
         (tmp_path / "survey/sources.json").read_text(encoding="utf-8")

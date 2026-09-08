@@ -69,9 +69,10 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     assert result["status"] == "completed", result["error"]
     assert llm.calls.count("MethodDesign") == 2
     assert {
-        "ResearchPlan",
+        "SurveyPlan",
         "ResearchBatch",
-        "ResearchFindings",
+        "DatasetVerification",
+        "LiteratureScreening",
         "CollectionReview",
         "ReportNarrative",
     } <= set(llm.calls)
@@ -237,7 +238,7 @@ async def test_design_can_request_more_research_before_execution(source, tmp_pat
     assert result["status"] == "completed", result["error"]
     assert (
         llm.calls.count("MethodDesign") == 2
-        and llm.calls.count("ResearchFindings") == 2
+        and llm.calls.count("ResearchFindings") == 1
     )
     assert (folder / "preprocessing/research.json").exists()
     assert file_hash(folder / "survey/research.json") == llm.survey_hash

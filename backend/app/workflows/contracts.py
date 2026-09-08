@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from app.preprocessing.schemas import Contract, Ref, Step
 from .schemas import WorkflowRequest
 from .cognition_contracts import ResearchFindings, ReportNarrative
+from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
 
 Count = Annotated[int, Field(ge=0)]
 
@@ -240,6 +241,9 @@ class ReportData(Contract):
     limitations: list[str]
     research: ResearchFindings | None = None
     narrative: ReportNarrative | None = None
+    verification: DatasetVerification | None = None
+    literature: LiteratureReview | None = None
+    local_inspection: LocalInspection | None = None
 
 
 STAGE_CONTRACTS = {

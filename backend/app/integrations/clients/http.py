@@ -51,7 +51,11 @@ class HttpExternalToolClient(ExternalToolClient):
         requests: dict[str, tuple[str, dict[str, Any]]] = {
             "semantic_scholar": (
                 "/paper/search",
-                {"query": query, "limit": limit, "fields": "title,url,year,authors,openAccessPdf"},
+                {
+                    "query": query,
+                    "limit": limit,
+                    "fields": "title,url,year,authors,openAccessPdf,citationCount,venue",
+                },
             ),
             "openalex": ("/works", {"search": query, "per-page": limit}),
             "crossref": ("/works", {"query": query, "rows": limit}),
@@ -97,7 +101,9 @@ class HttpExternalToolClient(ExternalToolClient):
         ) as client:
             for attempt in range(self._max_retries + 1):
                 try:
-                    response = await client.get(path, params=request_params, headers=headers)
+                    response = await client.get(
+                        path, params=request_params, headers=headers
+                    )
                 except (httpx.TimeoutException, httpx.NetworkError) as exc:
                     if attempt < self._max_retries:
                         await asyncio.sleep(0.1 * (2**attempt))
@@ -123,9 +129,7 @@ class HttpExternalToolClient(ExternalToolClient):
                 return response
         raise ExternalToolUnavailableError(f"{self.tool_id} is unavailable")
 
-    def _apply_auth(
-        self, headers: dict[str, str], params: dict[str, Any]
-    ) -> None:
+    def _apply_auth(self, headers: dict[str, str], params: dict[str, Any]) -> None:
         for binding in self._definition.credential_bindings:
             value = self._credentials.get(binding.field)
             if value is None or value == "":

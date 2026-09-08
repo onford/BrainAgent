@@ -13,7 +13,7 @@ STAGE_FOLDERS = {
     "data_delivery": "delivery",
 }
 LIVE_FILES = {"workflow.json", "process/index.json"}
-COGNITIVE_FILES = {"decisions.json", "sources.json", "research-plan.json", "research.json", "review.json", "design.json", "revisions.json", "narrative.json"}
+COGNITIVE_FILES = {"decisions.json", "sources.json", "research-plan.json", "research.json", "review.json", "design.json", "revisions.json", "narrative.json", "verification.json", "literature.json", "local-inspection.json", "directory-tree.txt"}
 
 
 def local_files(folder, state, previous=()):

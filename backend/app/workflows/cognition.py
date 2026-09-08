@@ -3,7 +3,6 @@
 import asyncio
 import json
 import re
-from urllib.parse import urlsplit
 from typing import Literal
 
 from pydantic import Field, ValidationError, create_model
@@ -18,9 +17,7 @@ from .cognition_contracts import (
     MethodDesign,
     ReportNarrative,
     ResearchAction,
-    ResearchBatch,
     ResearchFindings,
-    ResearchPlan,
     ResearchSources,
     ToolObservation,
 )
@@ -141,123 +138,32 @@ class WorkflowCognition:
                 write_readable(self.log_path, self.log.model_dump(mode="json"))
         raise ValueError(f"模型{operation}连续三次未通过结构或语义校验：{error}")
 
+    def survey_context(self, targets=()):
+        from .survey_contracts import DatasetVerification, LiteratureReview
+
+        context = {}
+        if (self.folder / "survey/verification.json").exists():
+            context["dataset_verification"] = self.load(
+                "survey/verification.json", DatasetVerification
+            ).model_dump()
+        if (self.folder / "survey/literature.json").exists():
+            review = self.load("survey/literature.json", LiteratureReview)
+            context["literature_for_this_stage"] = [
+                e.model_dump()
+                for e in review.entries
+                if e.decision == "included" and (not targets or e.target in targets)
+            ]
+            context["literature_coverage"] = [
+                c.model_dump()
+                for c in review.coverage
+                if not targets or c.target in targets
+            ]
+        return context
+
     async def research(self, survey):
-        findings_path = self.folder / "survey/research.json"
-        if findings_path.exists():
-            findings = self.load("survey/research.json", ResearchFindings)
-            self.validate_findings(
-                findings, self.load("survey/sources.json", ResearchSources)
-            )
-            return findings
-        inputs = {
-            "request": self.state["request"],
-            "adapter_profile_to_verify": survey["profile"],
-            "local_statistics": survey["statistics"],
-            "local_checks": survey["checks"],
-            "local_records": survey["records"],
-            "verification_source_candidates": survey["evidence"],
-        }
-        plan_path = self.folder / "survey/research-plan.json"
-        plan = (
-            self.load("survey/research-plan.json", ResearchPlan)
-            if plan_path.exists()
-            else await self.ask(
-                "拆解调研问题",
-                ResearchPlan,
-                inputs,
-                "Plan official dataset verification plus literature using/discussing the dataset and preprocessing methods. Form useful search queries.",
-            )
-        )
-        self.save("survey/research-plan.json", plan)
-        sources_path = self.folder / "survey/sources.json"
-        sources = (
-            self.load("survey/sources.json", ResearchSources)
-            if sources_path.exists()
-            else ResearchSources(documents=[], observations=[])
-        )
-        catalog = await self.tools.catalog(self.context) if self.tools else []
-        available = {
-            t["name"]
-            for t in catalog
-            if t["available"] and t.get("category") in {"literature", "code"}
-        }
-        if not available:
-            raise ValueError("没有可用论文检索工具，请启用一个文献集成后重试")
-        # The budget counts individual actions, not batches.
-        remaining = 18
-        while remaining:
-            batch_schema = create_model(
-                "ResearchBatch",
-                __base__=ResearchBatch,
-                actions=(
-                    list[ResearchAction],
-                    Field(min_length=1, max_length=min(4, remaining)),
-                ),
-            )
-            batch = await self.ask(
-                "安排并行检索与阅读任务",
-                batch_schema,
-                {
-                    **inputs,
-                    "plan": plan.model_dump(),
-                    "search_tools": sorted(available),
-                    "sources": self.source_context(sources),
-                    "observations": [o.model_dump() for o in sources.observations],
-                    "remaining_actions": remaining,
-                    "missing_requirements": self.coverage(sources),
-                },
-                "Return a batch of 1-4 independent search/read actions, within remaining_actions. Batch independent sources and literature categories to read them concurrently. "
-                "Actions in a batch cannot depend on each other's results: follow newly discovered links in the NEXT batch. To finish, return only one finish action. "
-                "search uses a listed tool with query (max five results); read fetches public HTML/XML/PDF text and links. "
-                "Read the official source_url, search all three paper categories, and read at least one relevant paper (an abstract is partial evidence). "
-                "Follow returned paper/fulltext links; Europe PMC full text is accessible via /europepmc/webservices/rest/PMC_ID/fullTextXML. "
-                "Use read.query to retrieve passages around a specific term beyond the source preview. Search literature by dataset name/alias and task, not the selected subject IDs or exact training window. "
-                "Do not repeat usable successful actions. Sources marked usable_as_literature=false need reading through a proper article API or full text. If blocked by a provider, use another. Finish only after coverage; explicitly record unread full text as a gap.",
-            )
-            remaining -= len(batch.actions)
-            if batch.actions[0].action == "finish":
-                missing = self.coverage(sources)
-                if not missing:
-                    break
-                sources.observations.append(
-                    ToolObservation(
-                        sequence=max(
-                            (o.sequence for o in sources.observations), default=0
-                        )
-                        + 1,
-                        action=batch.actions[0],
-                        success=False,
-                        output=None,
-                        error="未完成：" + "; ".join(missing),
-                    )
-                )
-            else:
-                await self.research_batch(batch.actions, sources, available)
-            self.save("survey/sources.json", sources)
-        missing = self.coverage(sources)
-        if missing:
-            raise ValueError("调研动作达到上限，仍缺少：" + "; ".join(missing))
-        findings = await self.ask(
-            "归纳数据与论文证据",
-            ResearchFindings,
-            {
-                **inputs,
-                "plan": plan.model_dump(),
-                "sources": self.source_context(sources),
-                "search_observations": [o.model_dump() for o in sources.observations],
-                "allowed_literature_source_ids": [
-                    d.id for d in sources.documents if self.usable_paper(d)
-                ],
-            },
-            "Extract supported dataset facts and preprocessing findings. Each fact needs a unique id, an existing source_id and an EXACT contiguous quote from its text. "
-            "Include task/run/trigger mapping, acquisition, licensing and method implications when available. Literature entries must refer to read paper documents. "
-            "Literature source_id MUST be from allowed_literature_source_ids; official dataset pages belong in facts, never literature. A read API article abstract counts as abstract evidence. "
-            "Do not claim full_text for abstracts, blocked pages or truncated excerpts. Search-hit titles without read article text are not read papers. "
-            "Identify discrepancies against the adapter profile and local facts; do not silently resolve them. All three literature categories were searched but may have gaps.",
-            lambda value: self.validate_findings(value, sources),
-        )
-        self.save("survey/research.json", findings)
-        return findings
+        from .survey_research import research
+
+        return await research(self, survey)
 
     @staticmethod
     def source_context(sources):
@@ -278,38 +184,6 @@ class WorkflowCognition:
             and document.title not in {"Europe PMCEurope PMC", "Europe PMC"}
             and not document.text.lstrip().startswith("{")
         )
-
-    @staticmethod
-    def coverage(sources):
-        missing = []
-        if not any(
-            d.kind == "official"
-            and urlsplit(d.url).hostname == "physionet.org"
-            and urlsplit(d.url).path.startswith("/content/eegmmidb/")
-            for d in sources.documents
-        ):
-            missing.append("读取 PhysioNet 数据集官网")
-        if not any(WorkflowCognition.usable_paper(d) for d in sources.documents):
-            missing.append("读取至少一篇相关论文的可用正文或摘要")
-        for category in (
-            "papers_using_dataset",
-            "papers_discussing_dataset",
-            "preprocessing_papers",
-        ):
-            if not any(
-                o.action.action == "search" and o.action.category == category
-                for o in sources.observations
-            ):
-                missing.append("检索 " + category)
-        if not any(
-            o.success
-            and o.action.action == "search"
-            and o.output
-            and o.output.get("items")
-            for o in sources.observations
-        ):
-            missing.append("取得真实论文检索结果")
-        return missing
 
     async def research_batch(self, actions, sources, available):
         """Fetch independently; merge and persist each completion on the event loop."""
@@ -503,6 +377,7 @@ class WorkflowCognition:
                     "adapter_profile": survey["profile"],
                     "request": self.state["request"],
                     "local_records": survey["records"],
+                    **self.survey_context({"dataset_discussion"}),
                     "research": findings.model_dump(),
                     "conversion": "ONLY selected EEGMMIDB R04/R08/R12 left/right imagery. T1=left_hand, T2=right_hand; EEG channels standardized, standard_1005 montage, BIDS BrainVision. Only unreadable/nonfinite records excluded.",
                 },
@@ -619,6 +494,9 @@ class WorkflowCognition:
                     "research": findings.model_dump(),
                     "collection": collection,
                     "data_characteristics": characteristics,
+                    **self.survey_context(
+                        {"usage_analysis", "usage_algorithm", "preprocessing_methods"}
+                    ),
                     "enabled_operations": [
                         {k: v for k, v in operation.items() if k != "parameters"}
                         for operation in extraction_contracts()
@@ -830,6 +708,7 @@ class WorkflowCognition:
                     "preprocessing/design.json", MethodDesign
                 ).model_dump(),
                 "actual_results": self.state["outputs"],
+                **self.survey_context(),
             },
             "Write only concise interpretation to fill fixed report sections. Actual numeric tables are rendered by code. "
             "Explain source/engineering decisions for the selected candidate, uncertainty, retention and training limitations. "

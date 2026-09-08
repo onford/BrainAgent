@@ -31,8 +31,9 @@ class PageText(HTMLParser):
             self.in_title = True
         if tag == "article-title" and not self.article_title:
             self.in_article_title = True
-        if tag == "a":
-            href = dict(attrs).get("href", "")
+        if tag in {"a", "ext-link"}:
+            attributes = dict(attrs)
+            href = attributes.get("href") or attributes.get("xlink:href", "")
             url = urljoin(self.base, href)
             if urlsplit(url).scheme in {"http", "https"}:
                 self.links.append(url)

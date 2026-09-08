@@ -18,12 +18,127 @@ def rows(values):
     )
 
 
+TARGET_LABELS = {
+    "usage_analysis": "使用数据集的分析",
+    "usage_algorithm": "使用数据集的算法",
+    "dataset_discussion": "讨论数据集本身",
+    "preprocessing_methods": "同类数据的预处理",
+}
+FIELD_LABELS = dict(
+    zip(
+        (
+            "directory_structure",
+            "file_format",
+            "file_header",
+            "signal_arrays",
+            "channels",
+            "sampling_rate",
+            "events",
+            "task_runs",
+            "subjects",
+            "recording_duration",
+            "acquisition",
+            "license",
+            "dataset_version",
+        ),
+        (
+            "目录结构",
+            "文件格式",
+            "文件头",
+            "实际数组",
+            "通道",
+            "采样率",
+            "事件",
+            "任务与 Run",
+            "被试",
+            "记录时长",
+            "采集设置",
+            "许可",
+            "版本",
+        ),
+    )
+)
+STATUS_LABELS = {
+    "consistent": "一致",
+    "partial": "部分一致",
+    "conflict": "不一致",
+    "not_stated": "未说明",
+    "unverifiable": "无法核查",
+    "not_applicable": "不适用",
+    "covered": "已覆盖",
+    "gap": "缺口",
+    "included": "纳入",
+    "excluded": "排除",
+    "deferred": "待补充",
+}
+
+
+def local_comparison(data, row):
+    grouped = {}
+    for fact in data.local_inspection.facts:
+        if fact.id in row.local_fact_ids:
+            value = (
+                fact.value[:180] + "…（详见本地观测记录）"
+                if len(fact.value) > 180
+                else fact.value
+            )
+            grouped.setdefault(value, []).append(fact.scope)
+    return (
+        "; ".join(f"{', '.join(scopes)}: {value}" for value, scopes in grouped.items())
+        or "未从本地取得"
+    )
+
+
+def literature_rows(review):
+    if review is None:
+        return ""
+    sources = {s.id: s for s in review.sources}
+    result = []
+    for entry in review.entries:
+        source = sources[entry.source_id]
+        links = f"<a href='{escape(source.url)}'>{escape(source.title)}</a>"
+        links += "".join(
+            f"<br><a href='{escape(url)}'>关联资料 {i + 1}</a>"
+            for i, url in enumerate(entry.related_urls)
+            if url != source.url
+        )
+        q = entry.quality
+        quality = (
+            "; ".join(
+                f"{name}: {value}"
+                for name, value in (
+                    ("期刊", q.venue),
+                    ("被引", q.citations),
+                    ("星标", q.stars),
+                )
+                if value is not None
+            )
+            or "未取得指标"
+        )
+        result.append(
+            "<tr><td>"
+            + escape(TARGET_LABELS[entry.target] + " · " + entry.medium)
+            + "</td><td>"
+            + links
+            + "</td>"
+            + "".join(
+                f"<td>{escape(v)}</td>"
+                for v in (
+                    STATUS_LABELS[entry.decision],
+                    entry.reading_scope,
+                    entry.reason,
+                    quality,
+                )
+            )
+            + "</tr>"
+        )
+    return "".join(result)
+
+
 def render_report(folder):
     data = report_data(folder.parent)
     # This small projection is the template input, not another process archive.
-    write_readable(
-        folder / "report.json", data.model_dump(mode="json")
-    )
+    write_readable(folder / "report.json", data.model_dump(mode="json"))
     titles = {
         "subjects": "被试数",
         "recordings": "记录数",
@@ -50,6 +165,46 @@ def render_report(folder):
         (Path(__file__).parent / "templates/report.html").read_text(encoding="utf-8")
     )
     document = template.substitute(
+        verification_rows=rows(
+            [
+                [
+                    FIELD_LABELS[r.field],
+                    local_comparison(data, r),
+                    r.official_sources.statement or "未说明/未取得",
+                    r.official_paper.statement or "未说明/未取得",
+                    STATUS_LABELS[r.status],
+                    r.conclusion,
+                ]
+                for r in data.verification.comparisons
+            ]
+            if data.verification and data.local_inspection
+            else []
+        ),
+        official_publication=escape(
+            data.verification.official_publication.explanation
+            if data.verification
+            else "此历史运行未记录三方核对"
+        ),
+        literature_rows=literature_rows(data.literature),
+        literature_coverage_rows=rows(
+            [
+                [
+                    TARGET_LABELS[c.target],
+                    c.medium,
+                    ", ".join(c.destinations),
+                    STATUS_LABELS[c.status],
+                    c.explanation,
+                ]
+                for c in data.literature.coverage
+            ]
+            if data.literature
+            else []
+        ),
+        literature_criteria="".join(
+            f"<li>{escape(c)}</li>" for c in data.literature.criteria
+        )
+        if data.literature
+        else "",
         research_overview=escape(
             data.narrative.overview
             if data.narrative

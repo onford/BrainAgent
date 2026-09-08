@@ -79,6 +79,8 @@ def _semantic_scholar(output: Any, limit: int) -> dict[str, Any]:
                 "url": row.get("url"),
                 "year": row.get("year"),
                 "open_access_pdf": (row.get("openAccessPdf") or {}).get("url"),
+                "citations": row.get("citationCount"),
+                "venue": row.get("venue"),
                 "authors": [
                     author.get("name")
                     for author in authors[:8]
@@ -102,6 +104,10 @@ def _openalex(output: Any, limit: int) -> dict[str, Any]:
                 "title": row.get("display_name"),
                 "url": row.get("doi") or row.get("id"),
                 "year": row.get("publication_year"),
+                "citations": row.get("cited_by_count"),
+                "venue": (
+                    ((row.get("primary_location") or {}).get("source")) or {}
+                ).get("display_name"),
                 "full_text_url": (
                     (row.get("best_oa_location") or {}).get("pdf_url")
                     or (row.get("best_oa_location") or {}).get("landing_page_url")
@@ -154,6 +160,8 @@ def _europe_pmc(output: Any, limit: int) -> dict[str, Any]:
             "authors": _shorten(row.get("authorString"), 300),
             "doi": row.get("doi"),
             "pmcid": row.get("pmcid"),
+            "citations": row.get("citedByCount"),
+            "venue": row.get("journalTitle"),
             "full_text_url": f"https://www.ebi.ac.uk/europepmc/webservices/rest/{row['pmcid']}/fullTextXML"
             if row.get("pmcid") and row.get("isOpenAccess") == "Y"
             else None,

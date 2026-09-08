@@ -10,13 +10,23 @@ TEXT = "This dataset records 64 EEG channels at 160 Hz. Runs 4, 8 and 12 are lef
 
 class ResearchTools:
     async def catalog(self, context):
-        return [{"name": "europe_pmc", "category": "literature", "available": True}]
+        return [
+            {"name": "europe_pmc", "category": "literature", "available": True},
+            {"name": "github", "category": "code", "available": True},
+        ]
 
     async def execute(self, name, context, **kwargs):
         return ToolResult(
             success=True,
             output={
-                "items": [{"title": "Test paper", "url": "https://example.org/paper"}]
+                "items": [
+                    {
+                        "title": "Test paper",
+                        "url": "https://example.org/repo"
+                        if name == "github"
+                        else "https://example.org/paper",
+                    }
+                ]
             },
         )
 
@@ -24,7 +34,11 @@ class ResearchTools:
 class Reader:
     async def read(self, url, kind):
         return SourceDocument(
-            id="official" if kind == "official" else "paper",
+            id="official"
+            if kind == "official"
+            else "repo"
+            if kind == "code"
+            else "paper",
             url=url,
             kind=kind,
             title="Test source",
@@ -55,6 +69,146 @@ class WorkflowLLM(LLMClient):
             "papers_discussing_dataset",
             "preprocessing_papers",
         ]
+        if model.__name__ == "SurveyPlan":
+            from app.workflows.survey_contracts import LITERATURE_TARGETS
+
+            return model(
+                objective="区分数据核对与文献用途",
+                verification=[
+                    {
+                        "target": "official_sources",
+                        "medium": "official",
+                        "question": "核对官网",
+                        "query": "EEGMMIDB official",
+                    },
+                    {
+                        "target": "official_publication",
+                        "medium": "paper",
+                        "question": "查官方论文",
+                        "query": "EEGMMIDB official paper",
+                    },
+                ],
+                literature=[
+                    {
+                        "target": t,
+                        "medium": m,
+                        "question": t,
+                        "query": f"EEGMMIDB {t} {m}",
+                    }
+                    for t in LITERATURE_TARGETS
+                    for m in ("paper", "repository")
+                ],
+            )
+        if model.__name__ == "ResearchBatch" and "purpose" in data:
+            actions = []
+            for goal in data["goals"]:
+                target, medium = goal["target"], goal["medium"]
+                seen = [
+                    o
+                    for o in data["observations"]
+                    if o["action"].get("purpose") == data["purpose"]
+                    and o["action"].get("target") == target
+                    and o["action"].get("medium") == medium
+                ]
+                action = {
+                    "purpose": data["purpose"],
+                    "target": target,
+                    "medium": medium,
+                    "rationale": "按用途查证",
+                }
+                if medium == "official" and not seen:
+                    action.update(
+                        action="read",
+                        kind="official",
+                        url="https://physionet.org/content/eegmmidb/1.0.0/",
+                    )
+                elif medium != "official" and not any(
+                    o["action"]["action"] == "search" for o in seen
+                ):
+                    action.update(
+                        action="search",
+                        tool="github" if medium == "repository" else "europe_pmc",
+                        query=goal["query"],
+                    )
+                elif medium != "official" and not any(
+                    o["action"]["action"] == "read" for o in seen
+                ):
+                    action.update(
+                        action="read",
+                        kind="code" if medium == "repository" else "paper",
+                        url="https://example.org/repo"
+                        if medium == "repository"
+                        else "https://example.org/paper",
+                        query=target,
+                    )
+                else:
+                    continue
+                actions.append(action)
+            if not actions:
+                actions = [
+                    {
+                        "action": "finish",
+                        "rationale": "该用途检索完成",
+                        "purpose": data["purpose"],
+                        "target": data["goals"][0]["target"],
+                        "medium": data["goals"][0]["medium"],
+                    }
+                ]
+            return model(actions=actions[: min(4, data["remaining_actions"])])
+        if model.__name__ in {"DatasetVerification", "LiteratureScreening"}:
+            from app.workflows.cognition_contracts import ResearchFindings
+            from app.workflows.survey_contracts import FIELDS
+
+            base = await WorkflowLLM().structured_output(
+                [{}, {"content": "{}"}], ResearchFindings
+            )
+            if model.__name__ == "DatasetVerification":
+                return model(
+                    summary="三方核对，官方论文身份待确认",
+                    facts=base.facts,
+                    metadata=base.metadata,
+                    official_publication={
+                        "source_id": None,
+                        "role": "not_identified",
+                        "basis_finding_ids": [],
+                        "explanation": "未确认官方数据集论文",
+                    },
+                    comparisons=[
+                        {
+                            "field": f,
+                            "local_fact_ids": [
+                                v["id"]
+                                for v in data["local_inspection"]["facts"]
+                                if v["field"] == f
+                            ],
+                            "official_sources": {"statement": None, "finding_ids": []},
+                            "official_paper": {"statement": None, "finding_ids": []},
+                            "status": "unverifiable",
+                            "conclusion": "保留缺口",
+                        }
+                        for f in FIELDS
+                    ],
+                    gaps=["官方论文待确认"],
+                    conflicts=[],
+                )
+            return model(
+                summary="筛选方法资料",
+                entries=[
+                    {
+                        "id": "entry-method",
+                        "source_id": "paper",
+                        "target": "preprocessing_methods",
+                        "medium": "paper",
+                        "decision": "included",
+                        "reason": "有可核验的方法内容",
+                        "reading_scope": "partial_text",
+                        "findings": [base.facts[2].model_dump()],
+                        "related_urls": ["https://example.org/paper"],
+                        "quality": {},
+                    }
+                ],
+                gaps=["其他分类未找到通过筛选的资料"],
+            )
         if model.__name__ == "ResearchPlan":
             value = {
                 "objective": "核对模型训练数据",

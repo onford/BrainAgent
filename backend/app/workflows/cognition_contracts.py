@@ -76,8 +76,8 @@ class ProfileFact(Contract):
 
 class ResearchFindings(Contract):
     summary: str
-    facts: list[Finding] = Field(min_length=3, max_length=30)
-    literature: list[LiteratureItem] = Field(min_length=1, max_length=15)
+    facts: list[Finding] = Field(min_length=3, max_length=400)
+    literature: list[LiteratureItem] = Field(max_length=40)
     gaps: list[str]
     conflicts: list[str]
     metadata: list[ProfileFact] = Field(min_length=6, max_length=6)
@@ -114,6 +114,9 @@ class ResearchAction(Contract):
     query: str | None = None
     url: str | None = None
     kind: Literal["official", "paper", "code", "documentation"] = "paper"
+    purpose: Literal["dataset_verification", "literature_review"] | None = None
+    target: Literal["official_sources", "official_publication", "usage_analysis", "usage_algorithm", "dataset_discussion", "preprocessing_methods"] | None = None
+    medium: Literal["official", "paper", "repository"] | None = None
 
     @model_validator(mode="after")
     def arguments(self):

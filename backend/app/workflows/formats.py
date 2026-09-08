@@ -29,11 +29,17 @@ from .cognition_contracts import (
     MethodDesign,
     ReportNarrative,
     ResearchFindings,
-    ResearchPlan,
     ResearchSources,
 )
 
-FORMAT_VERSION = "2"
+from .survey_contracts import (
+    DatasetVerification,
+    LiteratureReview,
+    LocalInspection,
+    SurveyPlan,
+)
+
+FORMAT_VERSION = "3"
 ARRAY_FORMATS = {
     "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
     "y.npy": {
@@ -172,7 +178,10 @@ class DeliveryManifest(Contract):
 
 
 JSON_MODELS = {
-    "survey/research-plan.json": ResearchPlan,
+    "survey/research-plan.json": SurveyPlan,
+    "survey/local-inspection.json": LocalInspection,
+    "survey/verification.json": DatasetVerification,
+    "survey/literature.json": LiteratureReview,
     "survey/research.json": ResearchFindings,
     "survey/sources.json": ResearchSources,
     "collection/review.json": CollectionReview,

@@ -7,6 +7,7 @@ from app.preprocessing.storage import file_hash
 
 from .contracts import ProcessData, ProcessIndex, ReportData, STAGE_CONTRACTS
 from .cognition_contracts import ResearchFindings, ReportNarrative, ResearchSources
+from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
 from .formats import (
     ARRAY_FORMATS,
     FORMAT_VERSION,
@@ -197,6 +198,9 @@ def report_data(folder):
         or optional("collection/research.json", ResearchFindings)
         or optional("survey/research.json", ResearchFindings),
         narrative=optional("report/narrative.json", ReportNarrative),
+        verification=optional("survey/verification.json", DatasetVerification),
+        literature=optional("survey/literature.json", LiteratureReview),
+        local_inspection=optional("survey/local-inspection.json", LocalInspection),
         limitations=[
             collection.validation,
             *collection.adaptations,
