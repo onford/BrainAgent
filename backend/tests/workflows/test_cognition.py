@@ -64,6 +64,10 @@ async def test_operation_schema_binds_channels_events_and_window():
     with pytest.raises(ValueError, match="string_pattern_mismatch"):
         schema.model_validate(output)
     output = design.model_dump()
+    output["candidates"][0]["steps"][0]["model_from"] = "unrelated"
+    with pytest.raises(ValueError, match="none_required"):
+        schema.model_validate(output)
+    output = design.model_dump()
     epoch = output["candidates"][0]["steps"][-1]
     epoch["params"]["picks"] = ["eeg"]
     with pytest.raises(ValueError, match="literal_error"):
@@ -88,6 +92,27 @@ async def test_no_llm_fails_instead_of_using_fixed_presets(source, tmp_path):
     result = service.get(OWNER, state["id"])
     assert result["status"] == "failed" and "LLM" in result["error"]
     assert not result.get("preprocessing_job")
+
+
+@pytest.mark.asyncio
+async def test_research_retry_cannot_mix_changed_local_bytes_with_saved_observations(
+    source, tmp_path
+):
+    prep = PreprocessingService(tmp_path / "prep")
+    service = WorkflowService(tmp_path / "runs", [source], prep)
+    service.registry = build_agent_registry(preprocessing=prep, workflow=service)
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source), runs=[4]))
+    await service.tasks[state["id"]]
+    folder = service.folder(state["id"])
+    observed = (folder / "survey/local-inspection.json").read_bytes()
+    checkpoint = (folder / "survey/survey.json").read_bytes()
+    (source / "S001/S001R04.edf").write_bytes(b"replacement dataset")
+    service.retry(OWNER, state["id"])
+    await service.tasks[state["id"]]
+    failed = service.get(OWNER, state["id"])
+    assert failed["status"] == "failed" and "源文件已变化" in failed["error"]
+    assert (folder / "survey/local-inspection.json").read_bytes() == observed
+    assert (folder / "survey/survey.json").read_bytes() == checkpoint
 
 
 @pytest.mark.asyncio

@@ -5,6 +5,7 @@ from typing import Annotated, Literal, Union
 from pydantic import Field, create_model
 
 from app.preprocessing.units import OPERATIONS
+from app.preprocessing.schemas import Scope
 from .cognition_contracts import CandidateDesign, MethodDesign, PlannedStep
 
 
@@ -32,6 +33,11 @@ def design_contract(finding_ids, request):
                 unit_id=(Literal[unit], unit),
                 params=(params, ...),
                 finding_ids=(list[Literal[ids]], ...),
+                model_from=(str, ...) if op == "eog_apply" else (type(None), None),
+                decision_from=(str, ...)
+                if op == "mark_channels"
+                else (type(None), None),
+                fit_scope=(Scope, ...) if op == "eog_fit" else (type(None), None),
             )
         )
     step = Annotated[Union[tuple(variants)], Field(discriminator="op")]

@@ -313,9 +313,19 @@ class WorkflowService:
             root = dataset.allowed_source(
                 request, self.input_roots, [self.root, self.preprocessing.store.root]
             )
-            value = await asyncio.to_thread(
-                dataset.inspect, root, request, folder / "survey"
-            )
+            checkpoint = folder / "survey/survey.json"
+            if checkpoint.exists():
+                value = validate_stage(
+                    name, json.loads(checkpoint.read_text(encoding="utf-8"))
+                )
+                await asyncio.to_thread(dataset.check_sources, value)
+            else:
+                value = await asyncio.to_thread(
+                    dataset.inspect, root, request, folder / "survey"
+                )
+                # Persist the measured input before remote research can fail.
+                # A retry cannot silently combine new source bytes with old findings.
+                write_readable(checkpoint, value)
             findings = await cognition.research(value)
             sources = cognition.load("survey/sources.json", ResearchSources)
             value["profile"] = dict(value["profile"])

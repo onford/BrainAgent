@@ -331,11 +331,13 @@ class WorkflowCognition:
                 continue
             if not WorkflowCognition.usable_paper(documents[item.source_id]):
                 problems.append("read the article text instead of search metadata")
-            if (
-                item.reading_scope == "full_text"
-                and documents[item.source_id].truncated
+            if item.reading_scope == "full_text" and (
+                documents[item.source_id].truncated
+                or len(documents[item.source_id].text) > 24000
             ):
-                problems.append("truncated source cannot be marked full_text")
+                problems.append(
+                    "truncated source or context preview cannot be marked full_text"
+                )
             if (
                 item.reading_scope == "full_text"
                 and "[Abstract]" in documents[item.source_id].text

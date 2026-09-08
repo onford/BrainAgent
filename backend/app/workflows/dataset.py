@@ -20,6 +20,12 @@ from .intake import Audit, table
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
+
+
+class SourceChangedError(Exception):
+    """Changing inputs invalidate observations instead of becoming exclusions."""
+
+
 PROFILE = {
     "dataset_id": "eegmmidb",
     "name": "EEG Motor Movement/Imagery Dataset",
@@ -162,10 +168,13 @@ def inspect(root, request, folder):
                         duration_s=raw.n_times / raw.info["sfreq"],
                         event_counts=counts,
                         task_trials=counts.get("T1", 0) + counts.get("T2", 0),
-                        sha256=file_hash(path),
                         status="readable",
                     )
                     values = raw.get_data()
+                    if file_hash(path) != record["sha256"]:
+                        raise SourceChangedError(
+                            f"源文件在读取期间发生变化，请新建运行：{relative}"
+                        )
                     measurements = {
                         "file_format": "EDF decoded by MNE",
                         "file_header": f"nchan={raw.info['nchan']}; sfreq={raw.info['sfreq']}; samples={raw.n_times}",
@@ -261,6 +270,10 @@ def summarize(records, *, include_excluded=False):
 def check_sources(survey):
     root = Path(survey["source_root"])
     for record in survey["records"]:
+        if not record.get("sha256") and (root / record["source_path"]).is_file():
+            raise ValueError(
+                f"此前未接入的源文件已出现或发生变化，请新建运行：{record['source_path']}"
+            )
         if (
             record.get("sha256")
             and file_hash(within(root, record["source_path"])) != record["sha256"]

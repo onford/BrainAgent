@@ -2,6 +2,7 @@
 
 import csv
 import json
+import math
 from pathlib import Path
 import re
 
@@ -49,6 +50,7 @@ def validate_input(
             raise ValueError(
                 "incomplete BrainVision file group or required BIDS sidecars"
             )
+        validate_sidecars(root, record)
         for header in [path, path.with_suffix(".vmrk")]:
             content = header.read_text(encoding="utf-8-sig")
             for key, value in re.findall(
@@ -90,11 +92,88 @@ def validate_input(
     return root
 
 
+def validate_sidecars(root: Path, record: RecordSpec):
+    """Check the supported EEG sidecars against the frozen record, not just hashes."""
+    path = within(root, record.bids_path)
+    metadata = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
+    required = {
+        "TaskName",
+        "SamplingFrequency",
+        "PowerLineFrequency",
+        "SoftwareFilters",
+        "EEGReference",
+    }
+    if not isinstance(metadata, dict) or not required <= metadata.keys():
+        raise ValueError("required EEG sidecar metadata is missing")
+    frequency = metadata["SamplingFrequency"]
+    power = metadata["PowerLineFrequency"]
+    if (
+        type(frequency) not in (int, float)
+        or not math.isfinite(frequency)
+        or frequency != record.sfreq
+        or metadata["EEGReference"] != record.reference
+        or not isinstance(metadata["TaskName"], str)
+        or not metadata["TaskName"].strip()
+        or (
+            power != "n/a"
+            and (
+                type(power) not in (int, float)
+                or not math.isfinite(power)
+                or power <= 0
+            )
+        )
+        or not (
+            metadata["SoftwareFilters"] == "n/a"
+            or isinstance(metadata["SoftwareFilters"], dict)
+        )
+    ):
+        raise ValueError(
+            "EEG sidecar metadata differs from Collection or has invalid values"
+        )
+    channels_path = path.parent / path.name.replace("eeg.vhdr", "channels.tsv")
+    with channels_path.open(encoding="utf-8-sig", newline="") as stream:
+        channels = list(csv.DictReader(stream, delimiter="\t"))
+    if [c.get("name") for c in channels] != record.channel_order:
+        raise ValueError("channels.tsv identity/order differs from Collection")
+    types = {
+        "eeg": "EEG",
+        "eog": "EOG",
+        "ecg": "ECG",
+        "emg": "EMG",
+        "misc": "MISC",
+        "stim": "TRIG",
+    }
+    for channel in channels:
+        kind = record.channels[channel["name"]]
+        if channel.get("type") != types[kind]:
+            raise ValueError("channels.tsv type differs from Collection")
+        if kind in {"eeg", "eog", "ecg", "emg"} and channel.get("units") not in {
+            "V",
+            "mV",
+            "µV",
+            "uV",
+            "nV",
+        }:
+            raise ValueError("channels.tsv voltage unit is not recognized")
+    for kind, key in (
+        ("eeg", "EEGChannelCount"),
+        ("eog", "EOGChannelCount"),
+        ("ecg", "ECGChannelCount"),
+        ("emg", "EMGChannelCount"),
+    ):
+        if key in metadata and (
+            type(metadata[key]) is not int
+            or metadata[key] != sum(v == kind for v in record.channels.values())
+        ):
+            raise ValueError(f"{key} differs from Collection")
+
+
 def read_record(root: Path, record: RecordSpec, event_id: dict, context_event_id=None):
     import numpy as np
     from mne_bids import get_bids_path_from_fname, read_raw_bids
 
     path = within(root, record.bids_path)
+    validate_sidecars(root, record)
     bids_path = get_bids_path_from_fname(path).update(root=root)
     raw = read_raw_bids(bids_path, extra_params={"preload": True}, verbose="ERROR")
     if raw.n_times != record.samples or raw.info["sfreq"] != record.sfreq:
@@ -139,6 +218,8 @@ def read_record(root: Path, record: RecordSpec, event_id: dict, context_event_id
         if (
             not np.isfinite([onset, duration]).all()
             or duration < 0
+            or onset < 0
+            or onset + duration > record.samples / record.sfreq + 1 / record.sfreq
             or sample < 0
             or sample >= record.samples
         ):

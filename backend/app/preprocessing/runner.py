@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+import json
 import shutil
 import traceback
 
@@ -95,18 +96,61 @@ def verify_result(root: Path, result):
     if not result or not result.get("artifacts"):
         return False
     try:
+        entries = result["artifacts"]
+        if len({a["path"] for a in entries}) != len(entries):
+            return False
         for artifact in result["artifacts"]:
             if file_hash(within(root, artifact["path"])) != artifact["sha256"]:
                 return False
-        data = next(a for a in result["artifacts"] if a["kind"] == "data")
+        data_files = [a for a in entries if a["kind"] == "data"]
+        if len(data_files) != 1:
+            return False
+        data = data_files[0]
         path = within(root, data["path"])
+        required = {"events.json", "delta.json", "provenance.json", "signal_V.npy"}
+        siblings = {
+            within(root, a["path"]).name
+            for a in entries
+            if within(root, a["path"]).parent == path.parent
+        }
+        if not required <= siblings:
+            return False
         x = (
             mne.read_epochs(path, preload=True, verbose="ERROR")
             if path.name.endswith("-epo.fif")
             else mne.io.read_raw_fif(path, preload=True, verbose="ERROR")
         )
-        return bool(x.get_data().size and np.isfinite(x.get_data()).all())
-    except (OSError, ValueError, StopIteration):
+        signal = np.load(path.parent / "signal_V.npy", allow_pickle=False)
+        delta = json.loads((path.parent / "delta.json").read_text(encoding="utf-8"))
+        events = json.loads((path.parent / "events.json").read_text(encoding="utf-8"))
+        if (
+            not x.get_data().size
+            or not np.isfinite(signal).all()
+            or signal.shape != x.get_data().shape
+            or not np.allclose(
+                signal, x.get_data(), rtol=2 * np.finfo(np.float32).eps, atol=1e-18
+            )
+            or delta != result["delta"]
+            or delta["after"]["shape"] != list(signal.shape)
+            or delta["after"]["channels"] != x.ch_names
+            or delta["after"]["sfreq"] != x.info["sfreq"]
+            or delta["events_before"] != len(events)
+            or len({e["event_id"] for e in events}) != len(events)
+        ):
+            return False
+        retained = [e for e in events if e["retained"]]
+        if len(retained) != delta["events_retained"]:
+            return False
+        if isinstance(x, mne.BaseEpochs):
+            retained.sort(key=lambda e: e["epoch_index"])
+            if [e["epoch_index"] for e in retained] != list(range(len(x))):
+                return False
+            if not np.array_equal(
+                [[e["output_sample"], 0, e["code"]] for e in retained], x.events
+            ):
+                return False
+        return True
+    except (OSError, ValueError, KeyError, TypeError, IndexError):
         return False
 
 
@@ -122,60 +166,61 @@ def run_record(
         r for r in plan.input_snapshot.collection.records if r.id == config.record_id
     )
     output.mkdir(parents=True, exist_ok=False)
-    work = output / "input"
-    # A materialized copy protects originals from readers and library in-place operations.
-    for relative, expected in record.files.items():
-        src, dst = within(source_root, relative), within(work, relative)
-        if file_hash(src) != expected:
-            raise ValueError("source changed before copy")
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(src, dst)
-        if file_hash(dst) != expected:
-            raise ValueError("work copy checksum mismatch")
-    raw, events, event_map = read_record(
-        work,
-        record,
-        plan.input_snapshot.survey.event_id,
-        plan.input_snapshot.survey.context_event_id,
-    )
-    input_state = state(raw)
-    nodes = {"raw": {"data": raw, "model": None, "artifacts": {}}}
-    logs, decisions, model_bindings = [], {}, {}
-    steps = {s.id: s for s in config.steps}
-
-    def check_cancel():
-        if cancelled():
-            raise Cancelled("cancelled at step boundary")
-
-    def scoped_input(name, scope):
-        interval = next(i for i in record.intervals if i.id == scope.ids[0])
-        if name == "raw":
-            return raw.copy().crop(
-                interval.start / record.sfreq, (interval.stop - 1) / record.sfreq
-            )
-        predecessor = steps[name]
-        if predecessor.op not in ("filter", "reference", "detrend"):
-            raise ValueError(
-                "fit ancestors must be replayable without fitted state or data-dependent decisions"
-            )
-        check_cancel()
-        x = scoped_input(predecessor.input, scope)
-        result = invoke(
-            predecessor.unit_id, predecessor.op, x, **deepcopy(predecessor.params)
-        )
-        logs.append(
-            {
-                "step_id": predecessor.id,
-                "branch": "fit",
-                "scope": scope.model_dump(),
-                "parameters": predecessor.params,
-                "input_hash": data_hash(x),
-                "output_hash": data_hash(result["data"]),
-            }
-        )
-        return result["data"]
-
+    logs = []
     try:
+        work = output / "input"
+        # A materialized copy protects originals from readers and library in-place operations.
+        for relative, expected in record.files.items():
+            src, dst = within(source_root, relative), within(work, relative)
+            if file_hash(src) != expected:
+                raise ValueError("source changed before copy")
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dst)
+            if file_hash(dst) != expected:
+                raise ValueError("work copy checksum mismatch")
+        raw, events, event_map = read_record(
+            work,
+            record,
+            plan.input_snapshot.survey.event_id,
+            plan.input_snapshot.survey.context_event_id,
+        )
+        input_state = state(raw)
+        nodes = {"raw": {"data": raw, "model": None, "artifacts": {}}}
+        decisions, model_bindings = {}, {}
+        steps = {s.id: s for s in config.steps}
+
+        def check_cancel():
+            if cancelled():
+                raise Cancelled("cancelled at step boundary")
+
+        def scoped_input(name, scope):
+            interval = next(i for i in record.intervals if i.id == scope.ids[0])
+            if name == "raw":
+                return raw.copy().crop(
+                    interval.start / record.sfreq, (interval.stop - 1) / record.sfreq
+                )
+            predecessor = steps[name]
+            if predecessor.op not in ("filter", "reference", "detrend"):
+                raise ValueError(
+                    "fit ancestors must be replayable without fitted state or data-dependent decisions"
+                )
+            check_cancel()
+            x = scoped_input(predecessor.input, scope)
+            result = invoke(
+                predecessor.unit_id, predecessor.op, x, **deepcopy(predecessor.params)
+            )
+            logs.append(
+                {
+                    "step_id": predecessor.id,
+                    "branch": "fit",
+                    "scope": scope.model_dump(),
+                    "parameters": predecessor.params,
+                    "input_hash": data_hash(x),
+                    "output_hash": data_hash(result["data"]),
+                }
+            )
+            return result["data"]
+
         for step in config.steps:
             check_cancel()
             directory = output / step.id
@@ -340,7 +385,7 @@ def run_record(
             if epoched
             else "continuous sample duration",
             "channels_removed": sorted(set(raw.ch_names) - set(final.ch_names)),
-            "scope": "all events in Collection recording",
+            "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
         }
         write_json(output / "events.json", event_map)
         write_json(output / "delta.json", delta)

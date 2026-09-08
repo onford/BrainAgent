@@ -22,6 +22,27 @@ from tests.workflows.test_workflow import source as source_fixture
 source = source_fixture
 
 
+def test_file_changing_during_scan_invalidates_the_observations(
+    source, tmp_path, monkeypatch
+):
+    import mne
+
+    original = mne.io.read_raw_edf
+
+    def read(path, **kwargs):
+        raw = original(path, **kwargs)
+        Path(path).write_bytes(b"changed during read")
+        return raw
+
+    monkeypatch.setattr(mne.io, "read_raw_edf", read)
+    with pytest.raises(dataset.SourceChangedError, match="读取期间"):
+        dataset.inspect(
+            source,
+            WorkflowRequest(source_root=str(source), runs=[4]),
+            tmp_path / "survey",
+        )
+
+
 def load(folder, name):
     return json.loads((folder / name).read_text(encoding="utf-8"))
 
