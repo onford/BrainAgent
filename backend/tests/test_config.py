@@ -38,12 +38,8 @@ async def test_configured_llm_timeout_reaches_http_request(monkeypatch, tmp_path
         requests.append(request)
         return httpx.Response(200, json={"choices": [{"message": {"content": "{}"}}]})
 
-    original_client = httpx.AsyncClient
-    monkeypatch.setattr(
-        "app.llm.client.httpx.AsyncClient",
-        lambda **kwargs: original_client(transport=httpx.MockTransport(respond), **kwargs),
-    )
     llm = app.state.agent_registry.get("planner").llm
+    monkeypatch.setattr(llm, "_transport", httpx.MockTransport(respond))
     assert await llm.chat([{"role": "user", "content": "extract a method"}]) == "{}"
     assert requests[0].extensions["timeout"]["read"] == 240
     assert requests[0].extensions["timeout"]["connect"] == 10

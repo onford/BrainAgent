@@ -4,7 +4,7 @@ from time import perf_counter
 from typing import Protocol, cast
 
 from app.agents.registry import AgentRegistry
-from app.core.logging import log_context
+from app.core.logging import log_context, log_scope
 from app.runtime.context import AgentContext, AgentTask, Plan, PlanStep
 from app.runtime.decision import AgentDecision, DecisionAction
 from app.runtime.events import ExecutionEvent
@@ -74,7 +74,8 @@ class Orchestrator:
             )
             logger.info("planner_decision_started", extra=log_extra)
             try:
-                decision = await self.planner.decide(context, available_agents)
+                with log_scope(**log_extra):
+                    decision = await self.planner.decide(context, available_agents)
             except Exception:
                 logger.exception("planner_decision_failed", extra=log_extra)
                 self._fail(context, "规划阶段失败，请查看后端日志。")
@@ -154,9 +155,15 @@ class Orchestrator:
             )
             logger.info("agent_execution_started", extra=agent_log_extra)
             try:
-                result = await agent.run(
-                    AgentTask(instruction=step.task, step=step.step, inputs=decision.inputs), context
-                )
+                with log_scope(**agent_log_extra):
+                    result = await agent.run(
+                        AgentTask(
+                            instruction=step.task,
+                            step=step.step,
+                            inputs=decision.inputs,
+                        ),
+                        context,
+                    )
             except Exception:
                 logger.exception("agent_execution_failed", extra=agent_log_extra)
                 result = AgentResult(

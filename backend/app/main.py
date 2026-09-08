@@ -23,7 +23,11 @@ def create_app(
     settings: Settings | None = None, llm_client: LLMClient | None = None
 ) -> FastAPI:
     app_settings = settings or get_settings()
-    configure_logging()
+    configure_logging(
+        app_settings.log_dir,
+        max_bytes=app_settings.log_max_bytes,
+        backup_count=app_settings.log_backup_count,
+    )
     database = Database(app_settings.database_url)
     llm = llm_client or create_llm_client(
         LLMConfig(

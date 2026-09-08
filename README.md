@@ -219,7 +219,26 @@ cd frontend
 pnpm test
 ```
 
-## 7. Docker 打包运行
+## 7. 后端日志
+
+后端启动后会自动创建 `backend/logs/`，同时保留终端日志输出：
+
+- `brain_agent.log`：ReAct orchestration、Planner、领域 Agent、tool call/result 和持久化错误。
+- `llm.log`：LLM 模型、provider、消息数量、输入/输出字符数、token usage、request ID、耗时和异常堆栈。
+
+两个文件默认达到 10 MiB 后轮转并保留 5 份历史文件。可以通过环境变量调整：
+
+```dotenv
+LOG_DIR=./logs
+LOG_MAX_BYTES=10485760
+LOG_BACKUP_COUNT=5
+```
+
+日志不会记录 API key、完整 prompt、完整 LLM response 或工具原始返回内容。
+`backend/logs/` 已加入 `.gitignore`。Docker 启动时该目录会挂载到宿主机的
+`backend/logs/`。
+
+## 8. Docker 打包运行
 
 Docker 用于打包、集成验证或部署，日常开发不需要使用。
 
@@ -250,7 +269,7 @@ docker compose down -v
 
 该命令会删除容器数据库数据，请谨慎使用。
 
-## 8. 常见启动问题
+## 9. 常见启动问题
 
 ### 后端提示 `LLM_API_KEY is not configured`
 
