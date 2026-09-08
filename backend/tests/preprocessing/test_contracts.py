@@ -23,7 +23,7 @@ def test_all_50_source_modules_match_frozen_catalog():
         path = root / (unit.implementation["module"] + ".py")
         assert file_hash(path) == unit.source["code_sha256"]
         ast.parse(path.read_text(encoding="utf-8"))
-    assert sum(bool(u.implementation["enabled_ops"]) for u in units) == 8
+    assert sum(bool(u.implementation["enabled_ops"]) for u in units) == 9
 
 
 @pytest.mark.parametrize(

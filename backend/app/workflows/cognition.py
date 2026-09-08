@@ -22,7 +22,7 @@ from .cognition_contracts import (
     ToolObservation,
 )
 from .records import write_readable
-from .source_reader import SourceReader
+from .source_reader import SourceReader, abstract_only
 from .planning_contracts import design_contract
 
 SYSTEM = """You are the EEG research and planning agent. Write concise Chinese analysis.
@@ -338,9 +338,8 @@ class WorkflowCognition:
                 problems.append(
                     "truncated source or context preview cannot be marked full_text"
                 )
-            if (
-                item.reading_scope == "full_text"
-                and "[Abstract]" in documents[item.source_id].text
+            if item.reading_scope == "full_text" and abstract_only(
+                documents[item.source_id]
             ):
                 problems.append("abstract-only API response cannot be marked full_text")
         if problems:
@@ -563,7 +562,8 @@ class WorkflowCognition:
                 "Every step must state basis=source or engineering, rationale and relevant finding_ids. Missing scientific parameters may be explicit engineering decisions, not attributed to papers. "
                 "When evidence is insufficient, include search/read supplement_requests and provisional candidates. Tools will run and you will revise using the new evidence before execution. Otherwise return an empty supplement_requests list. "
                 "Use whole-value $eeg_channels/$event_id/$events bindings, never wrap them in lists. Raw input is 'raw'; use step IDs for dependencies/output. "
-                "All candidates must output EEG epochs with the exact requested tmin/tmax and $event_id. Do not invent EOG channels or training/calibration intervals. Keep output channels identical for fair downstream use.",
+                "All candidates must output EEG epochs with the exact requested tmin/tmax and $event_id. Do not invent EOG channels or training/calibration intervals. Keep output channels identical for fair downstream use. "
+                "Each candidate must yield a common channel order, sampling rate and time grid across ALL selected records. If sampling rates differ, use resample with one explicit common sfreq before epoch; record its engineering/source rationale and anti-aliasing semantics.",
             )
             self.save("preprocessing/design.json", design)
             if design.supplement_requests:
@@ -630,6 +630,21 @@ class WorkflowCognition:
                             [s.model_dump() for s in plan.screening], ensure_ascii=False
                         )
                     )
+                from app.preprocessing.planner import training_grid
+
+                records_by_id = {
+                    r.id: r for r in plan.input_snapshot.collection.records
+                }
+                for candidate_ref in refs:
+                    grids = {
+                        training_grid(c, records_by_id[c.record_id])
+                        for c in plan.records
+                        if c.method_ref == candidate_ref
+                    }
+                    if len(grids) != 1:
+                        raise ValueError(
+                            "candidate outputs have incompatible channel order/sampling grids; use a common resample sfreq before epoch for mixed-rate records"
+                        )
                 self.progress(
                     f"方案校验通过：{len(refs)} 个候选，{len(plan.records)} 个执行单元"
                 )

@@ -29,11 +29,12 @@ PARAMETERS = {
 OWNER = "eeg-test-owner"
 
 
-def make_dataset(root: Path, *, subjects=2, test_amplitude=1.0):
-    sf, samples = 200.0, 8000
-    t = np.arange(samples) / sf
+def make_dataset(root: Path, *, subjects=2, test_amplitude=1.0, sfreqs=None):
     records = []
     for subject in range(1, subjects + 1):
+        sf = float(sfreqs[subject - 1]) if sfreqs else 200.0
+        samples = int(40 * sf)
+        t = np.arange(samples) / sf
         rng = np.random.default_rng(10 + subject)
         eog = 70e-6 * np.sin(2 * np.pi * 1.3 * t)
         eog[samples // 2 :] *= test_amplitude
@@ -81,8 +82,12 @@ def make_dataset(root: Path, *, subjects=2, test_amplitude=1.0):
                 channel_order=names,
                 reference="acquisition",
                 intervals=[
-                    Interval(id="calibration", role="calibration", start=0, stop=4000),
-                    Interval(id="heldout", role="test", start=4000, stop=8000),
+                    Interval(
+                        id="calibration", role="calibration", start=0, stop=samples // 2
+                    ),
+                    Interval(
+                        id="heldout", role="test", start=samples // 2, stop=samples
+                    ),
                 ],
             )
         )

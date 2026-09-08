@@ -185,7 +185,15 @@ def run_record(
             plan.input_snapshot.survey.context_event_id,
         )
         input_state = state(raw)
-        nodes = {"raw": {"data": raw, "model": None, "artifacts": {}}}
+        nodes = {
+            "raw": {
+                "data": raw,
+                "model": None,
+                "artifacts": {},
+                "events": events,
+                "event_origin": raw.first_samp,
+            }
+        }
         decisions, model_bindings = {}, {}
         steps = {s.id: s for s in config.steps}
 
@@ -226,6 +234,8 @@ def run_record(
             directory = output / step.id
             directory.mkdir()
             x = nodes[step.input]["data"]
+            current_events = nodes[step.input]["events"]
+            event_origin = nodes[step.input]["event_origin"]
             actual = deepcopy(step.params)
             model = None
             if step.op == "eog_fit":
@@ -236,8 +246,8 @@ def run_record(
                 binding = model_bindings[step.model_from]
                 if file_hash(output / binding["file"]) != binding["sha256"]:
                     raise ValueError("fitted model artifact changed")
-            elif step.op == "epoch":
-                actual["events"] = events.copy()
+            elif step.op in {"epoch", "resample"}:
+                actual["events"] = current_events.copy()
             elif step.op == "mark_channels":
                 detection = decisions[step.decision_from]
                 if detection["input_hash"] != data_hash(x):
@@ -259,8 +269,19 @@ def run_record(
                 raise ValueError("unit mutated its input")
             if not y.get_data().size or not np.isfinite(y.get_data()).all():
                 raise ValueError("empty or invalid output")
-            if step.op != "epoch" and y.get_data().shape != x.get_data().shape:
+            if (
+                step.op not in {"epoch", "resample"}
+                and y.get_data().shape != x.get_data().shape
+            ):
                 raise ValueError("unexpected signal shape change")
+            if step.op == "resample":
+                synchronized = result["artifacts"]["events"]
+                if len(synchronized) != len(current_events) or not np.array_equal(
+                    synchronized[:, 1:], current_events[:, 1:]
+                ):
+                    raise ValueError("resampling changed event identity")
+                current_events, event_origin = synchronized, y.first_samp
+            result["events"], result["event_origin"] = current_events, event_origin
             if step.op == "eog_fit":
                 model_path = directory / "eog-model.h5"
                 result["model"]["estimator"].save(model_path, overwrite=False)
@@ -329,6 +350,8 @@ def run_record(
             )
         check_cancel()
         final = nodes[config.output]["data"]
+        output_events = nodes[config.output]["events"]
+        output_origin = nodes[config.output]["event_origin"]
         epoched = isinstance(final, mne.BaseEpochs)
         path = output / ("data-epo.fif" if epoched else "data-raw.fif")
         final.save(path, fmt="double", overwrite=False, verbose="ERROR")
@@ -361,7 +384,15 @@ def run_record(
                 epoch_index=int(np.where(final.selection == i)[0][0])
                 if epoched and i in selected
                 else None,
-                output_sample=int(events[i, 0]),
+                output_sample=int(output_events[i, 0]),
+                output_sfreq=float(final.info["sfreq"]),
+                output_onset_s=float(
+                    (output_events[i, 0] - output_origin) / final.info["sfreq"]
+                ),
+                resampling_error_s=float(
+                    (output_events[i, 0] - output_origin) / final.info["sfreq"]
+                    - row["original_onset_s"]
+                ),
                 reason=list(final.drop_log[i]) if epoched else [],
             )
         trials = {}
@@ -379,7 +410,7 @@ def run_record(
             ),
             "duration_before_s": record.samples / record.sfreq,
             "duration_after_s": len(final.times)
-            / record.sfreq
+            / final.info["sfreq"]
             * (len(final) if epoched else 1),
             "duration_basis": "sum of epoch sample durations (may overlap)"
             if epoched

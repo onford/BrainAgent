@@ -7,6 +7,30 @@ from pydantic import Field, create_model
 from app.preprocessing.units import OPERATIONS
 from app.preprocessing.schemas import Scope
 from .cognition_contracts import CandidateDesign, MethodDesign, PlannedStep
+from .survey_contracts import SearchGoal, SurveyPlan, LITERATURE_TARGETS
+
+
+def survey_plan_contract():
+    def goal(target, medium):
+        return create_model(
+            f"{target}_{medium}",
+            __base__=SearchGoal,
+            target=(Literal[target], target),
+            medium=(Literal[medium], medium),
+        )
+
+    verification = tuple[
+        goal("official_sources", "official"), goal("official_publication", "paper")
+    ]
+    literature = tuple[
+        tuple(goal(t, m) for t in LITERATURE_TARGETS for m in ("paper", "repository"))
+    ]
+    return create_model(
+        "SurveyPlan",
+        __base__=SurveyPlan,
+        verification=(verification, ...),
+        literature=(literature, ...),
+    )
 
 
 def design_contract(finding_ids, request):

@@ -4,6 +4,8 @@ from types import SimpleNamespace
 from typing import Literal
 
 from pydantic import Field, create_model
+from .source_reader import abstract_only
+from .planning_contracts import survey_plan_contract
 
 from .cognition_contracts import (
     ResearchAction,
@@ -294,7 +296,7 @@ def validate_entry(agent, entry, sources, docs, observations):
     if any(f.source_id != entry.source_id for f in entry.findings):
         raise ValueError("entry findings must quote this entry's source")
     if entry.reading_scope == "full_text" and (
-        doc.truncated or len(doc.text) > 24000 or "[Abstract]" in doc.text
+        doc.truncated or len(doc.text) > 24000 or abstract_only(doc)
     ):
         raise ValueError(
             "a preview, truncated text or abstract cannot be marked full_text"
@@ -305,9 +307,7 @@ def validate_entry(agent, entry, sources, docs, observations):
     }:
         raise ValueError("paper reading_scope cannot be repository_docs or code")
     if entry.decision == "included" and (
-        not entry.findings
-        or entry.reading_scope == "abstract"
-        or "[Abstract]" in doc.text
+        not entry.findings or entry.reading_scope == "abstract" or abstract_only(doc)
     ):
         raise ValueError(
             "included literature needs substantive quoted evidence; abstract-only entries are deferred"
@@ -394,7 +394,7 @@ async def research(agent, survey):
         if (agent.folder / "survey/research-plan.json").exists()
         else await agent.ask(
             "分别规划数据核对和方法文献调研",
-            SurveyPlan,
+            survey_plan_contract(),
             inputs,
             "Create two distinct research tracks. Verification compares actual local files, official website/repository and OFFICIAL DATASET publication. "
             "Literature has eight goals: analysis uses, algorithm uses, discussion of the dataset itself, preprocessing of this data type, each for paper AND repository. "

@@ -162,6 +162,47 @@ class PreprocessingOutput(Contract):
     methods: list[CandidateMethod] = Field(min_length=1)
     records: list[RecordOutcome] = Field(min_length=1)
 
+    @model_validator(mode="after")
+    def actual_outcomes(self):
+        identities = {(r.method_id, r.record_id) for r in self.records}
+        completed = [r for r in self.records if r.status == "completed"]
+        if (
+            len(identities) != len(self.records)
+            or self.total != len(self.records)
+            or self.completed != len(completed)
+        ):
+            raise ValueError(
+                "preprocessing counts must match unique actual record outcomes"
+            )
+        methods = {m.ref.id for m in self.methods}
+        if any(r.method_id not in methods for r in self.records):
+            raise ValueError("record outcome refers to an unknown candidate")
+        if (self.execution_status == "completed") != (self.completed == self.total):
+            raise ValueError(
+                "completed/partial status must match actual execution coverage"
+            )
+        for record in completed:
+            if (
+                record.error
+                or not record.artifact_root
+                or record.shape is None
+                or record.events_before is None
+                or record.events_retained is None
+            ):
+                raise ValueError(
+                    "completed records require output shape, event counts and artifact location"
+                )
+            if (
+                len(record.shape) != 3
+                or record.shape[0] != record.events_retained
+                or not all(record.shape)
+                or record.events_retained > record.events_before
+            ):
+                raise ValueError(
+                    "training output shape and retained event count are inconsistent"
+                )
+        return self
+
 
 class ExcludedCandidate(Contract):
     method_ref: Ref

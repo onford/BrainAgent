@@ -43,6 +43,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
     steps = []
     channel_sets = {"raw": set(record.channels)}
     reference_nodes = {"raw": record.reference}
+    sample_rates = {"raw": record.sfreq}
     for original in method.recipe:
         step = original.model_copy(deep=True)
         if step.id in nodes or step.input not in nodes:
@@ -58,6 +59,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
             )
         channels = channel_sets[step.input].copy()
         reference = reference_nodes[step.input]
+        sfreq = sample_rates[step.input]
         step.params = validate_params(
             step.unit_id, step.op, bind(step.params, bindings)
         )
@@ -74,7 +76,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
             if (
                 lo is None
                 and hi is None
-                or any(v is not None and not 0 < v < record.sfreq / 2 for v in (lo, hi))
+                or any(v is not None and not 0 < v < sfreq / 2 for v in (lo, hi))
                 or lo is not None
                 and hi is not None
                 and lo >= hi
@@ -93,10 +95,12 @@ def compile_steps(method: MethodSpec, record, data, parameters):
                 "average" if donors == "average" else "channels:" + ",".join(donors)
             )
         if (
-            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter")
+            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter", "resample")
             and kind != "raw"
         ):
             raise ValueError(f"{step.op} requires continuous input in this release")
+        if step.op == "resample":
+            sfreq = p["sfreq"]
         if step.op == "epoch":
             if (
                 not p["event_id"]
@@ -174,6 +178,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
             channels,
             reference,
         )
+        sample_rates[step.id] = sfreq
         steps.append(step)
     if (
         method.output not in nodes
@@ -208,17 +213,42 @@ def numerical_signature(configs):
 
 def signal_bytes(record, steps, root):
     size = len(record.channels) * record.samples * 8
+    rates = {"raw": record.sfreq}
     for step in steps:
+        sfreq = step.params["sfreq"] if step.op == "resample" else rates[step.input]
+        rates[step.id] = sfreq
+        size = max(
+            size,
+            len(record.channels)
+            * int(round(record.samples * sfreq / record.sfreq))
+            * 8,
+        )
         if step.op == "epoch":
             path = Path(root) / record.bids_path.replace("eeg.vhdr", "events.tsv")
             with path.open(encoding="utf-8-sig", newline="") as stream:
                 events = sum(1 for _ in csv.DictReader(stream, delimiter="\t"))
             samples = (
-                int(round((step.params["tmax"] - step.params["tmin"]) * record.sfreq))
-                + 1
+                int(round((step.params["tmax"] - step.params["tmin"]) * sfreq)) + 1
             )
             size = max(size, events * len(step.params["picks"]) * samples * 8)
     return size
+
+
+def training_grid(config, record):
+    """Infer channel order and time grid through the compiled data branches."""
+    nodes = {"raw": (tuple(record.channel_order), record.sfreq, None)}
+    for step in config.steps:
+        channels, sfreq, window = nodes[step.input]
+        if step.op == "resample":
+            sfreq = step.params["sfreq"]
+        elif step.op == "epoch":
+            channels = tuple(step.params["picks"])
+            window = (
+                round(step.params["tmin"] * sfreq),
+                round(step.params["tmax"] * sfreq),
+            )
+        nodes[step.id] = channels, sfreq, window
+    return nodes[config.output]
 
 
 def create_plan(

@@ -2,7 +2,14 @@ from __future__ import annotations
 
 import json
 
-from .schemas import Evidence, MethodDraft, MethodSpec, Scope, Step, SurveyLiteratureBundle
+from .schemas import (
+    Evidence,
+    MethodDraft,
+    MethodSpec,
+    Scope,
+    Step,
+    SurveyLiteratureBundle,
+)
 from .storage import Storage
 from .units import OPERATIONS
 
@@ -145,13 +152,19 @@ def check_mapping(method: MethodSpec):
             missing = sorted(required - step.params.keys())
             extra = sorted(step.params.keys() - schema.model_fields.keys())
             if missing or extra:
-                checks.append(f"parameter contract: {step.id}; missing={missing}; extra={extra}")
+                checks.append(
+                    f"parameter contract: {step.id}; missing={missing}; extra={extra}"
+                )
         for key, value in step.params.items():
             if isinstance(value, list) and any(
-                isinstance(v, str) and v in {"$eeg_channels", "$eog_channels", "$all_channels", "$event_id"}
+                isinstance(v, str)
+                and v
+                in {"$eeg_channels", "$eog_channels", "$all_channels", "$event_id"}
                 for v in value
             ):
-                checks.append(f"collection binding must replace the whole parameter value: {step.id}.{key}")
+                checks.append(
+                    f"collection binding must replace the whole parameter value: {step.id}.{key}"
+                )
         if step.id in seen or any(
             ref is not None and ref not in seen
             for ref in (step.input, step.model_from, step.decision_from)
@@ -169,6 +182,7 @@ def extraction_contracts():
     semantics = {
         "detrend": "Remove constant/linear trend on EEG picks; preserve data state.",
         "filter": "Continuous Raw -> Raw; EEG picks only; IIR is fixed fourth-order Butterworth, zero phase. This phase is an implementation choice unless supported by source evidence.",
+        "resample": "Continuous Raw -> Raw at sfreq Hz, fixed polyphase anti-aliasing. Pass $events; the executor synchronizes target event sample indices, preserving original event identity and recording timing error. Use the same target sfreq across mixed-rate records before epoch. Does not add original frequency information when upsampling.",
         "reference": "Average reference uses EEG channels, excluding auxiliary channels; preserve data state.",
         "epoch": "Continuous Raw -> Epochs; events from Collection and event_id from Survey; tmin/tmax in seconds. Does not apply baseline or reject trials.",
         "baseline": "Epochs -> Epochs; subtract baseline mean, NOT percentage ERD/ERS normalization.",
@@ -178,7 +192,12 @@ def extraction_contracts():
         "mark_channels": "Apply channel marks using decision_from an earlier amplitude_windows result; does not drop trials.",
     }
     return [
-        {"unit_id": unit, "op": op, "parameters": schema.model_json_schema(), "semantics": semantics[op]}
+        {
+            "unit_id": unit,
+            "op": op,
+            "parameters": schema.model_json_schema(),
+            "semantics": semantics[op],
+        }
         for (unit, op), schema in OPERATIONS.items()
     ]
 
@@ -249,19 +268,23 @@ class MethodLibrary:
                             "The planner supports applicability keys dataset_id, dataset_version and exact upstream task only; describe other requirements in checks. "
                             "Separate analysis branches; no classifiers/evaluation steps. Output draft status, source survey_literature. "
                             "Never claim exact reproduction if you adapt steps. Schema: "
-                        ) + json.dumps(MethodDraft.model_json_schema()),
+                        )
+                        + json.dumps(MethodDraft.model_json_schema()),
                     },
                     {
                         "role": "user",
                         "content": json.dumps(
                             {
-                                "paper": paper.model_dump(mode="json", exclude={"evidence"}),
+                                "paper": paper.model_dump(
+                                    mode="json", exclude={"evidence"}
+                                ),
                                 "indexed_evidence": [
                                     {"index": i, **e.model_dump(mode="json")}
                                     for i, e in enumerate(paper.evidence)
                                 ],
                                 "enabled_operations": extraction_contracts(),
-                            }, ensure_ascii=False,
+                            },
+                            ensure_ascii=False,
                         ),
                     },
                 ],
@@ -269,7 +292,10 @@ class MethodLibrary:
             )
             method = MethodSpec(
                 **draft.model_dump(mode="json"),
-                evidence=[e.model_copy(update={"artifact_ref": paper.fulltext_ref}) for e in paper.evidence],
+                evidence=[
+                    e.model_copy(update={"artifact_ref": paper.fulltext_ref})
+                    for e in paper.evidence
+                ],
             )
             method.source, method.status = "survey_literature", "draft"
             method.validation, method.validated_profiles = [], []

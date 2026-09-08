@@ -12,9 +12,24 @@ from app.workflows.service import WorkflowService
 from tests.workflows.fakes import Reader, WorkflowLLM, workflow_service
 from tests.workflows.test_workflow import source as source_fixture, finish, OWNER
 from app.agents import build_agent_registry
-from app.workflows.planning_contracts import design_contract
+from app.workflows.planning_contracts import design_contract, survey_plan_contract
 
 source = source_fixture
+
+
+@pytest.mark.asyncio
+async def test_survey_plan_schema_fixes_all_required_target_medium_pairs():
+    contract = survey_plan_contract()
+    plan = await WorkflowLLM().structured_output([{}, {"content": "{}"}], contract)
+    data = plan.model_dump(mode="json")
+    assert len(data["verification"]) == 2 and len(data["literature"]) == 8
+    data["verification"][1]["medium"] = "official"
+    with pytest.raises(ValueError, match="literal_error"):
+        contract.model_validate(data)
+    data = plan.model_dump(mode="json")
+    data["literature"].pop()
+    with pytest.raises(ValueError):
+        contract.model_validate(data)
 
 
 @pytest.mark.asyncio
@@ -145,6 +160,16 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     assert all(r["steps"][0]["params"]["h_freq"] < 80 for r in plan["records"])
     artifacts = service.describe(OWNER, state["id"])["artifacts"]
     assert any(a["name"] == "survey/sources.json" and a["sha256"] for a in artifacts)
+    from app.workflows.contracts import PreprocessingOutput
+
+    summary = deepcopy(result["outputs"]["data_preprocessing"])
+    summary["completed"] += 1
+    with pytest.raises(ValueError, match="counts"):
+        PreprocessingOutput.model_validate(summary)
+    summary = deepcopy(result["outputs"]["data_preprocessing"])
+    summary["records"][0]["shape"][0] += 1
+    with pytest.raises(ValueError, match="shape"):
+        PreprocessingOutput.model_validate(summary)
 
 
 @pytest.mark.asyncio
@@ -171,6 +196,13 @@ async def test_invented_quote_or_unread_paper_rejected():
     changed = deepcopy(findings)
     changed.literature[0].source_id = "missing"
     with pytest.raises(ValueError, match="read paper"):
+        WorkflowCognition.validate_findings(changed, sources)
+
+    # A PubMed landing page is still abstract-only even if all its HTML was read.
+    sources.documents[1].url = "https://pubmed.ncbi.nlm.nih.gov/15188875/"
+    changed = deepcopy(findings)
+    changed.literature[0].reading_scope = "full_text"
+    with pytest.raises(ValueError, match="abstract-only"):
         WorkflowCognition.validate_findings(changed, sources)
 
 

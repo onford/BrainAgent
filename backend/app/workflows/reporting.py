@@ -139,6 +139,13 @@ def render_report(folder):
     from .collection_contracts import CATEGORY_LABELS
 
     data = report_data(folder.parent)
+    observed_rates = (
+        sorted(
+            {f.value for f in data.local_inspection.facts if f.field == "sampling_rate"}
+        )
+        if data.local_inspection
+        else []
+    )
     # This small projection is the template input, not another process archive.
     write_readable(folder / "report.json", data.model_dump(mode="json"))
     titles = {
@@ -156,7 +163,12 @@ def render_report(folder):
         "files": "对应的原始 EDF 数",
         "behavior_records": "行为记录数",
     }
-    operations = {"filter": "带通滤波", "reference": "平均参考", "epoch": "事件分段"}
+    operations = {
+        "filter": "带通滤波",
+        "reference": "平均参考",
+        "epoch": "事件分段",
+        "resample": "重采样",
+    }
     recipe = []
     for i, step in enumerate(data.method.recipe):
         p = step.params
@@ -168,6 +180,8 @@ def render_report(folder):
             description = f"参考通道：{p.get('ref_channels')}"
         elif step.op == "epoch":
             description = f"任务开始后 {p['tmin']:g}–{p['tmax']:g} 秒；保留左右手标签"
+        elif step.op == "resample":
+            description = f"统一至 {p['sfreq']:g} Hz；polyphase 抗混叠；同步事件样点并保留原始事件对应"
         else:
             description = "; ".join(f"{k}={v}" for k, v in p.items())
         recipe.append([i + 1, operations.get(step.op, step.op), description])
@@ -296,7 +310,15 @@ def render_report(folder):
             [
                 ["用途", "模型训练"],
                 ["任务", "左手 / 右手运动想象"],
-                ["采集", f"{data.channel_count} EEG 通道，{data.sfreq:g} Hz"],
+                [
+                    "采集",
+                    f"{data.channel_count} EEG 通道；原始采样率："
+                    + (
+                        " / ".join(observed_rates)
+                        if observed_rates
+                        else f"适配器预期 {data.sfreq:g} Hz，未取得逐记录观测"
+                    ),
+                ],
                 [
                     "范围",
                     ", ".join(data.subjects)

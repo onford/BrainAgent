@@ -17,6 +17,18 @@ import httpx
 from .cognition_contracts import SourceDocument
 
 
+def abstract_only(document):
+    location = urlsplit(document.url)
+    return (
+        "[Abstract]" in document.text
+        or location.hostname == "pubmed.ncbi.nlm.nih.gov"
+        or (
+            location.hostname in {"arxiv.org", "www.arxiv.org"}
+            and location.path.startswith("/abs/")
+        )
+    )
+
+
 class PageText(HTMLParser):
     def __init__(self, base):
         super().__init__()
@@ -178,6 +190,10 @@ class SourceReader:
             truncated = False
         else:
             text = body.decode("utf-8", errors="replace")
+            if kind == "paper" and "json" in mime:
+                raise ValueError(
+                    "paper metadata JSON is not article text; follow an abstract or full-text URL"
+                )
             if "html" in mime or "xml" in mime or "<html" in text[:1000].lower():
                 parser = PageText(url)
                 parser.feed(text)
@@ -187,6 +203,12 @@ class SourceReader:
                     parser.article_title or parser.title or url,
                 )
             truncated = False
+        location = urlsplit(url)
+        if location.hostname == "pubmed.ncbi.nlm.nih.gov" or (
+            location.hostname in {"arxiv.org", "www.arxiv.org"}
+            and location.path.startswith("/abs/")
+        ):
+            text = "[Abstract]\n" + text
         if len(text.strip()) < 100:
             raise ValueError("source has insufficient readable text")
         if any(

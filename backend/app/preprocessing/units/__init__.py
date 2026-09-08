@@ -53,6 +53,11 @@ class BaselineParams(Contract):
     baseline: tuple[float | None, float | None]
 
 
+class ResampleParams(Contract):
+    sfreq: float = Field(gt=0)
+    events: Literal["$events"] = "$events"
+
+
 class EogFitParams(Contract):
     picks: list[str] = Field(min_length=1)
     picks_artifact: list[str] = Field(min_length=1)
@@ -82,6 +87,7 @@ class MarkParams(Contract):
 OPERATIONS = {
     ("EEG-DETREND", "detrend"): DetrendParams,
     ("EEG-FILTER", "filter"): FilterParams,
+    ("EEG-RESAMPLE", "resample"): ResampleParams,
     ("EEG-REREFERENCE", "reference"): ReferenceParams,
     ("EEG-EPOCH", "epoch"): EpochParams,
     ("EEG-BASELINE", "baseline"): BaselineParams,
