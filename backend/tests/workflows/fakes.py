@@ -63,6 +63,47 @@ class WorkflowLLM(LLMClient):
                     for c in categories
                 ],
             }
+        elif model.__name__ == "ResearchBatch":
+            seen = {
+                o["action"]["category"]
+                for o in data["observations"]
+                if o["action"]["action"] == "search"
+            }
+            kinds = {d["kind"] for d in data["sources"]}
+            actions = []
+            if "official" not in kinds:
+                actions.append(
+                    {
+                        "action": "read",
+                        "rationale": "核对官网",
+                        "url": "https://physionet.org/content/eegmmidb/1.0.0/",
+                        "kind": "official",
+                    }
+                )
+            actions.extend(
+                {
+                    "action": "search",
+                    "rationale": "分头检索",
+                    "tool": "europe_pmc",
+                    "query": "EEGMMIDB " + c,
+                    "category": c,
+                }
+                for c in categories[1:]
+                if c not in seen
+            )
+            if "paper" not in kinds:
+                actions.append(
+                    {
+                        "action": "read",
+                        "rationale": "阅读论文",
+                        "url": "https://example.org/paper",
+                        "kind": "paper",
+                    }
+                )
+            value = {
+                "actions": actions[: min(4, data["remaining_actions"])]
+                or [{"action": "finish", "rationale": "最低覆盖完成"}]
+            }
         elif model.__name__ == "ResearchAction":
             observations = data["observations"]
             seen = {

@@ -18,6 +18,7 @@ from .cognition_contracts import (
     MethodDesign,
     ReportNarrative,
     ResearchAction,
+    ResearchBatch,
     ResearchFindings,
     ResearchPlan,
     ResearchSources,
@@ -34,6 +35,9 @@ Do not invent sources, quotes, paper access, validation, statistics or quality i
 The purpose is model training. Candidate selection remains random; no quality ranking is implemented.
 Return a JSON object conforming exactly to the supplied schema; unknowns belong in gaps/limitations.
 """
+
+RESEARCH_CONCURRENCY = 4
+RESEARCH_TIMEOUT_SECONDS = 90
 
 
 class WorkflowCognition:
@@ -179,41 +183,56 @@ class WorkflowCognition:
         }
         if not available:
             raise ValueError("没有可用论文检索工具，请启用一个文献集成后重试")
-        # Every action is model-selected; mandatory coverage is checked by code.
-        for _ in range(18):
-            action = await self.ask(
-                "选择资料检索或阅读动作",
-                ResearchAction,
+        # The budget counts individual actions, not batches.
+        remaining = 18
+        while remaining:
+            batch_schema = create_model(
+                "ResearchBatch",
+                __base__=ResearchBatch,
+                actions=(
+                    list[ResearchAction],
+                    Field(min_length=1, max_length=min(4, remaining)),
+                ),
+            )
+            batch = await self.ask(
+                "安排并行检索与阅读任务",
+                batch_schema,
                 {
                     **inputs,
                     "plan": plan.model_dump(),
                     "search_tools": sorted(available),
                     "sources": self.source_context(sources),
                     "observations": [o.model_dump() for o in sources.observations],
-                    "remaining_actions": 18 - _,
+                    "remaining_actions": remaining,
                     "missing_requirements": self.coverage(sources),
                 },
-                "Choose search/read/finish. search uses a listed tool with query (max five results); read fetches public HTML/XML/PDF text and links. "
+                "Return a batch of 1-4 independent search/read actions, within remaining_actions. Batch independent sources and literature categories to read them concurrently. "
+                "Actions in a batch cannot depend on each other's results: follow newly discovered links in the NEXT batch. To finish, return only one finish action. "
+                "search uses a listed tool with query (max five results); read fetches public HTML/XML/PDF text and links. "
                 "Read the official source_url, search all three paper categories, and read at least one relevant paper (an abstract is partial evidence). "
                 "Follow returned paper/fulltext links; Europe PMC full text is accessible via /europepmc/webservices/rest/PMC_ID/fullTextXML. "
                 "Use read.query to retrieve passages around a specific term beyond the source preview. Search literature by dataset name/alias and task, not the selected subject IDs or exact training window. "
                 "Do not repeat usable successful actions. Sources marked usable_as_literature=false need reading through a proper article API or full text. If blocked by a provider, use another. Finish only after coverage; explicitly record unread full text as a gap.",
             )
-            if action.action == "finish":
+            remaining -= len(batch.actions)
+            if batch.actions[0].action == "finish":
                 missing = self.coverage(sources)
                 if not missing:
                     break
                 sources.observations.append(
                     ToolObservation(
-                        sequence=len(sources.observations) + 1,
-                        action=action,
+                        sequence=max(
+                            (o.sequence for o in sources.observations), default=0
+                        )
+                        + 1,
+                        action=batch.actions[0],
                         success=False,
                         output=None,
                         error="未完成：" + "; ".join(missing),
                     )
                 )
             else:
-                await self.research_tool(action, sources, available)
+                await self.research_batch(batch.actions, sources, available)
             self.save("survey/sources.json", sources)
         missing = self.coverage(sources)
         if missing:
@@ -291,6 +310,59 @@ class WorkflowCognition:
         ):
             missing.append("取得真实论文检索结果")
         return missing
+
+    async def research_batch(self, actions, sources, available):
+        """Fetch independently; merge and persist each completion on the event loop."""
+        semaphore = asyncio.Semaphore(RESEARCH_CONCURRENCY)
+        base = max((o.sequence for o in sources.observations), default=0)
+        completed = 0
+        self.progress(f"并行处理 {len(actions)} 项资料任务（最多同时 4 项）")
+
+        async def run(index, action):
+            nonlocal completed
+            local = ResearchSources(documents=[], observations=[])
+            async with semaphore:
+                try:
+                    await asyncio.wait_for(
+                        self.research_tool(action, local, available),
+                        timeout=RESEARCH_TIMEOUT_SECONDS,
+                    )
+                except TimeoutError:
+                    local.observations.append(
+                        ToolObservation(
+                            sequence=1,
+                            action=action,
+                            success=False,
+                            output=None,
+                            error="资料任务超过 90 秒，已停止等待",
+                        )
+                    )
+            for document in local.documents:
+                sources.documents = [
+                    d for d in sources.documents if d.id != document.id
+                ] + [document]
+            sources.documents.sort(key=lambda d: d.id)
+            observation = local.observations[0]
+            observation.sequence = base + index + 1
+            sources.observations.append(observation)
+            sources.observations.sort(key=lambda o: o.sequence)
+            self.save(self.prefix + "/sources.json", sources)
+            completed += 1
+            self.progress(
+                f"资料任务已返回 {completed}/{len(actions)} · "
+                + ("成功：" if observation.success else "失败：")
+                + (action.url or action.query or action.action)
+            )
+
+        tasks = [asyncio.create_task(run(i, a)) for i, a in enumerate(actions)]
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            # Cancellation must not leave background readers writing after the stage stops.
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     async def research_tool(self, action, sources, available):
         output, error = None, None
@@ -547,8 +619,9 @@ class WorkflowCognition:
             )
             self.save("preprocessing/design.json", design)
             if design.supplement_requests:
-                for action in design.supplement_requests:
-                    await self.research_tool(action, sources, available)
+                await self.research_batch(
+                    design.supplement_requests, sources, available
+                )
                 self.save("preprocessing/sources.json", sources)
                 findings = await self.ask(
                     "归纳方案补充证据",

@@ -66,7 +66,7 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     assert llm.calls.count("MethodDesign") == 2
     assert {
         "ResearchPlan",
-        "ResearchAction",
+        "ResearchBatch",
         "ResearchFindings",
         "CollectionReview",
         "ReportNarrative",

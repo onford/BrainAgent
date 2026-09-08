@@ -124,6 +124,21 @@ class ResearchAction(Contract):
         return self
 
 
+class ResearchBatch(Contract):
+    """One model decision; individual actions retain the existing source format."""
+
+    actions: list[ResearchAction] = Field(min_length=1, max_length=4)
+
+    @model_validator(mode="after")
+    def independent_actions(self):
+        if len(self.actions) > 1 and any(a.action == "finish" for a in self.actions):
+            raise ValueError("finish must be the only action in a batch")
+        keys = [(a.action, a.tool, a.query, a.url, a.kind) for a in self.actions]
+        if len(keys) != len(set(keys)):
+            raise ValueError("duplicate actions in a batch")
+        return self
+
+
 class CollectionReview(Contract):
     compatible: bool
     rationale: str
