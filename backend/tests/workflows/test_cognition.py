@@ -26,6 +26,10 @@ async def test_operation_schema_binds_channels_events_and_window():
         schema,
     )
     output = design.model_dump()
+    output["candidates"][0]["output"] = "EEG epochs"
+    with pytest.raises(ValueError, match="string_pattern_mismatch"):
+        schema.model_validate(output)
+    output = design.model_dump()
     epoch = output["candidates"][0]["steps"][-1]
     epoch["params"]["picks"] = ["eeg"]
     with pytest.raises(ValueError, match="literal_error"):

@@ -780,6 +780,11 @@ class WorkflowCognition:
                 )
             # Output must descend from the epoch, not an unrelated raw branch.
             by_id = {s.id: s for s in steps}
+            if candidate.output not in by_id:
+                raise ValueError(
+                    f"{candidate.id}: output={candidate.output!r} must be a step ID "
+                    f"from {list(by_id)}, not an output description"
+                )
             node, visited = candidate.output, set()
             while node != epochs[0].id:
                 if node in visited or node not in by_id:

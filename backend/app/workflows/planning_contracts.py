@@ -39,6 +39,13 @@ def design_contract(finding_ids, request):
         "CandidateDesign",
         __base__=CandidateDesign,
         steps=(list[step], Field(min_length=1, max_length=12)),
+        output=(
+            str,
+            Field(
+                pattern=r"^[a-z][a-z0-9_]*$",
+                description="Exact ID of the step returning the training epochs, chosen from this candidate's steps[].id. Not a description such as 'EEG epochs'.",
+            ),
+        ),
     )
     return create_model(
         "MethodDesign",
