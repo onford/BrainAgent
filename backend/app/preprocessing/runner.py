@@ -9,7 +9,7 @@ import traceback
 import mne
 import numpy as np
 
-from .inputs import read_record
+from .inputs import read_record, working_files
 from .storage import canonical, digest, file_hash, within, write_json
 from .units import invoke
 
@@ -170,7 +170,7 @@ def run_record(
     try:
         work = output / "input"
         # A materialized copy protects originals from readers and library in-place operations.
-        for relative, expected in record.files.items():
+        for relative, expected in working_files(record).items():
             src, dst = within(source_root, relative), within(work, relative)
             if file_hash(src) != expected:
                 raise ValueError("source changed before copy")

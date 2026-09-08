@@ -51,6 +51,11 @@ def test_mixed_rates_keep_event_identity_and_yield_one_training_grid(service, tm
             a["name"]: service.store.root / a["path"]
             for a in result["result"]["artifacts"]
         }
+        work = artifacts["events.json"].parent / "input"
+        assert sorted(p.name for p in work.glob("sub-*")) == [
+            Path(record.bids_path).parts[0]
+        ]
+        assert (work / "participants.tsv").is_file()
         mapping = json.loads(artifacts["events.json"].read_text())
         original, events, _ = read_record(
             Path(data.collection.root),

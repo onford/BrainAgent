@@ -10,6 +10,16 @@ from .schemas import PreprocessInput, RecordSpec
 from .storage import file_hash, within
 
 
+def working_files(record):
+    """Root metadata and the selected subject's BIDS files satisfy reader inheritance."""
+    subject = Path(record.bids_path).parts[0]
+    return {
+        name: checksum
+        for name, checksum in record.files.items()
+        if len(Path(name).parts) == 1 or Path(name).parts[0] == subject
+    }
+
+
 def validate_input(
     data: PreprocessInput, allowed_roots: list[Path], output_root: Path, *, hashes=True
 ):
@@ -32,6 +42,7 @@ def validate_input(
         path = within(root, record.bids_path)
         if (
             path.suffix != ".vhdr"
+            or not re.fullmatch(r"sub-[A-Za-z0-9]+", Path(record.bids_path).parts[0])
             or path.parent.name != "eeg"
             or not path.name.endswith("_eeg.vhdr")
         ):

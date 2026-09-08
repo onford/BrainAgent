@@ -6,7 +6,7 @@
 
 | 部分 | 当前能力 |
 |---|---|
-| 基本单元 | 新版 50 项定义及全部原始代码入库，代码哈希校验；启用下表 8 类、9 个操作 |
+| 基本单元 | 新版 50 项定义及全部原始代码入库，代码哈希校验；启用下表 9 类、10 个操作 |
 | 方法库 | 两个 MNE 项目模板；经典调研子 Agent 的显式更新入口；Survey 文献全文证据与方法提取入口 |
 | 规划 | 输入/版本核验、参数绑定、通道/状态/依赖/拟合范围检查、严格去重、机制多样性与预算初筛 |
 | 执行 | BrainVision BIDS-EEG 读取、工作副本、校准分支、模型/决定绑定、数据与事件映射、数组/模型落盘及重读 |
@@ -17,6 +17,7 @@
 |---|---|
 | EEG-DETREND | detrend：constant / linear，明确 EEG picks |
 | EEG-FILTER | filter：4 阶 Butterworth IIR、zero phase、Raw、明确 EEG picks；其余参数使用源表固定默认 |
+| EEG-RESAMPLE | resample：连续 Raw，polyphase 抗混叠，同步事件样点；保留原始事件编号及时间量化误差 |
 | EEG-REREFERENCE | reference：average 或明确 EEG 参考电极 |
 | EEG-EPOCH | epoch：事件切段，允许保留辅助通道；保留 selection 和 drop_log |
 | EEG-BASELINE | baseline：Epochs，明确时间范围 |
@@ -24,7 +25,9 @@
 | EEG-AMPLITUDE-THRESHOLD | amplitude_windows：只生成候选与分数/掩码 |
 | EEG-BAD-CHANNEL-MARK | mark_channels：绑定同一输入版本的检测决定，检查合并后坏道比例 |
 
-这 9 个操作采用有限值输入合同。NaN 原生处理、重采样、ICA、插值、ASR、autoreject、完整 PREP/RELAX 及其他变体保留原表实现和未接入状态，需要逐操作补适配、依赖和验证。没有把 50 项的语法通过记为 50 项集成验证通过。
+这 10 个操作采用有限值输入合同。NaN 原生处理、Epochs 重采样、其他重采样变体、ICA、插值、ASR、autoreject、完整 PREP/RELAX 及其他变体保留原表实现和未接入状态，需要逐操作补适配、依赖和验证。没有把 50 项的语法通过记为 50 项集成验证通过。
+
+2026-09-09 增加混合采样率集成：规划器沿数据分支传播采样率，按当前输入检查 Nyquist 和资源预算；工作流要求每个候选对全部保留记录输出相同通道顺序、采样率和时间网格。执行器分别保存原始和输出事件样点，复核 FIF、精确电压数组、事件映射与 Delta 的一致性。每个记录的工作副本只含当前被试及根级元数据，源目录仍按完整冻结清单校验。
 
 两个预定义模板是 `mne-project-baseline` 与 `mne-project-eog-regression`，均明确标记为项目改编流程。频带、Epoch 时间和基线参数由请求提供；MNE 没有在此被称为全任务统一默认流程。两个模板初始为 draft，须通过验证运行及发布接口，才可用于 production。
 

@@ -4,7 +4,7 @@ from copy import deepcopy
 from pathlib import Path
 import csv
 
-from .inputs import validate_input
+from .inputs import validate_input, working_files
 from .schemas import (
     ExecutionPlan,
     MethodSpec,
@@ -405,13 +405,16 @@ def create_plan(
             records.extend(configs)
     # Bound work copies and diagnostics as well as final output. Candidate count
     # is small; this conservative estimate intentionally favors explicit budgets.
-    input_bytes = sum(
-        (Path(data.collection.root) / p).stat().st_size
-        for p in {name for r in data.collection.records for name in r.files}
-    )
     record_index = {r.id: r for r in data.collection.records}
+    input_bytes = {
+        r.id: sum(
+            (Path(data.collection.root) / name).stat().st_size
+            for name in working_files(r)
+        )
+        for r in data.collection.records
+    }
     estimated_disk = sum(
-        input_bytes
+        input_bytes[c.record_id]
         + signal_bytes(record_index[c.record_id], c.steps, data.collection.root)
         * (len(c.steps) + 6)
         for c in records
