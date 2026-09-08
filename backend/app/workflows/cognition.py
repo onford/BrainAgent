@@ -101,6 +101,13 @@ class WorkflowCognition:
             except (ValidationError, ValueError) as exc:
                 status = "rejected"
                 error = str(exc)[:4000]
+                rejected_content = getattr(exc, "content", None)
+                if rejected_content is not None:
+                    try:
+                        raw = json.loads(rejected_content)
+                        result = raw if isinstance(raw, dict) else None
+                    except ValueError:
+                        pass
                 messages.append(
                     {
                         "role": "user",
@@ -108,12 +115,14 @@ class WorkflowCognition:
                         + error,
                     }
                 )
-                if result:
+                if result is not None or rejected_content is not None:
                     messages.insert(
                         -1,
                         {
                             "role": "assistant",
-                            "content": json.dumps(result, ensure_ascii=False),
+                            "content": rejected_content
+                            if rejected_content is not None
+                            else json.dumps(result, ensure_ascii=False),
                         },
                     )
             except Exception as exc:

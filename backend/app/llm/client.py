@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 from urllib.parse import urlsplit
 
 import httpx
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from app.llm.config import LLMConfig
 from app.core.exceptions import LLMConfigurationError
@@ -13,6 +13,14 @@ from app.core.logging import current_log_context
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger("app.llm.calls")
+
+
+class StructuredOutputError(ValueError):
+    """Keep the rejected model reply so a caller can request a focused correction."""
+
+    def __init__(self, content: str, cause: ValidationError):
+        super().__init__(str(cause))
+        self.content = content
 
 
 class LLMClient(ABC):
@@ -24,7 +32,10 @@ class LLMClient(ABC):
         self, messages: list[dict[str, str]], response_model: type[T]
     ) -> T:
         content = await self.chat(messages)
-        return response_model.model_validate_json(content)
+        try:
+            return response_model.model_validate_json(content)
+        except ValidationError as exc:
+            raise StructuredOutputError(content, exc) from exc
 
 
 class OpenAICompatibleClient(LLMClient):
@@ -61,7 +72,9 @@ class OpenAICompatibleClient(LLMClient):
         if self.config.reasoning_effort is not None:
             payload["reasoning_effort"] = self.config.reasoning_effort
         try:
-            async with httpx.AsyncClient(timeout=timeout, transport=self._transport) as client:
+            async with httpx.AsyncClient(
+                timeout=timeout, transport=self._transport
+            ) as client:
                 response = await client.post(
                     endpoint,
                     headers=headers,

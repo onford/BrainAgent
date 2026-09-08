@@ -18,6 +18,40 @@ source = source_fixture
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "invalid", ['{"count": "bad", "note": "retain this"}', '{"count":']
+)
+async def test_schema_repair_receives_the_previous_reply(tmp_path, invalid):
+    from types import SimpleNamespace
+    from pydantic import BaseModel
+    from app.llm.client import LLMClient
+    from tests.workflows.test_parallel_research import make_cognition
+
+    class Reply(BaseModel):
+        count: int
+        note: str
+
+    class RepairLLM(LLMClient):
+        config = SimpleNamespace(model="test")
+        calls = 0
+
+        async def chat(self, messages):
+            self.calls += 1
+            if self.calls == 1:
+                return invalid
+            assert messages[-2] == {"role": "assistant", "content": invalid}
+            assert "validation rejected" in messages[-1]["content"]
+            return '{"count": 1, "note": "retain this"}'
+
+    agent = make_cognition(tmp_path, Reader(), RepairLLM())
+    result = await agent.ask("repair", Reply, {}, "Return the requested object.")
+    assert result.note == "retain this"
+    assert [r.status for r in agent.log.records] == ["rejected", "accepted"]
+    if "bad" in invalid:
+        assert agent.log.records[0].result == json.loads(invalid)
+
+
+@pytest.mark.asyncio
 async def test_operation_schema_binds_channels_events_and_window():
     request = {"tmin": 0.0, "tmax": 2.0}
     schema = design_contract(["f1", "f2", "f3"], request)
