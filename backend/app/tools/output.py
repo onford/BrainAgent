@@ -78,6 +78,7 @@ def _semantic_scholar(output: Any, limit: int) -> dict[str, Any]:
                 "title": row.get("title"),
                 "url": row.get("url"),
                 "year": row.get("year"),
+                "open_access_pdf": (row.get("openAccessPdf") or {}).get("url"),
                 "authors": [
                     author.get("name")
                     for author in authors[:8]
@@ -101,6 +102,10 @@ def _openalex(output: Any, limit: int) -> dict[str, Any]:
                 "title": row.get("display_name"),
                 "url": row.get("doi") or row.get("id"),
                 "year": row.get("publication_year"),
+                "full_text_url": (
+                    (row.get("best_oa_location") or {}).get("pdf_url")
+                    or (row.get("best_oa_location") or {}).get("landing_page_url")
+                ),
                 "authors": [
                     item.get("author", {}).get("display_name")
                     for item in authorships[:8]
@@ -148,6 +153,10 @@ def _europe_pmc(output: Any, limit: int) -> dict[str, Any]:
             "year": row.get("pubYear"),
             "authors": _shorten(row.get("authorString"), 300),
             "doi": row.get("doi"),
+            "pmcid": row.get("pmcid"),
+            "full_text_url": f"https://www.ebi.ac.uk/europepmc/webservices/rest/{row['pmcid']}/fullTextXML"
+            if row.get("pmcid") and row.get("isOpenAccess") == "Y"
+            else None,
         }
         for row in rows[:limit]
         if isinstance(row, dict)

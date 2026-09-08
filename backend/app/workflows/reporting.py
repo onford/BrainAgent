@@ -22,7 +22,7 @@ def render_report(folder):
     data = report_data(folder.parent)
     # This small projection is the template input, not another process archive.
     write_readable(
-        folder / "report.json", data.model_dump(mode="json", exclude_none=True)
+        folder / "report.json", data.model_dump(mode="json")
     )
     titles = {
         "subjects": "被试数",
@@ -36,9 +36,11 @@ def render_report(folder):
     for i, step in enumerate(data.method.recipe):
         p = step.params
         if step.op == "filter":
-            description = f"{p['l_freq']:g}–{p['h_freq']:g} Hz；四阶 Butterworth 零相位"
+            description = f"低频界 {p['l_freq']} / 高频界 {p['h_freq']} Hz；method={p.get('method', 'fir')}"
+            if p.get("method") == "iir":
+                description += "；四阶 Butterworth 零相位"
         elif step.op == "reference":
-            description = "使用 EEG 通道计算平均参考"
+            description = f"参考通道：{p.get('ref_channels')}"
         elif step.op == "epoch":
             description = f"任务开始后 {p['tmin']:g}–{p['tmax']:g} 秒；保留左右手标签"
         else:
@@ -48,6 +50,24 @@ def render_report(folder):
         (Path(__file__).parent / "templates/report.html").read_text(encoding="utf-8")
     )
     document = template.substitute(
+        research_overview=escape(
+            data.narrative.overview
+            if data.narrative
+            else "此历史运行未记录模型调研分析。"
+        ),
+        data_interpretation=escape(
+            data.narrative.data_interpretation if data.narrative else ""
+        ),
+        method_reasoning=escape(
+            data.narrative.method_reasoning
+            if data.narrative
+            else "参数依据见方法记录。"
+        ),
+        finding_rows=rows(
+            [[f.topic, f.statement, f.source_id] for f in data.research.facts]
+            if data.research
+            else []
+        ),
         dataset_name=escape(data.dataset_name),
         dataset_version=escape(data.dataset_version),
         subjects=data.after.subjects,
@@ -87,7 +107,18 @@ def render_report(folder):
             f"<li><a href='{escape(r.url)}'>{escape(r.title)}</a></li>"
             for r in data.references
         ),
-        limitations="".join(f"<li>{escape(v)}</li>" for v in data.limitations),
+        limitations="".join(
+            f"<li>{escape(v)}</li>"
+            for v in dict.fromkeys(
+                data.limitations
+                + (data.narrative.limitations if data.narrative else [])
+                + (
+                    data.research.gaps + data.research.conflicts
+                    if data.research
+                    else []
+                )
+            )
+        ),
     )
     (folder / "report.html").write_text(document, encoding="utf-8")
     return {

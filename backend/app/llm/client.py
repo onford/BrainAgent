@@ -58,6 +58,8 @@ class OpenAICompatibleClient(LLMClient):
             "response_format": {"type": "json_object"},
         }
         timeout = httpx.Timeout(self.config.timeout_seconds, connect=10.0)
+        if self.config.reasoning_effort is not None:
+            payload["reasoning_effort"] = self.config.reasoning_effort
         try:
             async with httpx.AsyncClient(timeout=timeout, transport=self._transport) as client:
                 response = await client.post(

@@ -12,7 +12,7 @@
 .\.venv-eeg\Scripts\python.exe -m app.workflows --source-root E:/dataset/eeg/EEGMMIDB --subjects S001 S002 S003
 ```
 
-命令会启动独立计算进程，并在完成后停止该进程；不需要 LLM、聊天数据库或外部检索凭据。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、状态和交付目录；退出码 0 表示全部完成。支持 `--runs 4 8 12`、`--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。同一存储目录同时运行一个 Worker。
+命令与 Web 入口使用相同的 LLM 和文献工具配置，需要有效模型配置、应用数据库及至少一个可用论文检索集成。命令会启动独立计算进程，并在完成后停止该进程。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、阶段和当前模型/工具动作；退出码 0 表示全部完成。支持 `--runs 4 8 12`、`--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。同一存储目录同时运行一个 Worker。
 
 Python 环境需安装 `backend/pyproject.toml` 中的 `eeg` 依赖；验收环境为 Python 3.12、MNE 1.10.2、NumPy 1.26.4。新环境可在 backend 中用 `uv sync --python 3.12 --extra eeg --extra dev` 安装，然后通过 `uv run python -m app.workflows ...` 运行。
 
@@ -28,7 +28,7 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 ## 各模块的实际工作
 
-运行页的“全部产出文件”按模块列出文件名、大小和下载链接，包括 BIDS 标准副本、两种候选的全部处理记录及交付溯源。模块完成后即可下载已有产物；Worker 完成的记录会在轮询时加入，失败及历史尝试的诊断文件也保留入口。原始数据和 Worker 临时输入副本不作为重复产物列出。下载继续检查所属用户和文件哈希。旧版已完成运行会补齐文件入口，保留原报告；旧版未完成运行续跑时转为结构协议，并复用已有数值结果。
+运行页的“全部产出文件”按模块列出文件名、用途说明、大小和下载链接，包括模型调研与决策记录、BIDS 标准副本、全部候选的处理记录及交付溯源。模型和工具执行时持续更新进度与记录；Worker 完成的记录会在轮询时加入，失败及历史尝试的诊断文件也保留入口。下载检查所属用户与已完成文件哈希。旧版已完成运行保持原报告；旧运行若格式快照与当前代码不一致，需要新建运行或使用原版本续跑。
 
 ## 过程结构与报告模板
 
@@ -51,7 +51,7 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 主记录使用缩进 JSON；相同的通道列表只保存一次，逐记录引用通道表。`workflow.json` 保存调度状态、事件和主记录路径，不再嵌入整份模块数据。TSV 适合逐行查看文件清单、事件映射和筛选变化；数值执行的原始证据仍可逐文件下载。
 
-报告生成链路为：**已校验的模块 JSON → ReportData 字段摘取 → HTML 模板**。`report/report.json` 是精简的模板输入，`backend/app/workflows/templates/report.html` 负责章节和样式，`reporting.py` 负责转义及表格填充。报告生成不访问数值数据库、不重新计算过程统计。可仅复制索引和前四个模块主记录来重建报告；之后更换用户提供的模板时可复用这些结构化数据。
+报告生成链路为：**已校验的模块 JSON 和调研/方案 → LLM 报告解释 → ReportData 字段摘取 → HTML 模板**。`report/report.json` 是模板输入，`templates/report.html` 负责章节和样式，`reporting.py` 负责转义及表格填充。报告不让模型计算统计。重建报告需复制索引、前四模块主记录、`survey/research.json` 和 `report/narrative.json`；无需再次调用模型或读取数值数据库。
 
 `delivery/output.json` 是数据包封装完成后的模块回执，位于压缩包外；包内完整文件列表和哈希以 `delivery/manifest.json` 为准。
 
@@ -59,14 +59,14 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 | 模块 | 输入与产物 |
 |---|---|
-| Data Survey | 使用版本化 EEGMMIDB 资料配置，扫描本地 EDF 清单；检查选定记录的采样率、通道、事件、时长和哈希；保存来源、Trigger 表和未确定字段 |
+| Data Survey | 扫描本地 EDF；LLM 拆解调研问题、选择论文检索和官网/论文阅读动作，形成有原文依据的结论和待补信息 |
 | Data Collection | 转为 BrainVision BIDS 工作副本，统一通道名并使用标准电极模板；检查信号有限值、转换前后误差和源文件哈希；输出 mapping、anomalies、exclusions、pre-screen、post-screen、delta |
-| Data Preprocessing | 复用基本单元、方法库、规划器和独立 Worker，执行两条明确参数的工程训练预设，保存各候选信号、事件、参数及执行证据 |
+| Data Preprocessing | LLM 从真实调研结果和可执行算子设计 2–3 个候选，拆解步骤、参数与依赖；编译校验失败时反馈修订，通过后交给独立 Worker |
 | Data Evaluation | 对覆盖全部保留记录且产物完整的候选，以指定 seed 随机选择；保存可选与排除候选、选择原因；不计算质量优劣 |
 | Data Report | 自动生成 HTML 报告与 JSON 摘要，列出数据、任务、接入统计、所选方法、逐记录 Epoch 数、来源与限制 |
 | Data Delivery | 导出 X、y、subjects、split、标签、通道、Trial 索引、实际处理记录及训练示例；逐文件哈希、数组重读、ZIP 完整性核验 |
 
-两条候选均为连续 EEG 带通 → 平均参考 → 事件分段，频带分别为 **1–40 Hz** 和 **8–30 Hz**。滤波采用 Butterworth 设计阶数 4、双向零相位 IIR；分段默认任务开始后 0–2 秒，包含终点，共 321 个采样点，不做基线扣除。它们在 `exploratory` 模式中执行，属于可运行的工程预设，未发布为经过科学验证的经典方法；不改变原有 `production` 模式的验证要求。
+候选顺序、算子和参数由模型根据本次调研设计，不固定为两组频带。每一步区分文献依据与工程决定；只允许启用算子，窗口与 EEG 输出通道必须满足用户请求。默认窗口为 0–2 秒，160 Hz 下含终点，共 321 个采样点。候选在 `exploratory` 模式执行，不自动声明科学有效性，也不改变 `production` 模式的验证要求。架构审阅、执行闭环与各新增过程文件见 [模型工作流设计](llm-workflow-redesign.md)。
 
 仅 Run 4、8、12 被接受，其含义为左右手运动想象，T1=左手、T2=右手；T0 休息不进入训练 Trial。Run 3、7、11 是实际运动，不被该适配器接受。事件说明见 [MNE 1.10.2 运行编号表](https://mne.tools/1.10/generated/mne.datasets.eegbci.load_data.html)，采集与资料来源见 [PhysioNet 数据集页](https://physionet.org/content/eegmmidb/1.0.0/)。
 
@@ -112,4 +112,4 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 测试覆盖真实 BIDS 转换、独立数值 Worker 调用、六 Agent 衔接、报告失败重试、服务重启恢复、数组/标签/源样点对应、按被试分组、训练拟合、随机选择复现、损坏候选排除、ZIP 哈希、下载归属与文件损坏。自动测试中的 EDF 解码用固定信号替代；真实 EDF 另通过命令行和页面完整验收。前端测试覆盖提交、重试、完成态、报告和下载入口。
 
-完整自动文献综述、任意数据集的资料核对、复杂伪迹处理、质量评价与最优候选选择仍待扩展。首版 Survey 使用已核对的版本化资料配置，不声称每次运行都重新检索全文。报告模板位于 `backend/app/workflows/templates/report.html`，内容汇总在 `outputs.py`；后续可以在该边界替换报告样式和章节。
+以上为原固定流程的数值验收记录。当前版本增加实际 LLM 调研与方案设计，其运行与验证结果见 [模型工作流设计](llm-workflow-redesign.md)。新的 Survey 每次从模型调研计划进入真实检索与阅读；重试复用本次已取得的证据。穷尽式文献综述、任意数据集适配、复杂伪迹处理、质量评价与最优候选选择仍待扩展。报告模板位于 `backend/app/workflows/templates/report.html`，解释与统计由结构化记录摘取。

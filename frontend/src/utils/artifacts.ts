@@ -66,6 +66,21 @@ const bidsDescriptions: Record<string, string> = {
 }
 
 export function artifactDescription(name: string): string {
+  if (name.endsWith('/decisions.json')) return '模型的决策输出、校验结果与修订记录'
+  const research: Record<string, string> = {
+    'survey/research-plan.json': '模型拆解的调研问题、文献分类与检索计划',
+    'survey/research.json': '有原文依据的调研结论、论文阅读范围与待补信息',
+    'survey/sources.json': '实际检索结果、来源正文、链接和获取记录',
+    'collection/review.json': '模型对任务、标签和数据接入适用性的核对',
+    'collection/research.json': '为解决接入疑问补充核对的事实与依据',
+    'collection/sources.json': '接入核对阶段实际读取的补充来源',
+    'preprocessing/design.json': '模型设计的候选方案、步骤参数及文献或工程依据',
+    'preprocessing/research.json': '方案设计阶段补充的文献依据与待解决问题',
+    'preprocessing/sources.json': '为方案补充获取的来源正文和检索记录',
+    'preprocessing/revisions.json': '不可执行方案的校验原因与修订历史',
+    'report/narrative.json': '从过程记录提炼、供报告模板使用的解释文字',
+  }
+  if (research[name]) return research[name]
   if (descriptions[name]) return descriptions[name]
   const filename = name.split('/').at(-1)!
   if (name.startsWith('collection/bids/')) {

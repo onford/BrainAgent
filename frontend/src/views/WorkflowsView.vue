@@ -5,7 +5,7 @@ import { apiRequest, apiUrl } from '../api/client'
 import { artifactDescription, groupArtifactFiles } from '../utils/artifacts'
 
 type Stage = { name: string; label: string; status: string; error?: string }
-type Workflow = { id: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
+type Workflow = { id: string; engine?: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
 const route = useRoute(), router = useRouter()
 const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
 const roots = ref<string[]>([]), source = ref(''), count = ref(3), busy = ref(false), error = ref('')
@@ -94,7 +94,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
           <label>本地数据目录<input v-model="source" list="source-roots" required placeholder="选择已配置的 EEGMMIDB 目录" aria-label="本地数据目录" /></label>
           <datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist>
           <label>被试数量<input v-model.number="count" type="number" min="1" max="12" required aria-label="被试数量" /></label>
-          <p class="hint">左右手运动想象 · Run 4 / 8<br>训练窗口 0–2 秒 · 两种频带候选</p>
+          <p class="hint">左右手运动想象 · Run 4 / 8<br>训练窗口 0–2 秒 · 模型调研并设计候选方案</p>
           <button class="primary" :disabled="busy || !source">{{busy?'正在提交…':'开始完整流程'}}</button>
         </form>
         <section class="history"><h2>运行记录</h2><button v-for="job in jobs" :key="job.id" :class="{chosen:job.id===selectedId}" @click="select(job.id)"><strong>{{labels[job.status] ?? job.status}}</strong><span>{{new Date(job.created_at).toLocaleString('zh-CN')}}</span></button><p v-if="!jobs.length" class="hint">还没有运行记录</p></section>
@@ -105,6 +105,8 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
           <section class="panel progress-panel"><div class="section-heading"><h2>{{sourceSummary?.profile.name ?? 'EEG 数据流程'}}</h2><span class="badge">{{labels[current.status]}}</span></div><p role="status">{{completedCount}} / 6 个模块已完成</p><progress :value="completedCount" max="6" aria-label="流程进度" />
             <ol class="stages"><li v-for="(stage,index) in current.stages" :key="stage.name" :class="stage.status"><span class="stage-number">{{stage.status==='completed'?'✓':index+1}}</span><div><strong>{{stage.label}}</strong><small>{{labels[stage.status]}}</small><p v-if="stage.error" class="error">{{stage.error}}</p></div></li></ol>
             <button v-if="current.status==='failed'" :disabled="busy" @click="retry">重试未完成步骤</button>
+            <p class="hint">{{current.engine === 'llm-research-v1' ? '模型负责资料调研、接入核对、方案设计与报告解释。工具负责数据处理和校验。' : '历史运行：使用固定处理流程。'}}</p>
+            <p v-if="active && current.events.length" class="current-action" role="status">{{current.events[current.events.length - 1]?.message}}</p>
           </section>
           <section v-if="delivered" class="panel delivery-panel"><div class="section-heading"><h2>训练数据已就绪</h2><span class="badge">随机选择候选</span></div><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>EEG 通道</span></div><div><strong>{{delivered.shape[2]}}</strong><span>每段时间点</span></div></div><p>训练 / 验证 / 测试按被试分组。候选方法随机选择，本轮未进行质量排名。</p><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">下载训练数据包</a><a :href="fileUrl('report/report.html',false)" target="_blank" rel="noopener">打开报告</a><a :href="fileUrl('delivery/manifest.json')">下载数据清单</a></div><p class="hint">数据包包含 X、y、分组、通道信息、原始事件映射与复现记录。</p></section>
           <section v-if="current.status==='completed'" class="panel"><h2>报告预览</h2><iframe :src="fileUrl('report/report.html',false)" title="EEG 训练数据报告" sandbox="allow-same-origin" /></section>
@@ -130,7 +132,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
           </section>
           <details class="panel records"><summary>执行日志</summary><ul><li v-for="event in current.events" :key="event.time+event.agent">{{new Date(event.time).toLocaleTimeString('zh-CN')}} · {{event.message}}</li></ul></details>
         </template>
-        <section v-else class="panel empty"><h2>选择数据，开始处理</h2><p>流程会读取数据、创建标准副本、运行候选预处理、随机选择结果，并生成报告和训练数据包。</p></section>
+        <section v-else class="panel empty"><h2>选择数据，开始处理</h2><p>Agent 会调研官网和论文、核对本地数据并设计候选预处理方案，执行校验后生成报告和训练数据包。</p></section>
       </section>
     </div>
   </main>
@@ -151,5 +153,6 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
 .file-family summary { font-size: 13px; overflow-wrap: anywhere; }
 .file-family[open] > summary { padding-bottom: 8px; border-bottom: 1px solid #e4ece6; }
 .file-copy { min-width: 0; overflow-wrap: anywhere; }
+.current-action { background: #edf4ef; border-radius: 8px; padding: 10px 14px; overflow-wrap: anywhere; font-size: 13px; }
 .file-group .file-description { margin-left: 8px; color: #6b776f; font-size: 12px; font-weight: 400; line-height: 1.6; }
 </style>

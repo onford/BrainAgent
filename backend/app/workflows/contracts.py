@@ -6,6 +6,7 @@ from pydantic import Field, model_validator
 
 from app.preprocessing.schemas import Contract, Ref, Step
 from .schemas import WorkflowRequest
+from .cognition_contracts import ResearchFindings, ReportNarrative
 
 Count = Annotated[int, Field(ge=0)]
 
@@ -237,6 +238,8 @@ class ReportData(Contract):
     seed: Count
     references: list[Citation]
     limitations: list[str]
+    research: ResearchFindings | None = None
+    narrative: ReportNarrative | None = None
 
 
 STAGE_CONTRACTS = {

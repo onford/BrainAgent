@@ -6,6 +6,7 @@ from uuid import uuid4
 from app.preprocessing.storage import file_hash
 
 from .contracts import ProcessData, ProcessIndex, ReportData, STAGE_CONTRACTS
+from .cognition_contracts import ResearchFindings, ReportNarrative, ResearchSources
 from .formats import (
     ARRAY_FORMATS,
     FORMAT_VERSION,
@@ -158,6 +159,25 @@ def report_data(folder):
         (folder / "process/index.json").read_text(encoding="utf-8")
     )
     method = next(m for m in prep.methods if m.ref == selection.selected_method_ref)
+
+    def optional(relative, model):
+        path = folder / relative
+        return (
+            model.model_validate_json(path.read_text(encoding="utf-8"))
+            if path.exists()
+            else None
+        )
+
+    references = [r.model_dump() for r in survey.profile.references]
+    extra_sources = optional("preprocessing/sources.json", ResearchSources) or optional(
+        "collection/sources.json", ResearchSources
+    )
+    if extra_sources:
+        references.extend(
+            {"title": d.title, "url": d.url}
+            for d in extra_sources.documents
+            if d.url not in {r["url"] for r in references}
+        )
     return ReportData(
         dataset_name=survey.profile.name,
         dataset_version=survey.profile.version,
@@ -172,7 +192,11 @@ def report_data(folder):
         records=[r for r in prep.records if r.method_id == method.ref.id],
         selection_reason=selection.reason,
         seed=selection.seed,
-        references=survey.profile.references,
+        references=references,
+        research=optional("preprocessing/research.json", ResearchFindings)
+        or optional("collection/research.json", ResearchFindings)
+        or optional("survey/research.json", ResearchFindings),
+        narrative=optional("report/narrative.json", ReportNarrative),
         limitations=[
             collection.validation,
             *collection.adaptations,

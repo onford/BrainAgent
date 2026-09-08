@@ -10,20 +10,33 @@ from pathlib import Path
 import subprocess
 import sys
 
-from app.agents import build_agent_registry
-from app.preprocessing.service import PreprocessingService
+from app.core.config import get_settings
+from app.main import create_app
 from .schemas import WorkflowRequest
-from .service import WorkflowService
 
 
 async def run(args):
     root = Path(args.root).resolve()
     source = Path(args.source_root).resolve(strict=True)
-    preprocessing = PreprocessingService(root / "preprocessing")
-    service = WorkflowService(root / "workflows", [source], preprocessing)
-    service.registry = build_agent_registry(
-        preprocessing=preprocessing, workflow=service
+    settings = get_settings().model_copy(
+        update={
+            "preprocessing_root": str(root / "preprocessing"),
+            "workflow_root": str(root / "workflows"),
+            "workflow_input_roots": [str(source)],
+        }
     )
+    app = create_app(settings)
+    try:
+        if settings.db_create_tables:
+            await app.state.database.create_tables()
+        return await run_workflow(args, app.state.workflows, root, source)
+    finally:
+        await app.state.workflows.close()
+        await app.state.database.dispose()
+
+
+async def run_workflow(args, service, root, source):
+    preprocessing = service.preprocessing
     if args.resume:
         state = service.get(args.owner, args.resume)
         if state["status"] in {"failed", "interrupted"}:
@@ -70,7 +83,12 @@ async def run(args):
                         f"Worker exited ({worker.returncode}); see {log.name}"
                     )
                 current = service.get(args.owner, state["id"])
-                progress = [(s["label"], s["status"]) for s in current["stages"]]
+                progress = {
+                    "stages": [(s["label"], s["status"]) for s in current["stages"]],
+                    "activity": current["events"][-1]["message"]
+                    if current["events"]
+                    else None,
+                }
                 if progress != last:
                     print(json.dumps(progress, ensure_ascii=False), flush=True)
                     last = progress

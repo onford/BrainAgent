@@ -51,7 +51,7 @@ class HttpExternalToolClient(ExternalToolClient):
         requests: dict[str, tuple[str, dict[str, Any]]] = {
             "semantic_scholar": (
                 "/paper/search",
-                {"query": query, "limit": limit, "fields": "title,url,year,authors"},
+                {"query": query, "limit": limit, "fields": "title,url,year,authors,openAccessPdf"},
             ),
             "openalex": ("/works", {"search": query, "per-page": limit}),
             "crossref": ("/works", {"query": query, "rows": limit}),

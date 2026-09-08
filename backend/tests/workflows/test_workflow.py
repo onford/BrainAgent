@@ -26,7 +26,7 @@ from app.workflows import dataset, outputs
 from app.workflows.schemas import WorkflowRequest
 from app.workflows.contracts import STAGE_CONTRACTS, SurveyOutput
 from app.workflows.records import load_stage, publish_stage, report_data
-from app.workflows.service import WorkflowService
+from tests.workflows.fakes import workflow_service as WorkflowService
 from app.workflows.templates.train_example import train
 from tests.fakes import ScriptedLLMClient
 

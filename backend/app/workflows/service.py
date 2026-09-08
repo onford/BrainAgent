@@ -5,8 +5,7 @@ from pathlib import Path
 import re
 from uuid import uuid4
 
-from app.preprocessing.methods import baseline_methods
-from app.preprocessing.schemas import PlanRequest, Ref
+from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import file_hash, within, write_json
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult
@@ -20,6 +19,8 @@ from .records import (
 )
 from .contracts import STAGE_CONTRACTS
 from .schemas import STAGES, STAGE_LABELS, WorkflowRequest
+from .cognition import WorkflowCognition
+from .cognition_contracts import ResearchSources
 
 
 def now():
@@ -27,12 +28,15 @@ def now():
 
 
 class WorkflowService:
-    """Each stage calls its registered domain agent; numeric work stays in Worker."""
+    """Domain agents use model research/design; numeric work stays in Worker."""
 
-    def __init__(self, root, input_roots, preprocessing):
+    def __init__(
+        self, root, input_roots, preprocessing, llm=None, tools=None, source_reader=None
+    ):
         self.root = Path(root).resolve()
         self.input_roots = [Path(p).resolve() for p in input_roots]
         self.preprocessing = preprocessing
+        self.llm, self.tools, self.source_reader = llm, tools, source_reader
         self.registry = None
         self.tasks = {}
         self.artifact_cache = {}
@@ -113,6 +117,7 @@ class WorkflowService:
         )
         state = {
             "schema_version": "1",
+            "engine": "llm-research-v1",
             "id": uuid4().hex,
             "owner": owner,
             "status": "queued",
@@ -221,6 +226,7 @@ class WorkflowService:
                 context.record_result(result)
                 # A stage may persist its background preprocessing job before waiting.
                 latest = self.get(owner, identity)
+                state["events"] = latest["events"]
                 if latest.get("preprocessing_job"):
                     state["preprocessing_job"] = latest["preprocessing_job"]
                 state["outputs"][name] = result.output
@@ -232,6 +238,7 @@ class WorkflowService:
         except asyncio.CancelledError:
             state.update(status="interrupted", error="服务中断，重新启动后继续")
             latest = self.get(owner, identity)
+            state["events"] = latest["events"]
             if latest.get("preprocessing_job"):
                 state["preprocessing_job"] = latest["preprocessing_job"]
             self.save(state)
@@ -249,6 +256,9 @@ class WorkflowService:
                     stage.update(status="failed", error=str(exc))
                     self.event(state, stage["name"], "failed", str(exc))
             latest = self.get(owner, identity)
+            state["events"] = latest["events"] + [
+                e for e in state["events"] if e not in latest["events"]
+            ]
             if latest.get("preprocessing_job"):
                 state["preprocessing_job"] = latest["preprocessing_job"]
             self.save(state)
@@ -298,6 +308,7 @@ class WorkflowService:
         folder = self.folder(identity)
         check_format(folder)
         request = WorkflowRequest.model_validate(state["request"])
+        cognition = WorkflowCognition(self, state, name)
         if name == "data_survey":
             root = dataset.allowed_source(
                 request, self.input_roots, [self.root, self.preprocessing.store.root]
@@ -305,7 +316,31 @@ class WorkflowService:
             value = await asyncio.to_thread(
                 dataset.inspect, root, request, folder / "survey"
             )
+            findings = await cognition.research(value)
+            sources = cognition.load("survey/sources.json", ResearchSources)
+            value["profile"] = dict(value["profile"])
+            value["profile"]["unknown_fields"] = list(
+                value["profile"]["unknown_fields"]
+            )
+            for item in findings.metadata:
+                value["profile"][item.field] = item.value or "unknown"
+                if item.value is None:
+                    value["profile"]["unknown_fields"].append(item.field)
+            value["profile"]["profile_reviewed"] = now().split("T")[0]
+            value["profile"]["references"] = [
+                {"title": d.title, "url": d.url} for d in sources.documents
+            ]
+            value["profile"]["literature_status"] = findings.summary
+            value["evidence"] = [
+                {
+                    "source_url": d.url,
+                    "locator": "survey/sources.json#" + d.id,
+                    "type": "retrieved_" + d.kind,
+                }
+                for d in sources.documents
+            ]
         elif name == "data_collection":
+            review = await cognition.collection_review(state["outputs"]["data_survey"])
             value = await asyncio.to_thread(
                 dataset.collect,
                 state["outputs"]["data_survey"],
@@ -314,6 +349,7 @@ class WorkflowService:
                 self.preprocessing,
                 owner,
             )
+            value["adaptations"].extend(review.limitations)
         elif name == "data_preprocessing":
             value = await self.preprocess(state, request)
         elif name == "data_evaluation":
@@ -326,6 +362,7 @@ class WorkflowService:
                 outputs.choose, result, plan, self.preprocessing.store, request.seed
             )
         elif name == "data_report":
+            await cognition.narrative()
             value = await asyncio.to_thread(
                 outputs.report, state, folder / "report", self.preprocessing.store
             )
@@ -346,40 +383,9 @@ class WorkflowService:
         owner = state["owner"]
         existing = state.get("preprocessing_job")
         if not existing:
-            methods = []
-            for label, lo, hi in [
-                ("broadband", 1.0, 40.0),
-                ("sensorimotor", 8.0, 30.0),
-            ]:
-                method = baseline_methods()[0].model_copy(deep=True)
-                method.id = f"mne-training-{label}"
-                method.title = f"MNE 训练预设 · {lo:g}–{hi:g} Hz"
-                method.recipe = method.recipe[:-1]
-                method.output = "epochs"
-                method.mechanism = f"filter-reference-epoch:{label}"
-                method.recipe[0].params.update(l_freq=lo, h_freq=hi)
-                method.recipe[-1].params.update(
-                    tmin=request.tmin, tmax=request.tmax, picks="$eeg_channels"
-                )
-                method.adaptations = [
-                    "Engineering training preset, not an author pipeline; no quality ranking",
-                    "Fourth-order zero-phase Butterworth on continuous EEG; average reference; epoch on task onset; no baseline subtraction",
-                ]
-                methods.append(self.preprocessing.register_method(owner, method))
-            plan_ref, plan = await asyncio.to_thread(
-                self.preprocessing.plan,
-                owner,
-                PlanRequest(
-                    input_ref=Ref.model_validate(
-                        state["outputs"]["data_collection"]["input_ref"]
-                    ),
-                    methods=methods,
-                    mode="exploratory",
-                    parameters={},
-                    selection="all",
-                    max_candidates=2,
-                ),
-            )
+            plan_ref, plan = await WorkflowCognition(
+                self, state, "data_preprocessing"
+            ).design()
             write_readable(
                 self.folder(state["id"]) / "preprocessing/plan.json",
                 plan.model_dump(mode="json"),

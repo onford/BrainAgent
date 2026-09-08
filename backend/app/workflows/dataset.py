@@ -14,6 +14,7 @@ from app.preprocessing.schemas import (
 from app.preprocessing.storage import file_hash, within
 from .records import write_readable as write_json
 from .formats import write_table as write_tsv
+from .cognition_contracts import ResearchFindings, ResearchSources
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
@@ -297,11 +298,38 @@ def collect(survey, folder, workflow_id, service, owner):
     for record in records:
         record.files = inventory.copy()
     evidence = Evidence(
-        source_url=SOURCE,
-        locator="EEGMMIDB 1.0.0 documentation and local EDF headers",
-        text="64 EEG channels at 160 Hz; runs 4, 8 and 12 are left/right fist imagery; T1 left, T2 right.",
-        source_version="1.0.0",
+        source_url="workflow:" + workflow_id,
+        locator="collection/mapping.tsv and local EDF headers",
+        text="Local EDF decoded, EEGMMIDB adapter applied, BrainVision roundtrip checked; source bytes unchanged.",
+        source_version="1",
     )
+    facts = [evidence]
+    research_folder = (
+        folder if (folder / "research.json").exists() else folder.parent / "survey"
+    )
+    research_path = research_folder / "research.json"
+    if research_path.exists():
+        research = ResearchFindings.model_validate_json(
+            research_path.read_text(encoding="utf-8")
+        )
+        sources = ResearchSources.model_validate_json(
+            (research_folder / "sources.json").read_text(encoding="utf-8")
+        )
+        documents = {d.id: d for d in sources.documents}
+        for fact in research.facts:
+            doc = documents[fact.source_id]
+            ref = service.store.put(
+                owner, "evidence", {"url": doc.url, "content": doc.text}
+            )
+            facts.append(
+                Evidence(
+                    source_url=doc.url,
+                    locator=fact.topic,
+                    text=fact.quote,
+                    source_version=doc.sha256,
+                    artifact_ref=ref,
+                )
+            )
     data = PreprocessInput(
         purpose="production",
         survey=SurveySnapshot(
@@ -313,7 +341,7 @@ def collect(survey, folder, workflow_id, service, owner):
             processing_history=[
                 "EDF to BrainVision; channel names standardized; task annotations selected; template electrode coordinates"
             ],
-            facts=[evidence],
+            facts=facts,
         ),
         collection=CollectionSnapshot(
             dataset_id="eegmmidb",

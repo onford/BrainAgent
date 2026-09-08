@@ -13,6 +13,7 @@ STAGE_FOLDERS = {
     "data_delivery": "delivery",
 }
 LIVE_FILES = {"workflow.json", "process/index.json"}
+COGNITIVE_FILES = {"decisions.json", "sources.json", "research-plan.json", "research.json", "review.json", "design.json", "revisions.json", "narrative.json"}
 
 
 def local_files(folder, state, previous=()):
@@ -30,6 +31,7 @@ def local_files(folder, state, previous=()):
         name = relative.as_posix()
         if not (
             relative.parts[0] in finished | {"process"}
+            or path.name in COGNITIVE_FILES
             or name in LIVE_FILES | {"preprocessing/plan.json"}
             or (name == "training-data.zip" and "delivery" in finished)
         ):
@@ -40,8 +42,8 @@ def local_files(folder, state, previous=()):
                 "name": name,
                 "bytes": path.stat().st_size,
                 "sha256": None
-                if name in LIVE_FILES
-                else (known[name]["sha256"] if name in known else file_hash(path)),
+                if name in LIVE_FILES or (path.name in COGNITIVE_FILES and relative.parts[0] not in finished)
+                else (known.get(name, {}).get("sha256") or file_hash(path)),
             }
         )
     return entries

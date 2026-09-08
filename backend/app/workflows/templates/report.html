@@ -42,18 +42,22 @@
     <div><strong>$trials</strong><span>输入任务 Trial</span></div>
   </div>
   <h2>数据与任务</h2>
+  <p>$research_overview</p>
   <table><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>$source_rows</tbody></table>
   <h2>接入与保留</h2>
+  <p>$data_interpretation</p>
   <table><thead><tr><th>统计</th><th>接入前</th><th>接入后</th></tr></thead><tbody>$statistics_rows</tbody></table>
   <h2>预处理</h2>
   <p>选择的方法：$method_title</p>
   <table><thead><tr><th>顺序</th><th>操作</th><th>参数</th></tr></thead><tbody>$recipe_rows</tbody></table>
-  <p>参数来自工程训练预设，不作为数据集作者推荐配置。</p>
+  <p>$method_reasoning</p>
   <table><thead><tr><th>记录</th><th>任务事件</th><th>输出 Epoch</th><th>数组形状</th></tr></thead><tbody>$record_rows</tbody></table>
   <h2>结果选择</h2>
   <p>$selection_reason 随机种子：$seed。</p>
   <h2>训练数据说明</h2>
   <p>X 按 Epoch × 通道 × 时间点组织，单位为 V；y 为从 0 开始的类别编号。训练、验证和测试按被试分组划分，同一被试不会跨组。被试不足时保留空组，详见交付清单。</p>
+  <h2>调研结论</h2>
+  <table><thead><tr><th>主题</th><th>结论</th><th>证据编号</th></tr></thead><tbody>$finding_rows</tbody></table>
   <h2>来源</h2><ul>$references</ul>
   <h2>限制与待补充信息</h2><ul>$limitations</ul>
 </main></body>

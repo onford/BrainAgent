@@ -12,6 +12,7 @@ dependencies = [
   "asyncmy>=0.2,<1",
   "httpx>=0.27,<1",
   "cryptography>=43,<47",
+  "pypdf>=5,<7",
 ]
 
 [project.optional-dependencies]

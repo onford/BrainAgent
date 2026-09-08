@@ -1,6 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote_plus
+from typing import Literal
 
 from pydantic import Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,6 +29,7 @@ class Settings(BaseSettings):
     llm_base_url: str = "https://api.openai.com/v1"
     llm_model: str = "gpt-4.1-mini"
     llm_timeout_seconds: float = Field(default=180, gt=0, le=600, allow_inf_nan=False)
+    workflow_reasoning_effort: Literal["low", "high", "max"] = "low"
 
     brain_agent_credential_encryption_key: str | None = None
     default_owner_id: str = "local-development-user"

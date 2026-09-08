@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,7 +13,7 @@ from app.preprocessing.service import PreprocessingService
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.db.session import Database
-from app.llm.client import LLMClient, create_llm_client
+from app.llm.client import LLMClient, OpenAICompatibleClient, create_llm_client
 from app.llm.config import LLMConfig
 from app.integrations.registry import ExternalToolRegistry
 from app.integrations.security import CredentialCipher
@@ -48,10 +49,32 @@ def create_app(
         timeout_seconds=app_settings.external_tool_timeout_seconds,
         max_retries=app_settings.external_tool_max_retries,
     )
-    preprocessing_service = PreprocessingService(app_settings.preprocessing_root, app_settings.preprocessing_input_roots, llm)
-    tool_registry = ToolRegistry(external_tool_registry, evidence_store=preprocessing_service.store)
-    workflow_service = WorkflowService(app_settings.workflow_root, app_settings.workflow_input_roots, preprocessing_service)
-    registry = build_agent_registry(llm, tool_registry, preprocessing_service, workflow_service)
+    preprocessing_service = PreprocessingService(
+        app_settings.preprocessing_root, app_settings.preprocessing_input_roots, llm
+    )
+    tool_registry = ToolRegistry(
+        external_tool_registry, evidence_store=preprocessing_service.store
+    )
+    workflow_llm = llm
+    if (
+        isinstance(llm, OpenAICompatibleClient)
+        and urlsplit(llm.config.base_url).hostname == "api.deepseek.com"
+    ):
+        workflow_llm = create_llm_client(
+            llm.config.model_copy(
+                update={"reasoning_effort": app_settings.workflow_reasoning_effort}
+            )
+        )
+    workflow_service = WorkflowService(
+        app_settings.workflow_root,
+        app_settings.workflow_input_roots,
+        preprocessing_service,
+        workflow_llm,
+        tool_registry,
+    )
+    registry = build_agent_registry(
+        llm, tool_registry, preprocessing_service, workflow_service
+    )
     workflow_service.registry = registry
     registry.register(PlannerAgent(llm))
     orchestrator = Orchestrator(registry)

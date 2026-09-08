@@ -22,7 +22,18 @@ from .contracts import (
     Statistics,
 )
 
-FORMAT_VERSION = "1"
+from .cognition_contracts import (
+    CollectionReview,
+    DecisionLog,
+    DesignRevisions,
+    MethodDesign,
+    ReportNarrative,
+    ResearchFindings,
+    ResearchPlan,
+    ResearchSources,
+)
+
+FORMAT_VERSION = "2"
 ARRAY_FORMATS = {
     "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
     "y.npy": {
@@ -161,6 +172,21 @@ class DeliveryManifest(Contract):
 
 
 JSON_MODELS = {
+    "survey/research-plan.json": ResearchPlan,
+    "survey/research.json": ResearchFindings,
+    "survey/sources.json": ResearchSources,
+    "collection/review.json": CollectionReview,
+    "collection/research.json": ResearchFindings,
+    "collection/sources.json": ResearchSources,
+    "preprocessing/design.json": MethodDesign,
+    "preprocessing/research.json": ResearchFindings,
+    "preprocessing/sources.json": ResearchSources,
+    "preprocessing/revisions.json": DesignRevisions,
+    "report/narrative.json": ReportNarrative,
+    **{
+        f"{stage}/decisions.json": DecisionLog
+        for stage in ("survey", "collection", "preprocessing", "report")
+    },
     "collection/input.json": PreprocessInput,
     "collection/pre-screen.json": Statistics,
     "collection/post-screen.json": Statistics,
