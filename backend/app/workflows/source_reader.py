@@ -1,6 +1,7 @@
 """Read public source pages/PDFs as inert text with bounded, saved provenance."""
 
 import asyncio
+import base64
 import hashlib
 import ipaddress
 import socket
@@ -78,6 +79,17 @@ class SourceReader:
     async def read(self, url, kind):
         # Article pages are JS shells; the public article API contains real text.
         parsed = urlsplit(url)
+        repository = re.fullmatch(r"/([\w.-]+)/([\w.-]+)", parsed.path.rstrip("/"))
+        if parsed.hostname == "github.com" and repository:
+            owner, name = repository.groups()
+            url = f"https://api.github.com/repos/{owner}/{name}/readme"
+        file_path = re.fullmatch(r"/([\w.-]+)/([\w.-]+)/blob/([^/]+)/(.+)", parsed.path)
+        if parsed.hostname == "github.com" and file_path:
+            owner, name, ref, path = file_path.groups()
+            url = (
+                f"https://api.github.com/repos/{owner}/{name}/contents/{path}?"
+                + urlencode({"ref": ref})
+            )
         article = re.fullmatch(
             r"/article/(MED|PMC)/([A-Za-z0-9]+)", parsed.path.rstrip("/")
         )
@@ -127,6 +139,27 @@ class SourceReader:
                 ), len(reader.pages) > 80
 
             text, truncated = await asyncio.to_thread(extract)
+        elif "json" in mime and urlsplit(url).hostname == "api.github.com":
+            document = json.loads(body)
+            if document.get("encoding") != "base64" or not document.get("content"):
+                raise ValueError(
+                    "GitHub response has no readable file content; read a README or file URL"
+                )
+            text = base64.b64decode(document["content"]).decode(
+                "utf-8", errors="replace"
+            )
+            title = f"{urlsplit(url).path.removeprefix('/repos/').split('/readme')[0]} — {document.get('name', 'repository file')}"
+            base = document.get("html_url") or url
+            links = [base]
+            for href in re.findall(r"\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)", text):
+                target = urljoin(base, href)
+                if urlsplit(target).scheme in {"http", "https"}:
+                    links.append(target)
+            links.extend(re.findall(r"https?://[^\s<>\[\]()]+", text))
+            parser = PageText(base)
+            parser.feed(text)
+            links = list(dict.fromkeys(links + parser.links))[:150]
+            truncated = False
         elif "json" in mime and urlsplit(url).hostname == "www.ebi.ac.uk":
             results = json.loads(body).get("resultList", {}).get("result", [])
             if not results or not results[0].get("abstractText"):

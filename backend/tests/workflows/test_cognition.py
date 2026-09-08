@@ -183,6 +183,60 @@ async def test_paper_reader_uses_actual_abstract_and_exposes_fulltext(monkeypatc
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "source_url,api_url",
+    [
+        (
+            "https://github.com/research/eeg",
+            "https://api.github.com/repos/research/eeg/readme",
+        ),
+        (
+            "https://github.com/research/eeg/blob/main/README.md",
+            "https://api.github.com/repos/research/eeg/contents/README.md?ref=main",
+        ),
+    ],
+)
+async def test_repository_reader_decodes_public_readme_and_preserves_links(
+    monkeypatch, source_url, api_url
+):
+    import base64
+    import httpx
+    from functools import partial
+    from app.workflows import source_reader
+
+    async def allowed(url):
+        pass
+
+    seen = []
+    readme = "# EEG analysis\n" + "Actual methods and dataset details. " * 10
+    readme += "\n[Code](analysis.py) [Paper](https://example.org/paper.pdf)"
+
+    def handle(request):
+        seen.append(str(request.url))
+        return httpx.Response(
+            200,
+            json={
+                "name": "README.md",
+                "encoding": "base64",
+                "content": base64.b64encode(readme.encode()).decode(),
+                "html_url": "https://github.com/research/eeg/blob/main/README.md",
+            },
+        )
+
+    monkeypatch.setattr(source_reader, "public_url", allowed)
+    monkeypatch.setattr(
+        source_reader.httpx,
+        "AsyncClient",
+        partial(httpx.AsyncClient, transport=httpx.MockTransport(handle)),
+    )
+    doc = await source_reader.SourceReader().read(source_url, "code")
+    assert seen == [api_url]
+    assert doc.text == readme and doc.kind == "code"
+    assert "https://example.org/paper.pdf" in doc.links
+    assert "https://github.com/research/eeg/blob/main/analysis.py" in doc.links
+
+
+@pytest.mark.asyncio
 async def test_abstract_cannot_be_claimed_as_full_text():
     sources = ResearchSources(
         documents=[

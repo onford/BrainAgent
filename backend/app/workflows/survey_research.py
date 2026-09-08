@@ -147,6 +147,8 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
             "For literature_review, cover analysis AND algorithm uses, dataset issues/discussion, and preprocessing of this data type; search papers AND repositories for each. "
             "Prefer reputable venues, high citations and high-star repos where observed; no invented metrics or arbitrary hard cutoff. "
             "Read useful fulltext/PDF and repository README/code, not just search titles. Discover associated PDF/repo links. "
+            "GitHub repository roots and blob file URLs are read through the public file API; retry failed HTML reads using these URLs and follow README links to substantive code. "
+            "Usage literature must itself use the target dataset; a related-work citation alone is insufficient. Follow the cited primary work. "
             "Use read.query for excerpts beyond source previews. Provider failure is a recorded gap; try another available provider. Do not repeat successful actions. "
             "Finish once required searches/reading attempts are done and sufficient evidence exists, or retain explicit gaps if no useful source remains.",
             validate,
@@ -248,86 +250,92 @@ def validate_verification(agent, value, sources, local):
 def validate_screening(agent, value, sources):
     docs = {d.id: d for d in sources.documents}
     observations = {o.sequence: o for o in sources.observations}
-    ids = set()
+    ids, problems = set(), []
     for entry in value.entries:
         if entry.id in ids:
-            raise ValueError("literature entry IDs must be unique")
+            problems.append(f"{entry.id}: literature entry IDs must be unique")
         ids.add(entry.id)
-        if entry.source_id not in docs:
-            raise ValueError(
-                "screened entries must reference read sources; unread search hits remain coverage gaps"
-            )
-        doc = docs[entry.source_id]
-        if doc.kind != ("paper" if entry.medium == "paper" else "code"):
-            raise ValueError(
-                "paper/repository classification must match the read source"
-            )
-        source_origins = {doc.url} | {
-            o.action.url
-            for o in sources.observations
-            if o.output and o.output.get("source_id") == doc.id
-        }
-        associated_items = [
-            item
-            for o in sources.observations
-            for item in (o.output or {}).get("items", [])
-            if urls(item) & source_origins
-        ]
-        allowed_links = set(doc.links) | source_origins | urls(associated_items)
-        if not set(entry.related_urls) <= allowed_links:
-            raise ValueError(
-                "PDF/repository links must belong to this source's links or its associated search result"
-            )
-        agent.validate_findings(
-            SimpleNamespace(facts=entry.findings, literature=[]), sources
+        try:
+            validate_entry(agent, entry, sources, docs, observations)
+        except ValueError as exc:
+            problems.append(f"{entry.id}: {exc}")
+    if problems:
+        raise ValueError("; ".join(problems))
+
+
+def validate_entry(agent, entry, sources, docs, observations):
+    if entry.source_id not in docs:
+        raise ValueError(
+            "screened entries must reference read sources; unread search hits remain coverage gaps"
         )
-        if any(f.source_id != entry.source_id for f in entry.findings):
-            raise ValueError("entry findings must quote this entry's source")
-        if entry.reading_scope == "full_text" and (
-            doc.truncated or len(doc.text) > 24000 or "[Abstract]" in doc.text
-        ):
+    doc = docs[entry.source_id]
+    if doc.kind != ("paper" if entry.medium == "paper" else "code"):
+        raise ValueError("paper/repository classification must match the read source")
+    source_origins = {doc.url} | {
+        o.action.url
+        for o in sources.observations
+        if o.output and o.output.get("source_id") == doc.id
+    }
+    associated_items = [
+        item
+        for o in sources.observations
+        for item in (o.output or {}).get("items", [])
+        if urls(item) & source_origins
+    ]
+    allowed_links = set(doc.links) | source_origins | urls(associated_items)
+    if not set(entry.related_urls) <= allowed_links:
+        raise ValueError(
+            "PDF/repository links must belong to this source's links or its associated search result; "
+            f"remove unverified links: {sorted(set(entry.related_urls) - allowed_links)}"
+        )
+    agent.validate_findings(
+        SimpleNamespace(facts=entry.findings, literature=[]), sources
+    )
+    if any(f.source_id != entry.source_id for f in entry.findings):
+        raise ValueError("entry findings must quote this entry's source")
+    if entry.reading_scope == "full_text" and (
+        doc.truncated or len(doc.text) > 24000 or "[Abstract]" in doc.text
+    ):
+        raise ValueError(
+            "a preview, truncated text or abstract cannot be marked full_text"
+        )
+    if entry.medium == "paper" and entry.reading_scope in {
+        "repository_docs",
+        "code",
+    }:
+        raise ValueError("paper reading_scope cannot be repository_docs or code")
+    if entry.decision == "included" and (
+        not entry.findings
+        or entry.reading_scope == "abstract"
+        or "[Abstract]" in doc.text
+    ):
+        raise ValueError(
+            "included literature needs substantive quoted evidence; abstract-only entries are deferred"
+        )
+    if entry.exclusions and (
+        entry.target != "dataset_discussion" or not entry.findings
+    ):
+        raise ValueError("reported exclusions need dataset-discussion evidence")
+    q = entry.quality
+    if not set(q.observation_ids) <= observations.keys():
+        raise ValueError("unknown quality-metric observation")
+    source_urls = {doc.url, *entry.related_urls} | {
+        o.action.url
+        for o in sources.observations
+        if o.output and o.output.get("source_id") == doc.id
+    }
+    matched = [
+        item
+        for i in q.observation_ids
+        for item in (observations[i].output or {}).get("items", [])
+        if urls(item) & source_urls
+    ]
+    for name in ("venue", "citations", "stars"):
+        metric = getattr(q, name)
+        if metric is not None and not any(item.get(name) == metric for item in matched):
             raise ValueError(
-                "a preview, truncated text or abstract cannot be marked full_text"
+                f"{entry.id}: {name} must match an associated search result; use null if unknown"
             )
-        if entry.medium == "paper" and entry.reading_scope in {
-            "repository_docs",
-            "code",
-        }:
-            raise ValueError("paper reading_scope cannot be repository_docs or code")
-        if entry.decision == "included" and (
-            not entry.findings
-            or entry.reading_scope == "abstract"
-            or "[Abstract]" in doc.text
-        ):
-            raise ValueError(
-                "included literature needs substantive quoted evidence; abstract-only entries are deferred"
-            )
-        if entry.exclusions and (
-            entry.target != "dataset_discussion" or not entry.findings
-        ):
-            raise ValueError("reported exclusions need dataset-discussion evidence")
-        q = entry.quality
-        if not set(q.observation_ids) <= observations.keys():
-            raise ValueError("unknown quality-metric observation")
-        source_urls = {doc.url, *entry.related_urls} | {
-            o.action.url
-            for o in sources.observations
-            if o.output and o.output.get("source_id") == doc.id
-        }
-        matched = [
-            item
-            for i in q.observation_ids
-            for item in (observations[i].output or {}).get("items", [])
-            if urls(item) & source_urls
-        ]
-        for name in ("venue", "citations", "stars"):
-            metric = getattr(q, name)
-            if metric is not None and not any(
-                item.get(name) == metric for item in matched
-            ):
-                raise ValueError(
-                    f"{entry.id}: {name} must match an associated search result; use null if unknown"
-                )
 
 
 def coverage_table(screening, sources, catalog):
@@ -448,8 +456,10 @@ async def research(agent, survey):
             },
             "Screen the actual read sources separately as usage_analysis, usage_algorithm, dataset_discussion and preprocessing_methods, for papers and repositories. "
             "Include/exclude/defer each relevant candidate with a concrete reason. Included entries need substantive exact quoted findings; abstract-only material is deferred. "
+            "For usage_analysis and usage_algorithm, the work itself must actually use the target dataset: citing another work in related work is not sufficient; defer it and follow the primary work. "
+            "Analysis means substantive analysis of data or signals, not merely a comparison of classifier accuracies. "
             "Keep coverage gaps explicit, never relabel unrelated papers to fill a category. A source may support multiple goals with distinct reasons/evidence. "
-            "Extract dataset-discussion subject/run exclusions as reported claims, not execution commands. Preserve actually found article/PDF/repository URLs. "
+            "Extract dataset-discussion subject/run exclusions as reported claims, not execution commands. related_urls may only copy URLs in that source links, its original read URL or its associated search result; omit inferred DOI URLs. "
             "Record venue/citations/stars ONLY when matched to associated tool items and observation IDs, otherwise null. "
             "Full_text requires full document access within the provided context; previews, abstracts and truncation are partial. Finding IDs must be unique across all entries and distinct from verification facts.",
             lambda value: validate_screening(agent, value, sources),
