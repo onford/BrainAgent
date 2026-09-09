@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import json
 from pathlib import Path
 
@@ -487,6 +488,90 @@ def test_early_worker_failure_contract(status):
     assert receipt.macro_ba is receipt.mean_delta is None
     assert receipt.timings.feature is None  # Unknown rather than a fabricated 0.
     assert receipt.stop_search == (status == "data_unevaluable")
+    assert receipt.predictions_sha256 is None
+
+
+def test_prediction_hash_binds_exact_tsv_content_and_persisted_receipt(tmp_path):
+    result, plan, root, panel = make_case(tmp_path)
+    output = tmp_path / "evaluation"
+    receipt = evaluation.evaluate(result, plan, root, panel, output)
+    assert receipt["status"] == "evaluated", receipt
+    path = Path(receipt["predictions_path"])
+    original = path.read_bytes()
+    expected = hashlib.sha256(original).hexdigest()
+    assert receipt["predictions_sha256"] == expected
+    assert (
+        json.loads((output / "receipt.json").read_text(encoding="utf-8"))[
+            "predictions_sha256"
+        ]
+        == expected
+    )
+    # An edit to an actual prediction must invalidate the content hash.
+    changed = original.replace(b"\tleft_hand\r\n", b"\tright_hand\r\n", 1)
+    if changed == original:
+        changed = original.replace(b"\tleft_hand\n", b"\tright_hand\n", 1)
+    assert changed != original
+    path.write_bytes(changed)
+    assert file_hash(path) != receipt["predictions_sha256"]
+    assert (
+        json.loads((output / "receipt.json").read_text(encoding="utf-8"))[
+            "predictions_sha256"
+        ]
+        == expected
+    )
+
+
+@pytest.mark.parametrize("checksum", ["", "a" * 63, "g" * 64, "A" * 64])
+def test_receipt_rejects_malformed_prediction_sha256(tmp_path, checksum):
+    result, plan, root, panel = make_case(tmp_path)
+    receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "evaluation")
+    assert receipt["status"] == "evaluated", receipt
+    receipt["predictions_sha256"] = checksum
+    with pytest.raises(ValidationError):
+        EvaluationReceipt.model_validate(receipt)
+
+
+@pytest.mark.parametrize("missing", [True, False])
+def test_legacy_evaluated_receipt_without_prediction_hash_remains_readable(
+    tmp_path, missing
+):
+    result, plan, root, panel = make_case(tmp_path)
+    receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "evaluation")
+    assert receipt["status"] == "evaluated", receipt
+    assert receipt["predictions_sha256"] == file_hash(Path(receipt["predictions_path"]))
+    receipt.pop("predictions_sha256")
+    if not missing:
+        receipt["predictions_sha256"] = None
+    # Validation is read-only and does not manufacture a hash for old artifacts.
+    path = tmp_path / "legacy-receipt.json"
+    write_json(path, receipt)
+    original = path.read_bytes()
+    validated = EvaluationReceipt.model_validate_json(original)
+    assert validated.status == "evaluated"
+    assert validated.macro_ba == receipt["macro_ba"]
+    assert validated.predictions_sha256 is None
+    assert path.read_bytes() == original
+
+
+def test_prediction_hash_failure_returns_null_hash_and_readable_error(
+    tmp_path, monkeypatch
+):
+    result, plan, root, panel = make_case(tmp_path)
+    original_hash = evaluation.file_hash
+
+    def fail_prediction_hash(path):
+        if path.name == "originalpredictions.tsv":
+            raise OSError("prediction file became unreadable")
+        return original_hash(path)
+
+    monkeypatch.setattr(evaluation, "file_hash", fail_prediction_hash)
+    receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "evaluation")
+    assert receipt["status"] == "execution_failure", receipt
+    assert receipt["error"] == "prediction file became unreadable"
+    assert receipt["predictions_sha256"] is None
+    assert receipt["macro_ba"] is receipt["mean_delta"] is None
+    with pytest.raises(ValidationError, match="predictions_sha256=None"):
+        EvaluationReceipt.model_validate({**receipt, "predictions_sha256": "a" * 64})
 
 
 @pytest.mark.parametrize(

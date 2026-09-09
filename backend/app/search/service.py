@@ -4,7 +4,6 @@ import os
 from pathlib import Path
 import random
 import re
-import subprocess
 import sys
 import time
 from uuid import uuid4
@@ -17,7 +16,8 @@ from app.preprocessing.storage import digest, file_hash, within
 from app.preprocessing.units import engine_hash, environment
 from .catalog import BASELINE_ID, catalog, method, search_engine_hash, select
 from .contracts import ActionRecord, Candidate, SearchRequest, SearchState
-from .io import directory_bytes, process_memory, read, write
+from .io import directory_bytes, read, write
+from .processes import ProcessTree
 from .reasoning import decide, read_evidence
 from .evaluation_contracts import FrozenPanel, EvaluationReceipt
 
@@ -48,6 +48,7 @@ class SearchService:
         self.tasks = {}
         self.children = {}
         self.cancelled = set()
+        self.verified = set()
 
     def folder(self, identity):
         if not re.fullmatch(r"[a-f0-9]{32}", identity):
@@ -71,8 +72,11 @@ class SearchService:
         value = SearchState.model_validate(state).model_dump(mode="json")
         write(self.folder(state["id"]) / "search.json", value)
 
-    def describe(self, owner, identity):
+    def describe(self, owner, identity, include_artifacts=True):
         state = self.get(owner, identity)
+        if not include_artifacts:
+            state["artifacts"] = []
+            return state
         root = self.folder(identity)
         documents = []
         descriptions = {
@@ -90,13 +94,14 @@ class SearchService:
         for path in sorted(root.rglob("*")):
             if (
                 not path.is_file()
-                or "engine" in path.relative_to(root).parts
-                or path.name.endswith((".tmp", ".lock"))
+                or path.suffix in {".db", ".tmp", ".lock"}
+                or path.name.endswith(("-wal", "-shm"))
+                or any(
+                    part.startswith(".verify-") for part in path.relative_to(root).parts
+                )
             ):
                 continue
             name = path.relative_to(root).as_posix()
-            if path.suffix not in {".json", ".tsv", ".html"}:
-                continue
             documents.append(
                 {
                     "name": name,
@@ -104,12 +109,22 @@ class SearchService:
                         name,
                         {
                             "receipt.json": "实际评价、覆盖和诊断回执",
-                            "predictions.tsv": "原始事件到预测的逐行对应",
+                            "originalpredictions.tsv": "原始试次、训练/开发角色和开发预测的逐行对应",
                             "plan.json": "编译后的执行方案",
                             "result.json": "逐记录执行与产物校验结果",
                             "method.json": "该候选的固定操作及参数",
                             "execution.json": "数值任务定位与恢复状态",
-                        }.get(path.name, "过程记录"),
+                        }.get(
+                            path.name,
+                            {
+                                ".fif": "该候选的 EEG 数值数据",
+                                ".npy": "该候选的数值数组",
+                                ".npz": "该候选的压缩数值数组",
+                                ".tsv": "逐条数据与处理结果",
+                                ".json": "结构化执行与校验记录",
+                                ".log": "数值执行日志",
+                            }.get(path.suffix, "过程记录"),
+                        ),
                     ),
                     "url": f"/api/searches/{identity}/artifacts/{name}?download=true",
                 }
@@ -207,7 +222,7 @@ class SearchService:
             "adaptation": "fixed_full_record_operations_only",
             "confirmation": "not_performed; these data are development data previously available to the workflow",
             "failure_denominator": "candidate must predict every predeclared eligible development trial",
-            "cost_scope": "elapsed time includes preprocessing, evaluation, LLM, failed attempts and downtime; memory is sampled worker RSS; money/provider token usage unavailable",
+            "cost_scope": "elapsed time includes preprocessing, evaluation, LLM, failed attempts and downtime; memory is sampled process-tree RSS; final report export is separate; money/provider token usage unavailable",
         }
         state = SearchState(
             id=identity,
@@ -295,6 +310,16 @@ class SearchService:
         if time.time() >= state["deadline"]:
             raise BudgetStop("time_budget_exhausted")
 
+    @staticmethod
+    def verify_runtime(state):
+        protocol = state["protocol"]
+        if (
+            protocol["numeric_engine_hash"] != engine_hash()
+            or protocol["search_engine_hash"] != search_engine_hash()
+            or protocol["environment"] != environment()
+        ):
+            raise IntegrityFailure("冻结的执行或评价代码/环境已改变，请创建新搜索")
+
     async def child(self, state, stage, candidate_id=None):
         self.guard(state)
         root = self.folder(state["id"])
@@ -311,9 +336,6 @@ class SearchService:
         ]
         if candidate_id:
             command.extend(["--candidate", candidate_id])
-        kwargs = (
-            {"creationflags": subprocess.CREATE_NO_WINDOW} if os.name == "nt" else {}
-        )
         env = dict(
             os.environ,
             PYTHONUTF8="1",
@@ -321,22 +343,21 @@ class SearchService:
         )
         logfile = root / (f"{stage}-{candidate_id or 'panel'}.log")
         with logfile.open("ab") as log:
-            process = await asyncio.create_subprocess_exec(
-                *command, stdout=log, stderr=log, env=env, **kwargs
-            )
+            # Windows Job membership is assigned atomically at process creation,
+            # before the venv launcher can start the actual numerical worker.
+            process = ProcessTree(command, stdout=log, stderr=log, env=env)
             self.children[state["id"]] = process
-            waiter = asyncio.create_task(process.wait())
+            waiter = asyncio.create_task(asyncio.to_thread(process.wait))
             last_disk = 0.0
             try:
                 while not waiter.done():
                     self.guard(state)
-                    memory = process_memory(process.pid)
-                    if memory is not None:
-                        state["usage"]["peak_worker_memory_bytes"] = max(
-                            memory, state["usage"]["peak_worker_memory_bytes"]
-                        )
-                        if memory > state["protocol"]["limits"]["memory_limit_bytes"]:
-                            raise BudgetStop("memory_budget_exhausted")
+                    memory = process.memory_bytes()
+                    state["usage"]["peak_worker_memory_bytes"] = max(
+                        memory, state["usage"]["peak_worker_memory_bytes"]
+                    )
+                    if memory > state["protocol"]["limits"]["memory_limit_bytes"]:
+                        raise BudgetStop("memory_budget_exhausted")
                     if time.monotonic() - last_disk >= 5:
                         used = await asyncio.to_thread(directory_bytes, root)
                         state["usage"]["disk_bytes"] = used
@@ -354,10 +375,12 @@ class SearchService:
                 self.guard(state)
                 return process.returncode
             finally:
-                if process.returncode is None:
+                try:
                     process.kill()
-                await waiter
-                self.children.pop(state["id"], None)
+                    await waiter
+                finally:
+                    process.close()
+                    self.children.pop(state["id"], None)
 
     def action(self, state, action, **kwargs):
         row = ActionRecord(
@@ -371,22 +394,53 @@ class SearchService:
         if self.llm is None:
             raise RuntimeError("动态搜索和一次性 LLM 对照需要配置模型")
         self.guard(state)
+        self.verify_runtime(state)
         state["usage"]["llm_calls"] += 1
         action = self.action(
             state,
             "initial_schedule" if one_shot else "model_decision",
             status="running",
         )
+        folder = self.folder(state["id"]) / "decisions" / f"{action['index']:03}"
+
+        def capture(messages):
+            config = getattr(self.llm, "config", None)
+            write(
+                folder / "request.json",
+                {
+                    "schema_version": "1",
+                    "action_index": action["index"],
+                    "model": getattr(config, "model", None),
+                    "reasoning_effort": getattr(config, "reasoning_effort", None),
+                    "messages": messages,
+                },
+            )
+
         started = time.monotonic()
         try:
             async with asyncio.timeout(max(0.001, state["deadline"] - time.time())):
-                result = await decide(self.llm, state, documents, one_shot=one_shot)
+                result = await decide(
+                    self.llm, state, documents, one_shot=one_shot, capture=capture
+                )
+            write(
+                folder / "response.json",
+                {"schema_version": "1", "status": "accepted", "result": result},
+            )
             action.update(status="completed", result=result)
             return result
         except TimeoutError:
             action.update(status="failed", error="模型调用期间总时间预算耗尽")
             raise BudgetStop("time_budget_exhausted") from None
         except Exception as exc:
+            write(
+                folder / "response.json",
+                {
+                    "schema_version": "1",
+                    "status": "failed",
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "rejected_content": getattr(exc, "content", None),
+                },
+            )
             action.update(status="failed", error=f"{type(exc).__name__}: {exc}")
             raise
         finally:
@@ -413,6 +467,7 @@ class SearchService:
             )
         receipt_path = root / "candidates" / identity / "receipt.json"
         while True:
+            self.verify_runtime(state)
             if existing["attempts"]:
                 if state["usage"]["retries"] >= state["budget"]["max_retries"]:
                     existing.update(
@@ -428,6 +483,7 @@ class SearchService:
             started = time.monotonic()
             try:
                 exit_code = await self.child(state, "candidate", identity)
+                self.verify_runtime(state)
                 receipt = (
                     read(receipt_path)
                     if receipt_path.exists()
@@ -444,6 +500,19 @@ class SearchService:
                 receipt = EvaluationReceipt.model_validate(receipt).model_dump(
                     mode="json"
                 )
+                if receipt["status"] == "evaluated":
+                    versions = receipt.get("versions") or {}
+                    expected = {
+                        "search_engine_sha256": state["protocol"]["search_engine_hash"],
+                        "engine_sha256": state["protocol"]["numeric_engine_hash"],
+                        "environment_sha256": digest(state["protocol"]["environment"]),
+                    }
+                    if any(
+                        versions.get(key) != value for key, value in expected.items()
+                    ):
+                        raise IntegrityFailure(
+                            "成功回执的执行/评价版本与冻结协议不一致"
+                        )
             finally:
                 existing["cost_seconds"] += time.monotonic() - started
             existing.update(
@@ -479,10 +548,12 @@ class SearchService:
         state = self.get(owner, identity)
         try:
             with portalocker.Lock(root / "search.lock", timeout=0):
+                self.verified.discard(identity)
                 await self._run(state)
         except portalocker.exceptions.LockException:
             return
         except asyncio.CancelledError:
+            self.interrupt_pending(state, "搜索已中断，尚未产生完整评价")
             state["usage"]["elapsed_seconds"] = max(
                 0, time.time() - (state["deadline"] - state["budget"]["max_seconds"])
             )
@@ -520,12 +591,7 @@ class SearchService:
             read(root / "input.json")
         ):
             raise IntegrityFailure("冻结协议或输入快照已改变，不能混用历史结果")
-        if (
-            protocol["numeric_engine_hash"] != engine_hash()
-            or protocol["search_engine_hash"] != search_engine_hash()
-            or protocol["environment"] != environment()
-        ):
-            raise IntegrityFailure("冻结的执行或评价代码/环境已改变，请创建新搜索")
+        self.verify_runtime(state)
         documents = read(root / "sources.json")
         if protocol["sources_hash"] != digest(documents) or protocol[
             "panel_request_hash"
@@ -553,6 +619,7 @@ class SearchService:
             if await self.child(state, "verify") != 0:
                 failure = read(root / "verification.json")
                 raise IntegrityFailure(failure.get("error") or "恢复前完整性校验失败")
+        self.verified.add(state["id"])
         state.update(status="running", error=None)
         self.save(state)
         strategy = state["request"]["strategy"]
@@ -767,7 +834,20 @@ class SearchService:
             )
             self.save(state)
 
+    @staticmethod
+    def interrupt_pending(state, reason):
+        for candidate in state["candidates"]:
+            if candidate["status"] in {"reserved", "running"}:
+                candidate.update(status="interrupted", error=reason)
+        for action in state["actions"]:
+            if action["status"] in {"reserved", "running"}:
+                action.update(status="interrupted", error=reason)
+
     async def stop(self, state, status, reason):
+        self.interrupt_pending(state, reason)
+        verified = state["id"] in self.verified
+        if not verified and state["candidates"] and not state["error"]:
+            state["error"] = "本次恢复未完成历史产物校验，未重新发布选中结果"
         state["usage"]["elapsed_seconds"] = max(
             0, time.time() - (state["deadline"] - state["budget"]["max_seconds"])
         )
@@ -775,7 +855,7 @@ class SearchService:
             status=status,
             phase="finished",
             stop_reason=reason,
-            selected_candidate_id=select(state["candidates"]),
+            selected_candidate_id=select(state["candidates"]) if verified else None,
         )
         state["message"] = "搜索结束，开发候选与完整记录已保存"
         self.save(state)

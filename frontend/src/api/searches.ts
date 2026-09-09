@@ -4,7 +4,7 @@ import type { SearchRequest, SearchState, SearchSummary } from '../types/search'
 const searchPath = (id: string) => `/api/searches/${encodeURIComponent(id)}`
 
 export const fetchSearches = () => apiRequest<SearchSummary[]>('/api/searches')
-export const fetchSearch = (id: string) => apiRequest<SearchState>(searchPath(id))
+export const fetchSearch = (id: string, includeArtifacts = true) => apiRequest<SearchState>(`${searchPath(id)}?include_artifacts=${includeArtifacts}`)
 export const createSearch = (request: SearchRequest) => apiRequest<SearchState>('/api/searches', {
   method: 'POST', body: JSON.stringify(request),
 })

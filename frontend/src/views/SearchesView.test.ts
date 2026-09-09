@@ -71,6 +71,9 @@ describe('SearchesView', () => {
     const { wrapper, router } = await open('/searches?workflow=source-1')
     expect((wrapper.get('input[aria-label="来源流程 ID"]').element as HTMLInputElement).value).toBe('source-1')
     expect(wrapper.find('select').exists()).toBe(false)
+    expect(wrapper.findAll('input[name="strategy"]').map(input => input.attributes('value'))).toEqual(['adaptive', 'random', 'exhaustive', 'one_shot'])
+    expect((wrapper.get('input[value="adaptive"]').element as HTMLInputElement).checked).toBe(true)
+    expect(wrapper.get('fieldset').text()).toContain('一次性提案对照')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
@@ -81,10 +84,10 @@ describe('SearchesView', () => {
     expect(wrapper.get('h1').text()).toContain('准备中')
     expect(wrapper.get('nav[aria-label="选择搜索"]').text()).toContain('search-1')
     expect(wrapper.text()).toContain('开发面板选择，不代表独立泛化或神经信号质量')
-    expect(apiRequest).not.toHaveBeenCalledWith('/api/searches/search-1')
+    expect(apiRequest.mock.calls.some(([path]) => path.startsWith('/api/searches/search-1?'))).toBe(false)
   })
 
-  it.each(['random', 'exhaustive'])('submits edited budgets and optional subject IDs with strategy %s', async selectedStrategy => {
+  it.each(['random', 'exhaustive', 'one_shot'])('submits edited budgets and optional subject IDs with strategy %s', async selectedStrategy => {
     apiRequest.mockImplementation(async (_path: string, init?: RequestInit) => init ? state() : [])
     const { wrapper } = await open('/searches?workflow=source-1')
     await wrapper.get(`input[value="${selectedStrategy}"]`).setValue(true)
@@ -97,6 +100,35 @@ describe('SearchesView', () => {
     expect(JSON.parse(post[1].body)).toEqual({ workflow_id: 'source-1', strategy: selectedStrategy, seed: 7,
       budget: { max_candidates: 9, max_proposals: 12, max_evidence_reads: 0, max_seconds: 900, max_memory_mb: 2048, max_disk_mb: 4096 },
       train_subjects: ['S001', 'S002'], development_subjects: ['S003', 'S004'] })
+  })
+
+  it('creates a one-shot comparison with unchanged default budgets and displays the returned strategy', async () => {
+    apiRequest.mockImplementation(async (_path: string, init?: RequestInit) => init ? state({ request: JSON.parse(init.body as string) }) : [])
+    const { wrapper, router } = await open('/searches?workflow=source-1')
+    await wrapper.get('input[value="one_shot"]').setValue(true)
+    expect(wrapper.get('.strategy-hint').text()).toContain('不根据中途评价调整提案')
+    await wrapper.get('form').trigger('submit'); await flushPromises()
+    const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(JSON.parse(post[1].body)).toEqual({ ...state().request, strategy: 'one_shot' })
+    expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
+    expect(wrapper.get('.page-heading').text()).toContain('一次性提案对照')
+  })
+
+  it('accepts fractional positive seconds and rejects zero, negative and empty time budgets', async () => {
+    const { wrapper } = await open('/searches?workflow=source-1')
+    const seconds = wrapper.get('input[aria-label="时限（秒）"]')
+    expect(seconds.attributes('step')).toBe('any')
+    for (const value of ['0', '-1', '']) {
+      await seconds.setValue(value)
+      await wrapper.get('form').trigger('submit')
+      expect(wrapper.get('[role="alert"]').text()).toContain('时限（秒）需为大于 0 的数值')
+    }
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    apiRequest.mockResolvedValueOnce(state())
+    await seconds.setValue('0.25')
+    await wrapper.get('form').trigger('submit'); await flushPromises()
+    const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
+    expect(JSON.parse(post[1].body).budget.max_seconds).toBe(.25)
   })
 
   it('rejects invalid budgets and overlapping subject panels before posting', async () => {
@@ -131,7 +163,7 @@ describe('SearchesView', () => {
 
   it('opens a deep link, presents backend selection and budgets, and separates subjects, rounds and artifacts', async () => {
     const { wrapper } = await open('/searches?id=search-1')
-    expect(apiRequest).toHaveBeenCalledWith('/api/searches/search-1')
+    expect(apiRequest).toHaveBeenCalledWith('/api/searches/search-1?include_artifacts=true')
     const meters = wrapper.findAll('[role="progressbar"]')
     expect(meters.map(meter => meter.attributes('aria-valuetext'))).toEqual(['2 / 6', '3 / 8', '1 / 2', '125.5 / 3,600'])
     expect(wrapper.text()).toContain('内存 自动')
@@ -295,7 +327,7 @@ describe('SearchesView', () => {
     })
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
-    expect(wrapper.text()).toContain('一次性 LLM 对照')
+    expect(wrapper.text()).toContain('一次性提案对照')
     expect(wrapper.text()).toContain('训练被试 2')
     expect(wrapper.text()).toContain('开发被试 1')
     expect(wrapper.text()).toContain('原始 trial 200')
@@ -344,6 +376,159 @@ describe('SearchesView', () => {
     expect(wrapper.get('tbody').text()).toContain('legacy-S001')
     expect(wrapper.get('tbody').text()).toContain('0.0%')
     expect(wrapper.get('tbody').text()).toContain('-2.0 pp')
+  })
+
+  it.each([
+    ['candidate_invalid', '候选无效'], ['data_unevaluable', '数据不可评价'],
+  ])('renders %s receipts with unknown coverage and diagnostic warnings', async (status, translated) => {
+    const latest = state({ selected_candidate_id: null, candidates: [{ id: 'c1', status,
+      receipt: { status, coverage: null, macro_ba: null, mean_delta: null,
+        diagnostics: { floor_fraction: null, converged: null, warnings: ['共同面板不可评价，未生成覆盖计数'] } } }],
+    })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('tbody').text()).toContain(translated)
+    expect(wrapper.get('tbody').text()).toContain('— / —')
+    await button(wrapper, '开发被试').trigger('click')
+    expect(wrapper.get('.diagnostics').text()).toContain('预测（开发） —')
+    expect(wrapper.get('.diagnostics').text()).not.toContain('预测（开发） 0')
+    expect(wrapper.text()).toContain('诊断警告（1）')
+    expect(wrapper.text()).toContain('共同面板不可评价，未生成覆盖计数')
+  })
+
+  it('keeps core files visible, collapses candidate/engine groups, and makes every permanent artifact reachable through bounded pages', async () => {
+    const files = [
+      { name: 'search.json', description: '当前搜索状态' },
+      { name: 'files.json', description: '全部文件索引' },
+      { name: 'candidates/c1/receipt.json', description: '宽频评价回执' },
+      { name: 'candidates/c1/originalpredictions.tsv', description: '逐事件原始预测' },
+      { name: 'candidates/c2/method.json', description: '窄频处理方法' },
+      { name: 'engine/objects/input/hash.json', description: '冻结输入对象' },
+      { name: 'engine/environment.json', description: '执行环境' },
+      { name: 'engine/runs/job-2/S001/data-epo.fif', description: '分段信号' },
+      ...Array.from({ length: 109 }, (_, index) => ({
+        name: `engine/runs/job-1/S${String(index + 1).padStart(3, '0')}/signal_V.npy`, description: `被试 ${index + 1} 的信号数组`,
+      })),
+    ].map(file => ({ ...file, url: `/api/searches/search-1/artifacts/${file.name}?download=true` }))
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ artifacts: files }))
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click')
+    expect(wrapper.get('.artifact-toolbar').text()).toContain(`${files.length} / ${files.length} 个文件`)
+    expect(wrapper.findAll('.artifact-list a').map(link => link.text())).toEqual(['search.json', 'files.json'])
+    expect(wrapper.get('[data-group="candidates/c1"]').attributes('open')).toBeUndefined()
+    expect(wrapper.get('[data-group="engine/runs/job-1"]').attributes('open')).toBeUndefined()
+    expect(wrapper.get('[data-group="engine/runs/job-1"] summary').text()).toContain('数值执行 · 宽频平均参考')
+    expect(wrapper.get('[data-group="engine/objects"] summary').text()).toContain('对象快照')
+    const seen = new Set<string>()
+    for (const group of wrapper.findAll('.artifact-group')) {
+      if (group.attributes('open') === undefined) await group.get('summary').trigger('click')
+      while (true) {
+        const links = group.findAll('.artifact-list a')
+        expect(links.length).toBeLessThanOrEqual(30)
+        links.forEach(link => {
+          seen.add(link.text())
+          expect(link.attributes('href')).toBe(`https://api.example.test/api/searches/search-1/artifacts/${link.text()}?download=true`)
+          expect(link.element.parentElement?.querySelector('.artifact-description')?.textContent).toBe(files.find(file => file.name === link.text())!.description)
+        })
+        const next = group.findAll('button').find(item => item.text() === '下一页')
+        if (!next || next.attributes('disabled') !== undefined) break
+        await next.trigger('click')
+      }
+    }
+    expect([...seen].sort()).toEqual(files.map(file => file.name).sort())
+    const engine = wrapper.get('[data-group="engine/runs/job-1"]')
+    expect(engine.findAll('.artifact-list a')).toHaveLength(19)
+    expect(engine.get('.artifact-pagination').text()).toContain('第 4 / 4 页')
+    expect(apiRequest.mock.calls.map(([path]) => path).sort()).toEqual(['/api/searches', '/api/searches/search-1?include_artifacts=true', '/api/searches/search-1?include_artifacts=true'])
+  })
+
+  it('filters files by name or description and resets the group page when filtering', async () => {
+    const files = Array.from({ length: 65 }, (_, index) => ({
+      name: `engine/runs/job-1/S${index}/signal_V.npy`, description: index === 64 ? '特殊诊断结果' : '信号数组',
+    }))
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ artifacts: files }))
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click')
+    await wrapper.get('.artifact-group summary').trigger('click')
+    await button(wrapper, '下一页').trigger('click')
+    expect(wrapper.get('.artifact-pagination').text()).toContain('第 2 / 3 页')
+    await wrapper.get('input[aria-label="查找搜索文件"]').setValue('特殊诊断')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(1)
+    expect(wrapper.get('.artifact-list a').text()).toContain('/S64/')
+    expect(wrapper.get('.artifact-toolbar').text()).toContain('1 / 65 个文件')
+    await wrapper.get('input[aria-label="查找搜索文件"]').setValue('not-a-file')
+    expect(wrapper.text()).toContain('没有匹配的文件')
+    await wrapper.get('input[aria-label="查找搜索文件"]').setValue('')
+    expect(wrapper.get('.artifact-pagination').text()).toContain('第 1 / 3 页')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(30)
+    await wrapper.get('input[aria-label="查找搜索文件"]').setValue('/S42/')
+    expect(wrapper.get('.artifact-list a').text()).toContain('/S42/')
+    expect(apiRequest).toHaveBeenCalledTimes(3)
+  })
+
+  it('preserves expanded file groups and pages during polling, but resets them when switching searches', async () => {
+    const files = Array.from({ length: 65 }, (_, index) => ({ name: `engine/runs/job-1/S${index}/signal_V.npy` }))
+    let latest = state({ status: 'running', artifacts: files })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper, router } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click')
+    await wrapper.get('.artifact-group summary').trigger('click')
+    await button(wrapper, '下一页').trigger('click')
+    latest = { ...latest, artifacts: [...files, { name: 'engine/runs/job-1/S65/signal_V.npy' }, { name: 'candidates/c2/receipt.json' }] }
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('[data-group="engine/runs/job-1"]').attributes('open')).toBeDefined()
+    expect(wrapper.get('.artifact-pagination').text()).toContain('第 2 / 3 页 · 共 66 个')
+    expect(wrapper.get('[data-group="candidates/c2"]').attributes('open')).toBeUndefined()
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(30)
+    latest = state({ id: 'search-2', artifacts: files })
+    await router.push('/searches?id=search-2'); await flushPromises()
+    await button(wrapper, '报告 / 文件').trigger('click')
+    expect(wrapper.get('.artifact-group').attributes('open')).toBeUndefined()
+    await wrapper.get('.artifact-group summary').trigger('click')
+    expect(wrapper.get('.artifact-pagination').text()).toContain('第 1 / 3 页')
+  })
+
+  it('uses lightweight polling outside the file tab, retains file counts, and refreshes all artifacts immediately on entry', async () => {
+    let fullArtifacts = [{ name: 'search.json' }]
+    apiRequest.mockImplementation(async (path: string) => {
+      if (path === '/api/searches') return []
+      if (path.startsWith('/api/searches/search-2?')) return state({ id: 'search-2', artifacts: [] })
+      return state({ status: 'running', artifacts: path.endsWith('include_artifacts=true') ? fullArtifacts : [] })
+    })
+    const { wrapper, router } = await open('/searches?id=search-1')
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches')
+    expect(apiRequest).toHaveBeenCalledWith('/api/searches/search-1?include_artifacts=true')
+    fullArtifacts = [...fullArtifacts, { name: 'selection.json' }]
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+    expect(button(wrapper, '报告 / 文件').text()).toBe('报告 / 文件1')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=true')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(2)
+    fullArtifacts = [...fullArtifacts, { name: 'protocol.json' }]
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=true')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(3)
+    await button(wrapper, '候选比较').trigger('click')
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+    expect(button(wrapper, '报告 / 文件').text()).toBe('报告 / 文件3')
+    await router.push('/searches?id=search-2'); await flushPromises()
+    expect(button(wrapper, '报告 / 文件').text()).toBe('报告 / 文件0')
+  })
+
+  it('ignores an older lightweight poll after a full artifact refresh finishes', async () => {
+    const oldPoll = deferred<SearchState>()
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ status: 'running', artifacts: [{ name: 'search.json' }] }))
+    const { wrapper } = await open('/searches?id=search-1')
+    apiRequest.mockReturnValueOnce(oldPoll.promise)
+    await vi.advanceTimersByTimeAsync(2000)
+    apiRequest.mockResolvedValueOnce(state({ status: 'running', message: '最新完整文件状态', artifacts: [{ name: 'search.json' }, { name: 'selection.json' }] }))
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    oldPoll.resolve(state({ status: 'running', message: '旧轮询状态', artifacts: [] })); await flushPromises()
+    expect(wrapper.text()).toContain('最新完整文件状态')
+    expect(wrapper.text()).not.toContain('旧轮询状态')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(2)
   })
 })
 

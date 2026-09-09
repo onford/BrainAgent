@@ -230,6 +230,9 @@ class EvaluationReceipt(EvaluationContract):
     error: str | None = None
     stop_search: bool = False
     predictions_path: str | None = None
+    # Legacy evaluated receipts remain readable. New evaluate() always writes
+    # this hash; the worker must require and verify it before cached reuse.
+    predictions_sha256: Hash | None = None
     candidate_id: str | None = None
     job_id: str | None = None
     plan_ref: PlanReference | None = None
@@ -290,6 +293,8 @@ class EvaluationReceipt(EvaluationContract):
                 raise ValueError("mean_delta must be the paired subject mean")
         elif self.macro_ba is not None or self.mean_delta is not None or not self.error:
             raise ValueError("failed receipt requires readable error and null scores")
+        elif self.predictions_sha256 is not None:
+            raise ValueError("failed receipt requires predictions_sha256=None")
         if self.coverage is not None:
             for key, field in {
                 "original": "original_trials",

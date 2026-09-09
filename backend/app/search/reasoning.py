@@ -50,7 +50,7 @@ def feedback(state, sources):
     }
 
 
-async def decide(llm, state, sources, *, one_shot=False):
+async def decide(llm, state, sources, *, one_shot=False, capture=None):
     schema = InitialSchedule if one_shot else Decision
     context = feedback(state, sources)
     instruction = SYSTEM
@@ -68,6 +68,8 @@ async def decide(llm, state, sources, *, one_shot=False):
         },
         {"role": "user", "content": json.dumps(context, ensure_ascii=False)},
     ]
+    if capture is not None:
+        capture(messages)
     return (await llm.structured_output(messages, schema)).model_dump(mode="json")
 
 

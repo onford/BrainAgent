@@ -513,7 +513,9 @@ def evaluate(
                     }
                 )
         receipt.update(
-            status="evaluated", predictions_path=str(prediction_path.resolve())
+            status="evaluated",
+            predictions_path=str(prediction_path.resolve()),
+            predictions_sha256=file_hash(prediction_path),
         )
     except MemoryError:
         raise
@@ -550,6 +552,7 @@ def evaluate(
             receipt["timings"][stage] = perf_counter() - started
     if receipt["status"] != "evaluated":
         receipt["macro_ba"] = receipt["mean_delta"] = None
+        receipt["predictions_sha256"] = None
         receipt["subjects"] = {}
         predicted_ids.clear()
     if panel_valid:

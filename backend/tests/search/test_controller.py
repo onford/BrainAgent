@@ -5,6 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.preprocessing.schemas import PreprocessInput
+from app.preprocessing.storage import digest
 from app.search.catalog import BASELINE_ID, catalog, select
 from app.search.contracts import Decision, SearchBudget, SearchRequest
 from app.search.io import read, write
@@ -108,6 +109,13 @@ class SimulatedSearch(SearchService):
                 "macro_ba": score,
                 "mean_delta": delta,
                 "predictions_path": "originalpredictions.tsv",
+                "predictions_sha256": "a" * 64,
+                "versions": {
+                    "worker_version": 1,
+                    "search_engine_sha256": state["protocol"]["search_engine_hash"],
+                    "engine_sha256": state["protocol"]["numeric_engine_hash"],
+                    "environment_sha256": digest(state["protocol"]["environment"]),
+                },
                 "subjects": {
                     "S002": {
                         "ba": score,
@@ -138,10 +146,7 @@ class SimulatedSearch(SearchService):
 
 
 @pytest.fixture
-def factory(tmp_path, monkeypatch):
-    import app.search.service as module
-
-    monkeypatch.setattr(module, "search_engine_hash", lambda: "fixed-search-engine")
+def factory(tmp_path):
     original = make_dataset(tmp_path / "data")
     raw = original.model_dump(mode="json")
     raw["survey"].update(dataset_id="eegmmidb", task="left_right_motor_imagery")
@@ -220,6 +225,11 @@ async def test_feedback_changes_next_candidate_and_fixed_tie_selection(factory):
         assert len(llm.contexts) == 2
         assert "trials" not in llm.contexts[1]["panel"]
         assert llm.contexts[1]["results"][-1]["receipt"]["macro_ba"] == score
+        snapshots = sorted(service.folder(state["id"]).glob("decisions/*/request.json"))
+        assert len(snapshots) == len(llm.contexts)
+        assert [
+            json.loads(read(p)["messages"][-1]["content"]) for p in snapshots
+        ] == llm.contexts
         chosen.append(service.executed[-1])
     assert chosen == ["bp4-40-average", "bp8-30-original"]
     candidates = [
@@ -347,6 +357,51 @@ def test_state_and_artifacts_are_owner_scoped(factory):
         service.artifact("owner", state["id"], "../escape")
 
 
+def test_artifact_index_includes_numeric_files_and_logs_but_not_internal_state(factory):
+    service, _, state = factory()
+    root = service.folder(state["id"])
+    for name in (
+        "engine/records/a/epochs.fif",
+        "candidate.log",
+        "engine/preprocessing.db",
+        "engine/preprocessing.db-wal",
+        "search.lock",
+    ):
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"fixture")
+    names = {a["name"] for a in service.describe("owner", state["id"])["artifacts"]}
+    assert {"engine/records/a/epochs.fif", "candidate.log"} <= names
+    assert (
+        not {"engine/preprocessing.db", "engine/preprocessing.db-wal", "search.lock"}
+        & names
+    )
+
+
+@pytest.mark.asyncio
+async def test_provider_requests_are_charged_without_hidden_retries(factory):
+    import httpx
+    from app.llm.client import OpenAICompatibleClient
+    from app.llm.config import LLMConfig
+
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(503)
+
+    service, _, state = factory()
+    original = OpenAICompatibleClient(
+        LLMConfig(api_key="test", base_url="https://llm.example/v1", model="test"),
+        transport=httpx.MockTransport(handler),
+    )
+    service.llm = SearchService(service.root, service.workflows, original).llm
+    result = await run(service, state)
+    assert len(requests) == result["usage"]["llm_calls"] == 2
+    assert result["usage"]["retries"] == 1
+    assert result["status"] == "failed"
+
+
 def test_action_schema_requires_both_decision_branches():
     proposal = propose("bp1-40-average")
     del proposal["decision"]["decision_branches"]["no_improvement"]
@@ -356,70 +411,171 @@ def test_action_schema_requires_both_decision_branches():
 
 @pytest.mark.asyncio
 async def test_one_shot_schedule_is_frozen_before_reference_feedback(factory):
-    service,llm,state=factory([{"candidate_ids":["bp1-40-average","bp8-30-original"],"reason":"固定初始候选"}],strategy="one_shot",max_candidates=3,max_proposals=2)
-    result=await run(service,state)
-    assert result["usage"]["proposals"]==2
-    assert len(llm.contexts)==1 and llm.contexts[0]["results"]==[]
-    assert service.executed==[BASELINE_ID,"bp1-40-average","bp8-30-original"]
+    service, llm, state = factory(
+        [
+            {
+                "candidate_ids": ["bp1-40-average", "bp8-30-original"],
+                "reason": "固定初始候选",
+            }
+        ],
+        strategy="one_shot",
+        max_candidates=3,
+        max_proposals=2,
+    )
+    result = await run(service, state)
+    assert result["usage"]["proposals"] == 2
+    assert len(llm.contexts) == 1 and llm.contexts[0]["results"] == []
+    assert service.executed == [BASELINE_ID, "bp1-40-average", "bp8-30-original"]
 
 
 @pytest.mark.asyncio
 async def test_model_timeout_stops_without_retry_or_budget_reset(factory):
-    service,_,state=factory(max_seconds=1)
+    service, _, state = factory(max_seconds=1)
+
     class Slow:
-        async def structured_output(self,*args):
+        async def structured_output(self, *args):
             await asyncio.sleep(30)
-    service.llm=Slow()
-    result=await run(service,state)
-    assert result["stop_reason"]=="time_budget_exhausted"
-    assert result["usage"]["retries"]==0
-    assert result["selected_candidate_id"]==BASELINE_ID
+
+    service.llm = Slow()
+    result = await run(service, state)
+    assert result["stop_reason"] == "time_budget_exhausted"
+    assert result["usage"]["retries"] == 0
+    assert result["selected_candidate_id"] == BASELINE_ID
 
 
 @pytest.mark.asyncio
 async def test_cancel_interrupts_model_and_preserves_reserved_call_cost(factory):
-    service,_,state=factory()
-    entered=asyncio.Event()
+    service, _, state = factory()
+    entered = asyncio.Event()
+
     class Slow:
-        async def structured_output(self,*args):
+        async def structured_output(self, *args):
             entered.set()
             await asyncio.sleep(30)
-    service.llm=Slow()
-    service.start("owner",state["id"])
-    await asyncio.wait_for(entered.wait(),timeout=5)
-    service.cancel("owner",state["id"])
+
+    service.llm = Slow()
+    service.start("owner", state["id"])
+    await asyncio.wait_for(entered.wait(), timeout=5)
+    service.cancel("owner", state["id"])
     await service.tasks[state["id"]]
-    result=service.get("owner",state["id"])
-    assert result["status"]=="cancelled"
-    assert result["usage"]["llm_calls"]==1 and result["usage"]["elapsed_seconds"]>0
+    result = service.get("owner", state["id"])
+    assert result["status"] == "cancelled"
+    assert result["usage"]["llm_calls"] == 1 and result["usage"]["elapsed_seconds"] > 0
+    assert all(a["status"] != "running" for a in result["actions"])
 
 
 @pytest.mark.asyncio
-async def test_real_subprocess_api_search_and_owner_boundary(factory,tmp_path):
+async def test_cancel_numeric_work_preserves_budget_without_a_score(factory):
+    service, _, state = factory()
+    entered = asyncio.Event()
+    original_child = service.child
+
+    async def child(state, stage, candidate_id=None):
+        if stage == "candidate":
+            entered.set()
+            await asyncio.sleep(30)
+        return await original_child(state, stage, candidate_id)
+
+    service.child = child
+    service.start("owner", state["id"])
+    await asyncio.wait_for(entered.wait(), timeout=5)
+    service.cancel("owner", state["id"])
+    await service.tasks[state["id"]]
+    result = service.get("owner", state["id"])
+    assert result["status"] == "cancelled"
+    assert result["usage"]["candidates"] == 1
+    assert result["candidates"][0]["status"] == "interrupted"
+    assert result["candidates"][0]["receipt"] is None
+    assert result["selected_candidate_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_code_change_during_candidate_invalidates_mixed_version_result(
+    factory, monkeypatch
+):
+    import app.search.service as module
+
+    service, _, state = factory()
+    original_child = service.child
+
+    async def child(state, stage, candidate_id=None):
+        outcome = await original_child(state, stage, candidate_id)
+        if stage == "candidate":
+            monkeypatch.setattr(module, "search_engine_hash", lambda: "changed-code")
+        return outcome
+
+    service.child = child
+    result = await run(service, state)
+    assert result["stop_reason"] == "integrity_failure"
+    assert result["selected_candidate_id"] is None
+    assert service.executed == [BASELINE_ID]
+
+
+@pytest.mark.asyncio
+async def test_expired_resume_cannot_reselect_unverified_cached_result(
+    factory, monkeypatch
+):
+    import app.search.service as module
+
+    service, _, state = factory()
+    previous = await run(service, state)
+    assert previous["selected_candidate_id"] == BASELINE_ID
+    previous["status"] = "interrupted"
+    service.save(previous)
+    monkeypatch.setattr(module.time, "time", lambda: previous["deadline"] + 1)
+    monkeypatch.setattr(module, "search_engine_hash", lambda: "changed-code")
+    result = await run(service, previous)
+    assert result["stop_reason"] == "time_budget_exhausted"
+    assert result["selected_candidate_id"] is None
+    assert "未完成历史产物校验" in result["error"]
+
+
+@pytest.mark.asyncio
+async def test_real_subprocess_api_search_and_owner_boundary(factory, tmp_path):
     import httpx
     from fastapi import FastAPI
     from app.api.routes.searches import router
-    fixture,_,_=factory()
-    service=SearchService(tmp_path/"real-subprocess",fixture.workflows,Decisions())
-    app=FastAPI()
-    app.state.searches=service
-    app.state.settings=SimpleNamespace(default_owner_id="owner")
-    app.include_router(router,prefix="/api")
-    async with httpx.AsyncClient(transport=httpx.ASGITransport(app),base_url="http://test") as client:
-        response=await client.post("/api/searches",json={"workflow_id":"a"*32,"strategy":"exhaustive","budget":{"max_candidates":2,"max_seconds":60}})
-        assert response.status_code==202,response.text
-        identity=response.json()["id"]
-        await asyncio.wait_for(service.tasks[identity],timeout=65)
-        state=(await client.get(f"/api/searches/{identity}")).json()
-        assert state["status"]=="stopped",state["error"]
-        assert [c["status"] for c in state["candidates"]]==["evaluated","evaluated"]
-        assert state["usage"]["candidates"]==2
-        assert state["usage"]["peak_worker_memory_bytes"]>0
-        receipt=state["candidates"][0]["receipt"]
-        assert receipt["coverage"]["eligible"]==receipt["coverage"]["predicted"]
-        assert receipt["coverage"]["train"]["predicted"]==0
-        assert state["panel"]["train_subjects"]!=state["panel"]["development_subjects"]
-        report=await client.get(f"/api/searches/{identity}/artifacts/report.html?download=false")
-        assert report.status_code==200 and "开发面板" in report.text
-        assert (await client.get(f"/api/searches/{identity}",headers={"X-Brain-Agent-Owner-ID":"other"})).status_code==404
-        assert (await client.post(f"/api/searches/{identity}/retry")).status_code==422
+
+    fixture, _, _ = factory()
+    service = SearchService(
+        tmp_path / "real-subprocess", fixture.workflows, Decisions()
+    )
+    app = FastAPI()
+    app.state.searches = service
+    app.state.settings = SimpleNamespace(default_owner_id="owner")
+    app.include_router(router, prefix="/api")
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app), base_url="http://test"
+    ) as client:
+        response = await client.post(
+            "/api/searches",
+            json={
+                "workflow_id": "a" * 32,
+                "strategy": "exhaustive",
+                "budget": {"max_candidates": 2, "max_seconds": 60},
+            },
+        )
+        assert response.status_code == 202, response.text
+        identity = response.json()["id"]
+        await asyncio.wait_for(service.tasks[identity], timeout=65)
+        state = (await client.get(f"/api/searches/{identity}")).json()
+        assert state["status"] == "stopped", state["error"]
+        assert [c["status"] for c in state["candidates"]] == ["evaluated", "evaluated"]
+        assert state["usage"]["candidates"] == 2
+        assert state["usage"]["peak_worker_memory_bytes"] > 0
+        receipt = state["candidates"][0]["receipt"]
+        assert receipt["coverage"]["eligible"] == receipt["coverage"]["predicted"]
+        assert receipt["coverage"]["train"]["predicted"] == 0
+        assert (
+            state["panel"]["train_subjects"] != state["panel"]["development_subjects"]
+        )
+        report = await client.get(
+            f"/api/searches/{identity}/artifacts/report.html?download=false"
+        )
+        assert report.status_code == 200 and "开发面板" in report.text
+        assert (
+            await client.get(
+                f"/api/searches/{identity}", headers={"X-Brain-Agent-Owner-ID": "other"}
+            )
+        ).status_code == 404
+        assert (await client.post(f"/api/searches/{identity}/retry")).status_code == 422

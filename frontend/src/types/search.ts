@@ -35,6 +35,7 @@ export interface SearchSubjectMetrics {
   recall_right?: number | null
   original_trials?: number
   eligible_trials?: number
+  available_trials?: number
   predicted_trials?: number
   missing?: number
   [key: string]: unknown
@@ -47,8 +48,11 @@ export interface SearchSubject extends SearchSubjectMetrics {
 export interface SearchCoverage {
   original?: number
   eligible?: number
+  available?: number
   predicted?: number
   missing?: number
+  common_invalid?: number
+  common_invalid_reasons?: Record<string, number>
   train?: Omit<SearchCoverage, 'train' | 'development'>
   development?: Omit<SearchCoverage, 'train' | 'development'>
 }
@@ -64,8 +68,8 @@ export interface SearchCandidate {
     macro_ba?: number | null
     mean_delta?: number | null
     subjects?: Record<string, SearchSubjectMetrics>
-    coverage?: SearchCoverage
-    diagnostics?: { floor_fraction?: number | null; converged?: boolean | null }
+    coverage?: SearchCoverage | null
+    diagnostics?: { floor_fraction?: number | null; converged?: boolean | null; warnings?: string[] }
     [key: string]: unknown
   } | null
   error?: string | null

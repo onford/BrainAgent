@@ -33,7 +33,7 @@ from app.preprocessing.storage import Storage, digest, file_hash, within
 from app.preprocessing.units import engine_hash, environment
 from app.preprocessing.worker import Worker
 
-from .catalog import BASELINE_ID, catalog, search_engine_hash
+from .catalog import BASELINE_ID, catalog, method as catalog_method, search_engine_hash
 from .evaluation_contracts import EvaluationReceipt
 from .panel import DataUnevaluable, freeze_panel, validate_panel
 
@@ -100,6 +100,16 @@ def read_json(path: Path):
 
 def _normalize_receipt(value) -> dict:
     return EvaluationReceipt.model_validate(value).model_dump(mode="json")
+
+
+def _check_catalog_method(spec: MethodSpec, candidate_id: str, panel: dict) -> None:
+    entry = next((item for item in catalog() if item["id"] == candidate_id), None)
+    if entry is None or spec.model_dump(mode="json") != catalog_method(
+        entry, panel
+    ).model_dump(mode="json"):
+        raise CandidateInvalid(
+            f"{candidate_id}: method differs from the frozen catalog recipe"
+        )
 
 
 def write_json(path: Path, value) -> None:
@@ -298,10 +308,15 @@ def _verify_candidate(root, store, entry, data, panel):
         raise RuntimeError(
             f"{identity}: receipt belongs to a different panel/evaluator"
         )
+    predictions = within(root, f"candidates/{identity}/originalpredictions.tsv")
+    if (
+        Path(receipt["predictions_path"]).resolve() != predictions
+        or file_hash(predictions) != receipt["predictions_sha256"]
+    ):
+        raise RuntimeError(f"{identity}: prediction path/checksum differs from receipt")
 
     method = MethodSpec.model_validate(read_json(output / "method.json"))
-    if method.id != identity:
-        raise RuntimeError(f"{identity}: method identity differs")
+    _check_catalog_method(method, identity, panel)
     # Mirror register_method's deterministic mapping checks without registering.
     method.checks = sorted(set(method.checks + check_mapping(method)))
     method_hash = digest(method.model_dump(mode="json"))
@@ -472,8 +487,7 @@ def candidate(root: Path, candidate_id: str) -> dict:
         limits = read_json(root / "limits.json")
         try:
             method = MethodSpec.model_validate(read_json(output / "method.json"))
-            if method.id != candidate_id:
-                raise CandidateInvalid("method identity differs from catalog candidate")
+            _check_catalog_method(method, candidate_id, panel)
             method_ref = service.register_method(OWNER, method)
         except ValueError as exc:
             raise CandidateInvalid(str(exc)) from exc

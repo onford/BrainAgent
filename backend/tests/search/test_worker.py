@@ -102,6 +102,9 @@ def test_real_prepare_candidate_cli_and_full_inventory(search):
     assert {"feature", "train", "predict", "total_seconds"} <= receipt["timings"].keys()
     assert receipt["versions"]["engine_sha256"] == plan["engine_sha256"]
     assert receipt["versions"]["search_engine_sha256"]
+    assert receipt["predictions_sha256"] == file_hash(
+        search / "candidates" / BASELINE_ID / "originalpredictions.tsv"
+    )
     assert result["completed"] == result["total"] == 2
     assert len(plan["input_snapshot"]["collection"]["records"]) == 3
     assert plan["input_snapshot"]["collection"]["selected_record_ids"] == [
@@ -518,6 +521,41 @@ def test_verify_normalizes_missing_receipt_defaults(cached_search):
     assert path.read_bytes() == before
 
 
+@pytest.mark.parametrize("stage", ["candidate", "verify"])
+@pytest.mark.parametrize("change", ["filter", "window", "title", "checks"])
+def test_entire_catalog_method_is_frozen_before_registration_or_cached_lookup(
+    search, monkeypatch, stage, change, request
+):
+    root = request.getfixturevalue("cached_search") if stage == "verify" else search
+    value = read(root, "method.json")
+    if change == "filter":
+        value["recipe"][1]["params"]["h_freq"] = (
+            29  # Valid filter, wrong catalog candidate.
+        )
+    elif change == "window":
+        value["recipe"][-1]["params"]["tmax"] = 0.4
+    elif change == "title":
+        value["title"] = "manually altered metadata"
+    else:
+        value["checks"] = ["manually injected check"]
+    worker.write_json(root / "candidates" / BASELINE_ID / "method.json", value)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail(
+            "catalog mismatch must be rejected before registration or engine lookup"
+        )
+
+    if stage == "candidate":
+        monkeypatch.setattr(worker.PreprocessingService, "register_method", forbidden)
+        receipt = worker.candidate(root, BASELINE_ID)
+        assert receipt["status"] == "candidate_invalid", receipt
+    else:
+        monkeypatch.setattr(worker._VerificationStorage, "get", forbidden)
+        receipt = worker.verify(root)
+        assert receipt["status"] == "execution_failure", receipt
+    assert "frozen catalog recipe" in receipt["error"]
+
+
 @pytest.mark.parametrize(
     "damage",
     [
@@ -535,6 +573,8 @@ def test_verify_normalizes_missing_receipt_defaults(cached_search):
         "state_receipt",
         "execution",
         "engine_job",
+        "predictions",
+        "predictions_path",
     ],
 )
 def test_verify_detects_corrupt_sources_artifacts_and_cached_snapshots(
@@ -579,6 +619,19 @@ def test_verify_detects_corrupt_sources_artifacts_and_cached_snapshots(
         store = Storage(root / "engine")
         with store.db() as db:
             db.execute("UPDATE jobs SET status='failed'")
+    elif damage == "predictions":
+        (output / "originalpredictions.tsv").write_text(
+            "corrupt predictions", encoding="utf-8"
+        )
+    elif damage == "predictions_path":
+        alternate = root / "wrong-predictions.tsv"
+        alternate.write_bytes((output / "originalpredictions.tsv").read_bytes())
+        receipt = read(root)
+        receipt["predictions_path"] = str(alternate.resolve())
+        worker.write_json(output / "receipt.json", receipt)
+        state = worker.read_json(root / "search.json")
+        state["candidates"][0]["receipt"] = receipt
+        worker.write_json(root / "search.json", state)
     else:
         path = output / f"{damage}.json"
         value = worker.read_json(path)

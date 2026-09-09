@@ -19,8 +19,15 @@ async def create(body: SearchRequest, request: Request, user=Depends(get_current
 
 
 @router.get("/{identity}")
-def get(identity: str, request: Request, user=Depends(get_current_user)):
-    return checked(request.app.state.searches.describe, user.owner_id, identity)
+def get(
+    identity: str,
+    request: Request,
+    include_artifacts: bool = True,
+    user=Depends(get_current_user),
+):
+    return checked(
+        request.app.state.searches.describe, user.owner_id, identity, include_artifacts
+    )
 
 
 @router.post("/{identity}/retry")
