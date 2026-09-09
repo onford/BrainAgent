@@ -335,7 +335,8 @@ describe('SearchesView', () => {
     expect(panel.text()).not.toContain('训练被试 0')
     const folds = panel.findAll('tbody tr')
     expect(folds).toHaveLength(3)
-    expect(folds[0]!.findAll('td').map(cell => cell.text())).toEqual(['fold-01', 'S002、S003', 'S001'])
+    expect(folds[0]!.get('td').text()).toBe('fold-01')
+    expect(folds[0]!.findAll('summary').map(summary => summary.text())).toEqual(['2 人', '1 人'])
     expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('CSP 与分类器在每折训练被试上拟合')
     expect(wrapper.text()).toContain('不是独立测试结果')
     expect(wrapper.find('form').exists()).toBe(false)
@@ -478,6 +479,37 @@ describe('SearchesView', () => {
     expect(panel.findAll('tbody td')[2]!.text()).toBe('123')
     expect(panel.findAll('tbody td')[3]!.text()).toBe('—')
     expect(wrapper.find('[aria-label="诊断总体均值"]').exists()).toBe(false)
+  })
+
+  it.each([5, 109])('keeps five folds compact for %i subjects and expands complete lists independently across polling', async total => {
+    const subjects = Array.from({ length: total }, (_, index) => `S${String(index + 1).padStart(3, '0')}`)
+    const folds = Array.from({ length: 5 }, (_, index) => ({ id: `fold-0${index + 1}`,
+      train_subjects: subjects.filter((_, subjectIndex) => subjectIndex % 5 !== index),
+      development_subjects: subjects.filter((_, subjectIndex) => subjectIndex % 5 === index),
+    }))
+    const latest = state({ status: 'running', panel: { evaluation_mode: 'group_cross_validation', train_subjects: [], development_subjects: subjects, folds } })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : structuredClone(latest))
+    const { wrapper } = await open('/searches?id=search-1')
+    const table = wrapper.get('table[aria-label="评估折次"]')
+    expect(table.findAll('tbody tr')).toHaveLength(5)
+    expect(table.findAll('details')).toHaveLength(10)
+    expect(table.findAll('details[open]')).toHaveLength(0)
+    const first = table.findAll('tbody tr')[0]!
+    const [train, development] = first.findAll('details')
+    expect(first.findAll('summary').map(summary => summary.text())).toEqual(total === 109 ? ['87 人', '22 人'] : ['4 人', '1 人'])
+    await train!.get('summary').trigger('click')
+    expect(train!.attributes('open')).toBeDefined()
+    expect(train!.findAll('li').map(item => item.text())).toEqual(folds[0]!.train_subjects)
+    expect(table.findAll('details[open]')).toHaveLength(1)
+    await development!.get('summary').trigger('click')
+    expect(development!.attributes('open')).toBeDefined()
+    expect(development!.findAll('li').map(item => item.text())).toEqual(folds[0]!.development_subjects)
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(table.findAll('details[open]')).toHaveLength(2)
+    await train!.get('summary').trigger('click')
+    expect(train!.attributes('open')).toBeUndefined()
+    expect(development!.attributes('open')).toBeDefined()
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
   it('accepts backend subject maps and panel summaries and hides successful model-decision wrappers', async () => {
