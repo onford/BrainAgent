@@ -18,11 +18,7 @@ class Cancelled(Exception):
     pass
 
 
-def state(x):
-    eeg = x.get_data(picks="eeg")
-    rank_data = (
-        eeg if eeg.ndim == 2 else eeg.transpose(1, 0, 2).reshape(eeg.shape[1], -1)
-    )
+def _state_metadata(x):
     return {
         "kind": "raw" if isinstance(x, mne.io.BaseRaw) else "epochs",
         "channels": x.ch_names,
@@ -38,16 +34,45 @@ def state(x):
         else None,
         "highpass": float(x.info["highpass"]),
         "lowpass": float(x.info["lowpass"]),
-        "rank": int(np.linalg.matrix_rank(rank_data)),
     }
+
+
+def state(x):
+    from threadpoolctl import threadpool_limits
+
+    eeg = x.get_data(picks="eeg")
+    rank_data = eeg if eeg.ndim == 2 else eeg.transpose(1, 0, 2).reshape(eeg.shape[1], -1)
+    # True data rank remains in artifact state. Hashing has no reason to recompute it.
+    with threadpool_limits(limits=1, user_api="blas"):
+        rank = int(np.linalg.matrix_rank(rank_data)) if rank_data.size else 0
+    return {**_state_metadata(x), "rank": rank}
 
 
 def data_hash(x):
     import hashlib
 
-    return hashlib.sha256(
-        canonical(state(x)).encode() + np.ascontiguousarray(x.get_data()).tobytes()
-    ).hexdigest()
+    h = hashlib.sha256(canonical(_state_metadata(x)).encode())
+    def array(value):
+        a = np.ascontiguousarray(value)
+        h.update(canonical([list(a.shape), str(a.dtype)]).encode())
+        h.update(a.tobytes())
+    array(x.get_data())
+    # Decisions also depend on montage, annotations and projection state.
+    for ch in x.info["chs"]:
+        array(ch["loc"])
+        h.update(canonical([int(ch["coord_frame"]), int(ch["unit"])]).encode())
+    for proj in x.info["projs"]:
+        h.update(canonical([proj["desc"], bool(proj["active"]), proj["data"]["col_names"]]).encode())
+        array(proj["data"]["data"])
+    if isinstance(x, mne.io.BaseRaw):
+        array(x.annotations.onset)
+        array(x.annotations.duration)
+        h.update(canonical([x.annotations.description.tolist(), str(x.annotations.orig_time),
+                            [list(v) for v in x.annotations.ch_names]]).encode())
+    else:
+        array(x.events)
+        h.update(canonical([x.event_id, x.baseline, x.drop_log]).encode())
+    return h.hexdigest()
 
 
 def save_artifacts(value, directory: Path, name="artifacts"):
@@ -142,6 +167,15 @@ def verify_result(root: Path, result):
         if len(retained) != delta["events_retained"]:
             return False
         if isinstance(x, mne.BaseEpochs):
+            continuous = [a for a in entries if a["kind"] == "continuous_data"]
+            if len(continuous) != 1 or continuous[0]["name"] != "continuous-raw.fif":
+                return False
+            provenance = json.loads((path.parent / "provenance.json").read_text(encoding="utf-8"))
+            snapshot = provenance.get("continuous_raw")
+            if (not snapshot or snapshot["path"] != continuous[0]["path"]
+                    or snapshot["sha256"] != continuous[0]["sha256"]
+                    or snapshot["bytes"] != within(root, continuous[0]["path"]).stat().st_size):
+                return False
             retained.sort(key=lambda e: e["epoch_index"])
             if [e["epoch_index"] for e in retained] != list(range(len(x))):
                 return False
@@ -196,6 +230,14 @@ def run_record(
         }
         decisions, model_bindings = {}, {}
         steps = {s.id: s for s in config.steps}
+        data_chain = []
+        cursor = config.output
+        while cursor != "raw":
+            data_chain.append(cursor)
+            cursor = steps[cursor].input
+        data_chain.reverse()
+        epoch_id = next((name for name in data_chain if steps[name].op == "epoch"), None)
+        continuous_raw = None
 
         def check_cancel():
             if cancelled():
@@ -263,6 +305,39 @@ def run_record(
                     },
                 )
             before_hash = data_hash(x)
+            if step.id == epoch_id:
+                snapshot_path = output / "continuous-raw.fif"
+                x.save(snapshot_path, fmt="double", overwrite=False, verbose="ERROR")
+                snapshot = mne.io.read_raw_fif(snapshot_path, preload=True, verbose="ERROR")
+                if (snapshot.ch_names != x.ch_names or snapshot.first_samp != x.first_samp
+                        or snapshot.info["sfreq"] != x.info["sfreq"]
+                        or snapshot.get_data().shape != x.get_data().shape
+                        or not np.allclose(snapshot.get_data(), x.get_data(),
+                                           rtol=2 * np.finfo(np.float32).eps, atol=1e-18)):
+                    raise ValueError("continuous snapshot roundtrip failed")
+                position = data_chain.index(epoch_id)
+                continuous_raw = {
+                    "file": "continuous-raw.fif",
+                    "path": snapshot_path.relative_to(storage_root).as_posix(),
+                    "sha256": file_hash(snapshot_path), "bytes": snapshot_path.stat().st_size,
+                    "before_epoch_step_id": epoch_id, "source_node_id": step.input,
+                    "pipeline_index": next(i for i, s in enumerate(config.steps) if s.id == epoch_id),
+                    "main_chain_step_ids": data_chain[:position],
+                    "pre_epoch_step_ids": data_chain[:position],
+                    "post_epoch_step_ids": data_chain[position + 1:],
+                    "post_epoch_steps": [steps[n].model_dump(mode="json") for n in data_chain[position + 1:]],
+                    "unit": "V", "format": "FIFF double",
+                    "sfreq": float(x.info["sfreq"]), "channels": list(x.ch_names),
+                    "channel_types": x.get_channel_types(), "first_sample": int(x.first_samp),
+                    "highpass": float(x.info["highpass"]), "lowpass": float(x.info["lowpass"]),
+                    "bads": list(x.info["bads"]), "custom_ref_applied": int(x.info["custom_ref_applied"]),
+                    "shape": list(x.get_data().shape), "source_data_hash": before_hash,
+                    "target_events": current_events.tolist(), "event_origin": int(event_origin),
+                    "roundtrip_max_error_V": float(np.max(np.abs(snapshot.get_data() - x.get_data()))),
+                    "applied_through": step.input,
+                    "post_epoch_operations_applied": False,
+                }
+                del snapshot
             result = invoke(step.unit_id, step.op, x, model=model, **actual)
             y = result["data"]
             if data_hash(x) != before_hash:
@@ -305,7 +380,7 @@ def run_record(
                 }
                 write_json(directory / "model-binding.json", binding)
                 model_bindings[step.id] = binding
-            if step.op == "amplitude_windows":
+            if step.op in {"amplitude_windows", "detect_bad_channels"}:
                 decisions[step.id] = {
                     "decision_id": digest(
                         [config.method_ref.id, record.id, step.id, before_hash]
@@ -346,6 +421,7 @@ def run_record(
                     "method_ref": config.method_ref.model_dump(),
                     "input_ref": plan.request.input_ref.model_dump(),
                     "mode": plan.request.mode,
+                    "continuous_raw": continuous_raw,
                 },
             )
         check_cancel()
@@ -431,7 +507,8 @@ def run_record(
                         "name": artifact.relative_to(output).as_posix(),
                         "path": artifact.relative_to(storage_root).as_posix(),
                         "sha256": file_hash(artifact),
-                        "kind": "data" if artifact == path else "provenance",
+                        "kind": "data" if artifact == path else (
+                            "continuous_data" if artifact.name == "continuous-raw.fif" else "provenance"),
                         "bytes": artifact.stat().st_size,
                     }
                 )
@@ -445,9 +522,11 @@ def run_record(
         if not verify_result(storage_root, result):
             raise ValueError("required artifacts failed verification")
         return result
-    except BaseException:
+    except BaseException as exc:
         write_json(
             output / "failure.json",
-            {"completed_steps": logs, "error": traceback.format_exc()},
+            {"completed_steps": logs, "error": traceback.format_exc(),
+             "failure_code": getattr(exc, "code", type(exc).__name__),
+             "failure_details": getattr(exc, "details", {})},
         )
         raise

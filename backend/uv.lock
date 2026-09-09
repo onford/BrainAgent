@@ -47,6 +47,20 @@ wheels = [
 ]
 
 [[package]]
+name = "asrpy"
+version = "0.0.8"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "mne" },
+    { name = "numpy" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/fd/f6/cbf2949b2cf1fe3a99c43c7072ab18ff995f7a65992df5c7f25e862b55c9/asrpy-0.0.8.tar.gz", hash = "sha256:9b7a2a5adf73c18e07f4af537ea338e38ef715223259a3f510b605264a6c1969", size = 20787, upload-time = "2025-06-19T15:10:54.007Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/d2/979a4fc283e80ae83e225ee9fa4e2bb22b911555d46db143749502a2a8fd/asrpy-0.0.8-py3-none-any.whl", hash = "sha256:f0acf5f0c00513cfba60c38d5823424bcad3035f3ddee0c1272b638d4ed20384", size = 20440, upload-time = "2025-06-19T15:10:52.26Z" },
+]
+
+[[package]]
 name = "asyncmy"
 version = "0.2.14"
 source = { registry = "https://pypi.org/simple" }
@@ -125,6 +139,7 @@ dev = [
     { name = "pytest-asyncio" },
 ]
 eeg = [
+    { name = "asrpy" },
     { name = "h5io" },
     { name = "h5py" },
     { name = "mne" },
@@ -133,6 +148,7 @@ eeg = [
     { name = "pandas" },
     { name = "portalocker" },
     { name = "pybv" },
+    { name = "pyriemann" },
     { name = "scikit-learn" },
     { name = "scipy" },
 ]
@@ -140,6 +156,7 @@ eeg = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", marker = "extra == 'dev'", specifier = ">=0.20,<1" },
+    { name = "asrpy", marker = "extra == 'eeg'", specifier = "==0.0.8" },
     { name = "asyncmy", specifier = ">=0.2,<1" },
     { name = "cryptography", specifier = ">=43,<47" },
     { name = "fastapi", specifier = ">=0.115,<1" },
@@ -155,6 +172,7 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.9,<3" },
     { name = "pydantic-settings", specifier = ">=2.5,<3" },
     { name = "pypdf", specifier = ">=5,<7" },
+    { name = "pyriemann", marker = "extra == 'eeg'", specifier = "==0.7" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8,<9" },
     { name = "pytest-asyncio", marker = "extra == 'dev'", specifier = ">=0.24,<1" },
     { name = "scikit-learn", marker = "extra == 'eeg'", specifier = "==1.6.1" },
@@ -1617,6 +1635,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c2/c3/9fa0666f280552bd3833562d985b785fce1ddb3804937edd2fd6a3f2bdb3/pypdf-6.18.0.tar.gz", hash = "sha256:ae58b7d93c22c169ffb02c3b06321c45c4f223b4916536568adb57d789d95d01", size = 7024871, upload-time = "2026-09-07T16:48:16.444Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c7/a5/d5922a078c9a612327681d4793404f82998f4d66213add6fdc0659245856/pypdf-6.18.0-py3-none-any.whl", hash = "sha256:05b762b77bcb9dcb4a7c91fcf5dded585b25bee7269ab3d3001d7c55fa1b324b", size = 393848, upload-time = "2026-09-07T16:48:14.254Z" },
+]
+
+[[package]]
+name = "pyriemann"
+version = "0.7"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "joblib" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "scikit-learn" },
+    { name = "scipy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c4/50/e551da680538e4e2add83d77c3dd201fc216900b5bfa9b9f215cabdfef5f/pyriemann-0.7.tar.gz", hash = "sha256:f1889f3aec02c4148dec5458299ade2b4a0f28063312c00180a8dfeeea9d9b8e", size = 129218, upload-time = "2024-10-03T19:58:30.739Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/a7/ff6e622c57fec2526a9b3ee56b8dd6c6b143a5ee57620eeb98687a9caf78/pyriemann-0.7-py2.py3-none-any.whl", hash = "sha256:6ad9c00a583fdab9472f433eb54730d8f55852300fec834e00b32daa295c4089", size = 115577, upload-time = "2024-10-03T19:58:27.306Z" },
 ]
 
 [[package]]

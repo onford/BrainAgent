@@ -19,6 +19,7 @@ dependencies = [
 eeg = [
   "mne==1.10.2", "mne-bids==0.17.0", "numpy==1.26.4",
   "scipy==1.15.3", "scikit-learn==1.6.1", "pandas==2.2.3",
+  "asrpy==0.0.8", "pyriemann==0.7",
   "pybv==0.7.6", "h5io==0.2.5", "h5py==3.13.0", "portalocker==3.2.0",
 ]
 dev = [

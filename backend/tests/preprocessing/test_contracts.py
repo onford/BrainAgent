@@ -17,13 +17,15 @@ from .test_execution import prepare
 
 def test_all_50_source_modules_match_frozen_catalog():
     units = catalog()
-    assert len(units) == len({u.id for u in units}) == 50
+    assert len(units) == len({u.id for u in units})
+    frozen = [u for u in units if u.source["version"] == "feishu-2026-09-06"]
+    assert len(frozen) == 50
     root = Path(__file__).parents[2] / "app/preprocessing/units/source"
     for unit in units:
         path = root / (unit.implementation["module"] + ".py")
         assert file_hash(path) == unit.source["code_sha256"]
         ast.parse(path.read_text(encoding="utf-8"))
-    assert sum(bool(u.implementation["enabled_ops"]) for u in units) == 9
+    assert sum(bool(u.implementation["enabled_ops"]) for u in frozen) == 9
 
 
 @pytest.mark.parametrize(

@@ -82,9 +82,38 @@ class MarkParams(Contract):
     max_fraction: float = Field(ge=0, lt=1)
 
 
+class DetectBadParams(Contract):
+    adaptation_scope: Literal["record_unlabeled"]
+    window_s: float = Field(default=1, ge=0.5, le=5)
+    flat_duration_s: float = Field(default=5, ge=1, le=30)
+    flat_ptp_V: float = Field(default=1e-7, gt=0, le=1e-5)
+    deviation_z: float = Field(default=5, ge=3, le=10)
+    correlation_threshold: float = Field(default=0.4, ge=0, le=0.8)
+    bad_window_fraction: float = Field(default=0.1, gt=0, le=1)
+
+
+class InterpolateBadParams(Contract):
+    max_fraction: float = Field(default=0.1, ge=0, le=0.25)
+
+
+class AsrCleanParams(Contract):
+    adaptation_scope: Literal["record_unlabeled"]
+    cutoff: float = Field(default=20, ge=10, le=100)
+    win_len: float = Field(default=0.5, ge=0.5, le=2)
+    win_overlap: float = Field(default=0.66, ge=0, le=0.9)
+    min_clean_seconds: float = Field(default=30, ge=30)
+    lookahead: float = Field(default=0.25, gt=0, le=1)
+    stepsize: int = Field(default=32, ge=1, strict=True)
+    maxdims: float = Field(default=0.66, gt=0, lt=1)
+    mem_splits: int = Field(default=3, ge=1, le=100, strict=True)
+
+
 # Each enabled operation has a deliberately bounded integrated parameter domain.
 # Other ops remain discoverable in the catalog without silently widening support.
 OPERATIONS = {
+    ("EEG-AUTO-BAD-CHANNEL", "detect_bad_channels"): DetectBadParams,
+    ("EEG-AUTO-BAD-CHANNEL", "interpolate_bad_channels"): InterpolateBadParams,
+    ("EEG-ASR-AUTO", "asr_clean"): AsrCleanParams,
     ("EEG-DETREND", "detrend"): DetrendParams,
     ("EEG-FILTER", "filter"): FilterParams,
     ("EEG-RESAMPLE", "resample"): ResampleParams,
@@ -110,7 +139,7 @@ def catalog() -> list[UnitSpec]:
             version="1",
             profile="source",
             enabled_ops=supported,
-            dependencies=PINNED if supported else {},
+            dependencies={**PINNED, **row["implementation"].get("extra_dependencies", {})} if supported else {},
             nonfinite_policy="reject" if supported else "op_specific_not_integrated",
         )
         row["validation"]["integration"] = (
@@ -157,7 +186,17 @@ def environment() -> dict[str, str]:
         raise ValueError(
             "EEG worker requires Python 3.12 and locked EEG dependencies; use uv sync --extra eeg --extra dev"
         )
-    return {**versions, "python": platform.python_version()}
+    result = {**versions, "python": platform.python_version(),
+              "threadpoolctl": metadata.version("threadpoolctl")}
+    try:
+        dist = metadata.distribution("asrpy")
+    except metadata.PackageNotFoundError:
+        return result
+    result["asrpy"] = dist.version
+    result["asrpy.source_sha256"] = digest({
+        name: file_hash(Path(dist.locate_file("asrpy/" + name)))
+        for name in ("asr.py", "asr_utils.py")})
+    return result
 
 
 def engine_hash() -> str:

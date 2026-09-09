@@ -237,14 +237,9 @@ def read_record(root: Path, record: RecordSpec, event_id: dict, context_event_id
     eeg_meta = json.loads(path.with_suffix(".json").read_text(encoding="utf-8"))
     if eeg_meta.get("EEGReference") != record.reference:
         raise ValueError("reference differs from Collection")
-    rows = list(
-        csv.DictReader(
-            (path.parent / path.name.replace("eeg.vhdr", "events.tsv")).open(
-                encoding="utf-8-sig", newline=""
-            ),
-            delimiter="\t",
-        )
-    )
+    events_path = path.parent / path.name.replace("eeg.vhdr", "events.tsv")
+    with events_path.open(encoding="utf-8-sig", newline="") as stream:
+        rows = list(csv.DictReader(stream, delimiter="\t"))
     events, mapping, all_samples = [], [], []
     known_events = {**(context_event_id or {}), **event_id}
     for i, row in enumerate(rows):

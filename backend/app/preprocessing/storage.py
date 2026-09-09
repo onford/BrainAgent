@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import tempfile
 import time
 from contextlib import contextmanager
 from uuid import uuid4
@@ -46,15 +47,27 @@ def within(root: Path, relative: str) -> Path:
 
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp = path.with_name(path.name + "." + uuid4().hex + ".tmp")
+    temp = None
     try:
-        with temp.open("w", encoding="utf-8", newline="\n") as stream:
+        # Keep the temporary basename short on Windows; deeply nested verified
+        # record trees must not exceed path limits just because of publication.
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="\n",
+            dir=path.parent,
+            prefix=".",
+            suffix=".tmp",
+            delete=False,
+        ) as stream:
+            temp = Path(stream.name)
             stream.write(canonical(value))
             stream.flush()
             os.fsync(stream.fileno())
         replace_file(temp, path)
     finally:
-        temp.unlink(missing_ok=True)
+        if temp is not None:
+            temp.unlink(missing_ok=True)
 
 
 class Storage:

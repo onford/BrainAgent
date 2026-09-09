@@ -178,8 +178,51 @@ def check_mapping(method: MethodSpec):
     return checks
 
 
+def automatic_cleaning_methods() -> list[MethodSpec]:
+    """Optional reviewable templates; not auto-seeded or empirically validated."""
+    evidence = [Evidence(
+        source_url="https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+        locator="Detection of Noisy Channels", source_version="PREP 2015",
+        text="PREP motivates amplitude and correlation diagnostics; this project uses a simplified MAD/max-peer engineering detector, not PREP reproduction."),
+        Evidence(source_url="https://mne.tools/1.10/generated/mne.io.Raw.html#mne.io.Raw.interpolate_bads",
+                 locator="interpolate_bads", source_version="MNE 1.10.2",
+                 text="MNE provides EEG spherical-spline interpolation from channel geometry."),
+        Evidence(source_url="https://pypi.org/project/asrpy/0.0.8/", locator="ASR.fit/transform source",
+                 source_version="ASRpy 0.0.8",
+                 text="Euclidean ASR fits thresholds from calibration EEG and corrects the original signal. This adapter guards rank and calibration duration before application.")]
+    methods = []
+    for use_asr in (False, True):
+        recipe = [
+            Step(id="highpass", unit_id="EEG-FILTER", op="filter",
+                 params={"l_freq": 1.0, "h_freq": None, "method": "iir", "phase": "zero", "picks": "$eeg_channels"}, evidence_indices=[2]),
+            Step(id="detect", unit_id="EEG-AUTO-BAD-CHANNEL", op="detect_bad_channels", input="highpass",
+                 params={"adaptation_scope": "record_unlabeled"}, evidence_indices=[0]),
+            Step(id="mark", unit_id="EEG-BAD-CHANNEL-MARK", op="mark_channels", input="highpass", decision_from="detect",
+                 params={"max_fraction": 0.1}, evidence_indices=[0])]
+        if use_asr:
+            recipe.append(Step(id="asr", unit_id="EEG-ASR-AUTO", op="asr_clean", input="mark",
+                               params={"adaptation_scope": "record_unlabeled", "cutoff": 20}, evidence_indices=[2]))
+        recipe.extend([
+            Step(id="interpolate", unit_id="EEG-AUTO-BAD-CHANNEL", op="interpolate_bad_channels",
+                 input="asr" if use_asr else "mark", params={"max_fraction": 0.1}, evidence_indices=[1]),
+            Step(id="car", unit_id="EEG-REREFERENCE", op="reference", input="interpolate",
+                 params={"ref_channels": "average"}, evidence_indices=[0])])
+        methods.append(MethodSpec(id="auto-clean-asr" if use_asr else "auto-clean-spatial", version="1",
+            title="无标签坏道修复与 ASR" if use_asr else "无标签坏道修复",
+            source="classic", mechanism="detect-asr-interpolate-car" if use_asr else "detect-interpolate-car",
+            evidence=evidence, recipe=recipe, output="car",
+            adaptations=["Project engineering recipe, not full PREP/clean_rawdata reproduction.",
+                         "Explicit whole-record unlabeled transductive adaptation; not train-only/online.",
+                         "No real EOG dependency, ICA classification or trial rejection.",
+                         "Append a common analysis band/epoch grid; high-pass and thresholds are search priors, not guaranteed optimal."]))
+    return methods
+
+
 def extraction_contracts():
     semantics = {
+        "detect_bad_channels": "Continuous Raw -> unchanged Raw + candidates. Simplified PREP-inspired flatness, robust amplitude and max-peer-correlation detector; NOT full PREP. Explicit record_unlabeled transductive adaptation, no class labels. Bind mark_channels.decision_from to this step and use its exact input.",
+        "interpolate_bad_channels": "Continuous Raw -> same grid/physical V. MNE spherical splines repair currently marked EEG only, require head geometry and max_fraction; preserve auxiliary channels and all events/trials. Clear only successfully repaired EEG marks. Place after ASR and before CAR.",
+        "asr_clean": "ASRpy 0.0.8 Euclidean correction on unmarked EEG, fixed samples/channels/events. Explicit record_unlabeled transductive calibration, not train-only. Requires full-rank good EEG before CAR/interpolation, high-pass >=0.5 Hz, sufficient clean calibration >=30s, sfreq>82. No EOG/ICA classifier, no time/trial rejection. Defaults cutoff20, window0.5s require >=1Hz high-pass; calibration mask/matrices and boundary caveat saved.",
         "detrend": "Remove constant/linear trend on EEG picks; preserve data state.",
         "filter": "Continuous Raw -> Raw; EEG picks only; IIR is fixed fourth-order Butterworth, zero phase. This phase is an implementation choice unless supported by source evidence.",
         "resample": "Continuous Raw -> Raw at sfreq Hz, fixed polyphase anti-aliasing. Pass $events; the executor synchronizes target event sample indices, preserving original event identity and recording timing error. Use the same target sfreq across mixed-rate records before epoch. Does not add original frequency information when upsampling.",
@@ -189,7 +232,7 @@ def extraction_contracts():
         "eog_fit": "Continuous Raw -> model port; requires real EOG channels and one explicit calibration/train interval id in fit_scope; never fit test data.",
         "eog_apply": "Data input and model_from from a preceding eog_fit; matching reference_id required. EOG regression does not implement EMG screening.",
         "amplitude_windows": "Continuous Raw -> unchanged Raw plus channel candidates from sliding-window PEAK-TO-PEAK thresholds in volts. Does NOT implement absolute-amplitude trial rejection or apply exclusion.",
-        "mark_channels": "Apply channel marks using decision_from an earlier amplitude_windows result; does not drop trials.",
+        "mark_channels": "Apply channel marks using decision_from an earlier amplitude_windows or detect_bad_channels result bound to the exact input; does not drop trials.",
     }
     return [
         {

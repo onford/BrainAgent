@@ -1298,5 +1298,152 @@
       "source_syntax": "passed",
       "integration": "not_enabled"
     }
+  },
+  {
+    "id": "EEG-AUTO-BAD-CHANNEL",
+    "source": {
+      "version": "brainagent-engineering-adapter-1",
+      "code_sha256": "83e005806340d29ee5c82071716e102ff4023ed91b2596d0e463e7303fed134c",
+      "references": [
+        {
+          "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+          "locator": "Detection of Noisy Channels",
+          "reliability": "primary paper",
+          "relationship": "inspiration only; engineered MAD/max-peer detector, not PREP reproduction"
+        },
+        {
+          "directURL": "https://mne.tools/1.10/generated/mne.io.Raw.html#mne.io.Raw.interpolate_bads",
+          "locator": "interpolate_bads, method eeg=spline, origin=auto",
+          "reliability": "official versioned API",
+          "relationship": "direct library invocation"
+        }
+      ],
+      "fields": {
+        "描述": "Transparent label-free same-grid cleaning adapter; see enabled operation schemas and machine-readable constraints.",
+        "输入合同": "Finite physical V continuous MNE Raw; explicit record_unlabeled scope for statistical adaptation.",
+        "输出合同": "Same ordered channels, sfreq, first_samp, annotations, sample count; no trial rejection.",
+        "验证": "New automatic cleaning tests plus source checks; see local research integration record."
+      }
+    },
+    "implementation": {
+      "module": "automatic_cleaning",
+      "entry": "automatic_cleaning",
+      "constraints": {
+        "stages": [
+          "continuous"
+        ],
+        "units": "V",
+        "channel_grid": "preserved",
+        "sample_grid": "preserved",
+        "events": "preserved",
+        "trial_rejection": false,
+        "fit_permissions": {
+          "detect_bad_channels": "explicit record_unlabeled transductive adaptation; no labels",
+          "interpolate_bad_channels": "marked channels and electrode geometry only"
+        },
+        "geometry_requirement": "finite distinct nonzero EEG positions in MNE head coordinates; >=4 good donors",
+        "failure_codes": [
+          "DISCONTINUOUS_INPUT",
+          "TOO_FEW_DONORS",
+          "BAD_FRACTION_EXCEEDED",
+          "MISSING_GEOMETRY",
+          "DUPLICATE_GEOMETRY",
+          "GEOMETRY_FRAME"
+        ]
+      },
+      "extra_dependencies": {}
+    },
+    "validation": {
+      "integration": "enabled_bounded_domain",
+      "source_syntax": "passed",
+      "algorithm_claim": "engineering adapter, not full pipeline reproduction"
+    }
+  },
+  {
+    "id": "EEG-ASR-AUTO",
+    "source": {
+      "version": "brainagent-engineering-adapter-1",
+      "code_sha256": "83e005806340d29ee5c82071716e102ff4023ed91b2596d0e463e7303fed134c",
+      "references": [
+        {
+          "directURL": "https://pypi.org/project/asrpy/0.0.8/",
+          "locator": "version 0.0.8",
+          "reliability": "official package release"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/DiGyt/asrpy/main/asrpy/asr.py",
+          "locator": "ASR.fit, ASR.transform, asr_process",
+          "reliability": "official upstream source (main mutable)",
+          "relationship": "release source review additionally captured by runtime code hashes"
+        }
+      ],
+      "fields": {
+        "描述": "Transparent label-free same-grid cleaning adapter; see enabled operation schemas and machine-readable constraints.",
+        "输入合同": "Finite physical V continuous MNE Raw; explicit record_unlabeled scope for statistical adaptation.",
+        "输出合同": "Same ordered channels, sfreq, first_samp, annotations, sample count; no trial rejection.",
+        "验证": "New automatic cleaning tests plus source checks; see local research integration record."
+      }
+    },
+    "implementation": {
+      "module": "automatic_cleaning",
+      "entry": "automatic_cleaning",
+      "constraints": {
+        "stages": [
+          "continuous",
+          "before_reference",
+          "before_interpolation"
+        ],
+        "units": "V",
+        "channel_grid": "preserved",
+        "sample_grid": "preserved",
+        "events": "preserved",
+        "trial_rejection": false,
+        "fit_permissions": {
+          "asr_clean": "explicit record_unlabeled, whole-record transductive calibration, task labels unused; not train-only or online"
+        },
+        "rank_requirement": {
+          "kind": "implementation_constraint",
+          "applies_to": "unmarked EEG, temporally centered",
+          "required": "full_channel_rank",
+          "minimum_singular_ratio": 1e-08,
+          "forbidden_ancestors": [
+            "reference",
+            "interpolate_bad_channels",
+            "asr_clean"
+          ],
+          "failure_code": "ASR_FULL_RANK_REQUIRED",
+          "not_claimed": "ASR universally requires full rank",
+          "custom_ref_applied_allowed": false
+        },
+        "calibration_requirement": {
+          "minimum_seconds": 30,
+          "highpass_hz_min": 0.5,
+          "window_highpass_product_min": 0.5,
+          "scope": "selected samples in same record",
+          "selection_does_not_delete_output": true
+        },
+        "sfreq_hz_exclusive_min": 82,
+        "failure_codes": [
+          "ASR_FULL_RANK_REQUIRED",
+          "ASR_CALIBRATION_RANK",
+          "ASR_CALIBRATION_TOO_SHORT",
+          "ASR_HIGHPASS_REQUIRED",
+          "ASR_WINDOW_HIGHPASS",
+          "ASR_WINDOW_PARAMETERS",
+          "ASR_LOOKAHEAD_GRID",
+          "ASR_DEPENDENCY",
+          "ASR_SFREQ_UNSUPPORTED",
+          "DISCONTINUOUS_INPUT"
+        ]
+      },
+      "extra_dependencies": {
+        "asrpy": "0.0.8"
+      }
+    },
+    "validation": {
+      "integration": "enabled_bounded_domain",
+      "source_syntax": "passed",
+      "algorithm_claim": "engineering adapter, not full pipeline reproduction"
+    }
   }
 ]

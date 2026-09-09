@@ -17,6 +17,7 @@ from .schemas import (
 )
 from .storage import Storage, digest
 from .units import environment, engine_hash, specification, validate_params
+from .units.source.automatic_cleaning import CleaningError
 
 
 def bind(value, bindings):
@@ -96,12 +97,26 @@ def compile_steps(method: MethodSpec, record, data, parameters):
                 "average" if donors == "average" else "channels:" + ",".join(donors)
             )
         if (
-            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter", "resample")
+            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter", "resample",
+                        "detect_bad_channels", "interpolate_bad_channels", "asr_clean")
             and kind != "raw"
         ):
             raise ValueError(f"{step.op} requires continuous input in this release")
         if step.op == "resample":
             sfreq = p["sfreq"]
+        if step.op == "asr_clean":
+            if sfreq <= 82:
+                raise CleaningError("ASR_SFREQ_UNSUPPORTED", "default spectral knots require sfreq > 82 Hz")
+            if reference == "average":
+                raise CleaningError("ASR_FULL_RANK_REQUIRED", "place ASR before CAR")
+            predecessor = step.input
+            while predecessor != "raw":
+                ancestor = next(s for s in steps if s.id == predecessor)
+                if ancestor.op in {"reference", "interpolate_bad_channels", "asr_clean"}:
+                    raise CleaningError("ASR_FULL_RANK_REQUIRED", "ASR must precede rereference/interpolation and cannot be repeated", ancestor=ancestor.id)
+                predecessor = ancestor.input
+            if p["lookahead"] > p["win_len"] / 2 or p["stepsize"] > p["win_len"] * sfreq:
+                raise CleaningError("ASR_WINDOW_PARAMETERS", "invalid lookahead or stepsize for current sampling rate")
         if step.op == "epoch":
             if (
                 not p["event_id"]
@@ -166,7 +181,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
             detection = next((s for s in steps if s.id == step.decision_from), None)
             if (
                 not detection
-                or detection.op != "amplitude_windows"
+                or detection.op not in {"amplitude_windows", "detect_bad_channels"}
                 or step.input != detection.input
             ):
                 raise ValueError(
@@ -331,6 +346,11 @@ def create_plan(
                         * (len(steps) + 8)
                         * 3
                     )
+                    for s in steps:
+                        if s.op == "asr_clean":
+                            # ASRpy materializes channel-pair moving covariance arrays.
+                            estimate += (8 * len(record.channels) ** 2 * record.samples * 6
+                                         // s.params["mem_splits"])
                     configs.append(
                         RecordPlan(
                             method_ref=ref,
@@ -414,7 +434,7 @@ def create_plan(
     for config in records:
         config.estimated_disk_bytes = input_bytes[config.record_id] + signal_bytes(
             record_index[config.record_id], config.steps, data.collection.root
-        ) * (len(config.steps) + 6)
+        ) * (len(config.steps) + 6 + int(any(s.op == "epoch" for s in config.steps)))
     estimated_disk = sum(c.estimated_disk_bytes for c in records)
     resources = budget(store.root, request)
     require_capacity("disk", estimated_disk, resources.disk_limit_bytes)
