@@ -1,7 +1,6 @@
 """Model/source doubles for numeric integration tests; application never imports them."""
 
 from app.llm.client import LLMClient
-from app.preprocessing.methods import baseline_methods
 from app.tools.base import ToolResult
 from app.workflows.cognition_contracts import SourceDocument
 
@@ -349,57 +348,29 @@ class WorkflowLLM(LLMClient):
                     for run in data["training_runs"]
                 ],
             }
-        elif model.__name__ == "MethodDesign":
-            candidates = []
-            for label, lo, hi in [("wide", 1, 40), ("narrow", 8, 30)]:
-                recipe = baseline_methods()[0].recipe[:-1]
-                recipe[0].params.update(
-                    l_freq=lo,
-                    h_freq=500
-                    if self.invalid_design and not data["compiler_feedback"]
-                    else hi,
-                )
-                recipe[-1].params.update(
-                    tmin=data["request"]["tmin"],
-                    tmax=data["request"]["tmax"],
-                    picks="$eeg_channels",
-                )
-                candidates.append(
-                    {
-                        "id": "test-" + label,
-                        "title": label,
-                        "mechanism": label,
-                        "rationale": "测试工程方案",
-                        "output": recipe[-1].id,
-                        "adaptations": [],
-                        "steps": [
-                            {
-                                **s.model_dump(
-                                    exclude={
-                                        "evidence_indices",
-                                        "profile",
-                                        "implementation_version",
-                                    }
-                                ),
-                                "basis": "engineering",
-                                "finding_ids": ["f3"],
-                                "rationale": "参数为工程设定",
-                            }
-                            for s in recipe
-                        ],
+        elif model.__name__ == "Decision":
+            if self.invalid_design and not getattr(self, "invalid_sent", False):
+                self.invalid_sent = True
+                raise ValueError("hypothesis is required")
+            identity = "bp8-30-original-ea"
+            if identity in {r["id"] for r in data["results"]}:
+                value = {
+                    "decision": {
+                        "action": "finish",
+                        "reason": "已比较公共与个体适配",
+                        "unresolved": ["独立确认尚未进行"],
                     }
-                )
-            value = {
-                "objective": "训练数据",
-                "candidates": candidates,
-                "limitations": ["未评价质量"],
-            }
+                }
+            else:
+                from tests.search.test_controller import propose
+
+                value = propose(identity)
         elif model.__name__ == "ReportNarrative":
             value = {
                 "overview": "完成资料调研与真实数据处理。",
                 "data_interpretation": "统计来自执行记录。",
-                "method_reasoning": "随机选取工程方案。",
-                "limitations": ["未进行质量排名"],
+                "method_reasoning": "按共同开发评价选择共享处理策略。",
+                "limitations": ["未进行独立确认"],
                 "finding_ids": ["f3"],
             }
         else:

@@ -38,7 +38,7 @@ from .evaluation_contracts import EvaluationReceipt
 from .panel import DataUnevaluable, freeze_panel, validate_panel
 
 OWNER = "offline-search"
-WORKER_VERSION = 1
+WORKER_VERSION = 2
 RETRYABLE = {"failed", "partial", "interrupted", "cancelled"}
 
 
@@ -292,6 +292,9 @@ def _verify_candidate(root, store, entry, data, panel):
     if identity not in {item["id"] for item in catalog()}:
         raise RuntimeError("cached candidate is not in the catalog")
     output = within(root, f"candidates/{identity}")
+    policy = next(item for item in catalog() if item["id"] == identity)
+    if read_json(output / "policy.json") != policy:
+        raise RuntimeError(f"{identity}: policy differs from frozen catalog")
     receipt = _normalize_receipt(read_json(output / "receipt.json"))
     if digest(receipt) != digest(_normalize_receipt(entry["receipt"])):
         raise RuntimeError(f"{identity}: receipt differs from search.json snapshot")
@@ -314,8 +317,29 @@ def _verify_candidate(root, store, entry, data, panel):
         or file_hash(predictions) != receipt["predictions_sha256"]
     ):
         raise RuntimeError(f"{identity}: prediction path/checksum differs from receipt")
+    representation = receipt.get("representation")
+    if representation:
+        if set(representation["records"]) != set(panel["records"]):
+            raise RuntimeError(f"{identity}: representation record coverage differs")
+        for record in representation["records"].values():
+            path = Path(record["array_path"]).resolve()
+            if (
+                not path.is_relative_to(root)
+                or file_hash(path) != record["array_sha256"]
+            ):
+                raise RuntimeError(f"{identity}: representation array checksum differs")
+        for subject in representation["subjects"].values():
+            if subject.get("transform_path"):
+                path = Path(subject["transform_path"]).resolve()
+                if (
+                    not path.is_relative_to(output)
+                    or file_hash(path) != subject["transform_sha256"]
+                ):
+                    raise RuntimeError(
+                        f"{identity}: subject transform checksum differs"
+                    )
 
-    method = MethodSpec.model_validate(read_json(output / "method.json"))
+        method = MethodSpec.model_validate(read_json(output / "method.json"))
     _check_catalog_method(method, identity, panel)
     # Mirror register_method's deterministic mapping checks without registering.
     method.checks = sorted(set(method.checks + check_mapping(method)))
@@ -486,6 +510,11 @@ def candidate(root: Path, candidate_id: str) -> dict:
         service = PreprocessingService(engine_root, allowed)
         limits = read_json(root / "limits.json")
         try:
+            policy = next(entry for entry in catalog() if entry["id"] == candidate_id)
+            if read_json(output / "policy.json") != policy:
+                raise CandidateInvalid(
+                    "policy differs from the frozen candidate catalog"
+                )
             method = MethodSpec.model_validate(read_json(output / "method.json"))
             _check_catalog_method(method, candidate_id, panel)
             method_ref = service.register_method(OWNER, method)
@@ -630,7 +659,15 @@ def candidate(root: Path, candidate_id: str) -> dict:
 
         baseline_path = root / "candidates" / BASELINE_ID / "receipt.json"
         baseline = read_json(baseline_path) if candidate_id != BASELINE_ID else None
-        receipt = evaluate(result, plan, engine_root, panel, output, baseline=baseline)
+        receipt = evaluate(
+            result,
+            plan,
+            engine_root,
+            panel,
+            output,
+            baseline=baseline,
+            policy=policy["parameters"],
+        )
         if not isinstance(receipt, dict) or not isinstance(receipt.get("status"), str):
             raise RuntimeError("evaluator did not return a status receipt")
         receipt = dict(receipt)

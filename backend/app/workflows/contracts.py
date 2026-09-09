@@ -155,6 +155,7 @@ class RecordOutcome(Contract):
 
 
 class PreprocessingOutput(Contract):
+    search_id: str = Field(pattern=r"^[a-f0-9]{32}$")
     execution_status: Literal["completed", "partial"]
     job_id: str
     plan_ref: Ref
@@ -204,32 +205,44 @@ class PreprocessingOutput(Contract):
         return self
 
 
-class ExcludedCandidate(Contract):
-    method_ref: Ref
-    missing_or_invalid_records: list[str]
-
-
 class EvaluationOutput(Contract):
-    selection_policy: Literal["random"]
-    quality_evaluated: Literal[False]
+    selection_policy: Literal["development_score"]
+    quality_evaluated: Literal[True]
+    search_id: str = Field(pattern=r"^[a-f0-9]{32}$")
+    selected_candidate_id: str
+    score: float = Field(ge=0, le=1, allow_inf_nan=False)
+    evaluation_scope: Literal["development"]
+    independent_confirmation: Literal[False] = False
+    candidate_summary: list[dict] = Field(default_factory=list)
+    evaluation_protocol: dict
+    panel: dict
+    selected_receipt: dict
+    representation: dict | None = None
     seed: Count
-    eligible_candidates: list[Ref] = Field(min_length=1)
-    excluded_candidates: list[ExcludedCandidate]
     selected_method_ref: Ref
-    best_output: None
     reason: str
 
     @model_validator(mode="after")
-    def selected_is_eligible(self):
-        if self.selected_method_ref not in self.eligible_candidates:
-            raise ValueError("selected method must be an eligible candidate")
+    def preserves_selected_receipt(self):
+        if (
+            self.selected_receipt.get("status") != "evaluated"
+            or self.selected_receipt.get("candidate_id") != self.selected_candidate_id
+            or self.selected_receipt.get("macro_ba") != self.score
+            or self.selected_receipt.get("panel_hash") != self.panel.get("panel_hash")
+            or self.selected_receipt.get("representation") != self.representation
+        ):
+            raise ValueError(
+                "selection must preserve the measured receipt and representation"
+            )
         return self
 
 
 class ReportOutput(Contract):
     report_path: str
     format: Literal["HTML"]
-    quality_evaluated: Literal[False]
+    quality_evaluated: Literal[True]
+    evaluation_scope: Literal["development"] = "development"
+    independent_confirmation: Literal[False] = False
 
 
 class DeliveryOutput(Contract):
@@ -239,8 +252,11 @@ class DeliveryOutput(Contract):
     classes: dict[str, Count]
     split_counts: dict[str, Count]
     subject_split: dict[str, Literal["train", "validation", "test"]]
-    selection_policy: Literal["random"]
-    quality_evaluated: Literal[False]
+    selection_policy: Literal["development_score"]
+    quality_evaluated: Literal[True]
+    unit: Literal["V", "dimensionless"]
+    evaluation_scope: Literal["development"] = "development"
+    independent_confirmation: Literal[False] = False
     sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
     source_unchanged: Literal[True]
 
@@ -288,6 +304,7 @@ class ReportData(Contract):
     records: list[RecordOutcome]
     selection_reason: str
     seed: Count
+    selection: EvaluationOutput | None = None
     references: list[Citation]
     limitations: list[str]
     research: ResearchFindings | None = None

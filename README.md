@@ -1,8 +1,8 @@
 # Brain Agent
 
-六模块训练数据流程已接入本地 EEGMMIDB：LLM 调研官网与论文、核对接入语义、拆解候选预处理方案并根据编译反馈修订；独立 Worker 执行数值处理，随机选择后生成报告和训练数据包。页面入口为 `/workflows`，运行方式见 [完整流程说明](docs/training-workflow.md)，职责与固定过程文件见 [模型工作流设计](docs/llm-workflow-redesign.md)。
+EEGMMIDB 工作流将本地调研、资料核对、标准化接入、诊断驱动的预处理策略搜索、报告与训练交付连接起来。LLM 根据实测诊断提出共享策略及实验预测；数值工具按被试隔离计算开发效用，选择规则确定胜者。页面入口为 `/workflows`，见[运行说明](docs/training-workflow.md)。
 
-已标准化的数据还可进入[有预算的离线预处理搜索](docs/offline-preprocessing-search.md)：冻结训练/开发被试及评价协议，由 LLM 根据实际评分逐轮选择有限候选，按开发指标选出方案。运行页提供「预算预处理搜索」入口；支持随机、一次性提案和枚举对照。
+[预处理策略搜索](docs/offline-preprocessing-search.md)支持公共处理、逐被试统一尺度、无标签 EA 与条件 EA；默认全部任务被试参加分组交叉验证。主评价器为 CSP＋收缩 LDA，适配数组及变换记录随选中策略交付。搜索页支持自适应、一次性提案、随机顺序与枚举对照。
 
 Data Preprocess 首版已接入真实 EEG 执行。功能范围、上游协议、独立 Worker 和验收脚本见 [实现与运行说明](docs/data-preprocessing-implementation.md)。EEG 路径使用 Python 3.12，并安装 `--extra eeg`；原有对话开发环境可单独使用。
 

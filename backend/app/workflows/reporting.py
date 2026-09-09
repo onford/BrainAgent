@@ -198,8 +198,15 @@ def render_report(folder):
     method_reasoning = (
         "实际处理顺序："
         + " → ".join(row[1] for row in recipe)
-        + "。参数见上表；本轮随机选择候选，未进行质量排名。"
+        + "。参数见上表；候选按冻结开发评价选择，未进行独立确认。"
     )
+    selection = data.selection
+    representation = selection.representation if selection else None
+    if representation:
+        method_reasoning += (
+            " 数值预处理后应用选中策略的被试适配；变换与拟合范围见评价回执。"
+        )
+    unit = representation.get("unit", "V") if representation else "V"
     if data.narrative:
         # Free model prose must not override the executed step order. The raw
         # interpretation remains available in narrative.json and decisions.json.
@@ -365,6 +372,50 @@ def render_report(folder):
             ]
         ),
         selection_reason=escape(data.selection_reason),
+        evaluation_summary=escape(
+            f"开发被试平均平衡准确率：{selection.score:.4f}；搜索 {selection.search_id}；"
+            f"主评价器：{selection.selected_receipt.get('primary_learner', '见评价回执')}；"
+            "该面板参与候选选择，无独立确认。"
+            if selection
+            else "未取得开发评价回执"
+        ),
+        candidate_rows=rows(
+            [
+                [
+                    c["candidate_id"],
+                    c["status"],
+                    f"{c['score']:.4f}" if c.get("score") is not None else "未取得",
+                ]
+                for c in selection.candidate_summary
+            ]
+            if selection
+            else []
+        ),
+        adaptation_rows=rows(
+            [
+                [
+                    subject,
+                    entry["applied_adaptation"],
+                    entry["gate_passed"],
+                    entry["fit_trials"],
+                    entry["unit"],
+                    entry.get("fallback_reason") or "—",
+                ]
+                for subject, entry in sorted(representation.get("subjects", {}).items())
+            ]
+            if representation
+            else []
+        ),
+        representation_summary=escape(
+            f"X 按 Epoch × 空间坐标 × 时间点组织，单位：{unit}。"
+            + (
+                "EA 或 scale-only 为无量纲变换坐标，不再代表原电极位置的伏特测量。"
+                if unit == "dimensionless"
+                else "空间轴为预处理后的 EEG 通道。"
+            )
+            + "y 为从 0 开始的类别编号。分组 CV 导出时全部被试标为 train，折成员另存；"
+            "显式训练/开发划分映射为 train/validation。test 为空，不生成独立测试集。"
+        ),
         seed=data.seed,
         references="".join(
             f"<li><a href='{escape(r.url)}'>{escape(r.title)}</a></li>"
@@ -387,5 +438,7 @@ def render_report(folder):
     return {
         "report_path": "report/report.html",
         "format": "HTML",
-        "quality_evaluated": False,
+        "quality_evaluated": True,
+        "evaluation_scope": "development",
+        "independent_confirmation": False,
     }

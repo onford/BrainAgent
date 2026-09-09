@@ -2,6 +2,10 @@
 
 Requires numpy and scikit-learn. This checks training compatibility;
 it does not compare preprocessing methods or estimate generalization quality.
+It is not the grouped-CV CSP/LDA search evaluator. CV exports mark every
+development subject as train; evaluation/folds.json preserves the search folds.
+Already adapted arrays must not be aligned a second time. Read channels.json
+for physical-voltage versus dimensionless transformed-coordinate semantics.
 """
 
 import argparse

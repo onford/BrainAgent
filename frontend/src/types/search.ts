@@ -1,5 +1,92 @@
 export type SearchStrategy = 'adaptive' | 'random' | 'exhaustive' | 'one_shot'
 export type SearchStatus = 'preparing' | 'running' | 'completed' | 'stopped' | 'failed' | 'cancelled' | 'interrupted'
+export type SearchEvaluationMode = 'group_cross_validation' | 'subject_holdout'
+export type SearchAdaptation = 'none' | 'subject_scale' | 'euclidean_alignment' | 'conditional_alignment'
+
+export interface SearchFold {
+  id: string
+  train_subjects: string[]
+  development_subjects: string[]
+}
+
+export interface SearchSignalDiagnostics {
+  channel_variance: number[]
+  channel_flat_fraction: number[]
+  covariance_condition: number
+  covariance_condition_before?: number
+  covariance_condition_after?: number
+  mean_channel_variance_before?: number
+  mean_channel_variance_after?: number
+  effective_rank_before?: number
+  effective_rank_after?: number
+}
+
+export interface SearchDiagnosticsSummary {
+  mean_condition_before: number
+  mean_condition_after: number
+  mean_variance_before: number
+  mean_variance_after: number
+  gate_fraction: number | null
+  mean_effective_rank: number
+  mean_anisotropy: number
+}
+
+export interface SearchSubjectRepresentation {
+  applied_adaptation: 'none' | 'scale_only' | 'euclidean_alignment'
+  gate_passed: boolean
+  fallback_reason: string | null
+  covariance_anisotropy: number
+  gate_metric_value?: number
+  fit_trials: number
+  transform_path: string | null
+  transform_sha256: string | null
+  unit: 'V' | 'dimensionless'
+}
+
+export interface SearchRepresentation {
+  policy: { adaptation: SearchAdaptation; alignment_threshold: number }
+  unit: 'V' | 'dimensionless'
+  transductive: boolean
+  channels: string[]
+  covariance_regularization: number
+  gate_subject_count?: number
+  gate_passed_subject_count?: number
+  gate_fraction?: number | null
+  fit_scope: 'subject_whole_batch_label_free'
+  subjects: Record<string, SearchSubjectRepresentation>
+  records: Record<string, { subject: string; array_path: string; array_sha256: string; shape: number[]; unit: 'V' | 'dimensionless' }>
+}
+
+export interface WorkflowEvaluation {
+  selection_policy: 'development_score'
+  quality_evaluated: true
+  search_id: string
+  score: number
+  evaluation_scope: 'development'
+  selected_candidate_id?: string
+  selected_method_ref: { id: string; sha256: string }
+  reason?: string
+}
+
+export interface SavedWorkflowEvaluation {
+  selection_policy?: string
+  quality_evaluated?: boolean
+  search_id?: string
+  score?: number | null
+  evaluation_scope?: string
+  selected_candidate_id?: string
+  selected_method_ref?: { id: string; sha256?: string }
+  reason?: string
+}
+
+export interface WorkflowSearchSummary {
+  id: string
+  status: SearchStatus
+  message: string
+  usage: SearchUsage
+  budget: SearchBudget
+  selected_candidate_id: string | null
+}
 
 export interface SearchBudget {
   max_candidates: number
@@ -60,19 +147,51 @@ export interface SearchCoverage {
 export interface SearchCandidate {
   id: string
   title?: string
-  parameters?: { l_freq?: number; h_freq?: number; reference?: 'average' | 'original' }
+  parameters?: { l_freq?: number; h_freq?: number; reference?: 'average' | 'original'; adaptation?: SearchAdaptation; alignment_threshold?: number }
   status: string
   job_id?: string | null
   receipt?: {
+    evaluator_version?: number
+    evaluation_mode?: SearchEvaluationMode | null
+    folds?: SearchFold[]
+    primary_learner?: string
+    secondary_learner?: string
+    secondary_macro_ba?: number | null
+    secondary_subjects?: Record<string, number>
+    paired_subject_ci?: { low: number; high: number; n_subjects: number; confidence?: number; n_resamples?: number; seed?: number; method?: string; interpretation?: string } | null
+    representation?: SearchRepresentation | null
     status?: string
     macro_ba?: number | null
     mean_delta?: number | null
     subjects?: Record<string, SearchSubjectMetrics>
     coverage?: SearchCoverage | null
-    diagnostics?: { floor_fraction?: number | null; converged?: boolean | null; warnings?: string[] }
+    diagnostics?: { floor_fraction?: number | null; converged?: boolean | null; warnings?: string[]; subjects?: Record<string, SearchSignalDiagnostics>; summary?: SearchDiagnosticsSummary | null }
     [key: string]: unknown
   } | null
   error?: string | null
+}
+
+export interface SearchPrediction {
+  kind: 'signal' | 'utility'
+  metric: string
+  direction: 'increase' | 'decrease' | 'unchanged'
+  tolerance: number
+  explanation: string
+}
+
+export interface SearchHypothesis {
+  explanation: string
+  competing_explanation: string
+  observations: { candidate_id: string; metric: string }[]
+  predictions: SearchPrediction[]
+  weakened_by: string
+}
+
+export interface SearchPredictionCheck extends SearchPrediction {
+  status: 'matched' | 'contradicted' | 'unavailable'
+  before: number | null
+  after: number | null
+  difference: number | null
 }
 
 export interface SearchAction {
@@ -86,8 +205,8 @@ export interface SearchAction {
   candidate_id?: string | null
   cost_seconds?: number | null
   error?: string | null
-  request?: unknown
-  result?: unknown
+  request?: { hypothesis?: SearchHypothesis; [key: string]: unknown } | null
+  result?: { prediction_checks?: { checks: SearchPredictionCheck[]; interpretation: string }; [key: string]: unknown } | null
 }
 
 export interface SearchSummary {
@@ -103,6 +222,8 @@ export interface SearchSummary {
 }
 
 export interface SearchPanel {
+  evaluation_mode?: SearchEvaluationMode
+  folds?: SearchFold[]
   trial_count?: number
   eligible_count?: number
   train_subjects?: string[]
@@ -114,7 +235,8 @@ export interface SearchPanel {
 }
 
 export interface SearchState extends SearchSummary {
-  schema_version: '1'
+  schema_version?: string
+  protocol?: { version?: string; evaluator?: string; [key: string]: unknown }
   request: SearchRequest
   deadline?: number
   phase?: string | null

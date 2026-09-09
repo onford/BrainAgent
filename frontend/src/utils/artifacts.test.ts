@@ -1,9 +1,33 @@
 import { describe, expect, it } from 'vitest'
-import { groupArtifactFiles } from './artifacts'
+import { artifactDescription, artifactSize, groupArtifactFiles } from './artifacts'
 
 const artifacts = (names: string[]) => names.map(name => ({name, bytes: 1024, sha256: null}))
 
 describe('artifact families', () => {
+  it.each([null, undefined, NaN, Infinity, -1])('preserves unknown size %s without treating it as zero', bytes => {
+    expect(artifactSize(bytes)).toBe('大小未知')
+    const names = ['preprocessing/runs/job/r0000/a1/events.json', 'preprocessing/runs/job/r0001/a1/events.json']
+    const files = names.map((name, index) => ({ name, bytes: index === 0 ? bytes : 1024, sha256: null }))
+    expect(groupArtifactFiles(files)[0]!.bytes).toBeNull()
+    expect(groupArtifactFiles([...files].reverse())[0]!.bytes).toBeNull()
+  })
+
+  it('preserves a real empty file and supplied family descriptions', () => {
+    expect(artifactSize(0)).toBe('0 B')
+    expect(artifactSize(1024)).toBe('1.0 KB')
+    const [family] = groupArtifactFiles([{ name: 'preprocessing/search/receipt.json', bytes: 0, sha256: null, description: '保存的预测核验' }])
+    expect(family?.bytes).toBe(0)
+    expect(family?.description).toBe('保存的预测核验')
+  })
+
+  it('describes saved selection artifacts neutrally', () => {
+    for (const name of ['evaluation/selection.json', 'delivery/selection.json']) {
+      expect(artifactDescription(name)).toContain('保存的选择')
+      expect(artifactDescription(name)).not.toContain('开发评估')
+      expect(artifactDescription(name)).not.toContain('随机')
+    }
+  })
+
   it('groups BIDS identities without mixing tasks, spaces or file types', () => {
     const files = artifacts([
       'collection/bids/sub-001/eeg/sub-001_task-mi_run-04_eeg.eeg',

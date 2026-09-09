@@ -1,53 +1,117 @@
 import json
-import random
+import hashlib
 import shutil
 import zipfile
 from collections import Counter
 from contextlib import contextmanager
 from math import prod
 from pathlib import Path
+from uuid import uuid4
 
 from app.preprocessing.runner import verify_result
 from app.preprocessing.schemas import Ref
-from app.preprocessing.storage import file_hash
+from app.preprocessing.storage import digest, file_hash, within
+from app.search.catalog import catalog, select
+from app.search.evaluation_contracts import EvaluationReceipt, EvaluationRepresentation
+from .contracts import EvaluationOutput
 from .records import write_readable as write_json
 from .dataset import check_sources, write_tsv
 from .formats import ARRAY_FORMATS, PROVENANCE_FILES, delivery_members
 
 
-def choose(result, plan, store, seed):
+def choose(search_state, plan, store):
+    """Project a terminal search winner; the supplied store is search/engine."""
+    if search_state["status"] not in {"completed", "stopped"}:
+        raise ValueError("搜索尚未正常结束，不能交付候选")
+    candidates = search_state["candidates"]
+    if len({c["id"] for c in candidates}) != len(candidates):
+        raise ValueError("搜索候选编号重复")
+    # Validate every measured receipt before catalog.select compares its score.
+    for candidate in candidates:
+        if candidate["status"] == "evaluated":
+            receipt = EvaluationReceipt.model_validate(candidate["receipt"])
+            if receipt.status != "evaluated" or receipt.candidate_id != candidate["id"]:
+                raise ValueError("候选身份或评价状态与回执不同")
+    winner = select(candidates)
+    if winner is None or winner != search_state["selected_candidate_id"]:
+        raise ValueError("选中候选与固定开发指标及平局规则不一致")
+    selected = next(c for c in candidates if c["id"] == winner)
+    receipt = selected["receipt"]
+    candidate_root = within(store.root.parent, "candidates/" + winner)
+    persisted = EvaluationReceipt.model_validate_json(
+        (candidate_root / "receipt.json").read_text(encoding="utf-8")
+    ).model_dump(mode="json")
+    if persisted != EvaluationReceipt.model_validate(receipt).model_dump(mode="json"):
+        raise ValueError("选中评价回执与搜索快照不同")
+    predictions = candidate_root / "originalpredictions.tsv"
+    recorded_predictions = Path(receipt["predictions_path"])
+    if not recorded_predictions.is_absolute():
+        recorded_predictions = within(candidate_root, receipt["predictions_path"])
+    if (
+        recorded_predictions.resolve() != predictions.resolve()
+        or file_hash(predictions) != receipt["predictions_sha256"]
+    ):
+        raise ValueError("选中预测记录完整性核验失败")
+    plan = plan.model_dump(mode="json") if hasattr(plan, "model_dump") else plan
+    plan_ref = Ref.model_validate(receipt["plan_ref"])
+    if (
+        receipt["panel_hash"] != search_state["panel"]["panel_hash"]
+        or selected.get("job_id") != receipt["job_id"]
+        or selected.get("plan_ref") != plan_ref.model_dump()
+        or digest(plan) != plan_ref.sha256
+        or store.get("offline-search", plan_ref, "plan") != plan
+    ):
+        raise ValueError("选中结果与冻结面板或数值计划不一致")
+    methods = plan["request"]["methods"]
+    if len(methods) != 1:
+        raise ValueError("搜索候选必须对应唯一数值方法")
+    method_ref = Ref.model_validate(methods[0]).model_dump()
+    method = store.get("offline-search", Ref.model_validate(method_ref), "method")
+    if digest(method) != method_ref["sha256"]:
+        raise ValueError("选中数值方法校验失败")
+    result = store.status("offline-search", receipt["job_id"])
     required = set(plan["input_snapshot"]["collection"]["selected_record_ids"])
-    candidates, excluded = [], []
-    for method_ref in plan["request"]["methods"]:
-        records = [r for r in result.records if r["method_id"] == method_ref["id"]]
-        valid = {
-            r["record_id"]
-            for r in records
-            if r["status"] == "completed" and verify_result(store.root, r["result"])
-        }
-        if valid == required:
-            candidates.append(method_ref)
-        else:
-            excluded.append(
+    if (
+        result.status != "completed"
+        or result.plan_ref != plan_ref
+        or len(result.records) != len(required)
+        or {r["record_id"] for r in result.records} != required
+        or any(
+            r["method_id"] != method_ref["id"]
+            or r["status"] != "completed"
+            or not verify_result(store.root, r["result"])
+            for r in result.records
+        )
+    ):
+        raise ValueError("选中候选未完整执行或产物校验失败")
+    selection = EvaluationOutput.model_validate(
+        {
+            "selection_policy": "development_score",
+            "quality_evaluated": True,
+            "search_id": search_state["id"],
+            "selected_candidate_id": winner,
+            "score": receipt["macro_ba"],
+            "evaluation_scope": "development",
+            "seed": search_state["request"]["seed"],
+            "candidate_summary": [
                 {
-                    "method_ref": method_ref,
-                    "missing_or_invalid_records": sorted(required - valid),
+                    "candidate_id": c["id"],
+                    "status": c["status"],
+                    "score": (c.get("receipt") or {}).get("macro_ba"),
+                    "error": c.get("error"),
                 }
-            )
-    if not candidates:
-        raise ValueError("没有覆盖全部保留记录且产物完整的候选方法")
-    candidates.sort(key=lambda r: r["id"])
-    selected = random.Random(seed).choice(candidates)
-    return {
-        "selection_policy": "random",
-        "quality_evaluated": False,
-        "seed": seed,
-        "eligible_candidates": candidates,
-        "excluded_candidates": excluded,
-        "selected_method_ref": selected,
-        "best_output": None,
-        "reason": "从完整执行且产物核验通过的候选方法中随机选择；未进行质量排名。",
-    }
+                for c in candidates
+            ],
+            "selected_method_ref": method_ref,
+            "reason": "按冻结开发面板的被试平均平衡准确率及固定平局规则选择；不是独立确认结果。",
+            "evaluation_protocol": search_state["protocol"],
+            "panel": search_state["panel"],
+            "selected_receipt": receipt,
+            "representation": receipt.get("representation"),
+        }
+    ).model_dump(mode="json")
+    _representation_files(selection, store, result.records)
+    return selection
 
 
 def report(state, folder, store):
@@ -57,6 +121,74 @@ def report(state, folder, store):
 
 
 _ARRAY_BLOCK_BYTES = 8 * 1024 * 1024
+
+
+def _evaluation_evidence(selection, store):
+    """Resolve the original, hash-bound panel and selected trial predictions."""
+    summary = selection["panel"]
+    panel_path = within(store.root.parent, "panel.json")
+    if file_hash(panel_path) != summary.get("file_sha256"):
+        raise ValueError("冻结面板文件完整性核验失败")
+    panel = json.loads(panel_path.read_text(encoding="utf-8"))
+    if (
+        not isinstance(panel.get("trials"), list)
+        or not panel["trials"]
+        or panel.get("panel_hash") != selection["selected_receipt"]["panel_hash"]
+        or panel["panel_hash"]
+        != digest({k: v for k, v in panel.items() if k != "panel_hash"})
+        or any(
+            panel.get(k) != v
+            for k, v in summary.items()
+            if k not in {"file_sha256", "trial_count", "eligible_count"}
+        )
+        or summary.get("trial_count") != len(panel["trials"])
+        or summary.get("eligible_count") != sum(t["eligible"] for t in panel["trials"])
+    ):
+        raise ValueError("完整冻结面板与选中评价快照不同")
+    receipt = selection["selected_receipt"]
+    root = within(store.root.parent, "candidates/" + selection["selected_candidate_id"])
+    predictions = within(root, "originalpredictions.tsv")
+    recorded = Path(receipt["predictions_path"])
+    if not recorded.is_absolute():
+        recorded = within(root, receipt["predictions_path"])
+    if (
+        recorded.resolve() != predictions
+        or file_hash(predictions) != receipt["predictions_sha256"]
+    ):
+        raise ValueError("选中预测记录完整性核验失败")
+    return [
+        (panel_path, "evaluation/panel.json", summary["file_sha256"]),
+        (
+            predictions,
+            "evaluation/originalpredictions.tsv",
+            receipt["predictions_sha256"],
+        ),
+    ]
+
+
+def _publish_archive(archive, folder, members, manifest, validate):
+    """Publish only a fully checked ZIP; keep an earlier valid file on failure."""
+    temporary = archive.with_name(f".{archive.name}.{uuid4().hex}.tmp")
+    expected = {entry["name"]: entry["sha256"] for entry in manifest["files"]}
+    expected["manifest.json"] = file_hash(folder / "manifest.json")
+    try:
+        with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_DEFLATED) as z:
+            for path in [*members, folder / "manifest.json"]:
+                z.write(path, path.relative_to(folder).as_posix())
+        with zipfile.ZipFile(temporary) as z:
+            if len(z.namelist()) != len(expected) or set(z.namelist()) != set(expected):
+                raise ValueError("交付压缩包文件清单不一致")
+            for name, checksum in expected.items():
+                # Reading also checks each member's CRC; SHA binds the manifest.
+                with z.open(name) as stream:
+                    if hashlib.file_digest(stream, "sha256").hexdigest() != checksum:
+                        raise ValueError("交付压缩包内容校验失败")
+        validate()
+        checksum = file_hash(temporary)
+        temporary.replace(archive)
+        return checksum
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 @contextmanager
@@ -119,33 +251,138 @@ def _write_epochs(path, sources, shape):
             offset += source_shape[0]
 
 
-def _subject_roles(groups, seed):
-    unique = sorted(set(groups))
-    random.Random(seed).shuffle(unique)
-    size = len(unique)
-    # Largest-remainder apportionment of 70/15/15, with stable tie breaking.
-    quotas = [divmod(size * weight, 100) for weight in (70, 15, 15)]
-    counts = [whole for whole, _ in quotas]
-    order = sorted(range(3), key=lambda i: (-quotas[i][1], i))
-    for i in order[: size - sum(counts)]:
-        counts[i] += 1
-    if size < 3:
-        counts = [min(size, 1), 0, int(size == 2)]
-    else:
-        for i in (1, 2):
-            if counts[i] == 0:
-                counts[0] -= 1
-                counts[i] = 1
-    return {
-        subject: (
-            "train"
-            if i < counts[0]
-            else "validation"
-            if i < counts[0] + counts[1]
-            else "test"
-        )
-        for i, subject in enumerate(unique)
-    }
+def _subject_roles(groups, panel):
+    subjects = set(groups)
+    folds = panel.get("folds")
+    if panel.get("evaluation_mode") == "group_cross_validation":
+        if not folds:
+            raise ValueError("交叉验证缺少折记录")
+        covered = set()
+        for fold in folds:
+            train = set(fold["train_subjects"])
+            development = set(fold["development_subjects"])
+            if (
+                not train
+                or not development
+                or train & development
+                or train | development != subjects
+            ):
+                raise ValueError("交叉验证折与交付被试范围不一致")
+            if covered & development:
+                raise ValueError("交叉验证被试重复计分")
+            covered.update(development)
+        if covered != subjects:
+            raise ValueError("交叉验证未覆盖全部交付被试")
+        return {s: "train" for s in sorted(subjects)}
+    train = set(panel.get("train_subjects", []))
+    development = set(panel.get("development_subjects", []))
+    if (
+        not train
+        or not development
+        or train & development
+        or train | development != subjects
+    ):
+        raise ValueError("冻结训练/开发被试与交付范围不一致")
+    if folds and (
+        len(folds) != 1
+        or set(folds[0]["train_subjects"]) != train
+        or set(folds[0]["development_subjects"]) != development
+    ):
+        raise ValueError("冻结 holdout 折与被试角色不一致")
+    return {s: "train" if s in train else "validation" for s in sorted(subjects)}
+
+
+def _representation_files(selection, store, records):
+    """Resolve only checksummed files inside the selected candidate directory."""
+    entry = next(
+        (c for c in catalog() if c["id"] == selection["selected_candidate_id"]), None
+    )
+    if entry is None:
+        raise ValueError("选中策略不在冻结目录中")
+    adaptation = entry["parameters"].get("adaptation", "none")
+    representation = selection.get("representation")
+    if representation is None:
+        if adaptation != "none":
+            raise ValueError("适配策略缺少表示回执，不能回退原始数组")
+        return {}, [], "V", "physical EEG channels"
+    if representation != selection["selected_receipt"].get("representation"):
+        raise ValueError("交付表示与选中评价回执不同")
+    representation = EvaluationRepresentation.model_validate(representation).model_dump(
+        mode="json"
+    )
+    unit = representation["unit"]
+    if unit not in {"V", "dimensionless"}:
+        raise ValueError("交付不允许混合单位")
+    if representation["policy"]["adaptation"] != adaptation or unit != (
+        "V" if adaptation == "none" else "dimensionless"
+    ):
+        raise ValueError("表示策略或单位与选中目录候选不同")
+    if (
+        adaptation == "conditional_alignment"
+        and representation["policy"]["alignment_threshold"]
+        != entry["parameters"]["alignment_threshold"]
+    ):
+        raise ValueError("条件策略阈值与选中候选不同")
+    semantics = {
+        "V": "physical EEG channels",
+        "dimensionless": "subject-specific transformed coordinates (EA or scale-only); names identify source-channel basis, not physical electrodes",
+    }[unit]
+    files = representation["records"]
+    if set(files) != {r["record_id"] for r in records}:
+        raise ValueError("适配数组未覆盖全部选中记录")
+    root = within(store.root.parent, "candidates/" + selection["selected_candidate_id"])
+
+    def resolve(name, checksum):
+        candidate = Path(name)
+        if candidate.is_absolute():
+            try:
+                name = candidate.resolve().relative_to(root).as_posix()
+            except ValueError as exc:
+                raise ValueError("适配产物路径越界") from exc
+        path = within(root, name)
+        if not path.is_file() or file_hash(path) != checksum:
+            raise ValueError("适配产物完整性核验失败")
+        return path
+
+    arrays = {}
+    for record in records:
+        identity = record["record_id"]
+        entry = files[identity]
+        if adaptation == "none":
+            # The evaluator deliberately reuses the verified numeric worker array
+            # for no-adaptation policies. Authorize that exact record, not engine/.
+            source = next(
+                a for a in record["result"]["artifacts"] if a["name"] == "signal_V.npy"
+            )
+            path = within(store.root, source["path"])
+            if (
+                Path(entry["array_path"]).resolve() != path
+                or entry["array_sha256"] != source["sha256"]
+                or file_hash(path) != source["sha256"]
+            ):
+                raise ValueError("无适配表示与选中数值记录不同")
+            arrays[identity] = path
+        else:
+            arrays[identity] = resolve(entry["array_path"], entry["array_sha256"])
+    provenance = []
+    subjects = representation["subjects"]
+    if {entry["subject"] for entry in files.values()} != set(subjects):
+        raise ValueError("适配数组与被试变换范围不同")
+    units = {entry["unit"] for entry in subjects.values()}
+    if units != {unit}:
+        raise ValueError("适配总体单位与被试单位不一致")
+    for entry in files.values():
+        if entry["unit"] != subjects[entry["subject"]]["unit"]:
+            raise ValueError("适配记录单位与被试单位不一致")
+    for entry in subjects.values():
+        if entry["unit"] == "dimensionless" and (
+            not entry["transform_path"] or not entry["transform_sha256"]
+        ):
+            raise ValueError("无量纲适配数组缺少变换溯源")
+        if entry["transform_path"]:
+            path = resolve(entry["transform_path"], entry["transform_sha256"])
+            provenance.append((path, path.relative_to(root).as_posix()))
+    return arrays, provenance, unit, semantics
 
 
 def deliver(state, folder, store):
@@ -153,13 +390,39 @@ def deliver(state, folder, store):
 
     survey = state["outputs"]["data_survey"]
     check_sources(survey)
-    selection = state["outputs"]["data_evaluation"]
+    selection = EvaluationOutput.model_validate(
+        state["outputs"]["data_evaluation"]
+    ).model_dump(mode="json")
+    evidence_files = _evaluation_evidence(selection, store)
+    if selection.get("representation") != selection["selected_receipt"].get(
+        "representation"
+    ):
+        raise ValueError("交付表示与选中评价回执不同")
     job = store.status(state["owner"], state["outputs"]["data_preprocessing"]["job_id"])
     result_records = [
         r
         for r in job.records
         if r["method_id"] == selection["selected_method_ref"]["id"]
     ]
+    receipt = selection["selected_receipt"]
+    if (
+        receipt.get("status") != "evaluated"
+        or receipt.get("candidate_id") != selection["selected_candidate_id"]
+        or receipt.get("job_id") != state["outputs"]["data_preprocessing"]["job_id"]
+        or receipt.get("macro_ba") != selection["score"]
+        or receipt.get("panel_hash") != selection["panel"].get("panel_hash")
+    ):
+        raise ValueError("交付选择与评价回执不同")
+    expected_records = set(selection["panel"].get("records", {}))
+    if (
+        not expected_records
+        or len(result_records) != len(expected_records)
+        or {r["record_id"] for r in result_records} != expected_records
+    ):
+        raise ValueError("交付记录与冻结面板不同")
+    adapted, transforms, unit, spatial_semantics = _representation_files(
+        selection, store, result_records
+    )
     source_records = {r["id"]: r for r in survey["records"]}
     folder.mkdir(parents=True, exist_ok=True)
     epoch_sources, labels, groups, rows = [], [], [], []
@@ -171,11 +434,19 @@ def deliver(state, folder, store):
         artifacts = {
             a["name"]: store.root / a["path"] for a in r["result"]["artifacts"]
         }
-        with _mapped_npy(artifacts["signal_V.npy"]) as values:
+        array_path = adapted.get(r["record_id"], artifacts["signal_V.npy"])
+        with _mapped_npy(array_path) as values:
             if values.ndim != 3 or len(values) == 0:
                 raise ValueError("训练输出必须为有限值 Epoch 数组")
             shape = values.shape
         info = r["result"]["delta"]["after"]
+        if adapted and (
+            list(shape)
+            != selection["representation"]["records"][r["record_id"]]["shape"]
+            or list(shape) != info["shape"]
+            or selection["representation"]["channels"] != info["channels"]
+        ):
+            raise ValueError("适配数组形状与原始 Epoch 或回执不一致")
         if channels is not None and (
             channels != info["channels"]
             or sfreq != info["sfreq"]
@@ -199,6 +470,12 @@ def deliver(state, folder, store):
         ):
             raise ValueError("事件与训练数组未逐行对齐")
         subject = source_records[r["record_id"]]["subject"]
+        if (
+            adapted
+            and selection["representation"]["records"][r["record_id"]]["subject"]
+            != subject
+        ):
+            raise ValueError("适配记录的被试身份与来源不同")
         for event in events:
             if event["label"] not in {"left_hand", "right_hand"}:
                 raise ValueError("交付发现未定义类别")
@@ -215,7 +492,7 @@ def deliver(state, folder, store):
                     "epoch_index": event["epoch_index"],
                 }
             )
-        epoch_sources.append((artifacts["signal_V.npy"], shape))
+        epoch_sources.append((array_path, shape))
         provenance = folder / "provenance" / r["record_id"]
         provenance.mkdir(parents=True, exist_ok=True)
         for name in PROVENANCE_FILES:
@@ -228,7 +505,7 @@ def deliver(state, folder, store):
         np.asarray(labels, dtype=np.int64),
         np.asarray(groups, dtype=ARRAY_FORMATS["subjects.npy"]["dtype"]),
     )
-    roles = _subject_roles(groups, state["request"]["seed"])
+    roles = _subject_roles(groups, selection["panel"])
     splits = np.asarray(
         [roles[s] for s in groups], dtype=ARRAY_FORMATS["split.npy"]["dtype"]
     )
@@ -253,7 +530,9 @@ def deliver(state, folder, store):
         {
             "names": channels,
             "sfreq": sfreq,
-            "unit": "V",
+            "unit": unit,
+            "spatial_semantics": spatial_semantics,
+            "representation": selection["representation"],
             "dtype": "float32",
             "layout": ["epochs", "channels", "samples"],
             "tmin_s": state["request"]["tmin"],
@@ -280,6 +559,55 @@ def deliver(state, folder, store):
     )
     write_json(folder / "method.json", method)
     write_json(folder / "selection.json", selection)
+    for name, value in {
+        "protocol": selection["evaluation_protocol"],
+        "folds": selection["panel"].get("folds", []),
+        "receipt": receipt,
+    }.items():
+        write_json(folder / "evaluation" / f"{name}.json", value)
+    for source, relative, checksum in evidence_files:
+        target = within(folder, relative)
+        shutil.copy2(source, target)
+        if file_hash(target) != checksum:
+            raise ValueError("评价证据复制校验失败")
+    representation_files = []
+    transform_map = []
+    for source, relative in transforms:
+        target = within(folder, "representation/" + relative)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        if file_hash(target) != file_hash(source):
+            raise ValueError("适配变换复制校验失败")
+        representation_files.append(target)
+        transform_map.append(
+            {
+                "source_path": str(source),
+                "archive_path": target.relative_to(folder).as_posix(),
+                "sha256": file_hash(target),
+            }
+        )
+    array_map = []
+    offset = 0
+    for record, (source, shape) in zip(
+        sorted(result_records, key=lambda r: r["record_id"]), epoch_sources
+    ):
+        array_map.append(
+            {
+                "record_id": record["record_id"],
+                "source_path": str(source),
+                "source_sha256": file_hash(source),
+                "archive_path": "X.npy",
+                "row_start": offset,
+                "row_stop": offset + shape[0],
+                "conversion": "float32",
+                "event_index": "trial-index.tsv",
+            }
+        )
+        offset += shape[0]
+    write_json(
+        folder / "evaluation/artifact-map.json",
+        {"arrays": array_map, "transforms": transform_map},
+    )
     write_json(
         folder / "sources.json",
         {
@@ -298,19 +626,28 @@ def deliver(state, folder, store):
     )
     readme = """# EEG 训练数据
 
-X.npy: float32，Epoch × EEG 通道 × 时间点，单位 V。
+X.npy: float32，Epoch × 空间坐标 × 时间点；单位和坐标含义见 channels.json。
+EA 或 scale-only 数组为无量纲变换坐标，不能解释为原电极位置的伏特测量；不应再次适配。
 y.npy: int64，0=left_hand，1=right_hand。
 subjects.npy / split.npy: 每行对应的被试与 train / validation / test 分组。
 trial-index.tsv: 每一行到原始事件、记录和样点的映射。
 同一被试只进入一个分组；标准化或模型拟合应仅使用 train。
-按 seed 对排序后的被试打乱，以 70/15/15 最大余数法分配 train/validation/test。
-至少 3 人时每组至少 1 人；1 人仅 train，2 人分别进入 train/test。
-候选方法随机选择，selection.json 保存随机种子；没有进行质量排名。
+交付保留搜索协议：分组交叉验证的被试全部标为 train，折成员见 evaluation/folds.json；
+显式训练/开发划分映射为 train/validation。test 始终为空，不存在独立测试集。
+候选按开发面板的被试平均平衡准确率选择，selection.json 保存分数与候选摘要。
+反复用于选择的开发分数不是独立泛化结论；交叉验证折之间不得共享拟合的 CSP/LDA。
+无标签整批适配仅使用协议允许的各被试信号，不能据此推断实时或前瞻有效。
+evaluation/ 保存冻结协议、含全部原始 trial 的完整面板、折、选中评价回执，
+以及 originalpredictions.tsv 逐试次预测；面板和预测按原文件字节及哈希收录。
+representation/ 保存适配变换。
+回执中的源路径保留原样用于溯源；evaluation/artifact-map.json 将源数组映射到
+X.npy 的连续行区间及 trial-index.tsv，并列出变换在压缩包中的路径。
+X.npy 是被评价数组的 float32 转换版本；该转换逐块保存后读取核对。
 数据来源 EEGMMIDB 1.0.0，DOI 10.13026/C28G6P，ODC Attribution License v1.0。
 来源与引用见 sources.json，操作与参数见 method.json，统计和限制见 report.html。
 provenance/ 保存每条记录的实际执行参数、版本、事件对应和前后统计。
 train_example.py: 安装 numpy、scikit-learn 后执行 python train_example.py，
-仅用 train 拟合标准化与逻辑回归并检查预测可用性，不输出质量排名。
+仅用 train 拟合标准化与逻辑回归并检查预测可用性；这不是搜索 CSP/LDA 评价器的复现。
 
 mmap 按需读取；基本切片为视图，布尔或整数数组索引会复制所选数据。
 下面只选取前 32 条中的训练样本；完整训练使用 train_example.py 分块提取特征。
@@ -330,13 +667,18 @@ finally:
 """
     (folder / "README.md").write_text(readme, encoding="utf-8")
     limitations = [
-        "工程预设；尚未验证模型性能或候选质量",
+        "候选已进行开发评价；没有独立确认，也未认证神经信号保真或实时有效性",
+        "交付不生成独立测试集；CV 面板的全部被试均参与过候选选择",
         "全部本地 Run 已调研与接入；训练记录范围见 collection/input.json 的 selected_record_ids",
     ]
     missing_splits = sorted({"train", "validation", "test"} - set(splits))
     if missing_splits:
-        limitations.append("被试数不足，以下分组为空：" + ", ".join(missing_splits))
-    members = delivery_members(folder, [r["record_id"] for r in result_records])
+        limitations.append("按评价协议，以下分组为空：" + ", ".join(missing_splits))
+    # Recheck adapted source hashes after streaming, before publishing the archive.
+    _representation_files(selection, store, result_records)
+    members = delivery_members(
+        folder, [r["record_id"] for r in result_records], representation_files
+    )
     counts = Counter(map(str, y))
     manifest = {
         "workflow_id": state["id"],
@@ -347,9 +689,15 @@ finally:
             for role in ["train", "validation", "test"]
         },
         "subject_split": roles,
-        "unit": "V",
-        "selection_policy": "random",
-        "quality_evaluated": False,
+        "unit": unit,
+        "selection_policy": "development_score",
+        "quality_evaluated": True,
+        "evaluation_scope": "development",
+        "independent_confirmation": False,
+        "search_id": selection["search_id"],
+        "selected_candidate_id": selection["selected_candidate_id"],
+        "score": selection["score"],
+        "representation": selection["representation"],
         "selected_method_ref": selection["selected_method_ref"],
         "files": [
             {
@@ -363,13 +711,13 @@ finally:
     }
     write_json(folder / "manifest.json", manifest)
     archive = folder.parent / "training-data.zip"
-    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        for p in [*members, folder / "manifest.json"]:
-            z.write(p, p.relative_to(folder).as_posix())
-    with zipfile.ZipFile(archive) as z:
-        if z.testzip() is not None:
-            raise ValueError("交付压缩包完整性校验失败")
-    check_sources(survey)
+
+    def validate():
+        check_sources(survey)
+        _representation_files(selection, store, result_records)
+        _evaluation_evidence(selection, store)
+
+    archive_hash = _publish_archive(archive, folder, members, manifest, validate)
     return {
         "archive": "training-data.zip",
         "manifest": "delivery/manifest.json",
@@ -382,8 +730,11 @@ finally:
                 "subject_split",
                 "selection_policy",
                 "quality_evaluated",
+                "unit",
+                "evaluation_scope",
+                "independent_confirmation",
             ]
         },
-        "sha256": file_hash(archive),
+        "sha256": archive_hash,
         "source_unchanged": True,
     }

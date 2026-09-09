@@ -692,6 +692,6 @@ def test_evaluator_accepts_actual_runner_artifacts(tmp_path):
         result, plan, service.store.root, panel, tmp_path / "evaluation"
     )
     assert receipt["status"] == "evaluated", receipt
-    assert receipt["coverage"]["eligible"] == 7
-    assert receipt["coverage"]["common_invalid"] == 1
-    assert receipt["coverage"]["train"]["eligible"] == 7
+    assert receipt["coverage"]["eligible"] == 14
+    assert receipt["coverage"]["common_invalid"] == 2
+    assert receipt["coverage"]["train"]["eligible"] == 0

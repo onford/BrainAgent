@@ -3,11 +3,11 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
-from time import monotonic
 from uuid import uuid4
 
 from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import file_hash, within, write_json
+from app.preprocessing.storage import Storage
 from app.runtime.context import AgentContext, AgentTask
 from app.runtime.result import AgentResult
 from . import artifacts, dataset, outputs
@@ -39,6 +39,7 @@ class WorkflowService:
         self.preprocessing = preprocessing
         self.llm, self.tools, self.source_reader = llm, tools, source_reader
         self.registry = None
+        self.searches = None
         self.tasks = {}
         self.artifact_cache = {}
         self.root.mkdir(parents=True, exist_ok=True)
@@ -59,17 +60,30 @@ class WorkflowService:
             raise KeyError("workflow not found")
         if state.get("schema_version") == "1":
             state["outputs"] = {
-                name: validate_stage(
-                    name,
-                    json.loads(
-                        within(
-                            self.folder(identity), STAGE_CONTRACTS[name][1]
-                        ).read_text(encoding="utf-8")
-                    ),
+                name: json.loads(
+                    within(self.folder(identity), STAGE_CONTRACTS[name][1]).read_text(
+                        encoding="utf-8"
+                    )
                 )
                 for name in state["outputs"]
             }
         return state
+
+    def search_service(self):
+        if self.searches is None:
+            from app.search.service import SearchService
+
+            self.searches = SearchService(self.root.parent / "offline-search", self)
+        return self.searches
+
+    def execution_store(self, state):
+        if state.get("search_id"):
+            searches = self.search_service()
+            searches.get(state["owner"], state["search_id"])
+            return Storage(
+                searches.folder(state["search_id"]) / "engine"
+            ), "offline-search"
+        return self.preprocessing.store, state["owner"]
 
     def save(self, state):
         state["updated_at"] = now()
@@ -87,21 +101,59 @@ class WorkflowService:
 
     def describe(self, owner, identity):
         state = self.get(owner, identity)
-        # Older runs omitted BIDS. Discover those once, preserving saved hashes.
+        store, execution_owner = self.execution_store(state)
+        # Inventory retains previously published hashes.
         known = {a["name"]: a for a in self.artifact_cache.get(identity, [])}
         known.update({a["name"]: a for a in state["artifacts"]})
         entries = artifacts.local_files(self.folder(identity), state, known.values())
         state["artifacts"] = sorted(
             entries
             + artifacts.worker_files(
-                self.preprocessing.store,
-                owner,
+                store,
+                execution_owner,
                 state.get("preprocessing_job"),
                 known.values(),
             ),
             key=lambda a: a["name"],
         )
         self.artifact_cache[identity] = state["artifacts"]
+        if state.get("search_id"):
+            searches = self.search_service()
+            search = searches.describe(owner, state["search_id"])
+            state["search_summary"] = {
+                k: search[k]
+                for k in (
+                    "id",
+                    "status",
+                    "message",
+                    "usage",
+                    "budget",
+                    "selected_candidate_id",
+                )
+            }
+            search_root = searches.folder(state["search_id"])
+            index_path = search_root / "files.json"
+            index = (
+                {
+                    item["name"]: item
+                    for item in json.loads(index_path.read_text(encoding="utf-8"))[
+                        "files"
+                    ]
+                }
+                if index_path.exists()
+                else {}
+            )
+            state["artifacts"].extend(
+                {
+                    **entry,
+                    "name": "preprocessing/search/" + entry["name"],
+                    "bytes": index.get(entry["name"], {}).get(
+                        "bytes", within(search_root, entry["name"]).stat().st_size
+                    ),
+                    "sha256": index.get(entry["name"], {}).get("sha256"),
+                }
+                for entry in search["artifacts"]
+            )
         return state
 
     def list(self, owner):
@@ -118,7 +170,7 @@ class WorkflowService:
         )
         state = {
             "schema_version": "1",
-            "engine": "llm-research-v1",
+            "engine": "diagnostic-policy-search-v2",
             "id": uuid4().hex,
             "owner": owner,
             "status": "queued",
@@ -139,14 +191,25 @@ class WorkflowService:
         return state
 
     def start(self, owner, identity):
+        self.require_current(self.get(owner, identity))
         if identity not in self.tasks or self.tasks[identity].done():
             self.tasks[identity] = asyncio.create_task(self.run(owner, identity))
+
+    def require_current(self, state):
+        if state.get("engine") != "diagnostic-policy-search-v2":
+            raise ValueError(
+                "此运行的执行协议与当前版本不同，请新建运行；已有产物保持只读"
+            )
+        check_format(self.folder(state["id"]))
 
     async def resume(self):
         for path in self.root.glob("*/workflow.json"):
             state = json.loads(path.read_text(encoding="utf-8"))
             if state["status"] in {"queued", "running", "interrupted"}:
-                self.start(state["owner"], state["id"])
+                try:
+                    self.start(state["owner"], state["id"])
+                except (ValueError, OSError, KeyError):
+                    continue
 
     async def close(self):
         running = [t for t in self.tasks.values() if not t.done()]
@@ -156,16 +219,14 @@ class WorkflowService:
 
     def retry(self, owner, identity):
         state = self.get(owner, identity)
-        check_format(self.folder(identity))
+        self.require_current(state)
         if state["status"] not in {"failed", "interrupted"}:
             raise ValueError("只有失败或中断的流程可以重试")
-        job = state.get("preprocessing_job")
-        if job and self.preprocessing.store.status(owner, job).status in {
-            "failed",
-            "partial",
-            "cancelled",
-        }:
-            self.preprocessing.store.control(owner, job, "retry")
+        if state.get("search_id"):
+            searches = self.search_service()
+            search = searches.get(owner, state["search_id"])
+            if search["status"] in {"failed", "interrupted", "cancelled"}:
+                searches.retry(owner, search["id"])
         state.update(status="queued", error=None)
         self.save(state)
         self.start(owner, identity)
@@ -180,6 +241,7 @@ class WorkflowService:
         state = self.get(owner, identity)
         if state["status"] == "completed":
             return state
+        self.require_current(state)
         context = AgentContext(
             owner_id=owner,
             session_id=f"workflow-{identity}",
@@ -187,8 +249,7 @@ class WorkflowService:
             metadata={"workflow_id": identity},
         )
         try:
-            if state.get("schema_version") != "1":
-                await self.upgrade_records(state)
+            check_format(self.folder(identity))
             state["status"] = "running"
             self.save(state)
             for stage in state["stages"]:
@@ -229,6 +290,8 @@ class WorkflowService:
                 # A stage may persist its background preprocessing job before waiting.
                 latest = self.get(owner, identity)
                 state["events"] = latest["events"]
+                if latest.get("search_id"):
+                    state["search_id"] = latest["search_id"]
                 if latest.get("preprocessing_job"):
                     state["preprocessing_job"] = latest["preprocessing_job"]
                 state["outputs"][name] = result.output
@@ -241,6 +304,8 @@ class WorkflowService:
             state.update(status="interrupted", error="服务中断，重新启动后继续")
             latest = self.get(owner, identity)
             state["events"] = latest["events"]
+            if latest.get("search_id"):
+                state["search_id"] = latest["search_id"]
             if latest.get("preprocessing_job"):
                 state["preprocessing_job"] = latest["preprocessing_job"]
             self.save(state)
@@ -261,49 +326,12 @@ class WorkflowService:
             state["events"] = latest["events"] + [
                 e for e in state["events"] if e not in latest["events"]
             ]
+            if latest.get("search_id"):
+                state["search_id"] = latest["search_id"]
             if latest.get("preprocessing_job"):
                 state["preprocessing_job"] = latest["preprocessing_job"]
             self.save(state)
         return state
-
-    async def upgrade_records(self, state):
-        """On resuming a legacy run, retain numeric work and rebuild its records."""
-        folder = self.folder(state["id"])
-        for stage in state["stages"]:
-            name = stage["name"]
-            if stage["status"] != "completed":
-                continue
-            if name in {"data_report", "data_delivery"}:
-                stage["status"] = "pending"
-                state["outputs"].pop(name, None)
-                continue
-            value = state["outputs"][name]
-            if name == "data_survey" and "channel_sets" not in value:
-                value["channel_sets"] = {}
-                for record in value["records"]:
-                    channels = record.pop("channels", None)
-                    if channels is not None:
-                        key = next(
-                            (
-                                k
-                                for k, v in value["channel_sets"].items()
-                                if v == channels
-                            ),
-                            None,
-                        )
-                        key = key or f"channels_{len(value['channel_sets']) + 1}"
-                        value["channel_sets"][key] = channels
-                        record["channel_set"] = key
-            elif name == "data_preprocessing":
-                value = await self.preprocess(
-                    state, WorkflowRequest.model_validate(state["request"])
-                )
-            state["outputs"][name] = publish_stage(folder, name, value)
-            prefix = artifacts.STAGE_FOLDERS[name] + "/"
-            state["artifacts"] = [
-                a for a in state["artifacts"] if not a["name"].startswith(prefix)
-            ]
-        state["schema_version"] = "1"
 
     async def execute_stage(self, name, owner, identity):
         state = self.get(owner, identity)
@@ -371,22 +399,23 @@ class WorkflowService:
         elif name == "data_preprocessing":
             value = await self.preprocess(state, request)
         elif name == "data_evaluation":
+            search = self.search_service().get(owner, state["search_id"])
+            store, execution_owner = self.execution_store(state)
             prep = state["outputs"]["data_preprocessing"]
-            plan = self.preprocessing.store.get(
-                owner, Ref.model_validate(prep["plan_ref"]), "plan"
+            plan = store.get(
+                execution_owner, Ref.model_validate(prep["plan_ref"]), "plan"
             )
-            result = self.preprocessing.store.status(owner, prep["job_id"])
-            value = await asyncio.to_thread(
-                outputs.choose, result, plan, self.preprocessing.store, request.seed
-            )
+            value = await asyncio.to_thread(outputs.choose, search, plan, store)
         elif name == "data_report":
             await cognition.narrative()
             value = await asyncio.to_thread(
                 outputs.report, state, folder / "report", self.preprocessing.store
             )
         elif name == "data_delivery":
+            store, execution_owner = self.execution_store(state)
+            delivery_state = {**state, "owner": execution_owner}
             value = await asyncio.to_thread(
-                outputs.deliver, state, folder / "delivery", self.preprocessing.store
+                outputs.deliver, delivery_state, folder / "delivery", store
             )
         else:
             raise ValueError("unknown workflow stage")
@@ -399,79 +428,100 @@ class WorkflowService:
 
     async def preprocess(self, state, request):
         owner = state["owner"]
-        existing = state.get("preprocessing_job")
-        if not existing:
-            plan_ref, plan = await WorkflowCognition(
-                self, state, "data_preprocessing"
-            ).design()
-            write_readable(
-                self.folder(state["id"]) / "preprocessing/plan.json",
-                plan.model_dump(mode="json"),
+        searches = self.search_service()
+        identity = state.get("search_id")
+        if identity is None:
+            from app.search.contracts import SearchRequest
+
+            search = searches.create(
+                owner,
+                SearchRequest(
+                    workflow_id=state["id"],
+                    seed=request.seed,
+                    budget=request.search_budget,
+                ),
+                start=False,
             )
-            result = await asyncio.to_thread(self.preprocessing.submit, owner, plan_ref)
-            state["preprocessing_job"] = result.job_id
+            identity = state["search_id"] = search["id"]
             self.save(state)
-        else:
-            result = self.preprocessing.store.status(owner, existing)
-        last_progress, last_reported = None, 0.0
-        snapshot = {
-            "status": result.status,
-            "completed": result.completed,
-            "total": result.total,
-        }
-        while snapshot["status"] in {"queued", "running", "interrupted"}:
-            progress = (snapshot["status"], snapshot["completed"], snapshot["total"])
-            if progress != last_progress and monotonic() - last_reported >= 5:
-                self.event(
-                    state,
-                    "data_preprocessing",
-                    "running",
-                    f"预处理计算：已完成 {snapshot['completed']}/{snapshot['total']} 个执行单元（{snapshot['status']}）",
-                )
+        search = searches.get(owner, identity)
+        if search["status"] in {"preparing", "running", "interrupted"}:
+            searches.start(owner, identity)
+        last_progress = None
+        while search["status"] in {"preparing", "running", "interrupted"}:
+            progress = (
+                search["phase"],
+                search["usage"]["candidates"],
+                search["message"],
+            )
+            if progress != last_progress:
+                self.event(state, "data_preprocessing", "running", search["message"])
                 self.save(state)
-                last_progress, last_reported = progress, monotonic()
+                last_progress = progress
             await asyncio.sleep(1)
-            snapshot = await asyncio.to_thread(
-                self.preprocessing.store.progress, owner, result.job_id
-            )
-        result = await asyncio.to_thread(
-            self.preprocessing.store.status, owner, result.job_id
-        )
-        if result.status not in {"completed", "partial"}:
-            errors = list(
-                dict.fromkeys(
-                    str(r["error"])
-                    for r in result.records
-                    if r["status"] != "completed"
-                )
-            )
+            search = searches.get(owner, identity)
+            task = searches.tasks.get(identity)
+            if (
+                task is not None
+                and task.done()
+                and search["status"] in {"preparing", "running", "interrupted"}
+            ):
+                if task.cancelled():
+                    raise ValueError("预处理搜索已中断")
+                if task.exception() is not None:
+                    raise ValueError(
+                        "预处理搜索未能保存最终状态：" + str(task.exception())
+                    )
+                # Another supervisor may own this search. Only an unlocked root
+                # proves that the recorded active state has no running writer.
+                import portalocker
+
+                try:
+                    with portalocker.Lock(
+                        searches.folder(identity) / "search.lock", timeout=0
+                    ):
+                        raise ValueError("预处理搜索进程已退出，未发布完整结果")
+                except portalocker.exceptions.LockException:
+                    pass
+        task = searches.tasks.get(identity)
+        if task is not None and not task.done():
+            await asyncio.shield(task)
+            search = searches.get(owner, identity)
+        if (
+            search["status"] not in {"completed", "stopped"}
+            or not search["selected_candidate_id"]
+        ):
             raise ValueError(
-                f"预处理未完成（{result.completed}/{result.total}）："
-                + "; ".join(errors[:5])
-                + (
-                    f"；另有 {len(errors) - 5} 类错误，详见记录"
-                    if len(errors) > 5
-                    else ""
-                )
+                "预处理搜索未产生可交付方案："
+                + (search["error"] or search["stop_reason"] or search["status"])
             )
+        selected = next(
+            c
+            for c in search["candidates"]
+            if c["id"] == search["selected_candidate_id"]
+        )
+        store, execution_owner = self.execution_store(state)
+        result = store.status(execution_owner, selected["job_id"])
+        plan = store.get(execution_owner, result.plan_ref, "plan")
+        state["preprocessing_job"] = result.job_id
+        self.save(state)
+        write_readable(self.folder(state["id"]) / "preprocessing/plan.json", plan)
         write_readable(
             self.folder(state["id"]) / "preprocessing/result.json",
             result.model_dump(mode="json"),
         )
-        plan = self.preprocessing.store.get(owner, result.plan_ref, "plan")
         record_positions = {
             (r["method_ref"]["id"], r["record_id"]): i
             for i, r in enumerate(plan["records"])
         }
         methods = []
         for ref in plan["request"]["methods"]:
-            method = self.preprocessing.store.get(
-                owner, Ref.model_validate(ref), "method"
-            )
+            method = store.get(execution_owner, Ref.model_validate(ref), "method")
             methods.append(
                 {"ref": ref, "title": method["title"], "recipe": method["recipe"]}
             )
         return {
+            "search_id": identity,
             "execution_status": result.status,
             "job_id": result.job_id,
             "plan_ref": result.plan_ref.model_dump(),
@@ -507,10 +557,13 @@ class WorkflowService:
         entry = next((a for a in state["artifacts"] if a["name"] == name), None)
         if entry is None:
             raise KeyError("artifact not found")
-        if name.startswith("preprocessing/runs/"):
-            path = within(
-                self.preprocessing.store.root, name.removeprefix("preprocessing/")
+        if name.startswith("preprocessing/search/"):
+            path = self.search_service().artifact(
+                owner, state["search_id"], name.removeprefix("preprocessing/search/")
             )
+        elif name.startswith("preprocessing/runs/"):
+            store, _ = self.execution_store(state)
+            path = within(store.root, name.removeprefix("preprocessing/"))
         else:
             path = within(self.folder(identity), name)
         if not path.is_file() or (

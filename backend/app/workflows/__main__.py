@@ -1,4 +1,4 @@
-"""Run the six-stage EEG workflow locally, including its independent worker.
+"""Run the EEG workflow locally with its budgeted numerical search workers.
 
 python -m app.workflows --source-root E:/dataset/eeg/EEGMMIDB
 """
@@ -7,7 +7,6 @@ import argparse
 import asyncio
 import json
 from pathlib import Path
-import subprocess
 import sys
 
 from app.core.config import get_settings
@@ -31,12 +30,12 @@ async def run(args):
             await app.state.database.create_tables()
         return await run_workflow(args, app.state.workflows, root, source)
     finally:
+        await app.state.searches.close()
         await app.state.workflows.close()
         await app.state.database.dispose()
 
 
 async def run_workflow(args, service, root, source):
-    preprocessing = service.preprocessing
     if args.resume:
         state = service.get(args.owner, args.resume)
         if state["status"] in {"failed", "interrupted"}:
@@ -55,31 +54,11 @@ async def run_workflow(args, service, root, source):
             ),
         )
     print(f"Workflow: {state['id']}", flush=True)
-    log = (root / "worker.log").open("a", encoding="utf-8")
-    worker = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "app.preprocessing.worker",
-            "--root",
-            str(preprocessing.store.root),
-            "--input-root",
-            str(service.root),
-        ],
-        cwd=Path(__file__).resolve().parents[2],
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
-    )
     task = service.tasks[state["id"]]
     last = None
     try:
         async with asyncio.timeout(args.timeout):
             while not task.done():
-                if worker.poll() is not None:
-                    raise RuntimeError(
-                        f"Worker exited ({worker.returncode}); see {log.name}"
-                    )
                 current = service.get(args.owner, state["id"])
                 progress = {
                     "stages": [(s["label"], s["status"]) for s in current["stages"]],
@@ -110,9 +89,6 @@ async def run_workflow(args, service, root, source):
         return current
     finally:
         await service.close()
-        worker.terminate()
-        await asyncio.to_thread(worker.wait, 15)
-        log.close()
 
 
 def main():

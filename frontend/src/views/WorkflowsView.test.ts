@@ -12,7 +12,7 @@ vi.mock('vue-router', () => ({
 
 function workflow(status: string) {
   return {
-    id: 'abc123', status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
+    id: 'abc123', schema_version: '1', engine: 'diagnostic-policy-search-v2', status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
     request: { source_root: 'E:/dataset/eeg/EEGMMIDB' }, error: null,
     artifacts: status === 'completed' ? [{name:'report/report.html',bytes:500,sha256:'abc'}] : [], events: [],
     stages: ['数据调研', '数据接入', '数据预处理', '结果选择', '数据报告', '数据交付'].map((label, i) => ({
@@ -27,6 +27,95 @@ describe('WorkflowsView', () => {
     request.mockReset(); replace.mockReset().mockResolvedValue(undefined)
     HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open','') }
     HTMLDialogElement.prototype.close = function() { this.removeAttribute('open') }
+  })
+
+  it.each([
+    { schema_version: '0', engine: 'diagnostic-policy-search-v2' },
+    { schema_version: '1', engine: 'cognitive-workflow' },
+    { schema_version: undefined, engine: undefined },
+  ])('keeps historical records neutral and read-only for %j', async version => {
+    vi.useFakeTimers()
+    const state = { ...workflow('failed'), ...version, outputs: {
+      data_collection: {}, data_delivery: { shape: [90, 64, 321] },
+      data_evaluation: { selection_policy: 'random', quality_evaluated: false, score: .99, selected_method_ref: { id: 'saved-method' } },
+    }, artifacts: [{ name: 'evaluation/selection.json', bytes: 500, sha256: null }, { name: 'report/report.html', bytes: 500, sha256: null }],
+      stages: [{ name: 'data_evaluation', label: '结果选择', status: 'failed' }] }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      expect(wrapper.find('.retry-button').exists()).toBe(false)
+      expect(wrapper.find('[aria-label="预算搜索入口"]').exists()).toBe(false)
+      expect(wrapper.get('.delivery-panel').text()).toContain('saved-method')
+      expect(wrapper.get('.delivery-panel').text()).toContain('方法与分组信息以保存的交付记录为准')
+      expect(wrapper.get('.delivery-panel').text()).not.toContain('开发 BA')
+      expect(wrapper.get('.files-panel').text()).not.toContain('开发评估')
+      expect(wrapper.get('iframe').attributes('src')).toContain('report/report.html?download=false')
+      await wrapper.get('.stages button').trigger('click'); await flushPromises()
+      expect(wrapper.get('.stage-dialog').text()).toContain('保存的记录')
+      expect(wrapper.get('.stage-dialog').text()).not.toContain('CSP')
+      expect(wrapper.findAll('button').some(button => button.text().includes('重试未完成步骤'))).toBe(false)
+      await vi.advanceTimersByTimeAsync(6000)
+      expect(request.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    } finally { wrapper.unmount(); vi.useRealTimers() }
+  })
+
+  it.each([
+    { selection_policy: 'random', quality_evaluated: true, evaluation_scope: 'development' },
+    { selection_policy: 'development_score', quality_evaluated: false, evaluation_scope: 'development' },
+    { selection_policy: 'development_score', quality_evaluated: true, evaluation_scope: undefined },
+  ])('does not infer measured evaluation from a numeric score alone: %j', async evaluation => {
+    const state = { ...workflow('completed'), outputs: { data_delivery: { shape: [90, 64, 321] }, data_evaluation: { ...evaluation, score: .9 } } }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    await flushPromises()
+    expect(wrapper.get('.delivery-panel').text()).not.toContain('开发 BA')
+    expect(wrapper.get('.delivery-panel').text()).not.toContain('方法按开发评估分数选择')
+    wrapper.unmount()
+  })
+
+  it('prefers original artifact URLs and descriptions, preserving query parameters and safe downloads', async () => {
+    const state = { ...workflow('completed'), artifacts: [
+      { name: 'preprocessing/search/report.html', bytes: null, sha256: null, url: '/api/searches/search-1/artifacts/report.html?v=abc&download=false#details', description: '实测预测核验' },
+      { name: 'preprocessing/search/unsafe.html', bytes: 0, sha256: null, url: 'javascript:alert(1)' },
+      { name: 'report/report.html', bytes: 500, sha256: null, url: 'https://reports.example.test/report.html?v=saved&download=true#summary', description: '保存的流程报告' },
+    ] }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    await flushPromises()
+    const link = wrapper.findAll('.file-row a').find(a => a.text() === 'preprocessing/search/report.html')!
+    expect(link.attributes('href')).toBe('/api/searches/search-1/artifacts/report.html?v=abc&download=true#details')
+    expect(wrapper.get('iframe').attributes('src')).toBe('https://reports.example.test/report.html?v=saved&download=false#summary')
+    expect(wrapper.findAll('.file-row a').some(a => a.text().includes('unsafe'))).toBe(false)
+    await wrapper.get('input[aria-label="查找文件"]').setValue('实测预测核验')
+    expect(wrapper.findAll('.file-row')).toHaveLength(1)
+    expect(wrapper.get('.file-row').text()).toContain('大小未知')
+    wrapper.unmount()
+  })
+
+  it('updates the linked search summary with workflow polling while retaining the existing search link', async () => {
+    vi.useFakeTimers()
+    const summary = { id: 'search-1', status: 'running', message: '正在核验预测', selected_candidate_id: null as string | null,
+      usage: { candidates: 2, proposals: 3, evidence_reads: 1, elapsed_seconds: 12.5 },
+      budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } }
+    let state = { ...workflow('running'), search_id: 'search-1', search_summary: summary }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      const panel = wrapper.get('[aria-label="关联搜索进度"]')
+      expect(panel.text()).toContain('执行中 · 正在核验预测')
+      expect(panel.text()).toContain('候选 2 / 6')
+      expect(panel.text()).toContain('提议 3 / 8')
+      expect(panel.text()).toContain('证据读取 1 / 2')
+      expect(panel.text()).toContain('耗时 12.5 / 3,600 秒')
+      state = { ...state, search_summary: { ...summary, status: 'completed', message: '评估完成', selected_candidate_id: 'chosen-1', usage: { ...summary.usage, candidates: 4 } } }
+      await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+      expect(panel.text()).toContain('已完成 · 评估完成')
+      expect(panel.text()).toContain('候选 4 / 6')
+      expect(panel.text()).toContain('所选候选 chosen-1')
+      expect(request.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    } finally { wrapper.unmount(); vi.useRealTimers() }
   })
 
   it('starts the configured training workflow and exposes completed downloads and report', async () => {
@@ -51,7 +140,8 @@ describe('WorkflowsView', () => {
     expect(wrapper.text()).toContain('训练数据已就绪')
     expect(wrapper.get('iframe').attributes('src')).toContain('report/report.html?download=false')
     expect(wrapper.get('a.primary').attributes('href')).toContain('training-data.zip')
-    expect(wrapper.text()).toContain('未进行质量排名')
+    expect(wrapper.text()).toContain('方法与分组信息以保存的交付记录为准')
+    expect(wrapper.text()).not.toContain('随机选择')
     wrapper.unmount()
   })
 

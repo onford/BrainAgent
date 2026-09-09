@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { artifactDescription, groupArtifactFiles, type WorkflowArtifact } from '../../utils/artifacts'
+import { artifactDescription, artifactSize, groupArtifactFiles, type WorkflowArtifact } from '../../utils/artifacts'
 
 const props = defineProps<{ artifacts: WorkflowArtifact[]; workflowId: string; fileUrl: (name: string, download?: boolean) => string }>()
 const query = ref(''), group = ref('all')
@@ -12,9 +12,8 @@ function selectGroup(value: string) { group.value = value; query.value = '' }
 defineExpose({ selectGroup })
 watch(() => props.workflowId, () => { group.value = 'all'; query.value = '' })
 const groups = computed(() => Object.entries(names).map(([key,label]) => ({key,label,count:props.artifacts.filter(a=>category(a.name)===key).length})).filter(g=>g.count))
-const matched = computed(() => props.artifacts.filter(a => (group.value==='all' || category(a.name)===group.value) && `${a.name} ${artifactDescription(a.name)}`.toLowerCase().includes(query.value.toLowerCase().trim())))
+const matched = computed(() => props.artifacts.filter(a => (group.value==='all' || category(a.name)===group.value) && `${a.name} ${a.description || artifactDescription(a.name)}`.toLowerCase().includes(query.value.toLowerCase().trim())))
 const families = computed(() => groupArtifactFiles(matched.value))
-const size = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024**2 ? `${(bytes/1024).toFixed(1)} KB` : `${(bytes/1024**2).toFixed(1)} MB`
 </script>
 
 <template>
@@ -23,8 +22,8 @@ const size = (bytes: number) => bytes < 1024 ? `${bytes} B` : bytes < 1024**2 ? 
     <div class="file-content"><header><label>查找文件<input v-model="query" type="search" placeholder="输入文件名或说明…" aria-label="查找文件" /></label><span>{{matched.length}} 个文件</span></header>
       <div class="file-list"><p class="hint">同类文件合并展示，展开即可逐个下载。文件名旁是内容概要。</p><p v-if="!matched.length" class="empty">{{artifacts.length?'没有匹配的文件，试试其他关键词或模块。':'尚未生成记录文件。'}}</p>
         <div v-for="family in families" :key="workflowId+family.key" class="file-group">
-          <div v-if="family.files.length===1" v-for="file in family.files" :key="file.name" class="file-row"><div><a :href="fileUrl(file.name)">{{file.name}}</a><span class="file-description">{{artifactDescription(file.name)}}</span></div><small>{{size(file.bytes)}}</small></div>
-          <details v-else class="file-family" :open="!!opened[family.key]" @toggle="opened[family.key]=($event.target as HTMLDetailsElement).open"><summary><strong>{{family.label}}</strong><span class="file-description">{{family.description}}</span><small>{{family.files.length}} 个文件 · {{size(family.bytes)}}</small></summary><template v-if="opened[family.key]"><div v-for="file in family.files.slice(0,limits[family.key] ?? 30)" :key="file.name" class="file-row"><div><a :href="fileUrl(file.name)">{{file.name}}</a><span class="file-description">{{artifactDescription(file.name)}}</span></div><small>{{size(file.bytes)}}</small></div><button v-if="family.files.length>(limits[family.key] ?? 30)" class="more-files" @click="limits[family.key]=(limits[family.key] ?? 30)+30">再显示 30 个（剩余 {{family.files.length-(limits[family.key] ?? 30)}} 个）</button></template></details>
+          <div v-if="family.files.length===1" v-for="file in family.files" :key="file.name" class="file-row"><div><a v-if="fileUrl(file.name)" :href="fileUrl(file.name)">{{file.name}}</a><span v-else>{{file.name}}</span><span class="file-description">{{file.description || artifactDescription(file.name)}}</span></div><small>{{artifactSize(file.bytes)}}</small></div>
+          <details v-else class="file-family" :open="!!opened[family.key]" @toggle="opened[family.key]=($event.target as HTMLDetailsElement).open"><summary><strong>{{family.label}}</strong><span class="file-description">{{family.description}}</span><small>{{family.files.length}} 个文件 · {{artifactSize(family.bytes)}}</small></summary><template v-if="opened[family.key]"><div v-for="file in family.files.slice(0,limits[family.key] ?? 30)" :key="file.name" class="file-row"><div><a v-if="fileUrl(file.name)" :href="fileUrl(file.name)">{{file.name}}</a><span v-else>{{file.name}}</span><span class="file-description">{{file.description || artifactDescription(file.name)}}</span></div><small>{{artifactSize(file.bytes)}}</small></div><button v-if="family.files.length>(limits[family.key] ?? 30)" class="more-files" @click="limits[family.key]=(limits[family.key] ?? 30)+30">再显示 30 个（剩余 {{family.files.length-(limits[family.key] ?? 30)}} 个）</button></template></details>
         </div>
       </div>
     </div>

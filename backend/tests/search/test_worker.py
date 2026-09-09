@@ -49,6 +49,7 @@ def search(tmp_path):
     panel = worker.prepare(root)
     assert "panel_hash" in panel, panel
     for entry in catalog()[:2]:
+        worker.write_json(root / "candidates" / entry["id"] / "policy.json", entry)
         worker.write_json(
             root / "candidates" / entry["id"] / "method.json",
             method(entry, panel).model_dump(mode="json"),

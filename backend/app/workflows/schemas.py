@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from app.preprocessing.schemas import Contract
+from app.search.contracts import SearchBudget
 
 STAGES = (
     "data_survey",
@@ -29,6 +30,7 @@ class WorkflowRequest(Contract):
     seed: int = Field(default=42, ge=0, le=2**32 - 1)
     tmin: float = 0
     tmax: float = 2
+    search_budget: SearchBudget = Field(default_factory=SearchBudget)
 
     @model_validator(mode="after")
     def valid(self):

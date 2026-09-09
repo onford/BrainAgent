@@ -71,7 +71,7 @@ def check_format(folder):
 
     manifest = folder / "process/formats.json"
     if not manifest.exists():
-        return  # Historical runs predate the supporting-file format contract.
+        raise ValueError("缺少冻结格式合同，请新建运行；已有产物保持只读")
     definition = json.loads(manifest.read_text(encoding="utf-8"))
     schema = folder / "process/schema.json"
     if (
@@ -205,6 +205,7 @@ def report_data(folder):
         records=[r for r in prep.records if r.method_id == method.ref.id],
         selection_reason=selection.reason,
         seed=selection.seed,
+        selection=selection,
         references=references,
         research=optional("preprocessing/research.json", ResearchFindings)
         or optional("collection/research.json", ResearchFindings)
@@ -223,6 +224,6 @@ def report_data(folder):
             *collection.adaptations,
             "待补充：" + ", ".join(survey.profile.unknown_fields),
             survey.profile.literature_status,
-            "本轮未进行候选质量排名或模型效果评估。",
+            "候选按开发评价选择；没有独立确认，开发分数不能作为独立泛化结论。",
         ],
     )

@@ -8,6 +8,7 @@ from app.preprocessing.schemas import PreprocessInput
 from app.preprocessing.storage import digest
 from app.search.catalog import BASELINE_ID, catalog, select
 from app.search.contracts import Decision, SearchBudget, SearchRequest
+from app.search.evaluation_contracts import EvaluationReceipt, LearnerMetadata
 from app.search.io import read, write
 from app.search.service import SearchService
 from tests.preprocessing.conftest import make_dataset
@@ -46,6 +47,26 @@ def propose(identity, parent=BASELINE_ID):
             "base_candidate_id": parent,
             "reason": "依据已有反馈改变频带或参考",
             "expected_result": "测量配对开发效用差",
+            "hypothesis": {
+                "explanation": "参考与频带可能改变跨人变化",
+                "competing_explanation": "有用判别信息可能同时受损",
+                "observations": [{"candidate_id": parent, "metric": "macro_ba"}],
+                "predictions": [
+                    {
+                        "kind": "signal",
+                        "metric": "diagnostics.floor_fraction",
+                        "direction": "unchanged",
+                        "explanation": "不引入平坦信号",
+                    },
+                    {
+                        "kind": "utility",
+                        "metric": "macro_ba",
+                        "direction": "increase",
+                        "explanation": "开发效用提升",
+                    },
+                ],
+                "weakened_by": "信号符合预测但效用下降",
+            },
             "decision_branches": {
                 "improvement": "继续该方向",
                 "no_improvement": "换参考或结束",
@@ -108,6 +129,79 @@ class SimulatedSearch(SearchService):
                 "status": "evaluated",
                 "macro_ba": score,
                 "mean_delta": delta,
+                "evaluation_mode": "subject_holdout",
+                "folds": [
+                    {
+                        "id": "fold-1",
+                        "train_subjects": ["S001"],
+                        "development_subjects": ["S002"],
+                    }
+                ],
+                "secondary_macro_ba": score,
+                "secondary_subjects": {"S002": score},
+                "paired_subject_ci": None
+                if delta is None
+                else {"low": delta, "high": delta, "n_subjects": 1, "seed": 42},
+                "learner_metadata": LearnerMetadata(
+                    csp_components=2,
+                    logistic_random_state=state["request"]["seed"],
+                ).model_dump(mode="json"),
+                "diagnostics": {
+                    "floor_fraction": 0.0,
+                    "subjects": {
+                        subject: {
+                            "channel_variance": [1e-12, 1e-12],
+                            "channel_flat_fraction": [0.0, 0.0],
+                            "covariance_condition": 1.0,
+                            "covariance_condition_before": 1.0,
+                            "covariance_condition_after": 1.0,
+                            "mean_channel_variance_before": 1e-12,
+                            "mean_channel_variance_after": 1e-12,
+                            "effective_rank_before": 2,
+                            "effective_rank_after": 2,
+                        }
+                        for subject in ("S001", "S002")
+                    },
+                    "summary": {
+                        "mean_condition_before": 1.0,
+                        "mean_condition_after": 1.0,
+                        "mean_variance_before": 1e-12,
+                        "mean_variance_after": 1e-12,
+                        "gate_fraction": None,
+                        "mean_effective_rank": 2.0,
+                        "mean_anisotropy": 1.0,
+                    },
+                },
+                "representation": {
+                    "policy": {"adaptation": "none", "alignment_threshold": 10.0},
+                    "unit": "V",
+                    "transductive": False,
+                    "channels": ["C3", "C4"],
+                    "gate_subject_count": 0,
+                    "gate_passed_subject_count": 0,
+                    "gate_fraction": None,
+                    "subjects": {
+                        subject: {
+                            "applied_adaptation": "none",
+                            "gate_passed": False,
+                            "covariance_anisotropy": 1.0,
+                            "gate_metric_value": 1.0,
+                            "fit_trials": 2,
+                            "unit": "V",
+                        }
+                        for subject in ("S001", "S002")
+                    },
+                    "records": {
+                        subject: {
+                            "subject": subject,
+                            "array_path": f"{subject}/signal_V.npy",
+                            "array_sha256": "b" * 64,
+                            "shape": [2, 2, 161],
+                            "unit": "V",
+                        }
+                        for subject in ("S001", "S002")
+                    },
+                },
                 "predictions_path": "originalpredictions.tsv",
                 "predictions_sha256": "a" * 64,
                 "versions": {
@@ -137,6 +231,7 @@ class SimulatedSearch(SearchService):
                 },
             }
         )
+        value = EvaluationReceipt.model_validate(value).model_dump(mode="json")
         write(root / "candidates" / candidate_id / "receipt.json", value)
         write(
             root / "candidates" / candidate_id / "plan.json",
@@ -355,6 +450,46 @@ def test_state_and_artifacts_are_owner_scoped(factory):
         service.get("another-owner", state["id"])
     with pytest.raises(ValueError):
         service.artifact("owner", state["id"], "../escape")
+
+
+@pytest.mark.asyncio
+async def test_terminal_state_waits_for_report_publication(factory, monkeypatch):
+    from app.search import reporting
+
+    original = reporting.render
+    service, _, state = factory()
+
+    def render(root, final):
+        assert service.get("owner", state["id"])["status"] == "running"
+        original(root, final)
+
+    monkeypatch.setattr(reporting, "render", render)
+    result = await run(service, state)
+    assert result["status"] == "completed"
+    path = service.artifact("owner", state["id"], "selection.json")
+    path.write_text("{}", encoding="utf-8")
+    with pytest.raises(ValueError, match="校验"):
+        service.artifact("owner", state["id"], "selection.json")
+
+
+@pytest.mark.asyncio
+async def test_publication_failure_does_not_publish_a_winner(factory, monkeypatch):
+    from app.search import reporting
+
+    service, _, state = factory()
+
+    def fail(root, final):
+        (root / "report.html").write_text("incomplete", encoding="utf-8")
+        raise OSError("injected full disk")
+
+    monkeypatch.setattr(reporting, "render", fail)
+    result = await run(service, state)
+    assert (
+        result["status"] == "failed" and result["stop_reason"] == "publication_failed"
+    )
+    assert result["selected_candidate_id"] is None
+    with pytest.raises(KeyError):
+        service.artifact("owner", state["id"], "report.html")
 
 
 def test_artifact_index_includes_numeric_files_and_logs_but_not_internal_state(factory):

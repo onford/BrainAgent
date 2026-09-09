@@ -1,4 +1,4 @@
-"""Freeze the subject split and original MI denominators without opening signals."""
+"""Freeze subject folds and original MI denominators without opening signals."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from app.preprocessing.schemas import PreprocessInput
 from app.preprocessing.storage import digest, file_hash, within
 from .evaluation_contracts import FrozenPanel
 
-EVALUATOR_VERSION = 1
+EVALUATOR_VERSION = 2
 
 
 class DataUnevaluable(ValueError):
@@ -41,7 +41,8 @@ def freeze_panel(
     ``records`` is keyed by record ID. ``source_sample`` is zero-origin (the
     supported, uncropped BrainVision reader has first_samp=0). ``epoch_stop``
     is exclusive. Hashes use preprocessing.storage.digest; panel_hash excludes
-    only itself. Explicit split arguments must be supplied together.
+    only itself. Default subject CV covers every subject once out of fold.
+    Explicit split arguments must be supplied together and select holdout mode.
     """
     if (
         any(isinstance(v, bool) or not math.isfinite(v) for v in (tmin, tmax, sfreq))
@@ -79,9 +80,19 @@ def freeze_panel(
     if train_subjects is None:
         shuffled = subjects.copy()
         random.Random(seed).shuffle(shuffled)
-        cut = min(len(subjects) - 1, max(1, int(0.8 * len(subjects))))
-        train_subjects, development_subjects = shuffled[:cut], shuffled[cut:]
-    if (
+        folds = []
+        for i in range(min(5, len(subjects))):
+            held_out = sorted(shuffled[i :: min(5, len(subjects))])
+            folds.append(
+                {
+                    "id": f"fold-{i + 1:02d}",
+                    "train_subjects": sorted(set(subjects) - set(held_out)),
+                    "development_subjects": held_out,
+                }
+            )
+        train_subjects, development_subjects = [], subjects
+        evaluation_mode = "group_cross_validation"
+    elif (
         not train_subjects
         or not development_subjects
         or len(train_subjects) != len(set(train_subjects))
@@ -92,6 +103,15 @@ def freeze_panel(
         raise ValueError(
             "subject groups must be nonempty, unique, disjoint and cover selected subjects"
         )
+    else:
+        evaluation_mode = "subject_holdout"
+        folds = [
+            {
+                "id": "fold-01",
+                "train_subjects": sorted(train_subjects),
+                "development_subjects": sorted(development_subjects),
+            }
+        ]
     train_subjects, development_subjects = (
         sorted(train_subjects),
         sorted(development_subjects),
@@ -106,6 +126,8 @@ def freeze_panel(
         )
     panel = {
         "evaluator_version": EVALUATOR_VERSION,
+        "evaluation_mode": evaluation_mode,
+        "folds": folds,
         "seed": seed,
         "input_hash": digest(data.model_dump(mode="json")),
         "train_subjects": train_subjects,
@@ -253,12 +275,7 @@ def validate_panel(panel: dict, *, check_hash: bool = True) -> None:
     ):
         raise DataUnevaluable("frozen panel checksum mismatch")
     train, dev = panel["train_subjects"], panel["development_subjects"]
-    if (
-        not train
-        or not dev
-        or set(train) & set(dev)
-        or len(train + dev) != len(set(train + dev))
-    ):
+    if not dev or set(train) & set(dev) or len(train + dev) != len(set(train + dev)):
         raise DataUnevaluable("common data unevaluable: invalid subject split")
     if set(train + dev) != {r["subject"] for r in panel["records"].values()}:
         raise DataUnevaluable("common data unevaluable: subject coverage differs")

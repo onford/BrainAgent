@@ -34,6 +34,50 @@ class SearchRequest(Contract):
         return self
 
 
+class ObservationReference(Contract):
+    candidate_id: str
+    metric: str = Field(
+        min_length=1,
+        description="Exact dot-separated numeric receipt path, e.g. macro_ba or diagnostics.floor_fraction",
+    )
+
+
+class ExperimentalPrediction(Contract):
+    kind: Literal["signal", "utility"]
+    metric: str = Field(
+        min_length=1,
+        description="Exact numeric receipt path to compare against the parent",
+    )
+    direction: Literal["increase", "decrease", "unchanged"]
+    tolerance: float = Field(default=1e-9, ge=0, allow_inf_nan=False)
+    explanation: str = Field(min_length=1)
+
+
+class MechanismHypothesis(Contract):
+    explanation: str = Field(min_length=1)
+    competing_explanation: str = Field(min_length=1)
+    observations: list[ObservationReference] = Field(min_length=1, max_length=12)
+    predictions: list[ExperimentalPrediction] = Field(min_length=2, max_length=12)
+    weakened_by: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def separate_predictions(self):
+        if {p.kind for p in self.predictions} != {"signal", "utility"}:
+            raise ValueError("分别登记信号变化预测与效用预测")
+        for p in self.predictions:
+            utility = (
+                p.metric in {"macro_ba", "secondary_macro_ba", "mean_delta"}
+                or p.metric.endswith(".ba")
+                or p.metric.startswith("secondary_subjects.")
+            )
+            signal = p.metric.startswith("diagnostics.")
+            if (p.kind == "utility" and not utility) or (
+                p.kind == "signal" and not signal
+            ):
+                raise ValueError("效用分数与信号诊断必须分开")
+        return self
+
+
 class ProposeCandidate(Contract):
     action: Literal["propose_candidate"]
     candidate_id: str
@@ -41,6 +85,7 @@ class ProposeCandidate(Contract):
     reason: str = Field(min_length=1)
     expected_result: str = Field(min_length=1)
     decision_branches: dict[Literal["improvement", "no_improvement"], str]
+    hypothesis: MechanismHypothesis
 
     @model_validator(mode="after")
     def branches(self):

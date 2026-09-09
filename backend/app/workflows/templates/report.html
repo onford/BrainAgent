@@ -67,9 +67,13 @@
   <p>$method_reasoning</p>
   <table><thead><tr><th>记录</th><th>任务事件</th><th>输出 Epoch</th><th>数组形状</th></tr></thead><tbody>$record_rows</tbody></table>
   <h2>结果选择</h2>
-  <p>$selection_reason 随机种子：$seed。</p>
+  <p>$selection_reason 协议种子：$seed。</p>
+  <p>$evaluation_summary</p>
+  <table><thead><tr><th>共享候选策略</th><th>状态</th><th>开发分数</th></tr></thead><tbody>$candidate_rows</tbody></table>
+  <h3>选中策略的个体拟合</h3>
+  <table><thead><tr><th>被试</th><th>实际适配</th><th>条件门通过</th><th>无标签拟合试次</th><th>单位</th><th>回退原因</th></tr></thead><tbody>$adaptation_rows</tbody></table>
   <h2>训练数据说明</h2>
-  <p>X 按 Epoch × 通道 × 时间点组织，单位为 V；y 为从 0 开始的类别编号。训练、验证和测试按被试分组划分，同一被试不会跨组。被试不足时保留空组，详见交付清单。</p>
+  <p>$representation_summary</p>
   <h2>调研结论</h2>
   <h3>数据信息三方核对</h3>
   <p>$official_publication</p>

@@ -11,7 +11,7 @@ vi.mock('../api/client', () => ({ apiRequest, apiUrl: (path: string) => `https:/
 
 function state(overrides: Partial<SearchState> = {}): SearchState {
   return {
-    schema_version: '1', id: 'search-1', workflow_id: 'source-1', status: 'completed',
+    schema_version: '1', protocol: { version: '2', evaluator: 'csp-shrinkage-lda-v2' }, id: 'search-1', workflow_id: 'source-1', status: 'completed',
     created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:10:00Z',
     request: { workflow_id: 'source-1', strategy: 'adaptive', seed: 42,
       budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } },
@@ -74,6 +74,8 @@ describe('SearchesView', () => {
     expect(wrapper.findAll('input[name="strategy"]').map(input => input.attributes('value'))).toEqual(['adaptive', 'random', 'exhaustive', 'one_shot'])
     expect((wrapper.get('input[value="adaptive"]').element as HTMLInputElement).checked).toBe(true)
     expect(wrapper.get('fieldset').text()).toContain('一次性提案对照')
+    expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('最多 5 折')
+    expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('全部被试各作为开发被试一次')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
@@ -83,7 +85,7 @@ describe('SearchesView', () => {
     expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
     expect(wrapper.get('h1').text()).toContain('准备中')
     expect(wrapper.get('nav[aria-label="选择搜索"]').text()).toContain('search-1')
-    expect(wrapper.text()).toContain('开发面板选择，不代表独立泛化或神经信号质量')
+    expect(wrapper.text()).toContain('开发评估用于策略选择，不是独立测试结果')
     expect(apiRequest.mock.calls.some(([path]) => path.startsWith('/api/searches/search-1?'))).toBe(false)
   })
 
@@ -91,6 +93,7 @@ describe('SearchesView', () => {
     apiRequest.mockImplementation(async (_path: string, init?: RequestInit) => init ? state() : [])
     const { wrapper } = await open('/searches?workflow=source-1')
     await wrapper.get(`input[value="${selectedStrategy}"]`).setValue(true)
+    if (selectedStrategy === 'random') expect(wrapper.get('.strategy-hint').text()).toContain('最终仍按开发主评分选择')
     for (const [name, value] of [['候选数', '9'], ['提议数', '12'], ['证据读取数', '0'], ['时限（秒）', '900'], ['内存上限（MB）', '2048'], ['磁盘上限（MB）', '4096'], ['随机种子', '7'], ['训练被试', 'S001, S002 S001'], ['开发被试', 'S003，S004']]) {
       await wrapper.get(`input[aria-label="${name}"]`).setValue(value)
     }
@@ -173,7 +176,7 @@ describe('SearchesView', () => {
     expect(wrapper.get('tr.selected').text()).toContain('72.5%')
     expect(wrapper.get('tr.selected').text()).toContain('+2.5 pp')
     expect(wrapper.get('tr.selected').text()).toContain('98 / 100')
-    expect(wrapper.get('tr.selected').text()).toContain('后端选中')
+    expect(wrapper.get('tr.selected').text()).toContain('开发评估选中')
     expect(wrapper.findAll('tbody tr')[1]!.text()).toContain('—')
     await wrapper.get('button[aria-label="查看候选 c1 的开发被试"]').trigger('click')
     expect(wrapper.get('section[aria-label="开发被试明细"]').text()).toContain('S003')
@@ -182,7 +185,7 @@ describe('SearchesView', () => {
     expect(wrapper.text()).toContain('0.0 pp')
     await button(wrapper, '窄频原始参考').trigger('click')
     expect(wrapper.text()).toContain('该候选暂无开发被试回执')
-    expect(wrapper.text()).toContain('后端选中 c1')
+    expect(wrapper.text()).toContain('开发评估选中 c1')
     await button(wrapper, '轮次时间线').trigger('click')
     expect(wrapper.get('.timeline').text()).toContain('比较参考方式')
     expect(wrapper.get('.timeline').text()).toContain('开发 BA 改善')
@@ -314,6 +317,167 @@ describe('SearchesView', () => {
     await button(wrapper, '停止搜索').trigger('click'); await flushPromises()
     oldPoll.resolve(state({ status: 'running' })); await flushPromises()
     expect(wrapper.get('h1').text()).toContain('已取消')
+  })
+
+  it('shows actual CV folds without presenting the empty top-level training list as no training', async () => {
+    const latest = state({ panel: { evaluation_mode: 'group_cross_validation', train_subjects: [], development_subjects: ['S001', 'S002', 'S003'],
+      folds: [
+        { id: 'fold-01', train_subjects: ['S002', 'S003'], development_subjects: ['S001'] },
+        { id: 'fold-02', train_subjects: ['S001', 'S003'], development_subjects: ['S002'] },
+        { id: 'fold-03', train_subjects: ['S001', 'S002'], development_subjects: ['S003'] },
+      ] } })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    const panel = wrapper.get('[aria-label="评估面板"]')
+    expect(panel.text()).toContain('按被试分组交叉验证')
+    expect(panel.text()).toContain('3 折')
+    expect(panel.text()).toContain('参与交叉验证的被试 3')
+    expect(panel.text()).not.toContain('训练被试 0')
+    const folds = panel.findAll('tbody tr')
+    expect(folds).toHaveLength(3)
+    expect(folds[0]!.findAll('td').map(cell => cell.text())).toEqual(['fold-01', 'S002、S003', 'S001'])
+    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('CSP 与分类器在每折训练被试上拟合')
+    expect(wrapper.text()).toContain('不是独立测试结果')
+    expect(wrapper.find('form').exists()).toBe(false)
+  })
+
+  it.each([
+    { schema_version: '1', protocol: { version: '1', evaluator: 'logvariance-scaler-logistic-v1' } },
+    { schema_version: '0', protocol: { version: '2', evaluator: 'csp-shrinkage-lda-v2' } },
+    { schema_version: undefined, protocol: undefined },
+  ])('renders saved learner scores without enabling controls for historical search %j', async version => {
+    const latest = state({ ...version, status: 'failed', candidates: [{ ...state().candidates![0]!, receipt: { ...state().candidates![0]!.receipt!, evaluator_version: 1 } }] })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('h1').text()).toContain('预算搜索记录')
+    expect(wrapper.get('.run-controls').text()).toContain('只读记录')
+    expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
+    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('对数方差 + 标准化 + 逻辑回归')
+    expect(wrapper.text()).not.toContain('CSP')
+    expect(wrapper.get('tr.selected').text()).toContain('72.5%')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(wrapper.get('iframe').attributes('src')).toContain('/api/searches/search-1/artifacts/report/report.html?download=false')
+    expect(wrapper.text()).not.toContain('正在整理产物')
+    const calls = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(apiRequest).toHaveBeenCalledTimes(calls)
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('keeps a historical running search read-only and uses neutral evaluator copy if no learner was saved', async () => {
+    const latest = state({ status: 'running', protocol: undefined, candidates: [{ id: 'c1', status: 'completed', receipt: { macro_ba: .62 } }] })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
+    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('保存的评价器')
+    expect(wrapper.get('tr.selected').text()).toContain('62.0%')
+    expect(wrapper.text()).not.toContain('CSP')
+    const calls = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(apiRequest).toHaveBeenCalledTimes(calls)
+  })
+
+  it('labels explicit subject holdout and displays its actual training and development membership', async () => {
+    const latest = state({ panel: { evaluation_mode: 'subject_holdout', train_subjects: ['S001', 'S002'], development_subjects: ['S003'],
+      folds: [{ id: 'fold-01', train_subjects: ['S001', 'S002'], development_subjects: ['S003'] }] } })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    const panel = wrapper.get('[aria-label="评估面板"]')
+    expect(panel.text()).toContain('被试留出评估')
+    expect(panel.text()).toContain('训练被试 2')
+    expect(panel.text()).toContain('开发被试 1')
+    expect(panel.findAll('tbody tr')).toHaveLength(1)
+    expect(panel.text()).not.toContain('每名被试作为开发被试一次')
+  })
+
+  it('renders hypotheses and measured prediction checks as readable content, preserving unavailable values and tiny tolerances', async () => {
+    const signal = { kind: 'signal' as const, metric: 'diagnostics.subjects.S003.covariance_condition', direction: 'decrease' as const, tolerance: 1e-9, explanation: '降低协方差病态程度' }
+    const utility = { kind: 'utility' as const, metric: 'macro_ba', direction: 'increase' as const, tolerance: .001, explanation: '改善开发被试分类' }
+    const latest = state({ actions: [{ index: 1, action: 'propose_candidate', status: 'completed', candidate_id: 'c2', base_candidate_id: 'c1',
+      request: { hypothesis: { explanation: '对齐可能降低被试间尺度差异', competing_explanation: '变化可能来自频带而非对齐',
+        observations: [{ candidate_id: 'c1', metric: signal.metric }], predictions: [signal, utility], weakened_by: '条件数未改善会削弱尺度差异解释' } },
+      result: { prediction_checks: { checks: [
+        { ...signal, status: 'contradicted', before: 12, after: 15, difference: 3 },
+        { ...utility, status: 'matched', before: .7, after: .75, difference: .05 },
+        { ...signal, direction: 'unchanged', status: 'unavailable', before: null, after: null, difference: null },
+      ], interpretation: '符合提前预测不构成生理原因确认。' } } }] })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '轮次时间线').trigger('click')
+    const hypothesis = wrapper.get('[aria-label="机制假设"]')
+    expect(hypothesis.text()).toContain('对齐可能降低被试间尺度差异')
+    expect(hypothesis.text()).toContain('变化可能来自频带而非对齐')
+    expect(hypothesis.text()).toContain('宽频平均参考 · S003 · 协方差条件数')
+    expect(hypothesis.text()).toContain('信号预测')
+    expect(hypothesis.text()).toContain('效用预测')
+    expect(hypothesis.text()).toContain('条件数未改善会削弱尺度差异解释')
+    const checks = wrapper.get('[aria-label="实测预测核验"]')
+    expect(checks.text()).toContain('与预测不符')
+    expect(checks.text()).toContain('符合预测')
+    expect(checks.text()).toContain('无法核验')
+    expect(checks.text()).toContain('1.000e-9')
+    expect(checks.findAll('tbody tr')[0]!.findAll('td').slice(2, 5).map(cell => cell.text())).toEqual(['12', '15', '3'])
+    expect(checks.findAll('tbody tr')[2]!.findAll('td').slice(2, 5).map(cell => cell.text())).toEqual(['—', '—', '—'])
+    expect(checks.text()).toContain('不构成生理原因确认')
+    expect(wrapper.get('.timeline').findAll('pre')).toHaveLength(0)
+  })
+
+  it('displays numeric signal diagnostics, secondary scores, development intervals and dimensionless gate-off adaptation', async () => {
+    const latest = state({ candidates: [{ id: 'c1', status: 'evaluated', parameters: { adaptation: 'conditional_alignment', alignment_threshold: 10 },
+      receipt: { macro_ba: .75, secondary_macro_ba: .6, mean_delta: .05, paired_subject_ci: { low: -.02, high: .1, n_subjects: 2 },
+        subjects: { S003: { ba: .75, delta: .05, predicted_trials: 40, eligible_trials: 40 } }, secondary_subjects: { S003: .6 },
+        diagnostics: { subjects: { S003: { covariance_condition: 8, covariance_condition_before: 8, covariance_condition_after: 8, mean_channel_variance_before: 1.5e-12, mean_channel_variance_after: 1, effective_rank_before: 1, effective_rank_after: 2, channel_variance: [1e-12, 2e-12], channel_flat_fraction: [0, .25] } }, summary: { mean_condition_before: 8, mean_condition_after: 8, mean_variance_before: 1.5e-12, mean_variance_after: 1, gate_fraction: 0, mean_effective_rank: 1, mean_anisotropy: 2 } },
+        representation: { policy: { adaptation: 'conditional_alignment', alignment_threshold: 10 }, unit: 'dimensionless', transductive: true, gate_subject_count: 1, gate_passed_subject_count: 0, gate_fraction: 0,
+          channels: ['C3', 'C4'], covariance_regularization: .1, fit_scope: 'subject_whole_batch_label_free', records: {},
+          subjects: { S003: { applied_adaptation: 'scale_only', gate_passed: false, fallback_reason: '未达到条件阈值', covariance_anisotropy: 8, gate_metric_value: 2, fit_trials: 40, transform_path: null, transform_sha256: null, unit: 'dimensionless' } } } } }] })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('tr.selected').text()).toContain('60.0%')
+    expect(wrapper.get('tr.selected').text()).toContain('描述性区间 -2.0 pp ～ +10.0 pp')
+    expect(wrapper.get('tr.selected').text()).toContain('2 名配对被试 · 开发比较')
+    await button(wrapper, '开发被试').trigger('click')
+    const diagnostics = wrapper.get('[aria-label="信号诊断"]')
+    expect(diagnostics.text()).toContain('S003')
+    expect(diagnostics.text()).toContain('8 → 8')
+    expect(diagnostics.text()).toContain('1.50e-12 → 1.00e+0')
+    expect(diagnostics.text()).toContain('C3 · 方差 1.00e-12 · 平坦比例 0.0%')
+    expect(diagnostics.text()).toContain('C4 · 方差 2.00e-12 · 平坦比例 25.0%')
+    const adaptation = wrapper.get('[aria-label="逐被试适配"]')
+    expect(adaptation.text()).toContain('保持空间结构，仅统一尺度')
+    expect(adaptation.text()).toContain('Q90/Q10，达到阈值 10 时触发')
+    expect(adaptation.get('[aria-label="条件触发比例"]').text()).toContain('0.0% · 0 / 1 名被试')
+    expect(adaptation.findAll('tbody td').slice(2, 5).map(cell => cell.text())).toEqual(['8', '2', '否'])
+    const summary = diagnostics.get('[aria-label="诊断总体均值"]')
+    expect(summary.text()).toContain('平均条件数 8 → 8')
+    expect(summary.text()).toContain('平均通道方差 1.50e-12 → 1.00e+0')
+    expect(summary.text()).toContain('平均有效秩（适配前） 1')
+    expect(summary.text()).toContain('平均谱 Q90/Q10 2')
+    expect(summary.text()).toContain('条件触发比例 0.0%')
+    expect(diagnostics.findAll('tbody td')[3]!.text()).toBe('1 → 2')
+    expect(adaptation.text()).toContain('无量纲')
+    expect(adaptation.text()).toContain('未达到条件阈值')
+    expect(adaptation.text()).not.toContain('none · 不对齐')
+    expect(wrapper.get('[aria-label="开发被试明细"]').text()).toContain('60.0%')
+  })
+
+  it.each(['none', 'euclidean_alignment', 'conditional_alignment'] as const)('distinguishes unavailable or inapplicable gate metrics for %s', async adaptation => {
+    const latest = state({ candidates: [{ id: 'c1', status: 'evaluated', receipt: {
+      representation: { policy: { adaptation, alignment_threshold: 10 }, unit: adaptation === 'none' ? 'V' : 'dimensionless', transductive: adaptation !== 'none',
+        channels: ['C3'], covariance_regularization: .1, fit_scope: 'subject_whole_batch_label_free', records: {},
+        ...(adaptation === 'conditional_alignment' ? {} : { gate_subject_count: 0, gate_passed_subject_count: 0, gate_fraction: null }),
+        subjects: { S003: { applied_adaptation: adaptation === 'none' ? 'none' : 'euclidean_alignment', gate_passed: true, fallback_reason: null,
+          covariance_anisotropy: 123, fit_trials: 40, transform_path: null, transform_sha256: null, unit: adaptation === 'none' ? 'V' : 'dimensionless' } } },
+    } }] })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '开发被试').trigger('click')
+    const panel = wrapper.get('[aria-label="逐被试适配"]')
+    const fraction = panel.get('[aria-label="条件触发比例"]')
+    expect(fraction.text()).toContain(adaptation === 'conditional_alignment' ? '— · — / —' : '不适用')
+    expect(fraction.text()).not.toContain('0.0%')
+    expect(panel.findAll('tbody td')[2]!.text()).toBe('123')
+    expect(panel.findAll('tbody td')[3]!.text()).toBe('—')
+    expect(wrapper.find('[aria-label="诊断总体均值"]').exists()).toBe(false)
   })
 
   it('accepts backend subject maps and panel summaries and hides successful model-decision wrappers', async () => {
@@ -722,8 +886,8 @@ describe('search entry and artifact links', () => {
   })
   afterEach(() => { wrappers.splice(0).forEach(wrapper => wrapper.unmount()) })
 
-  it.each([true, false])('shows the workflow entry only when data_collection exists (%s), preserving random selection copy', async collected => {
-    const workflow = { id: 'source-1', status: 'completed', created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
+  it.each([true, false])('shows automatic search preparation after data collection (%s)', async collected => {
+    const workflow = { schema_version: '1', engine: 'diagnostic-policy-search-v2', id: 'source-1', status: 'completed', created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
       request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
       outputs: { data_delivery: { shape: [90, 64, 321] }, ...(collected ? { data_collection: { path: 'collection' } } : {}) } }
     apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
@@ -731,10 +895,38 @@ describe('search entry and artifact links', () => {
     const entry = wrapper.find('[aria-label="预算搜索入口"]')
     expect(entry.exists()).toBe(collected)
     if (collected) {
-      expect(entry.get('a').attributes('href')).toBe('/searches?workflow=source-1')
-      expect(entry.get('a').text()).toContain('预算预处理搜索')
+      expect(entry.find('a').exists()).toBe(false)
+      expect(entry.text()).toContain('等待自动启动搜索')
     }
-    expect(wrapper.text()).toContain('候选方法随机选择，本轮未进行质量排名')
+    expect(wrapper.text()).toContain('方法与分组信息以保存的交付记录为准')
+    expect(wrapper.text()).not.toContain('随机选择')
+  })
+
+  it.each(['running', 'completed'])('opens the linked search for a %s workflow without creating another search', async status => {
+    const workflow = { schema_version: '1', engine: 'diagnostic-policy-search-v2', id: 'source-1', search_id: 'linked-search', status, created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
+      request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
+      outputs: { data_preprocessing: { search_id: 'other-search' }, data_evaluation: { selection_policy: 'development_score', quality_evaluated: true,
+        search_id: 'other-search', score: .735, evaluation_scope: 'development', selected_method_ref: { id: 'selected-method', sha256: 'hash' } } } }
+    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
+    const { wrapper, router } = await open('/workflows?id=source-1', WorkflowsView)
+    const entry = wrapper.get('[aria-label="预算搜索入口"]')
+    expect(entry.get('a').attributes('href')).toBe('/searches?id=linked-search')
+    expect(entry.text()).toContain('开发 BA 73.5%')
+    expect(entry.text()).toContain('selected-method')
+    await entry.get('a').trigger('click'); await flushPromises()
+    expect(router.currentRoute.value.query).toEqual({ id: 'linked-search' })
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    expect(wrapper.text()).not.toContain('随机选择')
+  })
+
+  it('uses the preprocessing search reference when the workflow reference is not yet present', async () => {
+    const workflow = { schema_version: '1', engine: 'diagnostic-policy-search-v2', id: 'source-1', status: 'completed', created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
+      request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
+      outputs: { data_preprocessing: { search_id: 'preprocessing-search' } } }
+    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
+    const { wrapper } = await open('/workflows?id=source-1', WorkflowsView)
+    expect(wrapper.get('[aria-label="预算搜索入口"] a').attributes('href')).toBe('/searches?id=preprocessing-search')
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
   it('preserves artifact query parameters, handles API bases, and excludes executable links', () => {

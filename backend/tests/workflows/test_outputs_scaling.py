@@ -4,7 +4,6 @@
 # ruff: noqa: E402
 import csv
 import json
-import random
 import zipfile
 from collections import Counter
 from pathlib import Path
@@ -17,11 +16,171 @@ pytest.importorskip("mne")
 pytest.importorskip("mne_bids")
 
 from app.preprocessing.methods import baseline_methods
-from app.preprocessing.storage import file_hash
+from app.preprocessing.storage import digest, file_hash
+from app.search.evaluation_contracts import EvaluationReceipt, LearnerMetadata
 from app.workflows import outputs
 from app.workflows.contracts import DeliveryOutput
 from app.workflows.dataset import PROFILE
 from app.workflows.formats import ARRAY_FORMATS, DELIVERY_FILES, PROVENANCE_FILES
+
+
+def numeric_metadata(receipt, representation):
+    receipt["representation"] = representation
+    receipt["learner_metadata"] = LearnerMetadata(
+        csp_components=2, logistic_random_state=42
+    ).model_dump(mode="json")
+    receipt["diagnostics"] = {
+        "subjects": {
+            subject: dict(
+                channel_variance=[1.0, 1.0],
+                channel_flat_fraction=[0.0, 0.0],
+                covariance_condition=1.0,
+                covariance_condition_before=1.0,
+                covariance_condition_after=1.0,
+                mean_channel_variance_before=1.0,
+                mean_channel_variance_after=1.0,
+                effective_rank_before=2,
+                effective_rank_after=2,
+            )
+            for subject in representation["subjects"]
+        },
+        "summary": dict(
+            mean_condition_before=1.0,
+            mean_condition_after=1.0,
+            mean_variance_before=1.0,
+            mean_variance_after=1.0,
+            gate_fraction=representation["gate_fraction"],
+            mean_effective_rank=2.0,
+            mean_anisotropy=1.0,
+        ),
+    }
+
+
+def complete_delivery_receipt(store, selection):
+    records = store.status("test", "test-job").records
+    counts = Counter()
+    arrays = {}
+    for record in records:
+        rid = record["record_id"]
+        subject = selection["panel"]["records"][rid]["subject"]
+        shape = record["result"]["delta"]["after"]["shape"]
+        source = next(
+            a for a in record["result"]["artifacts"] if a["name"] == "signal_V.npy"
+        )
+        counts[subject] += shape[0]
+        arrays[rid] = dict(
+            subject=subject,
+            array_path=str(store.root / source["path"]),
+            array_sha256=source["sha256"],
+            shape=shape,
+            unit="V",
+        )
+    rep = dict(
+        policy={"adaptation": "none"},
+        unit="V",
+        transductive=False,
+        channels=["C3", "C4"],
+        gate_subject_count=0,
+        gate_passed_subject_count=0,
+        gate_fraction=None,
+        subjects={
+            s: dict(
+                applied_adaptation="none",
+                gate_passed=False,
+                covariance_anisotropy=1.0,
+                gate_metric_value=1.0,
+                fit_trials=n,
+                unit="V",
+            )
+            for s, n in counts.items()
+        },
+        records=arrays,
+    )
+    receipt = selection["selected_receipt"]
+
+    def coverage(n, predicted):
+        return dict(
+            original=n,
+            eligible=n,
+            available=n,
+            predicted=predicted,
+            missing=0,
+            common_invalid=0,
+            common_invalid_reasons={},
+        )
+
+    total = sum(counts.values())
+    receipt.update(
+        evaluation_mode=selection["panel"]["evaluation_mode"],
+        folds=selection["panel"]["folds"],
+        secondary_macro_ba=0.5,
+        secondary_subjects={s: 0.5 for s in counts},
+        subjects={
+            s: dict(
+                recalls={"left": 0.5, "right": 1.0},
+                recall_left=0.5,
+                recall_right=1.0,
+                ba=0.75,
+                delta=None,
+                original_trials=n,
+                eligible_trials=n,
+                available_trials=n,
+                predicted_trials=n,
+                missing=0,
+            )
+            for s, n in counts.items()
+        },
+        coverage={
+            **coverage(total, total),
+            "development": coverage(total, total),
+            "train": coverage(0, 0),
+        },
+    )
+    numeric_metadata(receipt, rep)
+    selection["selected_receipt"] = EvaluationReceipt.model_validate(
+        receipt
+    ).model_dump(mode="json")
+    selection["representation"] = selection["selected_receipt"]["representation"]
+
+
+def freeze_evidence(store, selection):
+    panel = {
+        k: v
+        for k, v in selection["panel"].items()
+        if k not in {"panel_hash", "file_sha256", "trial_count", "eligible_count"}
+    }
+    panel["trials"] = [
+        {"event_id": f"{rid}:trial-{index}", "record_id": rid, "eligible": True}
+        for rid in panel["records"]
+        for index in range(2)
+    ]
+    panel["panel_hash"] = digest(panel)
+    path = store.root.parent / "panel.json"
+    path.write_text(json.dumps(panel, indent=2) + "\n", encoding="utf-8")
+    selection["panel"] = {
+        **{k: v for k, v in panel.items() if k != "trials"},
+        "file_sha256": file_hash(path),
+        "trial_count": len(panel["trials"]),
+        "eligible_count": len(panel["trials"]),
+    }
+    selection["selected_receipt"]["panel_hash"] = panel["panel_hash"]
+    predictions = (
+        store.root.parent
+        / "candidates"
+        / selection["selected_candidate_id"]
+        / "originalpredictions.tsv"
+    )
+    predictions.parent.mkdir(parents=True, exist_ok=True)
+    predictions.write_text(
+        "event_id\tprediction\n"
+        + "".join(
+            f"{t['event_id']}\t{index % 2}\n" for index, t in enumerate(panel["trials"])
+        ),
+        encoding="utf-8",
+    )
+    selection["selected_receipt"].update(
+        predictions_path=str(predictions), predictions_sha256=file_hash(predictions)
+    )
 
 
 @pytest.fixture
@@ -95,6 +254,20 @@ def delivery_case(tmp_path, monkeypatch):
                 }
             )
         records.reverse()  # Delivery order must depend on record IDs.
+        subjects = sorted({s for s, _ in specs})
+        panel = {
+            "panel_hash": "c" * 64,
+            "evaluation_mode": "group_cross_validation",
+            "records": {r["id"]: {"subject": r["subject"]} for r in sources},
+            "folds": [
+                {
+                    "id": f"fold-{i}",
+                    "train_subjects": [s for s in subjects if s != subject],
+                    "development_subjects": [subject],
+                }
+                for i, subject in enumerate(subjects)
+            ],
+        }
         state = {
             "id": "test-delivery",
             "owner": "test",
@@ -106,13 +279,33 @@ def delivery_case(tmp_path, monkeypatch):
                     "records": sources,
                 },
                 "data_evaluation": {
-                    "selection_policy": "random",
-                    "quality_evaluated": False,
+                    "selection_policy": "development_score",
+                    "quality_evaluated": True,
+                    "search_id": "a" * 32,
+                    "selected_candidate_id": "bp8-30-average",
+                    "score": 0.75,
+                    "evaluation_scope": "development",
+                    "evaluation_protocol": {
+                        "metric": "subject_macro_balanced_accuracy"
+                    },
+                    "panel": panel,
+                    "selected_receipt": {
+                        "status": "evaluated",
+                        "candidate_id": "bp8-30-average",
+                        "job_id": "test-job",
+                        "macro_ba": 0.75,
+                        "panel_hash": panel["panel_hash"],
+                    },
                     "seed": 42,
-                    "eligible_candidates": [method_ref],
-                    "excluded_candidates": [],
+                    "candidate_summary": [
+                        {
+                            "candidate_id": "bp8-30-average",
+                            "status": "evaluated",
+                            "score": 0.75,
+                            "error": None,
+                        }
+                    ],
                     "selected_method_ref": method_ref,
-                    "best_output": None,
                     "reason": "fixture",
                 },
                 "data_preprocessing": {"job_id": "test-job"},
@@ -123,6 +316,8 @@ def delivery_case(tmp_path, monkeypatch):
             status=lambda owner, job_id: SimpleNamespace(records=records),
             get=lambda owner, ref, kind: baseline_methods()[0].model_dump(mode="json"),
         )
+        freeze_evidence(store, state["outputs"]["data_evaluation"])
+        complete_delivery_receipt(store, state["outputs"]["data_evaluation"])
         # FIF semantic verification is covered by test_workflow's real worker.
         # Keep actual artifact/source hash checks and all delivery serialization.
         monkeypatch.setattr(
@@ -143,34 +338,15 @@ def delivery_case(tmp_path, monkeypatch):
     return make
 
 
-@pytest.mark.parametrize(
-    "size, counts",
-    [
-        (0, (0, 0, 0)),
-        (1, (1, 0, 0)),
-        (2, (1, 0, 1)),
-        (3, (1, 1, 1)),
-        (4, (2, 1, 1)),
-        (5, (3, 1, 1)),
-        (10, (7, 2, 1)),
-        (20, (14, 3, 3)),
-        (109, (76, 17, 16)),
-    ],
-)
-def test_subject_apportionment_is_seeded_and_independent_of_trial_counts(size, counts):
-    subjects = [f"S{i:03}" for i in range(1, size + 1)]
-    global_state = random.getstate()
-    roles = outputs._subject_roles(subjects, 42)
-    assert set(roles) == set(subjects)
-    assert (
-        tuple(Counter(roles.values())[r] for r in ("train", "validation", "test"))
-        == counts
-    )
-    repeated = subjects[::-1] + subjects[:1] * 100
-    assert outputs._subject_roles(repeated, 42) == roles
-    assert random.getstate() == global_state
-    if size >= 3:
-        assert outputs._subject_roles(subjects, 99) != roles
+def test_holdout_roles_preserve_development_as_validation():
+    panel = {"train_subjects": ["S001"], "development_subjects": ["S002"]}
+    assert outputs._subject_roles(["S002", "S001", "S001"], panel) == {
+        "S001": "train",
+        "S002": "validation",
+    }
+    for subjects in (["S001"], ["S001", "S002", "S003"]):
+        with pytest.raises(ValueError):
+            outputs._subject_roles(subjects, panel)
 
 
 def test_delivery_streams_and_preserves_arrays_rows_schema_and_archive(
@@ -249,7 +425,11 @@ def test_delivery_streams_and_preserves_arrays_rows_schema_and_archive(
             )
             cursor += 1
     assert result["classes"] == {str(i): int(sum(arrays["y.npy"] == i)) for i in (0, 1)}
-    assert result["split_counts"] == dict(Counter(arrays["split.npy"]))
+    assert result["split_counts"] == {
+        "train": len(expected),
+        "validation": 0,
+        "test": 0,
+    }
     manifest = json.loads((case.folder / "manifest.json").read_text(encoding="utf-8"))
     with zipfile.ZipFile(case.folder.parent / "training-data.zip") as archive:
         assert archive.testzip() is None
@@ -280,9 +460,7 @@ def test_109_subject_delivery_splits_subjects_not_trials(delivery_case):
     case = delivery_case([(f"S{i:03}", 1) for i in range(1, 110)] + [("S001", 30)])
     result = outputs.deliver(case.state, case.folder, case.store)
     assert Counter(result["subject_split"].values()) == {
-        "train": 76,
-        "validation": 17,
-        "test": 16,
+        "train": 109,
     }
     subjects = np.load(case.folder / "subjects.npy", allow_pickle=False)
     splits = np.load(case.folder / "split.npy", allow_pickle=False)
@@ -292,7 +470,7 @@ def test_109_subject_delivery_splits_subjects_not_trials(delivery_case):
 
 
 @pytest.mark.parametrize(
-    "size, empty", [(1, {"validation", "test"}), (2, {"validation"})]
+    "size, empty", [(2, {"validation", "test"}), (3, {"validation", "test"})]
 )
 def test_tiny_delivery_records_empty_groups(delivery_case, size, empty):
     case = delivery_case([(f"S{i:03}", 2) for i in range(1, size + 1)])
@@ -319,6 +497,9 @@ def test_nonfinite_or_float32_overflow_rejected_and_memmaps_closed(
     values[-1, -1, -1] = bad_value  # Last block must also be checked.
     np.save(source, values)
     artifact["sha256"] = file_hash(source)
+    case.state["outputs"]["data_evaluation"]["representation"]["records"][
+        record["record_id"]
+    ]["array_sha256"] = artifact["sha256"]
     monkeypatch.setattr(outputs, "_ARRAY_BLOCK_BYTES", 112)
     original_open = np.lib.format.open_memmap
     mappings = []

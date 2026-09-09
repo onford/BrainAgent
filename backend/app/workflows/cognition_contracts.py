@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 from pydantic import Field, model_validator
 
-from app.preprocessing.schemas import Contract, Scope
+from app.preprocessing.schemas import Contract
 from .collection_contracts import ReportedExclusion
 
 Bucket = Literal[
@@ -162,45 +162,6 @@ class CollectionReview(Contract):
     literature_exclusions: list["ReportedExclusion"] = Field(default_factory=list)
 
 
-class PlannedStep(Contract):
-    id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
-    unit_id: str
-    op: str
-    input: str
-    model_from: str | None = None
-    decision_from: str | None = None
-    params: dict[str, Any]
-    fit_scope: Scope | None = None
-    basis: Literal["source", "engineering"]
-    finding_ids: list[str]
-    rationale: str = Field(min_length=1)
-
-
-class CandidateDesign(Contract):
-    id: str = Field(pattern=r"^[a-z][a-z0-9_-]+$")
-    title: str
-    mechanism: str
-    rationale: str
-    steps: list[PlannedStep] = Field(min_length=1, max_length=12)
-    output: str
-    adaptations: list[str]
-
-
-class MethodDesign(Contract):
-    objective: str
-    candidates: list[CandidateDesign] = Field(min_length=2, max_length=3)
-    limitations: list[str]
-    supplement_requests: list[ResearchAction] = Field(
-        default_factory=list, max_length=3
-    )
-
-    @model_validator(mode="after")
-    def executable_requests(self):
-        if any(r.action == "finish" for r in self.supplement_requests):
-            raise ValueError("supplement requests must be search or read actions")
-        return self
-
-
 class ReportNarrative(Contract):
     overview: str
     data_interpretation: str
@@ -234,13 +195,3 @@ class ResearchSources(Contract):
 
 class DecisionLog(Contract):
     records: list[DecisionRecord]
-
-
-class DesignRevision(Contract):
-    attempt: int
-    design: MethodDesign
-    error: str
-
-
-class DesignRevisions(Contract):
-    attempts: list[DesignRevision]

@@ -118,8 +118,10 @@ def test_freeze_only_selected_subjects_stable_hash_and_no_signal_reads(
     data = make_input(tmp_path, counts=(4,) * 7)
     data.collection.selected_record_ids = [r.id for r in data.collection.records[:5]]
     panel = freeze(data)
-    assert len(panel["train_subjects"]) == 4
-    assert len(panel["development_subjects"]) == 1
+    assert panel["train_subjects"] == []
+    assert len(panel["development_subjects"]) == 5
+    assert len(panel["folds"]) == 5
+    assert panel["evaluation_mode"] == "group_cross_validation"
     assert set(panel["records"]) == set(data.collection.selected_record_ids)
     assert panel["output_contract"]["channels"] == ["C4", "C3"]
     assert panel == freeze(data)
@@ -169,6 +171,61 @@ def test_tsv_hash_is_checked_before_freezing(tmp_path):
     path.write_text(path.read_text().replace("left_hand", "right_hand"))
     with pytest.raises(DataUnevaluable, match="checksum"):
         freeze(data)
+
+
+@pytest.mark.parametrize("n_subjects", [2, 3, 5, 7, 12])
+def test_group_cv_covers_every_subject_exactly_once(tmp_path, n_subjects):
+    panel = freeze(make_input(tmp_path, counts=(4,) * n_subjects))
+    assert panel["evaluator_version"] == 2
+    assert panel["train_subjects"] == []
+    assert len(panel["folds"]) == min(5, n_subjects)
+    held_out = [s for fold in panel["folds"] for s in fold["development_subjects"]]
+    assert sorted(held_out) == panel["development_subjects"]
+    for fold in panel["folds"]:
+        assert not set(fold["train_subjects"]) & set(fold["development_subjects"])
+        assert set(fold["train_subjects"] + fold["development_subjects"]) == set(
+            held_out
+        )
+    assert all(t["role"] == "development" for t in panel["trials"])
+    assert all(r["role"] == "development" for r in panel["records"].values())
+
+
+@pytest.mark.parametrize("mutation", ["overlap", "duplicate", "missing", "v1", "role"])
+def test_panel_rejects_invalid_fold_contract(tmp_path, mutation):
+    from app.search.panel import validate_panel
+
+    panel = freeze(make_input(tmp_path))
+    if mutation == "overlap":
+        panel["folds"][0]["train_subjects"].extend(
+            panel["folds"][0]["development_subjects"]
+        )
+    elif mutation == "duplicate":
+        panel["folds"][1] = panel["folds"][0].copy()
+    elif mutation == "missing":
+        panel["folds"].pop()
+    elif mutation == "v1":
+        panel["evaluator_version"] = 1
+    else:
+        panel["records"]["sub-01"]["role"] = "train"
+    panel["panel_hash"] = digest({k: v for k, v in panel.items() if k != "panel_hash"})
+    with pytest.raises(DataUnevaluable):
+        validate_panel(panel)
+
+
+def test_explicit_holdout_has_one_matching_fold(tmp_path):
+    panel = freeze(
+        make_input(tmp_path),
+        train_subjects=["sub-01"],
+        development_subjects=["sub-02", "sub-03"],
+    )
+    assert panel["evaluation_mode"] == "subject_holdout"
+    assert panel["folds"] == [
+        {
+            "id": "fold-01",
+            "train_subjects": ["sub-01"],
+            "development_subjects": ["sub-02", "sub-03"],
+        }
+    ]
 
 
 @pytest.mark.parametrize(

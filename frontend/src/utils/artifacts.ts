@@ -1,9 +1,9 @@
-export type WorkflowArtifact = { name: string; bytes: number; sha256: string | null }
+export type WorkflowArtifact = { name: string; bytes?: number | null; sha256: string | null; url?: string; description?: string }
 export type ArtifactFamily = {
   key: string
   label: string
   files: WorkflowArtifact[]
-  bytes: number
+  bytes: number | null
   description: string
 }
 
@@ -44,7 +44,7 @@ const descriptions: Record<string, string> = {
   'preprocessing/plan.json': '候选方法、参数与待处理记录',
   'preprocessing/result.json': '数值任务执行结果及产物清单',
   'preprocessing/summary.json': '各候选的完成情况、事件数与输出形状',
-  'evaluation/selection.json': '可选候选、随机种子与选择结果',
+  'evaluation/selection.json': '所选方法与保存的选择依据',
   'report/output.json': '报告文件入口与格式',
   'report/report.json': '从过程记录中摘取的报告模板数据',
   'report/report.html': '可阅读的数据处理报告',
@@ -58,7 +58,7 @@ const descriptions: Record<string, string> = {
   'delivery/channels.json': '通道顺序、采样率、单位与时间窗口',
   'delivery/trial-index.tsv': '训练数据行与原始记录、事件的对应关系',
   'delivery/method.json': '所选预处理方法及参数定义',
-  'delivery/selection.json': '本次随机选择的候选与依据',
+  'delivery/selection.json': '交付方法与保存的选择记录',
   'delivery/sources.json': '数据来源、引用与源文件校验值',
   'delivery/report.html': '随训练数据交付的处理报告',
   'delivery/README.md': '训练数据包的读取与使用说明',
@@ -170,14 +170,23 @@ export function groupArtifactFiles(files: WorkflowArtifact[]): ArtifactFamily[] 
     const { key, label } = familyOf(artifact.name)
     let family = families.get(key)
     if (!family) {
-      family = { key, label, files: [], bytes: 0, description: artifactDescription(artifact.name) }
+      family = { key, label, files: [], bytes: 0, description: artifact.description || artifactDescription(artifact.name) }
       families.set(key, family)
     }
     family.files.push(artifact)
-    family.bytes += artifact.bytes
+    family.bytes = family.bytes !== null && knownArtifactSize(artifact.bytes) ? family.bytes + artifact.bytes : null
   }
   // Keep overview files immediately accessible, before the repeated file groups.
   return [...families.values()].sort((a, b) =>
     Number(a.files.length > 1) - Number(b.files.length > 1) || a.key.localeCompare(b.key),
   )
+}
+
+export function knownArtifactSize(bytes: unknown): bytes is number {
+  return typeof bytes === 'number' && Number.isFinite(bytes) && bytes >= 0
+}
+
+export function artifactSize(bytes: unknown): string {
+  if (!knownArtifactSize(bytes)) return '大小未知'
+  return bytes < 1024 ? `${bytes} B` : bytes < 1024**2 ? `${(bytes / 1024).toFixed(1)} KB` : `${(bytes / 1024**2).toFixed(1)} MB`
 }

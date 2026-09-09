@@ -12,9 +12,36 @@ from app.workflows.service import WorkflowService
 from tests.workflows.fakes import Reader, WorkflowLLM, workflow_service
 from tests.workflows.test_workflow import source as source_fixture, finish, OWNER
 from app.agents import build_agent_registry
-from app.workflows.planning_contracts import design_contract, survey_plan_contract
+from app.workflows.planning_contracts import survey_plan_contract
 
 source = source_fixture
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("historical", ["engine", "missing_format"])
+async def test_historical_execution_is_read_only(source, tmp_path, historical):
+    prep = PreprocessingService(tmp_path / "prep")
+    service = WorkflowService(tmp_path / "runs", [source], prep)
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)), start=False)
+    state.update(status="interrupted")
+    if historical == "engine":
+        state["engine"] = "previous-engine"
+    service.save(state)
+    root = service.folder(state["id"])
+    if historical == "missing_format":
+        (root / "process/formats.json").unlink()
+    before = {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    }
+    with pytest.raises(ValueError, match="只读"):
+        service.retry(OWNER, state["id"])
+    with pytest.raises(ValueError, match="只读"):
+        await service.run(OWNER, state["id"])
+    await service.resume()
+    assert not service.tasks
+    assert before == {
+        p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
+    }
 
 
 @pytest.mark.asyncio
@@ -67,37 +94,6 @@ async def test_schema_repair_receives_the_previous_reply(tmp_path, invalid):
 
 
 @pytest.mark.asyncio
-async def test_operation_schema_binds_channels_events_and_window():
-    request = {"tmin": 0.0, "tmax": 2.0}
-    schema = design_contract(["f1", "f2", "f3"], request)
-    design = await WorkflowLLM().structured_output(
-        [{}, {"content": json.dumps({"request": request, "compiler_feedback": []})}],
-        schema,
-    )
-    output = design.model_dump()
-    output["candidates"][0]["output"] = "EEG epochs"
-    with pytest.raises(ValueError, match="string_pattern_mismatch"):
-        schema.model_validate(output)
-    output = design.model_dump()
-    output["candidates"][0]["steps"][0]["model_from"] = "unrelated"
-    with pytest.raises(ValueError, match="none_required"):
-        schema.model_validate(output)
-    output = design.model_dump()
-    epoch = output["candidates"][0]["steps"][-1]
-    epoch["params"]["picks"] = ["eeg"]
-    with pytest.raises(ValueError, match="literal_error"):
-        schema.model_validate(output)
-    epoch["params"]["picks"] = "$eeg_channels"
-    epoch["params"]["event_id"] = {"left_hand": 1, "right_hand": 2}
-    with pytest.raises(ValueError, match="literal_error"):
-        schema.model_validate(output)
-    epoch["params"]["event_id"] = "$event_id"
-    epoch["params"]["tmax"] = 3
-    with pytest.raises(ValueError, match="literal_error"):
-        schema.model_validate(output)
-
-
-@pytest.mark.asyncio
 async def test_no_llm_fails_instead_of_using_fixed_presets(source, tmp_path):
     prep = PreprocessingService(tmp_path / "prep")
     service = WorkflowService(tmp_path / "runs", [source], prep)
@@ -131,17 +127,17 @@ async def test_research_retry_cannot_mix_changed_local_bytes_with_saved_observat
 
 
 @pytest.mark.asyncio
-async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
+async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
+    source, tmp_path
+):
     prep = PreprocessingService(tmp_path / "prep")
     llm = WorkflowLLM(invalid_design=True)
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
-    )
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
-    assert llm.calls.count("MethodDesign") == 2
+    assert llm.calls.count("Decision") == 3
     assert {
         "SurveyPlan",
         "ResearchBatch",
@@ -151,13 +147,11 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
         "ReportNarrative",
     } <= set(llm.calls)
     folder = service.folder(state["id"])
-    revisions = json.loads(
-        (folder / "preprocessing/revisions.json").read_text(encoding="utf-8")
-    )
-    assert "sampling rate" in revisions["attempts"][0]["error"]
-    assert any("方案校验未通过" in e["message"] for e in result["events"])
+    search = service.search_service().get(OWNER, result["search_id"])
+    assert any(a["action"] == "invalid_proposal" for a in search["actions"])
+    assert search["usage"]["candidates"] == 2
     plan = json.loads((folder / "preprocessing/plan.json").read_text(encoding="utf-8"))
-    assert all(r["steps"][0]["params"]["h_freq"] < 80 for r in plan["records"])
+    assert all(r["steps"][1]["params"]["h_freq"] < 80 for r in plan["records"])
     artifacts = service.describe(OWNER, state["id"])["artifacts"]
     assert any(a["name"] == "survey/sources.json" and a["sha256"] for a in artifacts)
     from app.workflows.contracts import PreprocessingOutput
@@ -184,7 +178,7 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     html = (folder / "report/report.html").read_text(encoding="utf-8")
     projection = json.loads((folder / "report/report.json").read_text(encoding="utf-8"))
     assert "错误地声称首先重采样" not in html
-    assert "实际处理顺序：带通滤波 → 平均参考 → 事件分段" in html
+    assert "实际处理顺序：重采样 → 带通滤波" in html
     assert projection["narrative"]["method_reasoning"] in html
 
 
@@ -202,9 +196,7 @@ async def test_screening_retry_reuses_completed_retrieval(source, tmp_path):
     prep = PreprocessingService(tmp_path / "prep")
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
-    )
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
     first = await finish(service, state["id"])
     assert first["status"] == "failed"
     source_path = service.folder(state["id"]) / "survey/sources.json"
@@ -392,46 +384,42 @@ async def test_abstract_cannot_be_claimed_as_full_text():
 
 
 @pytest.mark.asyncio
-async def test_design_can_request_more_research_before_execution(source, tmp_path):
-    from app.workflows.cognition_contracts import ResearchAction
+async def test_search_reads_frozen_evidence_before_experiment(source, tmp_path):
     from app.preprocessing.storage import file_hash
 
     class SupplementLLM(WorkflowLLM):
         async def structured_output(self, messages, model):
-            result = await super().structured_output(messages, model)
-            if (
-                model.__name__ == "MethodDesign"
-                and self.calls.count("MethodDesign") == 1
-            ):
+            if model.__name__ == "Decision" and not getattr(self, "read_sent", False):
+                self.read_sent = True
                 self.survey_hash = file_hash(folder / "survey/research.json")
-                result.supplement_requests = [
-                    ResearchAction(
-                        action="read",
-                        rationale="补充方法全文",
-                        url="https://example.org/method",
-                        kind="paper",
-                    )
-                ]
-            return result
+                context = json.loads(messages[-1]["content"])
+                return model.model_validate(
+                    {
+                        "decision": {
+                            "action": "request_evidence",
+                            "source_id": context["sources"][0]["id"],
+                            "query": "160 Hz",
+                            "question": "核对采样率",
+                            "affects_choice": "候选频带适用性",
+                            "reason": "先确认测量条件",
+                        }
+                    }
+                )
+            return await super().structured_output(messages, model)
 
     llm = SupplementLLM()
     prep = PreprocessingService(tmp_path / "prep")
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(
-        OWNER,
-        WorkflowRequest(source_root=str(source), subjects=["S001"]),
-        start=False,
-    )
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)), start=False)
     folder = service.folder(state["id"])
     service.start(OWNER, state["id"])
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
-    assert (
-        llm.calls.count("MethodDesign") == 2
-        and llm.calls.count("ResearchFindings") == 1
-    )
-    assert (folder / "preprocessing/research.json").exists()
+    search = service.search_service().get(OWNER, result["search_id"])
+    reads = [a for a in search["actions"] if a["action"] == "request_evidence"]
+    assert len(reads) == 1 and reads[0]["result"]["status"] == "read"
+    assert search["usage"]["evidence_reads"] == 1
     assert file_hash(folder / "survey/research.json") == llm.survey_hash
 
 
@@ -477,7 +465,7 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
         OWNER,
-        WorkflowRequest(source_root=str(source), subjects=["S001"]),
+        WorkflowRequest(source_root=str(source)),
         start=False,
     )
     folder = service.folder(state["id"])
@@ -508,9 +496,7 @@ async def test_nonblocking_metadata_conflict_is_corrected_before_collection(
     prep = PreprocessingService(tmp_path / "prep")
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
-    )
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
     assert llm.calls.count("CollectionReview") == 2

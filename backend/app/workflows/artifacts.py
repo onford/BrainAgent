@@ -19,8 +19,6 @@ COGNITIVE_FILES = {
     "research-plan.json",
     "research.json",
     "review.json",
-    "design.json",
-    "revisions.json",
     "narrative.json",
     "verification.json",
     "literature.json",
@@ -48,6 +46,10 @@ def local_files(folder, state, previous=()):
         for s in state["stages"]
         if s["status"] in {"completed", "failed"}
     }
+    delivery_completed = any(
+        s["name"] == "data_delivery" and s["status"] == "completed"
+        for s in state["stages"]
+    )
     entries = []
     for path in sorted(folder.rglob("*")):
         relative = path.relative_to(folder)
@@ -63,7 +65,7 @@ def local_files(folder, state, previous=()):
             relative.parts[0] in finished | {"process"}
             or path.name in COGNITIVE_FILES
             or name in LIVE_FILES | {"preprocessing/plan.json"}
-            or (name == "training-data.zip" and "delivery" in finished)
+            or (name == "training-data.zip" and delivery_completed)
         ):
             continue
         within(folder, name)  # Reject symlinks that escape the workflow directory.

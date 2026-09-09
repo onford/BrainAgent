@@ -14,12 +14,22 @@ import warnings
 
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 
 from app.preprocessing.schemas import ExecutionPlan, RunResult
 from app.preprocessing.storage import digest, file_hash, within, write_json
-from .evaluation_contracts import EvaluationReceipt
+from .evaluation_contracts import AlignmentPolicy, EvaluationReceipt, LearnerMetadata
+from .evaluation_numeric import (
+    StableShrinkageCovariance,
+    VARIANCE_FLOOR,
+    covariance,
+    csp_features,
+    fit_csp,
+    paired_ci,
+    prepare_representation,
+)
 from .panel import DataUnevaluable, EVALUATOR_VERSION, validate_panel
 
 
@@ -311,10 +321,20 @@ def _coverage(panel, observed, predicted):
 def _baseline(baseline, panel):
     if baseline is None:
         return None
+    try:
+        EvaluationReceipt.model_validate(baseline)
+    except ValueError as exc:
+        raise DataUnevaluable(
+            "Baseline is not evaluated with a valid current-version receipt.",
+            code="baseline_invalid",
+        ) from exc
     if (
         baseline.get("status") != "evaluated"
         or baseline.get("panel_hash") != panel["panel_hash"]
         or baseline.get("evaluator_version") != EVALUATOR_VERSION
+        or baseline.get("evaluation_mode") != panel["evaluation_mode"]
+        or baseline.get("folds") != panel["folds"]
+        or baseline.get("primary_learner") != "csp4_reg0.1_shrinkage_lda"
         or set(baseline.get("subjects", {})) != set(panel["development_subjects"])
     ):
         raise DataUnevaluable(
@@ -348,6 +368,20 @@ def _baseline(baseline, panel):
                 f"Baseline has incomplete frozen trial coverage for subject {subject}.",
                 code="baseline_invalid",
             )
+    expected_coverage = _coverage(
+        panel,
+        {t["event_id"] for t in panel["trials"] if t["eligible"]},
+        {
+            t["event_id"]
+            for t in panel["trials"]
+            if t["eligible"] and t["role"] == "development"
+        },
+    )
+    if baseline["coverage"] != expected_coverage:
+        raise DataUnevaluable(
+            "Baseline has incomplete common train/development coverage.",
+            code="baseline_invalid",
+        )
     return scores
 
 
@@ -358,15 +392,21 @@ def evaluate(
     panel: dict,
     output: Path,
     baseline: dict | None = None,
+    *,
+    policy: dict | None = None,
 ) -> dict:
     """Return aggregate metrics; write raw labels/predictions only to local TSV.
 
     ``output`` is a directory. ``subjects`` maps DEVELOPMENT subject IDs to
-    summaries. No train predictions are made. All top-level coverage counts use
-    development only; coverage.train/development give separate group counts.
+    summaries. In CV every subject is development and predicted only by its
+    held-out fold; in explicit holdout only development subjects are predicted.
+    All top-level coverage counts use development; train/development give group counts.
     Missing means eligible - available, NOT eligible - predicted. Before candidate
     validation finishes, available counts only inspected matching trials.
     Resource errors propagate to the supervising worker, which owns budgets.
+    ``policy`` accepts frozen catalog parameters; only adaptation and the
+    predeclared alignment_threshold are used here. Subject adaptation is
+    transductive and label-free; all supervised fitting uses fold training only.
     """
     receipt = {
         "status": "execution_failure",
@@ -383,11 +423,24 @@ def evaluate(
         "attribution": "Development-condition preprocessing utility; no test-set or causal generalization claim.",
     }
     observed, predicted_ids = set(), set()
+    covariance_path = None
     stage, started = "validation", perf_counter()
     panel_valid = False
     try:
         validate_panel(panel)
         panel_valid = True
+        receipt.update(evaluation_mode=panel["evaluation_mode"], folds=panel["folds"])
+        # Catalog filter/reference keys are allowed; only declared alignment keys
+        # are interpreted here. Never infer adaptation from candidate scores.
+        if policy is not None and not isinstance(policy, dict):
+            raise CandidateInvalid("policy must be a dict or None")
+        alignment_policy = AlignmentPolicy.model_validate(
+            {
+                k: v
+                for k, v in (policy or {}).items()
+                if k in AlignmentPolicy.model_fields
+            }
+        ).model_dump(mode="json")
         baseline_scores = _baseline(baseline, panel)
         _check_plan(result, plan, panel)
         if result.status != "completed" or any(
@@ -405,57 +458,143 @@ def evaluate(
             _require(item["method_id"] == config.method_ref.id, "result method differs")
             paths = _artifact_paths(Path(store_root), item)
             rows, shape = _check_record(paths, item, config, plan, panel, observed)
-            sources.append((paths["signal_V.npy"], rows, shape))
-        stage, started = "feature", perf_counter()
-        features, identities = [], []
-        floored, total = 0, 0
-        for path, rows, shape in sources:
-            with _mapped(path) as values:
+            with _mapped(paths["signal_V.npy"]) as values:
                 _require(
                     list(values.shape) == shape and values.dtype.kind in "fiu",
                     "signal shape/dtype differs",
                 )
-                for row in rows:
-                    # A bounded owning copy prevents views from outliving mmap.
-                    trial = np.array(
-                        values[row["epoch_index"]], dtype=np.float64, copy=True
-                    )
-                    if not np.isfinite(trial).all():
-                        raise RuntimeError("nonfinite signal")
-                    with np.errstate(over="raise", invalid="raise"):
-                        variance = np.var(trial, axis=-1, dtype=np.float64)
-                        feature = np.log(np.maximum(variance, 1e-20))
-                    if not np.isfinite(feature).all():
-                        raise RuntimeError("nonfinite logvariance")
-                    floored += int(np.count_nonzero(variance <= 1e-20))
-                    total += len(variance)
-                    features.append(feature)
-                    identities.append(row["event_id"])
+            sources.append((paths["signal_V.npy"], rows, shape, config.record_id))
+        stage, started = "feature", perf_counter()
+        output = Path(output)
+        output.mkdir(parents=True, exist_ok=True)
+        sources, numeric_diagnostics, representation = prepare_representation(
+            sources, panel, output, alignment_policy, _mapped
+        )
+        receipt["representation"] = representation
+        receipt["diagnostics"]["subjects"] = numeric_diagnostics
+        receipt["diagnostics"]["summary"] = {
+            **{
+                key: float(np.mean([s[field] for s in numeric_diagnostics.values()]))
+                for key, field in {
+                    "mean_condition_before": "covariance_condition_before",
+                    "mean_condition_after": "covariance_condition_after",
+                    "mean_variance_before": "mean_channel_variance_before",
+                    "mean_variance_after": "mean_channel_variance_after",
+                    "mean_effective_rank": "effective_rank_before",
+                }.items()
+            },
+            "gate_fraction": representation["gate_fraction"],
+            "mean_anisotropy": float(
+                np.mean(
+                    [
+                        s["gate_metric_value"]
+                        for s in representation["subjects"].values()
+                    ]
+                )
+            ),
+        }
+        identities = [r["event_id"] for _, rows, _, _ in sources for r in rows]
+        n_channels = len(panel["output_contract"]["channels"])
+        receipt["learner_metadata"] = LearnerMetadata(
+            csp_components=min(4, n_channels),
+            logistic_random_state=panel["seed"] % (2**32),
+        ).model_dump(mode="json")
+        covariance_path = output / "epoch-covariances.npy"
+        X = np.empty((len(identities), n_channels), dtype=np.float64)
+        covariance_store = np.lib.format.open_memmap(
+            covariance_path,
+            mode="w+",
+            dtype="float64",
+            shape=(len(identities), n_channels, n_channels),
+        )
+        floored, total, index = 0, 0, 0
+        try:
+            for path, rows, shape, rid in sources:
+                with _mapped(path) as values:
+                    for row in rows:
+                        cov = covariance(values[row["epoch_index"]])
+                        covariance_store[index] = cov
+                        variance = np.diag(cov)
+                        X[index] = np.log(np.maximum(variance, VARIANCE_FLOOR))
+                        floored += int(np.count_nonzero(variance <= VARIANCE_FLOOR))
+                        total += len(variance)
+                        index += 1
+            covariance_store.flush()
+        finally:
+            covariance_store._mmap.close()
         receipt["timings"][stage] = perf_counter() - started
         receipt["diagnostics"]["floor_fraction"] = floored / total
         frozen = {t["event_id"]: t for t in panel["trials"]}
-        X = np.asarray(features, dtype=np.float64)
         labels = np.asarray([frozen[e]["label"] for e in identities])
-        train = np.asarray([frozen[e]["role"] == "train" for e in identities])
-        stage, started = "train", perf_counter()
-        scaler = StandardScaler()
-        train_X = scaler.fit_transform(X[train])
-        classifier = LogisticRegression(max_iter=1000, random_state=42)
-        with warnings.catch_warnings(record=True) as caught:
-            warnings.simplefilter("always")
-            classifier.fit(train_X, labels[train])
-        receipt["diagnostics"].update(
-            converged=not any(
-                issubclass(w.category, ConvergenceWarning) for w in caught
-            ),
-            warnings=[w.category.__name__ for w in caught],
+        subjects = np.asarray([frozen[e]["subject"] for e in identities])
+        by_id, secondary_by_id, fold_by_id = {}, {}, {}
+        warning_names, converged = [], True
+        with _mapped(covariance_path) as covariances:
+            for fold in panel["folds"]:
+                train_indices = np.flatnonzero(
+                    np.isin(subjects, fold["train_subjects"])
+                )
+                dev_indices = np.flatnonzero(
+                    np.isin(subjects, fold["development_subjects"])
+                )
+                stage, started = "train", perf_counter()
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    filters = fit_csp(covariances, train_indices, labels[train_indices])
+                    primary_X = csp_features(covariances, filters)
+                    primary = LinearDiscriminantAnalysis(
+                        solver="lsqr",
+                        covariance_estimator=StableShrinkageCovariance(
+                            store_precision=False
+                        ),
+                    )
+                    primary.fit(primary_X[train_indices], labels[train_indices])
+                    scaler = StandardScaler()
+                    train_X = scaler.fit_transform(X[train_indices])
+                    classifier = LogisticRegression(
+                        max_iter=1000,
+                        random_state=panel["seed"] % (2**32),
+                        solver="lbfgs",
+                        penalty="l2",
+                        C=1.0,
+                        tol=1e-4,
+                        fit_intercept=True,
+                        class_weight=None,
+                    )
+                    classifier.fit(train_X, labels[train_indices])
+                converged &= not any(
+                    issubclass(w.category, ConvergenceWarning) for w in caught
+                )
+                warning_names.extend(w.category.__name__ for w in caught)
+                receipt["timings"][stage] += perf_counter() - started
+                stage, started = "predict", perf_counter()
+                predictions = primary.predict(primary_X[dev_indices])
+                secondary = classifier.predict(scaler.transform(X[dev_indices]))
+                for i, prediction, diagnostic_prediction in zip(
+                    dev_indices, predictions, secondary
+                ):
+                    event_id = identities[i]
+                    _require(event_id not in by_id, "duplicate out-of-fold prediction")
+                    by_id[event_id] = str(prediction)
+                    secondary_by_id[event_id] = str(diagnostic_prediction)
+                    fold_by_id[event_id] = fold["id"]
+                receipt["timings"][stage] += perf_counter() - started
+        # Scratch covariances are never a delivered representation.
+        covariance_path.unlink()
+        expected_ids = {
+            t["event_id"]
+            for t in panel["trials"]
+            if t["eligible"] and t["role"] == "development"
+        }
+        _require(
+            set(by_id) == set(secondary_by_id) == expected_ids,
+            "incomplete out-of-fold coverage",
         )
-        receipt["timings"][stage] = perf_counter() - started
-        stage, started = "predict", perf_counter()
-        predictions = classifier.predict(scaler.transform(X[~train]))
-        dev_ids = [e for e, is_train in zip(identities, train) if not is_train]
-        by_id = dict(zip(dev_ids, predictions.tolist()))
         predicted_ids.update(by_id)
+        receipt["diagnostics"].update(
+            converged=bool(converged), warnings=sorted(set(warning_names))
+        )
+        receipt["secondary_subjects"] = {}
         for subject in panel["development_subjects"]:
             original = [t for t in panel["trials"] if t["subject"] == subject]
             eligible = [t for t in original if t["eligible"]]
@@ -466,6 +605,20 @@ def evaluate(
                     by_id[t["event_id"]] == label for t in members
                 ) / len(members)
             ba = (recalls["left"] + recalls["right"]) / 2
+            receipt["secondary_subjects"][subject] = float(
+                np.mean(
+                    [
+                        np.mean(
+                            [
+                                secondary_by_id[t["event_id"]] == label
+                                for t in eligible
+                                if t["label"] == label
+                            ]
+                        )
+                        for label in panel["class_labels"].values()
+                    ]
+                )
+            )
             receipt["subjects"][subject] = {
                 "recalls": recalls,
                 "recall_left": recalls["left"],
@@ -483,11 +636,16 @@ def evaluate(
         receipt["macro_ba"] = float(
             np.mean([s["ba"] for s in receipt["subjects"].values()])
         )
+        receipt["secondary_macro_ba"] = float(
+            np.mean(list(receipt["secondary_subjects"].values()))
+        )
         if baseline_scores is not None:
+            receipt["paired_subject_ci"] = paired_ci(
+                [s["delta"] for s in receipt["subjects"].values()], panel["seed"]
+            )
             receipt["mean_delta"] = float(
                 np.mean([s["delta"] for s in receipt["subjects"].values()])
             )
-        receipt["timings"][stage] = perf_counter() - started
         stage = "output"
         output = Path(output)
         output.mkdir(parents=True, exist_ok=True)
@@ -500,6 +658,9 @@ def evaluate(
             "label",
             "eligible",
             "reason",
+            "fold_id",
+            "primary_prediction",
+            "secondary_prediction",
             "prediction",
         ]
         with prediction_path.open("w", encoding="utf-8", newline="") as stream:
@@ -508,7 +669,12 @@ def evaluate(
             for trial in panel["trials"]:
                 writer.writerow(
                     {
-                        **{k: trial[k] for k in fields if k != "prediction"},
+                        **{k: trial[k] for k in fields if k in trial},
+                        "fold_id": fold_by_id.get(trial["event_id"], ""),
+                        "primary_prediction": by_id.get(trial["event_id"], ""),
+                        "secondary_prediction": secondary_by_id.get(
+                            trial["event_id"], ""
+                        ),
                         "prediction": by_id.get(trial["event_id"], ""),
                     }
                 )
@@ -548,10 +714,14 @@ def evaluate(
             error=str(exc) or type(exc).__name__,
         )
     finally:
-        if stage in receipt["timings"]:
+        if stage == "feature":
             receipt["timings"][stage] = perf_counter() - started
+        if covariance_path is not None:
+            covariance_path.unlink(missing_ok=True)
     if receipt["status"] != "evaluated":
         receipt["macro_ba"] = receipt["mean_delta"] = None
+        receipt["secondary_macro_ba"] = receipt["paired_subject_ci"] = None
+        receipt["secondary_subjects"] = {}
         receipt["predictions_sha256"] = None
         receipt["subjects"] = {}
         predicted_ids.clear()

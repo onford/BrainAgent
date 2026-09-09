@@ -25,8 +25,6 @@ from .contracts import (
 from .cognition_contracts import (
     CollectionReview,
     DecisionLog,
-    DesignRevisions,
-    MethodDesign,
     ReportNarrative,
     ResearchFindings,
     ResearchSources,
@@ -48,9 +46,13 @@ from .collection_contracts import (
 
 from .local_contracts import LocalObservation, LocalEvent
 
-FORMAT_VERSION = "8"
+FORMAT_VERSION = "9"
 ARRAY_FORMATS = {
-    "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
+    "X.npy": {
+        "dtype": "float32",
+        "axes": ["trial", "channel", "sample"],
+        "unit": "channels.json:unit",
+    },
     "y.npy": {
         "dtype": "int64",
         "axes": ["trial"],
@@ -163,7 +165,9 @@ class TrainingLabels(Contract):
 class ChannelInfo(Contract):
     names: list[str] = Field(min_length=1)
     sfreq: float = Field(gt=0)
-    unit: Literal["V"]
+    unit: Literal["V", "dimensionless"]
+    spatial_semantics: str
+    representation: dict | None = None
     dtype: Literal["float32"]
     layout: tuple[Literal["epochs"], Literal["channels"], Literal["samples"]]
     tmin_s: float
@@ -193,9 +197,15 @@ class DeliveryManifest(Contract):
     classes: dict[Literal["0", "1"], Count]
     split_counts: dict[Literal["train", "validation", "test"], Count]
     subject_split: dict[str, Literal["train", "validation", "test"]]
-    unit: Literal["V"]
-    selection_policy: Literal["random"]
-    quality_evaluated: Literal[False]
+    unit: Literal["V", "dimensionless"]
+    selection_policy: Literal["development_score"]
+    quality_evaluated: Literal[True]
+    evaluation_scope: Literal["development"] = "development"
+    independent_confirmation: Literal[False] = False
+    search_id: str
+    selected_candidate_id: str
+    score: float = Field(ge=0, le=1, allow_inf_nan=False)
+    representation: dict | None = None
     selected_method_ref: Ref
     files: list[ManifestFile]
     limitations: list[str]
@@ -227,10 +237,8 @@ JSON_MODELS = {
     "collection/standardization.json": Standardization,
     "collection/research.json": ResearchFindings,
     "collection/sources.json": ResearchSources,
-    "preprocessing/design.json": MethodDesign,
     "preprocessing/research.json": ResearchFindings,
     "preprocessing/sources.json": ResearchSources,
-    "preprocessing/revisions.json": DesignRevisions,
     "report/narrative.json": ReportNarrative,
     **{
         f"{stage}/decisions.json": DecisionLog
@@ -262,6 +270,12 @@ DELIVERY_FILES = (
     "report.html",
     "train_example.py",
     "README.md",
+    "evaluation/protocol.json",
+    "evaluation/panel.json",
+    "evaluation/originalpredictions.tsv",
+    "evaluation/folds.json",
+    "evaluation/receipt.json",
+    "evaluation/artifact-map.json",
 )
 PROVENANCE_FILES = ("provenance.json", "events.json", "delta.json")
 
@@ -296,13 +310,14 @@ def write_table(path, rows, fields):
         temporary.unlink(missing_ok=True)
 
 
-def delivery_members(folder, record_ids):
+def delivery_members(folder, record_ids, representation_files=()):
     paths = [folder / name for name in DELIVERY_FILES]
     paths += [
         folder / "provenance" / record / name
         for record in sorted(record_ids)
         for name in PROVENANCE_FILES
     ]
+    paths += list(representation_files)
     for path in paths:
         if not path.is_file():
             raise ValueError(

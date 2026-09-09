@@ -2,12 +2,14 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
-import { artifactDescription } from '../utils/artifacts'
+import { artifactDescription, type WorkflowArtifact } from '../utils/artifacts'
+import { searchArtifactUrl } from '../api/searches'
 import ReportReader from '../components/workflows/ReportReader.vue'
 import ArtifactExplorer from '../components/workflows/ArtifactExplorer.vue'
+import type { SavedWorkflowEvaluation, WorkflowSearchSummary } from '../types/search'
 
 type Stage = { name: string; label: string; status: string; error?: string }
-type Workflow = { id: string; engine?: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: Record<string, any>; events: {time:string;agent:string;message:string}[]; artifacts: {name:string;bytes:number;sha256:string | null}[] }
+type Workflow = { id: string; schema_version?: string; search_id?: string | null; search_summary?: WorkflowSearchSummary; engine?: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: { data_evaluation?: SavedWorkflowEvaluation; data_preprocessing?: { search_id?: string | null }; [key: string]: any }; events: {time:string;agent:string;message:string}[]; artifacts: WorkflowArtifact[] }
 type View = 'reports' | 'files' | 'logs' | 'delivery'
 const route = useRoute(), router = useRouter()
 const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
@@ -20,8 +22,16 @@ const labels: Record<string,string> = {queued:'等待开始',pending:'等待执�
 const viewLabels: Record<View,string> = {reports:'报告阅读',files:'记录文件',logs:'执行日志',delivery:'训练数据'}
 let timer: ReturnType<typeof setTimeout> | undefined
 let disposed = false
-const active = computed(() => current.value && ['queued','running','interrupted'].includes(current.value.status))
+const supportedWorkflow = computed(() => current.value?.schema_version === '1' && current.value.engine === 'diagnostic-policy-search-v2')
+const active = computed(() => supportedWorkflow.value && current.value && ['queued','running','interrupted'].includes(current.value.status))
+const canRetry = computed(() => supportedWorkflow.value && current.value && ['failed', 'interrupted'].includes(current.value.status))
 const delivered = computed(() => current.value?.outputs.data_delivery)
+const evaluation = computed(() => current.value?.outputs.data_evaluation)
+const measuredEvaluation = computed(() => evaluation.value?.selection_policy === 'development_score' && evaluation.value.quality_evaluated === true && evaluation.value.evaluation_scope === 'development' && typeof evaluation.value.score === 'number' && Number.isFinite(evaluation.value.score) && evaluation.value.score >= 0 && evaluation.value.score <= 1)
+const searchSummary = computed(() => current.value?.search_summary)
+const searchStatuses: Record<string, string> = { preparing:'准备中', running:'执行中', completed:'已完成', stopped:'已停止', failed:'失败', cancelled:'已取消', interrupted:'等待恢复' }
+const searchId = computed(() => current.value?.search_id || current.value?.outputs.data_preprocessing?.search_id || evaluation.value?.search_id)
+const developmentScore = computed(() => typeof evaluation.value?.score === 'number' && Number.isFinite(evaluation.value.score) ? `${(evaluation.value.score * 100).toFixed(1)}%` : '—')
 const sourceSummary = computed(() => current.value?.outputs.data_survey)
 const completedCount = computed(() => current.value?.stages.filter(s => s.status==='completed').length ?? 0)
 const stage = computed(() => current.value?.stages.find(s=>s.name===stageName.value))
@@ -35,20 +45,24 @@ const reports = computed(() => {
     'report/report.html':'最终处理报告',
   }
   const available = new Set(current.value?.artifacts.map(a=>a.name))
-  return Object.entries(titles).filter(([name])=>available.has(name)).map(([name,title])=>({name,title,description:artifactDescription(name)}))
+  return Object.entries(titles).filter(([name])=>available.has(name)).map(([name,title])=>({name,title,description:current.value?.artifacts.find(file => file.name === name)?.description || artifactDescription(name)}))
 })
 const stageDescriptions: Record<string,string> = {
   data_survey:'核对本地文件、官网与论文，整理统计和后续操作需要的文献。',
   data_collection:'检查数据接入条件、核对任务标签，并生成标准数据副本。',
-  data_preprocessing:'根据调研设计候选方案，执行信号处理并校验输出。',
-  data_evaluation:'从可用候选中随机选择一版，本轮未进行质量排名。',
+  data_preprocessing:'自动运行诊断驱动的预算策略搜索，比较频带、参考方式与逐被试无标签对齐策略。',
+  data_evaluation:'按开发评估中 CSP + 收缩 LDA 的被试平均平衡准确率选择方法，并记录选择依据。',
   data_report:'将已验证的过程数据组织为可阅读的处理报告。',
   data_delivery:'导出训练数组、标签、被试分组和复现记录。',
 }
 function fileUrl(name: string, download = true) {
-  const hash = current.value?.artifacts.find(file => file.name === name)?.sha256
+  const artifact = current.value?.artifacts.find(file => file.name === name)
+  if (artifact?.url) return searchArtifactUrl(current.value!.id, artifact, download)
+  const hash = artifact?.sha256
   return apiUrl(`/api/workflows/${current.value!.id}/artifacts/${name.split('/').map(encodeURIComponent).join('/')}?download=${download}${hash ? `&v=${encodeURIComponent(hash)}` : ''}`)
 }
+function count(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('zh-CN', { maximumFractionDigits: 1 }) : '—' }
+function stageDescription(name: string) { return supportedWorkflow.value ? stageDescriptions[name] ?? '本阶段的处理状态与记录。' : '本阶段的状态、过程和产物见保存的记录。' }
 function date(value: string) { return new Date(value).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }
 async function showStage(item: Stage) { stageName.value=item.name; await nextTick(); stageDialog.value?.showModal() }
 function showStageFiles() {
@@ -80,7 +94,7 @@ async function start() {
   } catch(reason) {error.value=String(reason)} finally {busy.value=false}
 }
 async function retry() {
-  if(!current.value || busy.value) return
+  if(!current.value || !canRetry.value || busy.value) return
   busy.value=true
   try {await apiRequest(`/api/workflows/${current.value.id}/retry`,{method:'POST'});stageDialog.value?.close();await select(current.value.id)}
   catch(reason) {error.value=String(reason)} finally {busy.value=false}
@@ -108,28 +122,29 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
     <p v-if="error && !createDialog?.open" class="page-error" role="alert">{{error}} <button v-if="selectedId" @click="select(selectedId)">重新连接</button></p>
     <template v-if="current">
       <section v-show="!focused" class="progress-panel" aria-label="流程进度">
-        <div class="run-heading"><div class="dataset-heading"><h1 :title="sourceSummary?.profile.name">{{sourceSummary?.profile.name ?? 'EEG 数据流程'}}</h1><span class="badge" :class="current.status">{{labels[current.status]}}</span></div><div class="progress-summary"><span role="status">{{completedCount}} / 6 个模块已完成</span><button v-if="current.status==='failed'" class="retry-button" :disabled="busy" @click="retry">重试未完成步骤</button></div></div>
+        <div class="run-heading"><div class="dataset-heading"><h1 :title="sourceSummary?.profile.name">{{sourceSummary?.profile.name ?? 'EEG 数据流程'}}</h1><span class="badge" :class="current.status">{{labels[current.status]}}</span></div><div class="progress-summary"><span role="status">{{completedCount}} / 6 个模块已完成</span><button v-if="canRetry" class="retry-button" :disabled="busy" @click="retry">重试未完成步骤</button></div></div>
         <ol class="stages"><li v-for="(item,index) in current.stages" :key="item.name" :class="item.status"><button :aria-label="`${item.label}：${labels[item.status]}，查看详情`" @click="showStage(item)"><span class="stage-number">{{item.status==='completed'?'✓':item.status==='failed'?'!':index+1}}</span><span class="stage-copy"><strong>{{item.label}}</strong><small>{{labels[item.status]}}</small></span><span class="stage-more">›</span></button></li></ol>
         <div class="activity-strip"><span class="activity-dot" :class="{live:active}"/><span v-if="active" class="activity-label">正在推进</span><span v-else class="activity-label">{{current.status==='completed'?'流程已完成':'运行记录'}}</span><button class="activity-message" :title="latest?.message" @click="view='logs'">{{latest?.message ?? '等待执行记录'}}</button><span v-if="delivered" class="output-summary">{{delivered.shape[0]}} Epoch · {{delivered.shape[1]}} 通道</span></div>
       </section>
       <section class="work-area" aria-label="运行产物工作区">
-        <div v-if="current.outputs.data_collection" v-show="!focused" class="content-toolbar" aria-label="预算搜索入口"><div><strong>预算预处理搜索</strong><p class="muted">在已接入数据上比较候选，按开发面板选择。</p></div><RouterLink class="primary" :to="{path:'/searches',query:{workflow:current.id}}">预算预处理搜索 →</RouterLink></div>
+        <div v-if="searchId || (supportedWorkflow && current.outputs.data_collection)" v-show="!focused" class="content-toolbar" aria-label="预算搜索入口"><div><strong>{{ supportedWorkflow ? '诊断驱动的预算策略搜索' : '关联搜索记录' }}</strong><p v-if="supportedWorkflow" class="muted">流程自动运行搜索，按开发评估选择预处理策略。</p><p v-if="measuredEvaluation" class="muted">开发 BA {{ developmentScore }}<template v-if="evaluation?.selected_method_ref"> · 所选方法 {{ evaluation.selected_method_ref.id }}</template></p><div v-if="searchSummary" class="search-summary" aria-label="关联搜索进度"><p role="status">{{ searchStatuses[searchSummary.status] ?? searchSummary.status }}<template v-if="searchSummary.message"> · {{ searchSummary.message }}</template></p><p>候选 {{ count(searchSummary.usage?.candidates) }} / {{ count(searchSummary.budget?.max_candidates) }} · 提议 {{ count(searchSummary.usage?.proposals) }} / {{ count(searchSummary.budget?.max_proposals) }} · 证据读取 {{ count(searchSummary.usage?.evidence_reads) }} / {{ count(searchSummary.budget?.max_evidence_reads) }} · 耗时 {{ count(searchSummary.usage?.elapsed_seconds) }} / {{ count(searchSummary.budget?.max_seconds) }} 秒</p><p v-if="searchSummary.selected_candidate_id">所选候选 {{ searchSummary.selected_candidate_id }}</p></div></div><RouterLink v-if="searchId" class="primary" :to="{path:'/searches',query:{id:searchId}}">查看策略搜索 →</RouterLink><span v-else role="status">等待自动启动搜索</span></div>
         <nav v-show="!focused" class="workspace-tabs" aria-label="工作区视图"><button v-for="(label,key) in viewLabels" :key="key" :aria-pressed="view===key" @click="view=key">{{label}}<span v-if="key==='reports'">{{reports.length}}</span><span v-if="key==='files'">{{current.artifacts.length}}</span></button><span class="workspace-caption">{{view==='reports'?'选择报告，在此阅读':view==='files'?'按模块查找全部产物':view==='logs'?'最近的记录显示在前':'下载与复现'}}</span></nav>
         <div class="workspace-body">
           <ReportReader v-show="view==='reports'" :reports="reports" :workflow-id="current.id" :file-url="fileUrl" :focused="focused" @focus="focused=!focused" @exit-focus="focused=false" />
           <ArtifactExplorer v-show="view==='files'" ref="files" :artifacts="current.artifacts" :workflow-id="current.id" :file-url="fileUrl" />
           <section v-show="view==='logs'" class="logs-panel" aria-label="执行日志"><header class="content-toolbar"><div><h2>执行日志</h2><span>{{current.events.length}} 条记录 · 最新在前</span></div><input v-model="logQuery" type="search" placeholder="搜索执行记录…" aria-label="搜索执行记录" /></header><ol class="event-list"><li v-for="event in events" :key="`${current.id}-${event.id}`"><time>{{date(event.time)}}</time><div><span class="event-agent">{{current.stages.find(s=>s.name===event.agent)?.label ?? event.agent}}</span><p>{{event.message}}</p></div></li><li v-if="!events.length" class="empty-message">{{logQuery?'没有匹配的执行记录。':'流程开始后，执行记录会在此更新。'}}</li></ol></section>
-          <section v-show="view==='delivery'" class="delivery-panel" aria-label="训练数据"><div v-if="delivered" class="delivery-content"><p class="eyebrow">READY FOR TRAINING</p><h2>训练数据已就绪</h2><p class="muted">数据、标签与复现记录已整理完成。</p><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>EEG 通道</span></div><div><strong>{{delivered.shape[2]}}</strong><span>每段时间点</span></div></div><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">↓ 下载训练数据包</a><a :href="fileUrl('delivery/manifest.json')">数据清单 ↗</a></div><div class="delivery-notes"><h3>使用说明</h3><p>训练 / 验证 / 测试按被试分组。候选方法随机选择，本轮未进行质量排名。</p><p>数据包包含 X、y、分组、通道信息、原始事件映射与复现记录。</p></div></div><div v-else class="empty-state"><h2>训练数据尚未就绪</h2><p>处理与校验完成后，可在这里下载数据包。已完成的调研报告可先行阅读。</p><button @click="view='reports'">查看现有报告 →</button></div></section>
+          <section v-show="view==='delivery'" class="delivery-panel" aria-label="训练数据"><div v-if="delivered" class="delivery-content"><p class="eyebrow">READY FOR TRAINING</p><h2>训练数据已就绪</h2><p class="muted">数据、标签与复现记录已整理完成。</p><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>EEG 通道</span></div><div><strong>{{delivered.shape[2]}}</strong><span>每段时间点</span></div></div><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">↓ 下载训练数据包</a><a :href="fileUrl('delivery/manifest.json')">数据清单 ↗</a></div><div class="delivery-notes"><h3>使用说明</h3><p v-if="measuredEvaluation">方法按开发评估分数选择；分数用于策略比较，不是独立测试结果。</p><p v-else>方法与分组信息以保存的交付记录为准。</p><p v-if="measuredEvaluation">开发 BA {{ developmentScore }}</p><p v-if="evaluation?.selected_method_ref">所选方法 {{ evaluation.selected_method_ref.id }}</p><p>数据包包含 X、y、分组、通道信息、原始事件映射与复现记录。<template v-if="measuredEvaluation">评估划分以搜索面板的被试分组与折次为准。</template></p><p v-if="searchId"><RouterLink :to="{path:'/searches',query:{id:searchId}}">查看搜索记录与选择依据 ↗</RouterLink></p></div></div><div v-else class="empty-state"><h2>训练数据尚未就绪</h2><p>处理与校验完成后，可在这里下载数据包。已完成的调研报告可先行阅读。</p><button @click="view='reports'">查看现有报告 →</button></div></section>
         </div>
       </section>
     </template>
     <section v-else class="initial-state"><span class="initial-symbol">▤</span><h1>{{selectedId?'正在载入运行…':'从本地 EEG 到训练数据'}}</h1><p>调研资料、核对数据、执行预处理，在一个工作区中查看结果。</p><button v-if="!selectedId" class="primary" @click="createDialog?.showModal()">新建数据流程</button></section>
-    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">NEW WORKFLOW</p><h2 id="create-title">开始数据流程</h2></div><button type="button" class="icon-button" aria-label="关闭新建流程" @click="createDialog?.close()">×</button></div><p class="muted">选择本地数据，Agent 将完成调研、处理与交付。</p><form @submit.prevent="start"><label>本地数据目录<input v-model="source" list="source-roots" required placeholder="选择已配置的 EEGMMIDB 目录" aria-label="本地数据目录" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><p class="muted">自动扫描该目录，使用发现的全部被试和全部 Run。被试和记录数量将在数据调研中显示。</p><div class="form-scope"><span>左右手运动想象</span><span>全部本地 Run</span><span>训练窗口 0–2 秒</span></div><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source">{{busy?'正在提交…':'开始完整流程 →'}}</button></form></dialog>
-    <dialog ref="stageDialog" class="stage-dialog" aria-labelledby="stage-title"><template v-if="stage"><div class="dialog-heading"><h2 id="stage-title">{{stage.label}}</h2><button class="icon-button" aria-label="关闭阶段详情" @click="stageDialog?.close()">×</button></div><span class="badge" :class="stage.status">{{labels[stage.status]}}</span><p>{{stageDescriptions[stage.name] ?? '本阶段的处理状态与记录。'}}</p><details v-if="stage.error" class="stage-error" open><summary>错误详情</summary><pre>{{stage.error}}</pre></details><p v-else class="muted">{{stage.status==='pending'?'前序阶段完成后将自动开始。':'完整过程与产物保存在对应模块的记录文件中。'}}</p><div class="dialog-actions"><button v-if="stage.status==='failed'" class="primary" :disabled="busy" @click="retry">重试未完成步骤</button><button @click="showStageFiles">查看本阶段文件 →</button><button @click="view='logs';stageDialog?.close()">执行日志</button></div></template></dialog>
+    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">NEW WORKFLOW</p><h2 id="create-title">开始数据流程</h2></div><button type="button" class="icon-button" aria-label="关闭新建流程" @click="createDialog?.close()">×</button></div><p class="muted">选择本地数据，Agent 将完成调研、诊断策略搜索、开发评估与交付。</p><form @submit.prevent="start"><label>本地数据目录<input v-model="source" list="source-roots" required placeholder="选择已配置的 EEGMMIDB 目录" aria-label="本地数据目录" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><p class="muted">自动扫描该目录，使用发现的全部被试和全部 Run。被试和记录数量将在数据调研中显示。</p><div class="form-scope"><span>左右手运动想象</span><span>全部本地 Run</span><span>训练窗口 0–2 秒</span></div><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source">{{busy?'正在提交…':'开始完整流程 →'}}</button></form></dialog>
+    <dialog ref="stageDialog" class="stage-dialog" aria-labelledby="stage-title"><template v-if="stage"><div class="dialog-heading"><h2 id="stage-title">{{stage.label}}</h2><button class="icon-button" aria-label="关闭阶段详情" @click="stageDialog?.close()">×</button></div><span class="badge" :class="stage.status">{{labels[stage.status]}}</span><p>{{stageDescription(stage.name)}}</p><details v-if="stage.error" class="stage-error" open><summary>错误详情</summary><pre>{{stage.error}}</pre></details><p v-else class="muted">{{supportedWorkflow && stage.status==='pending'?'前序阶段完成后将自动开始。':'完整过程与产物保存在对应模块的记录文件中。'}}</p><div class="dialog-actions"><button v-if="canRetry && stage.status==='failed'" class="primary" :disabled="busy" @click="retry">重试未完成步骤</button><button @click="showStageFiles">查看本阶段文件 →</button><button @click="view='logs';stageDialog?.close()">执行日志</button></div></template></dialog>
   </main>
 </template>
 
 <style scoped>
+.search-summary{font-size:12px;color:#60776a;margin-top:8px}.search-summary p{margin-top:4px;overflow-wrap:anywhere}
 .workflow-page{height:100dvh;min-height:480px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:0 28px 20px;background:#f2f5f3;color:#263e31;font:14px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden}
 .workflow-page *{box-sizing:border-box}button,input,select{font:inherit}button,a,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}a{color:#356b4f;text-decoration:none}a:hover{text-decoration:underline}h1,h2,h3,p{margin:0}button{border:1px solid #d6e1d9;background:white;border-radius:7px;padding:8px 13px;color:#3e614b}button:hover{background:#edf4ef}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #39845b;outline-offset:3px}
 .primary{display:inline-block;background:#285e43;border:1px solid #285e43;color:white;padding:9px 16px;border-radius:7px;text-decoration:none;font-size:13px}.primary:hover{background:#1e4c34}

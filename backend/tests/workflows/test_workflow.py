@@ -21,7 +21,6 @@ from app.main import create_app
 from app.preprocessing.schemas import Ref
 from app.preprocessing.service import PreprocessingService
 from app.preprocessing.storage import file_hash
-from app.preprocessing.worker import Worker
 from app.workflows import dataset, outputs
 from app.workflows.schemas import WorkflowRequest
 from app.workflows.contracts import STAGE_CONTRACTS, SurveyOutput
@@ -62,10 +61,8 @@ def source(tmp_path, monkeypatch):
 
 
 async def finish(service, identity):
-    worker = Worker(service.preprocessing.store, service.preprocessing.allowed_roots)
-    async with asyncio.timeout(60):
+    async with asyncio.timeout(120):
         while not service.tasks[identity].done():
-            await asyncio.to_thread(worker.run_once)
             await asyncio.sleep(0.05)
         await service.tasks[identity]
     return service.get(OWNER, identity)
@@ -78,7 +75,9 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     prep = PreprocessingService(tmp_path / "preprocessing")
     service = WorkflowService(tmp_path / "workflows", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    request = WorkflowRequest(source_root=str(source))
+    request = WorkflowRequest(
+        source_root=str(source), search_budget={"max_candidates": 1}
+    )
     original = outputs.report
     calls = []
 
@@ -93,7 +92,11 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     failed = await finish(service, state["id"])
     assert failed["status"] == "failed" and failed["stages"][4]["status"] == "failed"
     job_id = failed["preprocessing_job"]
-    assert prep.store.status(OWNER, job_id).completed == 6
+    store, execution_owner = service.execution_store(failed)
+    assert execution_owner == "offline-search"
+    assert store.status(execution_owner, job_id).completed == 3
+    with pytest.raises(KeyError):
+        prep.store.status(OWNER, job_id)
     failed_files = {
         a["name"] for a in service.describe(OWNER, state["id"])["artifacts"]
     }
@@ -110,7 +113,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     completed = await finish(service, state["id"])
     assert completed["status"] == "completed"
     assert all(s["status"] == "completed" for s in completed["stages"])
-    assert all(r["attempt"] == 1 for r in prep.store.status(OWNER, job_id).records)
+    assert all(r["attempt"] == 1 for r in store.status(execution_owner, job_id).records)
     folder = service.folder(state["id"])
     index = json.loads((folder / "process/index.json").read_text(encoding="utf-8"))
     for stage in index["stages"]:
@@ -129,6 +132,8 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     projection = tmp_path / "standalone-report"
     for relative in [
         "process/index.json",
+        "process/formats.json",
+        "process/schema.json",
         *[STAGE_CONTRACTS[n][1] for n in STAGE_CONTRACTS][:4],
     ]:
         destination = projection / relative
@@ -157,10 +162,49 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     assert [int(r["source_sample"]) for r in rows] == [640, 1280, 1920, 2560] * 3
     assert [r["subject"] for r in rows] == list(groups)
     assert [r["split"] for r in rows] == list(splits)
-    assert train(delivery)["training_trials"] == 4
+    assert set(splits) == {"train"}
+    assert train(delivery)["training_trials"] == 12
     with zipfile.ZipFile(folder / "training-data.zip") as archive:
         manifest = json.loads(archive.read("manifest.json"))
         assert archive.testzip() is None
+        assert manifest["split_counts"] == {"train": 12, "validation": 0, "test": 0}
+        assert len(json.loads(archive.read("evaluation/folds.json"))) == 3
+        selection = completed["outputs"]["data_evaluation"]
+        panel_bytes = archive.read("evaluation/panel.json")
+        prediction_bytes = archive.read("evaluation/originalpredictions.tsv")
+        assert panel_bytes == (store.root.parent / "panel.json").read_bytes()
+        assert json.loads(panel_bytes)["trials"]
+        assert (
+            hashlib.sha256(panel_bytes).hexdigest() == selection["panel"]["file_sha256"]
+        )
+        assert (
+            hashlib.sha256(prediction_bytes).hexdigest()
+            == selection["selected_receipt"]["predictions_sha256"]
+        )
+        predictions = list(
+            csv.DictReader(
+                prediction_bytes.decode("utf-8").splitlines(), delimiter="\t"
+            )
+        )
+        eligible = {
+            t["event_id"] for t in json.loads(panel_bytes)["trials"] if t["eligible"]
+        }
+        scored = [row for row in predictions if row["primary_prediction"]]
+        assert {row["event_id"] for row in scored} == eligible
+        subject_scores = []
+        for subject in sorted({row["subject"] for row in scored}):
+            subject_rows = [row for row in scored if row["subject"] == subject]
+            recalls = []
+            for label in sorted({row["label"] for row in subject_rows}):
+                class_rows = [row for row in subject_rows if row["label"] == label]
+                recalls.append(
+                    sum(row["primary_prediction"] == label for row in class_rows)
+                    / len(class_rows)
+                )
+            subject_scores.append(sum(recalls) / len(recalls))
+        assert sum(subject_scores) / len(subject_scores) == pytest.approx(
+            selection["score"]
+        )
         for entry in manifest["files"]:
             assert (
                 hashlib.sha256(archive.read(entry["name"])).hexdigest()
@@ -168,16 +212,24 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
             )
             assert file_hash(delivery / entry["name"]) == entry["sha256"]
     selection = completed["outputs"]["data_evaluation"]
-    plan = prep.store.get(
-        OWNER,
+    plan = store.get(
+        execution_owner,
         Ref.model_validate(completed["outputs"]["data_preprocessing"]["plan_ref"]),
         "plan",
     )
-    result = prep.store.status(OWNER, job_id)
-    assert outputs.choose(result, plan, prep.store, 42) == selection
+    result = store.status(execution_owner, job_id)
+    search = service.search_service().get(OWNER, completed["search_id"])
+    assert outputs.choose(search, plan, store) == selection
     assert (
-        selection["quality_evaluated"] is False
-        and len(selection["eligible_candidates"]) == 2
+        selection["quality_evaluated"] is True
+        and selection["evaluation_scope"] == "development"
+        and len(selection["candidate_summary"]) == len(search["candidates"])
+    )
+    assert selection["selected_method_ref"] == plan["request"]["methods"][0]
+    assert any(
+        candidate["candidate_id"] == selection["selected_candidate_id"]
+        and candidate["score"] == selection["score"]
+        for candidate in selection["candidate_summary"]
     )
 
     settings = Settings(
@@ -224,7 +276,8 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
         )
         assert report.status_code == 200 and "Content-Disposition" not in report.headers
         assert report.headers["Cache-Control"] == "private, no-cache"
-        assert "未进行质量排名" in report.text
+        assert "开发被试平均平衡准确率" in report.text
+        assert "未进行质量排名" not in report.text
         assert (
             client.get(
                 prefix + "/artifacts/training-data.zip", headers=headers
@@ -249,7 +302,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
             ).status_code
             == 422
         )
-    # A corrupt candidate must not remain eligible for random selection.
+    # Corruption invalidates the measured winner; no substitute is selected.
     victim = next(
         r
         for r in result.records
@@ -258,10 +311,9 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     artifact = next(
         a for a in victim["result"]["artifacts"] if a["name"] == "signal_V.npy"
     )
-    (prep.store.root / artifact["path"]).write_bytes(b"corrupt")
-    remaining = outputs.choose(result, plan, prep.store, 42)
-    assert len(remaining["eligible_candidates"]) == 1
-    assert remaining["selected_method_ref"] != selection["selected_method_ref"]
+    (store.root / artifact["path"]).write_bytes(b"corrupt")
+    with pytest.raises(ValueError):
+        outputs.choose(search, plan, store)
     await service.close()
 
 
@@ -313,7 +365,9 @@ def test_source_changed_after_survey_is_rejected(source, tmp_path):
 
 
 def test_source_boundary_and_request_validation(source, tmp_path):
-    request = WorkflowRequest(source_root=str(source))
+    request = WorkflowRequest(
+        source_root=str(source), search_budget={"max_candidates": 1}
+    )
     assert WorkflowRequest(source_root=str(source), tmin=-0.2, tmax=6).tmin == -0.2
     with pytest.raises(ValueError, match="允许范围"):
         dataset.allowed_source(request, [tmp_path / "elsewhere"], [])
@@ -331,7 +385,7 @@ def test_source_boundary_and_request_validation(source, tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
+async def test_single_subject_cannot_produce_cross_subject_evaluation(source, tmp_path):
     prep = PreprocessingService(tmp_path / "preprocessing")
     service = WorkflowService(tmp_path / "workflows", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
@@ -346,48 +400,9 @@ async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     await service.resume()
     result = await finish(service, state["id"])
-    assert result["status"] == "completed", result["error"]
-    manifest = json.loads(
-        (service.folder(state["id"]) / "delivery/manifest.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert manifest["split_counts"] == {"train": 4, "validation": 0, "test": 0}
-    assert np.load(
-        service.folder(state["id"]) / "delivery/split.npy", allow_pickle=False
-    ).dtype == np.dtype("<U10")
-    assert any("分组为空" in s for s in manifest["limitations"])
-    # A legacy persisted run resumes with the original numeric attempts intact.
-    result.pop("schema_version")
-    result["status"] = "failed"
-    result["stages"][4]["status"] = "failed"
-    result["stages"][5]["status"] = "pending"
-    result["outputs"].pop("data_report")
-    result["outputs"].pop("data_delivery")
-    survey = result["outputs"]["data_survey"]
-    channels = survey.pop("channel_sets")
-    for record in survey["records"]:
-        record["channels"] = channels[record.pop("channel_set")]
-    prep_output = result["outputs"]["data_preprocessing"]
-    prep_output.pop("methods")
-    prep_output.pop("records")
-    (service.folder(state["id"]) / "delivery/leftover.json").write_text(
-        "{}", encoding="utf-8"
-    )
-    service.save(result)
-    service.retry(OWNER, state["id"])
-    upgraded = await finish(service, state["id"])
-    assert upgraded["status"] == "completed", upgraded["error"]
-    assert upgraded["schema_version"] == "1"
-    with zipfile.ZipFile(service.folder(state["id"]) / "training-data.zip") as archive:
-        assert "output.json" not in archive.namelist()
-        assert "leftover.json" not in archive.namelist()
-        upgraded_manifest = json.loads(archive.read("manifest.json"))
-        assert set(archive.namelist()) == {
-            a["name"] for a in upgraded_manifest["files"]
-        } | {"manifest.json"}
-    assert all(
-        r["attempt"] == 1
-        for r in prep.store.status(OWNER, upgraded["preprocessing_job"]).records
-    )
+    assert result["status"] == "failed"
+    assert result["stages"][2]["status"] == "failed"
+    assert "subject" in result["error"].lower() or "被试" in result["error"]
+    assert "data_evaluation" not in result["outputs"]
+    assert not (service.folder(state["id"]) / "training-data.zip").exists()
     await service.close()

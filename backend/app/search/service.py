@@ -20,6 +20,7 @@ from .io import directory_bytes, read, write
 from .processes import ProcessTree
 from .reasoning import decide, read_evidence
 from .evaluation_contracts import FrozenPanel, EvaluationReceipt
+from .hypotheses import validate_hypothesis, check_predictions
 
 
 def now():
@@ -39,6 +40,7 @@ class SearchService:
         self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self.workflows = workflows
+        workflows.searches = self
         self.llm = llm if llm is not None else workflows.llm
         if isinstance(self.llm, OpenAICompatibleClient):
             # Every actual provider request is charged by the search ledger.
@@ -56,9 +58,7 @@ class SearchService:
         return within(self.root, identity)
 
     def get(self, owner, identity):
-        state = SearchState.model_validate(
-            read(self.folder(identity) / "search.json")
-        ).model_dump(mode="json")
+        state = read(self.folder(identity) / "search.json")
         if state["owner"] != owner:
             raise KeyError("search not found")
         return state
@@ -200,13 +200,20 @@ class SearchService:
                     if doc["id"] not in {d["id"] for d in documents}:
                         documents.append(doc)
         protocol = {
-            "version": "1",
+            "version": "2",
             "request": request.model_dump(mode="json"),
             "deadline": started + request.budget.max_seconds,
             "input_hash": digest(data_json),
             "source_workflow_id": request.workflow_id,
             "scope": "offline_development_panel",
-            "evaluator": "logvariance-scaler-logistic-v1",
+            "evaluator": "csp-shrinkage-lda-v2",
+            "secondary_evaluator": "logvariance-scaler-logistic",
+            "evaluation_mode": "subject_holdout"
+            if request.train_subjects
+            else "group_cross_validation",
+            "split_rationale": "Explicit subject roles"
+            if request.train_subjects
+            else "Seeded subject folds, min(5, n_subjects); every subject has out-of-fold predictions. Engineering evaluation protocol, not a dataset optimum.",
             "metric": "subject_macro_balanced_accuracy",
             "selection": "highest_development_ba",
             "tie_break": ["reference", "fewer_operators", "catalog_order"],
@@ -219,7 +226,19 @@ class SearchService:
             "sources_hash": digest(documents),
             "panel_request_hash": digest(panel_request),
             "limits": limits.model_dump(),
-            "adaptation": "fixed_full_record_operations_only",
+            "numeric_threads": 1,
+            "adaptation": "shared_policy_with_label_free_subject_batch_fitting",
+            "information_permissions": {
+                "target_signals": "whole_unlabelled_subject_batch",
+                "target_labels": "scoring_only",
+                "policy_selection": "development_feedback",
+                "independent_confirmation": False,
+            },
+            "parameter_provenance": {
+                "bands": "engineering comparison grid",
+                "alignment": "He & Wu, arXiv:1808.05464",
+                "conditional_thresholds": "engineering hypotheses (3 and 10), not validated physiological cutoffs",
+            },
             "confirmation": "not_performed; these data are development data previously available to the workflow",
             "failure_denominator": "candidate must predict every predeclared eligible development trial",
             "cost_scope": "elapsed time includes preprocessing, evaluation, LLM, failed attempts and downtime; memory is sampled process-tree RSS; final report export is separate; money/provider token usage unavailable",
@@ -252,6 +271,7 @@ class SearchService:
         return self.describe(owner, identity)
 
     def start(self, owner, identity):
+        self.verify_runtime(self.get(owner, identity))
         if identity not in self.tasks or self.tasks[identity].done():
             self.tasks[identity] = asyncio.create_task(self.run(owner, identity))
 
@@ -259,7 +279,10 @@ class SearchService:
         for path in self.root.glob("*/search.json"):
             state = read(path)
             if state["status"] in {"preparing", "running", "interrupted"}:
-                self.start(state["owner"], state["id"])
+                try:
+                    self.start(state["owner"], state["id"])
+                except (IntegrityFailure, OSError, KeyError):
+                    continue
 
     async def close(self):
         active = [t for t in self.tasks.values() if not t.done()]
@@ -282,6 +305,10 @@ class SearchService:
 
     def retry(self, owner, identity):
         state = self.get(owner, identity)
+        try:
+            self.verify_runtime(state)
+        except IntegrityFailure as exc:
+            raise ValueError(str(exc)) from exc
         if state["stop_reason"] == "integrity_failure":
             raise ValueError("冻结内容或已验证产物改变，需重新创建搜索")
         if state["status"] not in {"failed", "interrupted", "cancelled"}:
@@ -340,6 +367,10 @@ class SearchService:
             os.environ,
             PYTHONUTF8="1",
             PYTHONPATH=str(Path(__file__).resolve().parents[2]),
+            OMP_NUM_THREADS="1",
+            OPENBLAS_NUM_THREADS="1",
+            MKL_NUM_THREADS="1",
+            NUMEXPR_NUM_THREADS="1",
         )
         logfile = root / (f"{stage}-{candidate_id or 'panel'}.log")
         with logfile.open("ab") as log:
@@ -465,6 +496,7 @@ class SearchService:
                 root / "candidates" / identity / "method.json",
                 method(entry, state["panel"]).model_dump(mode="json"),
             )
+            write(root / "candidates" / identity / "policy.json", entry)
         receipt_path = root / "candidates" / identity / "receipt.json"
         while True:
             self.verify_runtime(state)
@@ -818,6 +850,7 @@ class SearchService:
                 state,
                 "propose_candidate",
                 status="reserved",
+                request=proposal,
                 **{
                     k: proposal[k]
                     for k in (
@@ -840,10 +873,28 @@ class SearchService:
                 )
                 self.save(state)
                 continue
+            if strategy == "adaptive":
+                try:
+                    validate_hypothesis(proposal, state["candidates"])
+                except (ValueError, KeyError) as exc:
+                    action.update(status="rejected", error=str(exc))
+                    self.save(state)
+                    continue
             result = await self.candidate(state, proposal["candidate_id"])
+            parent = next(
+                c
+                for c in state["candidates"]
+                if c["id"] == proposal["base_candidate_id"]
+            )
             action.update(
                 status="completed",
-                result={"candidate_id": result["id"], "status": result["status"]},
+                result={
+                    "candidate_id": result["id"],
+                    "status": result["status"],
+                    "prediction_checks": check_predictions(
+                        proposal, parent["receipt"], result.get("receipt") or {}
+                    ),
+                },
             )
             self.save(state)
 
@@ -871,13 +922,21 @@ class SearchService:
             selected_candidate_id=select(state["candidates"]) if verified else None,
         )
         state["message"] = "搜索结束，开发候选与完整记录已保存"
-        self.save(state)
         from .reporting import render
 
-        await asyncio.to_thread(render, self.folder(state["id"]), state)
+        try:
+            await asyncio.to_thread(render, self.folder(state["id"]), state)
+        except Exception as exc:
+            state.update(
+                status="failed",
+                stop_reason="publication_failed",
+                selected_candidate_id=None,
+                error=f"结果发布失败：{type(exc).__name__}: {exc}",
+            )
+        self.save(state)
 
     def artifact(self, owner, identity, name):
-        self.get(owner, identity)
+        state = self.get(owner, identity)
         path = within(self.folder(identity), name)
         if (
             not path.is_file()
@@ -885,4 +944,19 @@ class SearchService:
             or path.name.endswith(("-wal", "-shm"))
         ):
             raise KeyError("artifact not found")
+        if name in {"selection.json", "report.html", "files.json"} and (
+            state["status"] in {"running", "preparing", "interrupted"}
+            or state.get("stop_reason") == "publication_failed"
+        ):
+            raise KeyError("artifact not published")
+        index = self.folder(identity) / "files.json"
+        if index.is_file() and name not in {"search.json", "files.json"}:
+            entry = next(
+                (item for item in read(index)["files"] if item["name"] == name), None
+            )
+            if entry is not None and (
+                path.stat().st_size != entry["bytes"]
+                or file_hash(path) != entry["sha256"]
+            ):
+                raise ValueError("已发布产物的内容与校验记录不同")
         return path
