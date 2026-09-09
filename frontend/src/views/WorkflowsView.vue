@@ -46,7 +46,8 @@ const stageDescriptions: Record<string,string> = {
   data_delivery:'导出训练数组、标签、被试分组和复现记录。',
 }
 function fileUrl(name: string, download = true) {
-  return apiUrl(`/api/workflows/${current.value!.id}/artifacts/${name.split('/').map(encodeURIComponent).join('/')}?download=${download}`)
+  const hash = current.value?.artifacts.find(file => file.name === name)?.sha256
+  return apiUrl(`/api/workflows/${current.value!.id}/artifacts/${name.split('/').map(encodeURIComponent).join('/')}?download=${download}${hash ? `&v=${encodeURIComponent(hash)}` : ''}`)
 }
 function date(value: string) { return new Date(value).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }
 async function showStage(item: Stage) { stageName.value=item.name; await nextTick(); stageDialog.value?.showModal() }

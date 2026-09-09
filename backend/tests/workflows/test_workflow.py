@@ -223,6 +223,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
             prefix + "/artifacts/report/report.html?download=false", headers=headers
         )
         assert report.status_code == 200 and "Content-Disposition" not in report.headers
+        assert report.headers["Cache-Control"] == "private, no-cache"
         assert "未进行质量排名" in report.text
         assert (
             client.get(

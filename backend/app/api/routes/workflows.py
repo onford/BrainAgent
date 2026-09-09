@@ -62,6 +62,7 @@ def artifact(
         media_type=media,
         filename=path.name if download else None,
         headers={
+            "Cache-Control": "private, no-cache",
             "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; base-uri 'none'",
             "X-Content-Type-Options": "nosniff",
         },
