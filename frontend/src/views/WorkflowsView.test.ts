@@ -13,7 +13,8 @@ vi.mock('vue-router', () => ({
 function workflow(status: string) {
   return {
     id: 'abc123', status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
-    request: { source_root: 'E:/dataset/eeg/EEGMMIDB' }, error: null, artifacts: [], events: [],
+    request: { source_root: 'E:/dataset/eeg/EEGMMIDB' }, error: null,
+    artifacts: status === 'completed' ? [{name:'report/report.html',bytes:500,sha256:'abc'}] : [], events: [],
     stages: ['数据调研', '数据接入', '数据预处理', '结果选择', '数据报告', '数据交付'].map((label, i) => ({
       name: `stage${i}`, label, status: status === 'completed' ? 'completed' : i === 4 ? 'failed' : 'pending',
     })),
@@ -22,7 +23,11 @@ function workflow(status: string) {
 }
 
 describe('WorkflowsView', () => {
-  beforeEach(() => { request.mockReset(); replace.mockReset().mockResolvedValue(undefined) })
+  beforeEach(() => {
+    request.mockReset(); replace.mockReset().mockResolvedValue(undefined)
+    HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open','') }
+    HTMLDialogElement.prototype.close = function() { this.removeAttribute('open') }
+  })
 
   it('starts the configured training workflow and exposes completed downloads and report', async () => {
     const completed = workflow('completed')
@@ -72,25 +77,33 @@ describe('WorkflowsView', () => {
     request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
-    const links = wrapper.findAll('.survey-reports a')
-    expect(links).toHaveLength(2)
-    expect(links[0]!.text()).toBe('数据集基本信息')
-    expect(links.every(link => link.attributes('href')?.endsWith('?download=false'))).toBe(true)
-    expect(wrapper.find('iframe').exists()).toBe(false)
+    const choices = wrapper.findAll('nav[aria-label="选择报告"] button')
+    expect(choices).toHaveLength(2)
+    expect(choices[0]!.text()).toContain('数据集基本信息')
+    expect(wrapper.get('iframe').attributes('src')).toContain('dataset-basic.html?download=false')
+    await choices[1]!.trigger('click')
+    expect(wrapper.get('iframe').attributes('src')).toContain('literature-usage.html?download=false')
+    await wrapper.get('.reader-actions button').trigger('click')
+    expect(wrapper.get('main').classes()).toContain('focused')
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))
+    await flushPromises()
+    expect(wrapper.get('main').classes()).not.toContain('focused')
     wrapper.unmount()
   })
 
-  it('keeps long stage errors collapsed outside the stage grid', async () => {
+  it('opens long errors in a stage dialog without expanding the progress layout', async () => {
     const state = workflow('failed')
     const message = 'quote must occur verbatim in its retrieved source; '.repeat(30)
     Object.assign(state.stages[4], { error: message })
     request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
-    const details = wrapper.get('details.stage-error')
-    expect(details.attributes('open')).toBeUndefined()
-    expect(details.get('summary').text()).toContain('数据报告：查看错误详情')
-    expect(details.get('.error').text()).toBe(message.trim())
+    expect(wrapper.get('.stage-dialog').attributes('open')).toBeUndefined()
+    await wrapper.findAll('.stages button')[4]!.trigger('click')
+    await flushPromises()
+    expect(wrapper.get('.stage-dialog').attributes('open')).toBeDefined()
+    expect(wrapper.get('.stage-dialog h2').text()).toBe('数据报告')
+    expect(wrapper.get('.stage-error pre').text()).toBe(message.trim())
     expect(wrapper.get('.stages').text()).not.toContain('quote must occur')
     wrapper.unmount()
   })
@@ -113,7 +126,14 @@ describe('WorkflowsView', () => {
     expect(links).toHaveLength(state.artifacts.length)
     expect(links.map(link => link.text()).sort()).toEqual(state.artifacts.map(a => a.name).sort())
     expect(wrapper.get('.files-panel').text()).toContain('6 个文件')
-    expect(wrapper.findAll('.file-group').every(group => group.attributes('open') !== undefined)).toBe(true)
+    await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
+    await wrapper.get('input[aria-label="查找文件"]').setValue('事件')
+    expect(wrapper.findAll('.file-group a')).toHaveLength(2)
+    await wrapper.get('input[aria-label="查找文件"]').setValue('')
+    const filter = wrapper.findAll('.files-panel nav button').find(b=>b.text().startsWith('数据调研'))!
+    await filter.trigger('click')
+    expect(wrapper.findAll('.file-group a')).toHaveLength(1)
+    expect(wrapper.get('.file-group a').text()).toBe('survey/survey.json')
     wrapper.unmount()
   })
 
