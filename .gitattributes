@@ -1,3 +1,23 @@
+* text=auto
+.gitattributes text eol=lf
+.gitignore text eol=lf
 *.py text eol=lf
+*.vue text eol=lf
+*.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.sh text eol=lf
+*.ps1 text eol=crlf
+*.edf binary
+*.eeg binary
+*.fif binary
+*.npy binary
+*.npz binary
+*.zip binary
+
+# Preserve imported research sources byte-for-byte.
 backend/app/preprocessing/units/catalog.json text eol=lf
 docs/sources/* -text -diff

@@ -50,9 +50,14 @@ def local_files(folder, state, previous=()):
     }
     entries = []
     for path in sorted(folder.rglob("*")):
-        if not path.is_file() or path.name.startswith(".") or path.suffix == ".tmp":
-            continue
         relative = path.relative_to(folder)
+        if (
+            not path.is_file()
+            or any(part.startswith(".") for part in relative.parts)
+            or path.suffix in {".tmp", ".bak", ".orig", ".rej", ".swp", ".swo"}
+            or path.name.endswith("~")
+        ):
+            continue
         name = relative.as_posix()
         if not (
             relative.parts[0] in finished | {"process"}

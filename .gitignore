@@ -1,19 +1,44 @@
+# Local credentials and configuration (examples remain reviewable).
 .env
+.env.*
+!.env.example
+!.env.*.example
+!.env.template
+
+# Dependencies and local tools.
 .venv/
-.venv-eeg/
+.venv-*/
 .local/
-__pycache__/
-.pytest_cache/
-*.py[cod]
+node_modules/
+.pnpm-store/
+
+# Generated datasets, workflow artifacts and service state.
+workspace/
+data/
+/backend/logs/
 *.db
 *.db-shm
 *.db-wal
-node_modules/
+
+# Build, test and interpreter output.
 dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
 *.tsbuildinfo
-.pnpm-store/
+
+# Editor and merge leftovers; history belongs in Git.
 .DS_Store
-workspace/
-backend/logs/
-data/
-*.db
+Thumbs.db
+*.swp
+*.swo
+*~
+*.bak
+*.orig
+*.rej

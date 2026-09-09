@@ -35,7 +35,7 @@ const reports = computed(() => {
     'report/report.html':'最终处理报告',
   }
   const available = new Set(current.value?.artifacts.map(a=>a.name))
-  return Object.entries(titles).map(([name,title])=>({name: name==='survey/reports/data-information.html' && available.has('survey/observation-v2/reports/data-information.html') ? 'survey/observation-v2/reports/data-information.html' : name,title})).filter(({name})=>available.has(name)).map(({name,title})=>({name,title,description:artifactDescription(name)}))
+  return Object.entries(titles).filter(([name])=>available.has(name)).map(([name,title])=>({name,title,description:artifactDescription(name)}))
 })
 const stageDescriptions: Record<string,string> = {
   data_survey:'核对本地文件、官网与论文，整理统计和后续操作需要的文献。',

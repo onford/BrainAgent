@@ -1,6 +1,5 @@
 # ruff: noqa: F811
 import csv
-import json
 from copy import deepcopy
 
 import pytest
@@ -109,31 +108,3 @@ def test_fractional_event_samples_and_mixed_rates_are_preserved(source, tmp_path
     assert float(events[0]["sample_position"]) == pytest.approx(16.16)
     assert float(events[1]["sample_position"]) == pytest.approx(8.08)
     assert events[0]["duration_s"] == "0.103"
-
-
-def test_legacy_refresh_preserves_original_files_and_publishes_separately(
-    source, products, tmp_path
-):
-    from app.workflows.local_refresh import refresh_local_report
-
-    workflow = tmp_path / "workflow"
-    folder = workflow / "survey"
-    request = WorkflowRequest(source_root=str(source), runs=[4])
-    survey = dataset.inspect(source, request, folder)
-    for path, value in (
-        (
-            workflow / "workflow.json",
-            {"status": "completed", "request": request.model_dump()},
-        ),
-        (folder / "survey.json", survey),
-        (folder / "verification.json", products[3].model_dump()),
-        (folder / "sources.json", products[1].model_dump()),
-    ):
-        path.write_text(json.dumps(value), encoding="utf-8")
-    original = {p: p.read_bytes() for p in workflow.rglob("*") if p.is_file()}
-    report = refresh_local_report(workflow)
-    assert report == folder / "observation-v2/reports/data-information.html"
-    assert "尚未重新调研" in report.read_text(encoding="utf-8")
-    assert all(p.read_bytes() == data for p, data in original.items())
-    with pytest.raises(ValueError, match="already exists"):
-        refresh_local_report(workflow)
