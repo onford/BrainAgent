@@ -25,8 +25,7 @@ STAGE_LABELS = (
 class WorkflowRequest(Contract):
     source_root: str
     adapter: Literal["eegmmidb"] = "eegmmidb"
-    subjects: list[str] = Field(default_factory=list, max_length=12)
-    max_subjects: int = Field(default=3, ge=1, le=12)
+    subjects: list[str] = Field(default_factory=list)
     runs: list[Literal[4, 8, 12]] = Field(default_factory=lambda: [4, 8], min_length=1)
     seed: int = Field(default=42, ge=0, le=2**32 - 1)
     tmin: float = Field(default=0, ge=0)

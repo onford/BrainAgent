@@ -1,6 +1,6 @@
 """Readable projections of object-based local observations."""
 
-from .reporting import escape
+from .reporting import escape, identifiers
 
 GROUPS = {
     "scope": "范围与覆盖",
@@ -25,7 +25,7 @@ def comparison_value(local, field):
     if field == "directory_structure":
         return local.scope_text
     if field == "subjects":
-        return ", ".join(local.scope.selected_subjects) + "（目录 / 文件名编号）"
+        return identifiers(local.scope.selected_subjects) + "（目录 / 文件名编号）"
     grouped = {}
     for key, r in local.recordings.items():
         if r.read_status != "readable":
@@ -69,7 +69,7 @@ def comparison_value(local, field):
             (
                 f"全部 {len(keys)} 条已读取记录"
                 if len(keys) == local.statistics.readable_records
-                else ", ".join(keys)
+                else identifiers(keys)
             )
             + "："
             + value
@@ -149,8 +149,29 @@ def observation_html(local):
             for key, r in local.recordings.items()
         ],
     )
-    body += '<h3>记录详情</h3><p class="muted">选择记录打开详情窗口，查看信号、事件和原始头。</p><div class="observation-grid">'
-    for key, r in local.recordings.items():
+    body += '<h3>记录详情</h3><p class="muted">按被试展开记录，再选择记录查看信号、事件和原始头。</p><div class="subject-list">'
+    active_subject = None
+    for key, r in sorted(
+        local.recordings.items(), key=lambda item: (item[1].subject_id, item[1].run_id)
+    ):
+        if active_subject != r.subject_id:
+            if active_subject is not None:
+                body += "</div></details>"
+            active_subject = r.subject_id
+            records = [
+                k
+                for k, item in local.recordings.items()
+                if item.subject_id == active_subject
+            ]
+            body += (
+                '<details class="subject-group" data-search="'
+                + escape(" ".join(records))
+                + '"><summary>'
+                + escape(active_subject)
+                + " · "
+                + str(len(records))
+                + ' 条记录</summary><div class="observation-grid">'
+            )
         body += (
             '<details class="observation-record" name="observation-record"><summary><strong>'
             + escape(key)
@@ -250,7 +271,9 @@ def observation_html(local):
             + escape("#/recordings/" + key)
             + "</p></details></div></details>"
         )
-    sections["organization"] = body + "</div>"
+    sections["organization"] = (
+        body + ("</div></details>" if active_subject else "") + "</div>"
+    )
     body = "<h3>共享通道与采集设置</h3>"
     for key, names in local.channel_sets.items():
         members = [k for k, r in local.recordings.items() if r.channel_set_ref == key]
@@ -260,7 +283,7 @@ def observation_html(local):
             + " 个通道 · "
             + str(len(members))
             + " 条记录使用</summary><p>"
-            + escape(", ".join(members))
+            + escape(identifiers(members))
             + "</p><p>"
             + escape(", ".join(names))
             + "</p></details>"
@@ -293,7 +316,7 @@ def observation_html(local):
     sections["statistics"] = "<h3>记录长度差异</h3>" + table(
         ["样点数", "时长（秒）", "记录数", "对应记录"],
         [
-            (n, duration, len(keys), ", ".join(keys))
+            (n, duration, len(keys), identifiers(keys))
             for (n, duration), keys in duration_groups.items()
         ],
     )

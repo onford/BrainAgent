@@ -48,7 +48,7 @@ from .collection_contracts import (
 
 from .local_contracts import LocalObservation, LocalEvent
 
-FORMAT_VERSION = "5"
+FORMAT_VERSION = "6"
 ARRAY_FORMATS = {
     "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
     "y.npy": {

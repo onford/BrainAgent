@@ -58,6 +58,36 @@ def test_objects_share_configs_preserve_missing_records_and_reject_inconsistent_
             LocalObservation.model_validate(value)
 
 
+def test_default_discovers_all_subjects_without_a_count_limit(source, tmp_path):
+    for i in range(4, 16):
+        folder = source / f"S{i:03}"
+        folder.mkdir()
+        (folder / f"S{i:03}R04.edf").write_bytes(b"fixture")
+    request = WorkflowRequest(source_root=str(source), runs=[4])
+    survey = dataset.inspect(source, request, tmp_path / "survey")
+    assert len(survey["selected_subjects"]) == 15
+    assert survey["selected_subjects"][-1] == "S015"
+    assert "max_subjects" not in request.model_dump()
+    assert (
+        len(
+            WorkflowRequest(
+                source_root=str(source), subjects=survey["selected_subjects"]
+            ).subjects
+        )
+        == 15
+    )
+    assert (
+        len(
+            dataset.inspect(
+                source,
+                WorkflowRequest(source_root=str(source), subjects=["S015"], runs=[4]),
+                tmp_path / "subset",
+            )["records"]
+        )
+        == 1
+    )
+
+
 def test_runtime_schema_rejects_cross_field_and_invented_pointers(
     source, products, tmp_path
 ):  # noqa: F811

@@ -11,6 +11,13 @@ def escape(value):
     return html.escape(str(value), quote=True)
 
 
+def identifiers(values):
+    values = list(values)
+    return ", ".join(values[:8]) + (
+        f" …（共 {len(values)} 项；完整名单见记录明细）" if len(values) > 8 else ""
+    )
+
+
 def rows(values):
     return "".join(
         "<tr>" + "".join(f"<td>{escape(v)}</td>" for v in row) + "</tr>"
@@ -330,7 +337,7 @@ def render_report(folder):
                 ],
                 [
                     "范围",
-                    ", ".join(data.subjects)
+                    identifiers(data.subjects)
                     + "；Run "
                     + ", ".join(map(str, data.runs)),
                 ],

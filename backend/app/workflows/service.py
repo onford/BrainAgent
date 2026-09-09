@@ -326,6 +326,9 @@ class WorkflowService:
                 # Persist the measured input before remote research can fail.
                 # A retry cannot silently combine new source bytes with old findings.
                 write_readable(checkpoint, value)
+            cognition.progress(
+                f"路径调研发现 {value['available_subjects']} 名被试；本轮选择 {len(value['selected_subjects'])} 名、{len(value['records'])} 条记录，开始资料核对"
+            )
             findings = await cognition.research(value)
             sources = cognition.load("survey/sources.json", ResearchSources)
             value["profile"] = dict(value["profile"])

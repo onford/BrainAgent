@@ -93,7 +93,7 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 ## API 与恢复
 
 - `GET /api/workflows/sources`：允许的源目录与适配器。
-- `POST /api/workflows`：提交 `source_root`、`subjects` 或 `max_subjects`、`runs`、`seed`、`tmin/tmax`，返回 202 和流程 ID。
+- `POST /api/workflows`：提交 `source_root`、可选的 `subjects`（省略时扫描路径并使用全部被试）、`runs`、`seed`、`tmin/tmax`，返回 202 和流程 ID。
 - `GET /api/workflows`、`GET /api/workflows/{id}`：列表、逐模块状态、事件与结果。
 - `POST /api/workflows/{id}/retry`：重试失败或中断流程，复用已经完成的模块。
 - `GET /api/workflows/{id}/artifacts/{name}`：检查归属及哈希后下载；HTML 支持 `?download=false` 预览。

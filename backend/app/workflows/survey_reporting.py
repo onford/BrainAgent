@@ -8,7 +8,14 @@ from urllib.parse import urlsplit
 from app.preprocessing.storage import file_hash
 from .cognition_contracts import ResearchSources
 from .contracts import SurveyOutput
-from .reporting import FIELD_LABELS, STATUS_LABELS, TARGET_LABELS, escape, rows
+from .reporting import (
+    FIELD_LABELS,
+    STATUS_LABELS,
+    TARGET_LABELS,
+    escape,
+    rows,
+    identifiers,
+)
 from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
 
 REPORTS = {
@@ -113,7 +120,7 @@ def basic(survey, verification, sources):
                 "扫描发现的被试 / EDF 记录",
                 f"{survey.available_subjects} / {survey.available_recordings}",
             ),
-            ("选择被试", ", ".join(survey.selected_subjects)),
+            ("选择被试", identifiers(survey.selected_subjects)),
             ("选择 Run", ", ".join(map(str, sorted({r.run for r in survey.records})))),
             ("统计范围", survey.scope),
             ("资料核对日期", survey.profile.profile_reviewed),

@@ -379,13 +379,18 @@ def coverage_table(screening, sources, catalog):
 
 async def research(agent, survey):
     local = agent.load("survey/local-inspection.json", LocalInspection)
+    from .local_contracts import LocalObservation
+
+    local_facts = local.facts
     inputs = {
         "request": agent.state["request"],
         "adapter_profile_to_verify": survey["profile"],
-        "local_inspection": local.model_dump(),
+        "local_inspection": local.research_context()
+        if isinstance(local, LocalObservation)
+        else local.model_dump(),
         "local_reference_catalog": {
-            field: [f.id for f in local.facts if f.field == field]
-            for field in {f.field for f in local.facts}
+            field: [f.id for f in local_facts if f.field == field]
+            for field in {f.field for f in local_facts}
         },
         "local_records": survey["records"],
         "verification_source_candidates": survey["evidence"],

@@ -254,7 +254,31 @@ class LocalObservation(Contract):
     @property
     def scope_text(self):
         s = self.scope
-        return f"目录扫描：{s.discovered_files} 个文件；选择 {len(self.recordings)} 条记录，成功读取 {self.statistics.readable_records} 条。未选择记录未进行信号检查。"
+        return f"目录扫描：{s.discovered_files} 个文件、{s.discovered_subjects} 名被试；选择 {len(s.selected_subjects)} 名被试、{len(self.recordings)} 条记录，成功读取 {self.statistics.readable_records} 条。未选择记录未进行信号检查。"
+
+    def research_context(self):
+        """Keep every record measurable without repeating full per-signal headers."""
+        value = self.model_dump(
+            mode="json", exclude={"recordings": {"__all__": {"storage"}}}
+        )
+        for key, record in self.recordings.items():
+            header = record.storage
+            value["recordings"][key]["storage"] = (
+                None
+                if header is None
+                else {
+                    "format": header.format,
+                    "header_bytes": header.header_bytes,
+                    "signal_count": len(header.signals),
+                    "physical_dimensions": sorted(
+                        {s.physical_dimension for s in header.signals}
+                    ),
+                    "data_records": header.data_records,
+                    "record_duration_s": header.record_duration_s,
+                    "full_header_ref": "#/recordings/" + key + "/storage",
+                }
+            )
+        return value
 
     @property
     def facts(self):

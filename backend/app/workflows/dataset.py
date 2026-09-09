@@ -84,7 +84,7 @@ def inspect(root, request, folder):
 
     all_edf = sorted(root.glob("S[0-9][0-9][0-9]/S*R*.edf"))
     subjects = sorted({p.parent.name for p in all_edf})
-    chosen = request.subjects or subjects[: request.max_subjects]
+    chosen = request.subjects or subjects
     if not chosen:
         raise ValueError("没有找到 EEGMMIDB EDF 记录")
     records, checks, channel_sets = [], [], {}

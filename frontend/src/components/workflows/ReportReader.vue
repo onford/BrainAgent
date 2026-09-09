@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { installReportPagination } from '../../utils/reportPagination'
 
 type Report = { name: string; title: string; description: string }
 const props = defineProps<{ reports: Report[]; workflowId: string; fileUrl: (name: string, download?: boolean) => string; focused: boolean }>()
@@ -31,6 +32,8 @@ function loaded() {
     const style = doc.createElement('style')
     style.textContent = 'body{background:#fff!important}main{padding:24px 30px!important;max-width:none!important}main>nav,main>p:first-child,main>h1{display:none!important}h2{scroll-margin-top:24px}table{font-size:14px}a{overflow-wrap:anywhere}@media(max-width:600px){main{padding:18px!important}}'
     doc.head.append(style)
+    style.textContent += '.report-pagination{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:12px 0;font-size:12px;color:#617368}.report-pagination input{padding:8px 10px;border:1px solid #d4dfd8;border-radius:6px;flex:1;min-width:120px}.report-pagination button{padding:6px 10px;background:#f3f7f4;border:1px solid #d4dfd8;border-radius:5px;color:#365c45;cursor:pointer}.report-pagination button:disabled{opacity:.4;cursor:default}[hidden]{display:none!important}@media print{.report-pagination{display:none}tr[hidden],.subject-group[hidden]{display:revert!important}}'
+    const removePagination = installReportPagination(doc)
     if (doc.scrollingElement && report.value) doc.scrollingElement.scrollTop = positions.get(report.value.name) ?? 0
     headings.value = Array.from(doc.querySelectorAll<HTMLElement>('h2')).map(element => ({ title: element.textContent ?? '', element }))
     const escape = (event: KeyboardEvent) => {
@@ -40,7 +43,7 @@ function loaded() {
       else emit('exitFocus')
     }
     doc.addEventListener('keydown', escape)
-    detach = () => doc.removeEventListener('keydown', escape)
+    detach = () => { doc.removeEventListener('keydown', escape); removePagination() }
   } catch { loadError.value = true }
 }
 onBeforeUnmount(() => detach?.())

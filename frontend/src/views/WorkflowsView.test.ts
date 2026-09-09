@@ -42,8 +42,10 @@ describe('WorkflowsView', () => {
     await flushPromises()
     const submitted = request.mock.calls.find(([, options]) => options?.method === 'POST')
     expect(JSON.parse(submitted![1].body)).toMatchObject({
-      source_root: 'E:/dataset/eeg/EEGMMIDB', max_subjects: 3, runs: [4, 8], seed: 42,
+      source_root: 'E:/dataset/eeg/EEGMMIDB', runs: [4, 8], seed: 42,
     })
+    expect(JSON.parse(submitted![1].body)).not.toHaveProperty('max_subjects')
+    expect(wrapper.find('input[aria-label="被试数量"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('6 / 6 个模块已完成')
     expect(wrapper.text()).toContain('训练数据已就绪')
     expect(wrapper.get('iframe').attributes('src')).toContain('report/report.html?download=false')

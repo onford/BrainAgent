@@ -11,7 +11,7 @@ type Workflow = { id: string; engine?: string; status: string; created_at: strin
 type View = 'reports' | 'files' | 'logs' | 'delivery'
 const route = useRoute(), router = useRouter()
 const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
-const roots = ref<string[]>([]), source = ref(''), count = ref(3), busy = ref(false), error = ref('')
+const roots = ref<string[]>([]), source = ref(''), busy = ref(false), error = ref('')
 const selectedId = ref(''), view = ref<View>('reports'), focused = ref(false)
 const files = ref<InstanceType<typeof ArtifactExplorer>>()
 const createDialog = ref<HTMLDialogElement>(), stageDialog = ref<HTMLDialogElement>()
@@ -75,7 +75,7 @@ async function start() {
   if(busy.value) return
   busy.value=true; error.value=''
   try {
-    const job=await apiRequest<Workflow>('/api/workflows',{method:'POST',body:JSON.stringify({source_root:source.value,max_subjects:count.value,adapter:'eegmmidb',runs:[4,8],seed:42,tmin:0,tmax:2})})
+    const job=await apiRequest<Workflow>('/api/workflows',{method:'POST',body:JSON.stringify({source_root:source.value,adapter:'eegmmidb',runs:[4,8],seed:42,tmin:0,tmax:2})})
     createDialog.value?.close(); await select(job.id)
   } catch(reason) {error.value=String(reason)} finally {busy.value=false}
 }
@@ -123,7 +123,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
       </section>
     </template>
     <section v-else class="initial-state"><span class="initial-symbol">▤</span><h1>{{selectedId?'正在载入运行…':'从本地 EEG 到训练数据'}}</h1><p>调研资料、核对数据、执行预处理，在一个工作区中查看结果。</p><button v-if="!selectedId" class="primary" @click="createDialog?.showModal()">新建数据流程</button></section>
-    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">NEW WORKFLOW</p><h2 id="create-title">开始数据流程</h2></div><button type="button" class="icon-button" aria-label="关闭新建流程" @click="createDialog?.close()">×</button></div><p class="muted">选择本地数据，Agent 将完成调研、处理与交付。</p><form @submit.prevent="start"><label>本地数据目录<input v-model="source" list="source-roots" required placeholder="选择已配置的 EEGMMIDB 目录" aria-label="本地数据目录" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><label>被试数量<input v-model.number="count" type="number" min="1" max="12" required aria-label="被试数量" /></label><div class="form-scope"><span>左右手运动想象</span><span>Run 4 / 8</span><span>训练窗口 0–2 秒</span></div><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source">{{busy?'正在提交…':'开始完整流程 →'}}</button></form></dialog>
+    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">NEW WORKFLOW</p><h2 id="create-title">开始数据流程</h2></div><button type="button" class="icon-button" aria-label="关闭新建流程" @click="createDialog?.close()">×</button></div><p class="muted">选择本地数据，Agent 将完成调研、处理与交付。</p><form @submit.prevent="start"><label>本地数据目录<input v-model="source" list="source-roots" required placeholder="选择已配置的 EEGMMIDB 目录" aria-label="本地数据目录" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><p class="muted">自动扫描该目录，使用发现的全部被试。被试和记录数量将在数据调研中显示。</p><div class="form-scope"><span>左右手运动想象</span><span>Run 4 / 8</span><span>训练窗口 0–2 秒</span></div><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source">{{busy?'正在提交…':'开始完整流程 →'}}</button></form></dialog>
     <dialog ref="stageDialog" class="stage-dialog" aria-labelledby="stage-title"><template v-if="stage"><div class="dialog-heading"><h2 id="stage-title">{{stage.label}}</h2><button class="icon-button" aria-label="关闭阶段详情" @click="stageDialog?.close()">×</button></div><span class="badge" :class="stage.status">{{labels[stage.status]}}</span><p>{{stageDescriptions[stage.name] ?? '本阶段的处理状态与记录。'}}</p><details v-if="stage.error" class="stage-error" open><summary>错误详情</summary><pre>{{stage.error}}</pre></details><p v-else class="muted">{{stage.status==='pending'?'前序阶段完成后将自动开始。':'完整过程与产物保存在对应模块的记录文件中。'}}</p><div class="dialog-actions"><button v-if="stage.status==='failed'" class="primary" :disabled="busy" @click="retry">重试未完成步骤</button><button @click="showStageFiles">查看本阶段文件 →</button><button @click="view='logs';stageDialog?.close()">执行日志</button></div></template></dialog>
   </main>
 </template>
