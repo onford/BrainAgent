@@ -49,7 +49,6 @@ async def run_workflow(args, service, root, source):
             WorkflowRequest(
                 source_root=str(source),
                 subjects=args.subjects,
-                runs=args.runs,
                 seed=args.seed,
                 tmin=args.tmin,
                 tmax=args.tmax,
@@ -125,7 +124,6 @@ def main():
     parser.add_argument("--root", default="workspace/training-cli")
     parser.add_argument("--owner", default="local-development-user")
     parser.add_argument("--subjects", nargs="*", default=[])
-    parser.add_argument("--runs", nargs="+", type=int, default=[4, 8])
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--tmin", type=float, default=0)
     parser.add_argument("--tmax", type=float, default=2)

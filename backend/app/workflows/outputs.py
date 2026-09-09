@@ -226,7 +226,7 @@ X_train, y_train = X[split == 'train'], y[split == 'train']
     (folder / "README.md").write_text(readme, encoding="utf-8")
     limitations = [
         "工程预设；尚未验证模型性能或候选质量",
-        "样本范围由 subjects/runs 明确限定",
+        "全部本地 Run 已调研与接入；训练记录范围见 collection/input.json 的 selected_record_ids",
     ]
     missing_splits = sorted({"train", "validation", "test"} - set(splits))
     if missing_splits:

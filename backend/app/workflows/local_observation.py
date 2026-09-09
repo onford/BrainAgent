@@ -80,7 +80,7 @@ class ObservationBuilder:
             discovered_recordings=discovered_recordings,
             selected_subjects=chosen,
             selected_runs=runs,
-            selection_basis="工作流请求选择；对象身份按 EEGMMIDB 目录和文件名解析",
+            selection_basis="从被试目录发现全部 Run；对象身份按 EEGMMIDB 目录和文件名解析",
         )
         self.records, self.channels, self.acquisition, self.events = {}, {}, {}, []
 
@@ -205,7 +205,7 @@ class ObservationBuilder:
             "所选记录读取",
             read,
             total,
-            "未选择的 EDF 未进行信号检查",
+            "逐条读取所选被试实际存在的全部 Run",
             ["#/recordings"],
         )
         add(

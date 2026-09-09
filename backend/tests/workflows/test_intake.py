@@ -38,7 +38,7 @@ def test_file_changing_during_scan_invalidates_the_observations(
     with pytest.raises(dataset.SourceChangedError, match="读取期间"):
         dataset.inspect(
             source,
-            WorkflowRequest(source_root=str(source), runs=[4]),
+            WorkflowRequest(source_root=str(source)),
             tmp_path / "survey",
         )
 
@@ -49,7 +49,7 @@ def load(folder, name):
 
 def collect(source, tmp_path):
     request = WorkflowRequest(
-        source_root=str(source), subjects=["S001", "S002", "S003"], runs=[4]
+        source_root=str(source), subjects=["S001", "S002", "S003"]
     )
     survey = dataset.inspect(source, request, tmp_path / "survey")
     service = PreprocessingService(tmp_path / "prep", allowed_roots=[tmp_path])
@@ -163,9 +163,15 @@ def test_nonfinite_record_is_excluded_with_specific_category_and_delta(
 
 
 def test_no_readable_record_keeps_audit_and_unknown_counts_without_bids(
-    source, tmp_path
+    source, tmp_path, monkeypatch
 ):
-    request = WorkflowRequest(source_root=str(source), subjects=["S099"], runs=[4])
+    import mne
+
+    def unreadable(*args, **kwargs):
+        raise ValueError("invalid EDF")
+
+    monkeypatch.setattr(mne.io, "read_raw_edf", unreadable)
+    request = WorkflowRequest(source_root=str(source), subjects=["S001"])
     survey = dataset.inspect(source, request, tmp_path / "survey")
     with pytest.raises(ValueError, match="没有通过"):
         dataset.collect(

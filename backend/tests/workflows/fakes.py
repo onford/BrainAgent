@@ -346,7 +346,7 @@ class WorkflowLLM(LLMClient):
                 "limitations": [],
                 "task_mappings": [
                     {"run": run, "status": "verified", "finding_ids": ["f2"]}
-                    for run in sorted(set(data["request"]["runs"]))
+                    for run in data["training_runs"]
                 ],
             }
         elif model.__name__ == "MethodDesign":

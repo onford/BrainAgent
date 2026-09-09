@@ -306,12 +306,23 @@ class Audit:
                         "事件码已定义、样点有序唯一、时间和持续时长有效",
                         f"codes={sorted(codes)}; valid_timing={bool(valid)}",
                     )
-                    check(
-                        "trial_protocol",
-                        {"T1", "T2"} <= codes,
-                        "左右手训练任务必须具有两类事件；保留 T0 上下文",
-                        f"events={item['event_counts']}",
-                    )
+                    from .dataset import TRAINING_RUNS
+
+                    if item["run"] in TRAINING_RUNS:
+                        check(
+                            "trial_protocol",
+                            {"T1", "T2"} <= codes,
+                            "左右手训练任务必须具有两类事件；保留 T0 上下文",
+                            f"events={item['event_counts']}",
+                        )
+                    else:
+                        self.add(
+                            "trial_protocol",
+                            obj,
+                            "保留全部 Run；非当前训练任务的记录保留原始事件标签",
+                            f"run={item['run']}; events={item['event_counts']}; training_selected=false",
+                            action="建立工作副本",
+                        )
             except (OSError, ValueError, RuntimeError) as exc:
                 check("format_readability", False, "完整解码所选 EDF", str(exc))
             if failures:

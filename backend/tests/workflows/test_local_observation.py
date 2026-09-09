@@ -15,13 +15,23 @@ from tests.workflows.test_workflow import source  # noqa: F401
 from tests.workflows.test_survey_purposes import products  # noqa: F401
 
 
-def test_objects_share_configs_preserve_missing_records_and_reject_inconsistent_values(
-    source, tmp_path
+def test_objects_share_configs_preserve_unreadable_records_and_reject_inconsistent_values(
+    source, tmp_path, monkeypatch
 ):  # noqa: F811
+    import mne
+
+    reader = mne.io.read_raw_edf
+    for subject in ("S001", "S002", "S003"):
+        (source / subject / f"{subject}R08.edf").write_bytes(b"invalid EDF")
+
+    def read(path, **kwargs):
+        if path.name.endswith("R08.edf"):
+            raise ValueError("invalid EDF")
+        return reader(path, **kwargs)
+
+    monkeypatch.setattr(mne.io, "read_raw_edf", read)
     folder = tmp_path / "survey"
-    dataset.inspect(
-        source, WorkflowRequest(source_root=str(source), runs=[4, 8]), folder
-    )
+    dataset.inspect(source, WorkflowRequest(source_root=str(source)), folder)
     local = read_local(folder / "local-inspection.json")
     assert isinstance(local, LocalObservation)
     assert "facts" not in local.model_dump()
@@ -63,7 +73,7 @@ def test_default_discovers_all_subjects_without_a_count_limit(source, tmp_path):
         folder = source / f"S{i:03}"
         folder.mkdir()
         (folder / f"S{i:03}R04.edf").write_bytes(b"fixture")
-    request = WorkflowRequest(source_root=str(source), runs=[4])
+    request = WorkflowRequest(source_root=str(source))
     survey = dataset.inspect(source, request, tmp_path / "survey")
     assert len(survey["selected_subjects"]) == 15
     assert survey["selected_subjects"][-1] == "S015"
@@ -80,7 +90,7 @@ def test_default_discovers_all_subjects_without_a_count_limit(source, tmp_path):
         len(
             dataset.inspect(
                 source,
-                WorkflowRequest(source_root=str(source), subjects=["S015"], runs=[4]),
+                WorkflowRequest(source_root=str(source), subjects=["S015"]),
                 tmp_path / "subset",
             )["records"]
         )
@@ -92,7 +102,7 @@ def test_runtime_schema_rejects_cross_field_and_invented_pointers(
     source, products, tmp_path
 ):  # noqa: F811
     folder = tmp_path / "survey"
-    dataset.inspect(source, WorkflowRequest(source_root=str(source), runs=[4]), folder)
+    dataset.inspect(source, WorkflowRequest(source_root=str(source)), folder)
     local = read_local(folder / "local-inspection.json")
     model = verification_contract(local)
     value = products[3].model_dump()

@@ -78,7 +78,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
     prep = PreprocessingService(tmp_path / "preprocessing")
     service = WorkflowService(tmp_path / "workflows", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    request = WorkflowRequest(source_root=str(source), runs=[4])
+    request = WorkflowRequest(source_root=str(source))
     original = outputs.report
     calls = []
 
@@ -292,7 +292,7 @@ async def test_invalid_agent_output_cannot_complete_or_publish(source, tmp_path)
 
 def test_survey_contract_rejects_extra_fields_and_dangling_channels(source, tmp_path):
     survey = dataset.inspect(
-        source, WorkflowRequest(source_root=str(source), runs=[4]), tmp_path / "survey"
+        source, WorkflowRequest(source_root=str(source)), tmp_path / "survey"
     )
     SurveyOutput.model_validate(survey)
     with pytest.raises(ValueError):
@@ -305,7 +305,7 @@ def test_survey_contract_rejects_extra_fields_and_dangling_channels(source, tmp_
 
 
 def test_source_changed_after_survey_is_rejected(source, tmp_path):
-    request = WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+    request = WorkflowRequest(source_root=str(source), subjects=["S001"])
     survey = dataset.inspect(source, request, tmp_path / "survey")
     (source / "S001/S001R04.edf").write_bytes(b"changed")
     with pytest.raises(ValueError, match="源文件已变化"):
@@ -320,6 +320,7 @@ def test_source_boundary_and_request_validation(source, tmp_path):
         dataset.allowed_source(request, [source], [source / "outputs"])
     for invalid in [
         {"subjects": ["../escape"]},
+        {"runs": [4, 8]},
         {"runs": [3]},
         {"runs": [4, 4]},
         {"tmin": 2, "tmax": 1},
@@ -335,7 +336,7 @@ async def test_single_subject_delivery_records_empty_groups(source, tmp_path):
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
         OWNER,
-        WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4]),
+        WorkflowRequest(source_root=str(source), subjects=["S001"]),
         start=False,
     )
     assert state["status"] == "queued"

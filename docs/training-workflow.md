@@ -12,7 +12,7 @@
 .\.venv-eeg\Scripts\python.exe -m app.workflows --source-root E:/dataset/eeg/EEGMMIDB --subjects S001 S002 S003
 ```
 
-命令与 Web 入口使用相同的 LLM 和文献工具配置，需要有效模型配置、应用数据库及至少一个可用论文检索集成。命令会启动独立计算进程，并在完成后停止该进程。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、阶段和当前模型/工具动作；退出码 0 表示全部完成。支持 `--runs 4 8 12`、`--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。同一存储目录同时运行一个 Worker。
+命令与 Web 入口使用相同的 LLM 和文献工具配置，需要有效模型配置、应用数据库及至少一个可用论文检索集成。命令会启动独立计算进程，并在完成后停止该进程。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、阶段和当前模型/工具动作；退出码 0 表示全部完成。支持 `--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。同一存储目录同时运行一个 Worker。
 
 Python 环境需安装 `backend/pyproject.toml` 中的 `eeg` 依赖；验收环境为 Python 3.12、MNE 1.10.2、NumPy 1.26.4。新环境可在 backend 中用 `uv sync --python 3.12 --extra eeg --extra dev` 安装，然后通过 `uv run python -m app.workflows ...` 运行。
 
@@ -68,7 +68,7 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 
 候选顺序、算子和参数由模型根据本次调研设计，不固定为两组频带。每一步区分文献依据与工程决定；只允许启用算子，窗口与 EEG 输出通道必须满足用户请求。默认窗口为 0–2 秒，160 Hz 下含终点，共 321 个采样点。候选在 `exploratory` 模式执行，不自动声明科学有效性，也不改变 `production` 模式的验证要求。架构审阅、执行闭环与各新增过程文件见 [模型工作流设计](llm-workflow-redesign.md)。
 
-仅 Run 4、8、12 被接受，其含义为左右手运动想象，T1=左手、T2=右手；T0 休息不进入训练 Trial。Run 3、7、11 是实际运动，不被该适配器接受。事件说明见 [MNE 1.10.2 运行编号表](https://mne.tools/1.10/generated/mne.datasets.eegbci.load_data.html)，采集与资料来源见 [PhysioNet 数据集页](https://physionet.org/content/eegmmidb/1.0.0/)。
+Run 不作为请求参数：按每名被试的本地 EDF 文件发现全部 Run，缺少的 Run 不虚构为文件读取失败。全部可读 Run 进入调研及 BIDS 标准化。当前训练目标仍为左右手运动想象，只有经资料核验的 Run 4、8、12 进入训练；其余 Run 保留原始 T0/T1/T2 标签和独立任务名称。`collection/input.json` 的 `records` 保存完整接入记录，`selected_record_ids` 和 `selection_reason` 明确训练范围，`event-mapping.tsv` 逐事件标明是否用于训练。任务映射依据见 [MNE 运行编号表](https://mne.tools/stable/generated/mne.datasets.eegbci.load_data.html)。
 
 ## 训练交付
 
@@ -93,7 +93,7 @@ Worker 启动命令为 `python -m app.preprocessing.worker`，默认允许读取
 ## API 与恢复
 
 - `GET /api/workflows/sources`：允许的源目录与适配器。
-- `POST /api/workflows`：提交 `source_root`、可选的 `subjects`（省略时扫描路径并使用全部被试）、`runs`、`seed`、`tmin/tmax`，返回 202 和流程 ID。
+- `POST /api/workflows`：提交 `source_root`、可选的 `subjects`（省略时扫描路径并使用全部被试）、`seed`、`tmin/tmax`，返回 202 和流程 ID。
 - `GET /api/workflows`、`GET /api/workflows/{id}`：列表、逐模块状态、事件与结果。
 - `POST /api/workflows/{id}/retry`：重试失败或中断流程，复用已经完成的模块。
 - `GET /api/workflows/{id}/artifacts/{name}`：检查归属及哈希后下载；HTML 支持 `?download=false` 预览。

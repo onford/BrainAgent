@@ -1,6 +1,7 @@
 """EEGMMIDB adapter: source inspection and conversion have separate outputs."""
 
 import json
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -20,6 +21,7 @@ from .intake import Audit, table
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
 EVENT_ID = {"left_hand": 1, "right_hand": 2}
+TRAINING_RUNS = frozenset({4, 8, 12})
 
 
 class SourceChangedError(Exception):
@@ -39,8 +41,12 @@ PROFILE = {
     "task": "left_right_motor_imagery",
     "expected_sfreq": 160,
     "expected_eeg_channels": 64,
-    "trigger_map": {"T0": "rest", "T1": "left_hand", "T2": "right_hand"},
-    "run_scope": [4, 8, 12],
+    "trigger_map": {
+        "T0": "rest",
+        "T1": "含义随 Run 的任务而异；R04/R08/R12 中为左手运动想象",
+        "T2": "含义随 Run 的任务而异；R04/R08/R12 中为右手运动想象",
+    },
+    "run_scope": list(range(1, 15)),
     "references": [
         {"title": "EEG Motor Movement/Imagery Dataset", "url": SOURCE},
         {
@@ -82,11 +88,20 @@ def allowed_source(request, allowed_roots, output_roots):
 def inspect(root, request, folder):
     import mne
 
-    all_edf = sorted(root.glob("S[0-9][0-9][0-9]/S*R*.edf"))
+    all_edf = sorted(
+        p
+        for p in root.glob("S[0-9][0-9][0-9]/S*R*.edf")
+        if re.fullmatch(rf"{p.parent.name}R(?!00)\d{{2}}\.edf", p.name)
+    )
     subjects = sorted({p.parent.name for p in all_edf})
     chosen = request.subjects or subjects
     if not chosen:
         raise ValueError("没有找到 EEGMMIDB EDF 记录")
+    missing = set(chosen) - set(subjects)
+    if missing:
+        raise ValueError("没有找到被试的 EDF 记录：" + ", ".join(sorted(missing)))
+    selected = [p for p in all_edf if p.parent.name in chosen]
+    runs = sorted({int(p.stem[-2:]) for p in selected})
     records, checks, channel_sets = [], [], {}
     all_files = sorted(p for p in root.rglob("*") if p.is_file() and not p.is_symlink())
     inventory = [
@@ -109,10 +124,11 @@ def inspect(root, request, folder):
         encoding="utf-8",
     )
     observations = ObservationBuilder(
-        root, chosen, request.runs, inventory, len(subjects), len(all_edf)
+        root, chosen, runs, inventory, len(subjects), len(all_edf)
     )
     for subject in chosen:
-        for run in request.runs:
+        for entry in (p for p in selected if p.parent.name == subject):
+            run = int(entry.stem[-2:])
             relative = f"{subject}/{subject}R{run:02}.edf"
             path = within(root, relative)
             record = {
@@ -144,7 +160,9 @@ def inspect(root, request, folder):
                         channel_set=channel_set,
                         duration_s=raw.n_times / raw.info["sfreq"],
                         event_counts=counts,
-                        task_trials=counts.get("T1", 0) + counts.get("T2", 0),
+                        task_trials=(counts.get("T1", 0) + counts.get("T2", 0))
+                        if run in TRAINING_RUNS
+                        else 0,
                         status="readable",
                     )
                     values = raw.get_data()
@@ -188,7 +206,7 @@ def inspect(root, request, folder):
                 "type": "run_mapping",
             },
         ],
-        "scope": "selected subjects and imagery runs; unselected recordings are outside this workflow",
+        "scope": "所选被试在本地实际存在的全部 Run；任务语义由资料核对，训练范围在接入阶段单独记录",
     }
     write_tsv(folder / "source-inventory.tsv", inventory, ["path", "bytes"])
     observations.finish(result, folder)
@@ -277,8 +295,20 @@ def collect(survey, folder, workflow_id, service, owner):
         original_annotations = raw.annotations.copy()
         mne.datasets.eegbci.standardize(raw)
         raw.set_montage("standard_1005", on_missing="raise", verbose="ERROR")
-        event_names = {"T0": "rest", "T1": "left_hand", "T2": "right_hand"}
-        standard_event_id = {**EVENT_ID, "rest": 3}
+        training = item["run"] in TRAINING_RUNS
+        event_names = (
+            {"T0": "rest", "T1": "left_hand", "T2": "right_hand"}
+            if training
+            else {"T0": "T0", "T1": "T1", "T2": "T2"}
+        )
+        standard_event_id = (
+            {**EVENT_ID, "rest": 3} if training else {"T0": 3, "T1": 4, "T2": 5}
+        )
+        standard_event_id = {
+            k: v
+            for k, v in standard_event_id.items()
+            if k in {event_names[label] for label in original_annotations.description}
+        }
         raw.set_annotations(
             mne.Annotations(
                 original_annotations.onset - raw.first_time,
@@ -310,7 +340,7 @@ def collect(survey, folder, workflow_id, service, owner):
                 "source_sample": int(
                     round((onset - raw.first_time) * raw.info["sfreq"])
                 ),
-                "training_selected": label in {"T1", "T2"},
+                "training_selected": training and label in {"T1", "T2"},
             }
             for i, (onset, duration, label) in enumerate(
                 zip(
@@ -323,7 +353,7 @@ def collect(survey, folder, workflow_id, service, owner):
         bids = BIDSPath(
             root=bids_root,
             subject=item["subject"][1:],
-            task="leftrightmi",
+            task="leftrightmi" if training else f"run{item['run']:02}",
             run=f"{item['run']:02}",
             datatype="eeg",
         )
@@ -451,7 +481,15 @@ def collect(survey, folder, workflow_id, service, owner):
         if p.is_file()
     }
     for record in records:
-        record.files = inventory.copy()
+        subject = Path(record.bids_path).parts[0]
+        record.files = {
+            name: checksum
+            for name, checksum in inventory.items()
+            if len(Path(name).parts) == 1 or Path(name).parts[0] == subject
+        }
+    training_ids = [r["id"] for r in kept if r["run"] in TRAINING_RUNS]
+    if not training_ids:
+        raise ValueError("全部 Run 已接入，但没有可用于当前左右手运动想象训练的记录")
     evidence = Evidence(
         source_url="workflow:" + workflow_id,
         locator="collection/mapping.tsv and local EDF headers",
@@ -507,8 +545,8 @@ def collect(survey, folder, workflow_id, service, owner):
                 (bids_root / "dataset_description.json").read_text()
             )["BIDSVersion"],
             validation_evidence=evidence,
-            selection_reason="explicit workflow subject/run selection; structural checks only",
-            selected_record_ids=[r.id for r in records],
+            selection_reason="全部本地 Run 已标准化并保留；当前左右手运动想象训练使用通过结构检查及任务核验的 R04/R08/R12。其他任务保留源事件标签，不作为该训练任务样本。",
+            selected_record_ids=training_ids,
             records=records,
         ),
     )
@@ -521,7 +559,7 @@ def collect(survey, folder, workflow_id, service, owner):
             "standard": "BIDS-EEG",
             "version": description["BIDSVersion"],
             "writer": "mne-bids " + audit.provenance.versions["mne-bids"],
-            "supported_scope": "EEGMMIDB EDF，所选左右手运动想象记录；BrainVision BIDS 工作副本",
+            "supported_scope": "EEGMMIDB 全部本地 Run 的 BrainVision BIDS 工作副本；左右手运动想象记录映射训练标签，其余记录保留源事件标签",
             "unsupported_modalities": ["BIDS-iEEG (eCoG/sEEG)", "NWB"],
             "validation": "信号往返、通道/时间一致性、完整事件映射、文件组/根元数据及输入合同检查",
             "official_validator": "not_run",

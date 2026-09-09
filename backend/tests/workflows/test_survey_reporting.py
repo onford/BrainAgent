@@ -19,9 +19,7 @@ async def test_reports_use_only_survey_records_preserve_evidence_and_separate_pu
 ):
     _, sources, local, verification, screening = products
     folder = tmp_path / "survey"
-    survey = dataset.inspect(
-        source, WorkflowRequest(source_root=str(source), runs=[4]), folder
-    )
+    survey = dataset.inspect(source, WorkflowRequest(source_root=str(source)), folder)
     # Zero and unknown must remain distinct; model text must remain inert HTML.
     for entry in screening.entries:
         entry.quality.stars = 0
@@ -51,7 +49,8 @@ async def test_reports_use_only_survey_records_preserve_evidence_and_separate_pu
     }
     stats = documents["statistics.html"]
     assert "<td>目标任务 Trial 数</td><td>12</td>" in stats
-    assert "<td>T1</td><td>left_hand</td><td>6</td>" in stats
+    assert "含义随 Run 的任务而异；R04/R08/R12 中为左手运动想象" in stats
+    assert "<td>6</td>" in stats
     assert "未知 / 未取得" in stats
     targets = {
         "literature-usage.html": {"usage_analysis", "usage_algorithm"},

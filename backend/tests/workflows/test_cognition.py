@@ -102,7 +102,7 @@ async def test_no_llm_fails_instead_of_using_fixed_presets(source, tmp_path):
     prep = PreprocessingService(tmp_path / "prep")
     service = WorkflowService(tmp_path / "runs", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(OWNER, WorkflowRequest(source_root=str(source), runs=[4]))
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
     await service.tasks[state["id"]]
     result = service.get(OWNER, state["id"])
     assert result["status"] == "failed" and "LLM" in result["error"]
@@ -116,7 +116,7 @@ async def test_research_retry_cannot_mix_changed_local_bytes_with_saved_observat
     prep = PreprocessingService(tmp_path / "prep")
     service = WorkflowService(tmp_path / "runs", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(OWNER, WorkflowRequest(source_root=str(source), runs=[4]))
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)))
     await service.tasks[state["id"]]
     folder = service.folder(state["id"])
     observed = (folder / "survey/local-inspection.json").read_bytes()
@@ -137,7 +137,7 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
     )
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
@@ -203,7 +203,7 @@ async def test_screening_retry_reuses_completed_retrieval(source, tmp_path):
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
     )
     first = await finish(service, state["id"])
     assert first["status"] == "failed"
@@ -420,7 +420,7 @@ async def test_design_can_request_more_research_before_execution(source, tmp_pat
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
         OWNER,
-        WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4]),
+        WorkflowRequest(source_root=str(source), subjects=["S001"]),
         start=False,
     )
     folder = service.folder(state["id"])
@@ -477,7 +477,7 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
         OWNER,
-        WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4]),
+        WorkflowRequest(source_root=str(source), subjects=["S001"]),
         start=False,
     )
     folder = service.folder(state["id"])
@@ -509,7 +509,7 @@ async def test_nonblocking_metadata_conflict_is_corrected_before_collection(
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
     state = service.create(
-        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"])
     )
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]

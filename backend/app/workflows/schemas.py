@@ -26,7 +26,6 @@ class WorkflowRequest(Contract):
     source_root: str
     adapter: Literal["eegmmidb"] = "eegmmidb"
     subjects: list[str] = Field(default_factory=list)
-    runs: list[Literal[4, 8, 12]] = Field(default_factory=lambda: [4, 8], min_length=1)
     seed: int = Field(default=42, ge=0, le=2**32 - 1)
     tmin: float = Field(default=0, ge=0)
     tmax: float = Field(default=2, gt=0, le=4)
@@ -41,6 +40,4 @@ class WorkflowRequest(Contract):
             not re.fullmatch(r"S\d{3}", s) for s in self.subjects
         ):
             raise ValueError("subjects must be unique EEGMMIDB IDs such as S001")
-        if len(set(self.runs)) != len(self.runs):
-            raise ValueError("runs must be unique")
         return self

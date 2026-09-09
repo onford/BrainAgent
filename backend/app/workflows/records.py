@@ -167,9 +167,6 @@ def report_data(folder):
     collection = load_stage(folder, "data_collection")
     prep = load_stage(folder, "data_preprocessing")
     selection = load_stage(folder, "data_evaluation")
-    index = ProcessIndex.model_validate_json(
-        (folder / "process/index.json").read_text(encoding="utf-8")
-    )
     method = next(m for m in prep.methods if m.ref == selection.selected_method_ref)
 
     def optional(relative, model):
@@ -199,7 +196,7 @@ def report_data(folder):
         dataset_version=survey.profile.version,
         license=survey.profile.license,
         subjects=survey.selected_subjects,
-        runs=index.request.runs,
+        runs=sorted({r.run for r in survey.records}),
         sfreq=survey.profile.expected_sfreq,
         channel_count=survey.profile.expected_eeg_channels,
         before=optional("collection/pre-screen.json", Statistics) or survey.statistics,

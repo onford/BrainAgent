@@ -121,7 +121,10 @@ def basic(survey, verification, sources):
                 f"{survey.available_subjects} / {survey.available_recordings}",
             ),
             ("选择被试", identifiers(survey.selected_subjects)),
-            ("选择 Run", ", ".join(map(str, sorted({r.run for r in survey.records})))),
+            (
+                "本地全部 Run",
+                ", ".join(map(str, sorted({r.run for r in survey.records}))),
+            ),
             ("统计范围", survey.scope),
             ("资料核对日期", survey.profile.profile_reviewed),
         ],

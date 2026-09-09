@@ -354,6 +354,9 @@ class WorkflowCognition:
 
     async def collection_review(self, survey):
         from .intake import literature_matches
+        from .dataset import TRAINING_RUNS
+
+        training_runs = sorted({r["run"] for r in survey["records"]} & TRAINING_RUNS)
 
         discussion = self.survey_context({"dataset_discussion"}).get(
             "literature_for_this_stage", []
@@ -415,7 +418,7 @@ class WorkflowCognition:
             ids = tuple(f.id for f in findings.facts)
             review_schema = create_model(
                 "CollectionReview",
-                __base__=collection_review_contract(ids, self.state["request"]["runs"]),
+                __base__=collection_review_contract(ids, training_runs),
                 conflicts=(
                     list[str],
                     Field(
@@ -430,11 +433,12 @@ class WorkflowCognition:
                     "adapter_profile": survey["profile"],
                     "request": self.state["request"],
                     "local_records": survey["records"],
+                    "training_runs": training_runs,
                     **self.survey_context({"dataset_discussion"}),
                     "research": findings.model_dump(),
-                    "conversion": "ONLY selected EEGMMIDB R04/R08/R12 left/right imagery. Preserve all T0/T1/T2 events in BIDS; rest is context outside training. Channel names standardized, explicitly labeled standard_1005 TEMPLATE coordinates. Confirmed structural failures are excluded; metadata unknowns and literature claims retain flags.",
+                    "conversion": "ALL locally discovered runs are converted to BIDS. Only training_runs (R04/R08/R12) receive left/right imagery labels; other runs retain original T0/T1/T2 labels under separate run-specific BIDS tasks and remain outside this training target. Preserve all events. Channel names standardized, explicitly labeled standard_1005 TEMPLATE coordinates. Confirmed structural failures are excluded; metadata unknowns and literature claims retain flags.",
                 },
-                "Review ONLY the selected local subjects/runs, not all tasks in the dataset. Unselected execution or both-hands/feet tasks are outside scope, not incompatibilities. "
+                "Review all locally discovered runs. Baseline, execution and other imagery tasks are retained with source labels, not mislabeled as left/right imagery. Their presence is not an incompatibility. task_mappings verifies only training_runs before semantic label conversion. "
                 "supporting_facts contains exact finding IDs from its enum, never sentences. Unknown mapping needs more evidence; known contradictory labels block conversion. "
                 "For each task_mappings row, verified requires quoted evidence naming that run and identifying left/right motor imagery; generic T0/T1/T2 definitions do not establish run identity. Unresolved mapping requires compatible=false, then supplemental research. MNE dataset documentation is valid technical evidence even when the official site lacks this table. "
                 "Unknown demographics/hardware metadata are limitations, not exclusions. Do not treat a general multi-task dataset description as a contradiction with a scoped adapter. "
@@ -538,6 +542,7 @@ class WorkflowCognition:
                     "intervals": r["intervals"],
                 }
                 for r in snapshot["collection"]["records"]
+                if r["id"] in snapshot["collection"]["selected_record_ids"]
             ],
         }
         feedback = []
@@ -634,8 +639,8 @@ class WorkflowCognition:
                 )
                 selected = [s for s in plan.screening if s.status == "selected"]
                 if len(selected) != len(refs) or any(
-                    len([r for r in plan.records if r.method_ref == s.method_ref])
-                    != collection["statistics"]["recordings"]
+                    {r.record_id for r in plan.records if r.method_ref == s.method_ref}
+                    != set(snapshot["collection"]["selected_record_ids"])
                     for s in selected
                 ):
                     raise ValueError(
