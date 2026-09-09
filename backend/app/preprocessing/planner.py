@@ -84,6 +84,11 @@ def compile_steps(method: MethodSpec, record, data, parameters):
                 and lo >= hi
             ):
                 raise ValueError("filter bounds violate sampling rate")
+        if step.op == "notch":
+            # MNE default width=f/200 and one-Hz total transition bandwidth.
+            if any(f - f / 400 - 0.5 <= 0 or f + f / 400 + 0.5 >= sfreq / 2
+                   for f in p["freqs"]):
+                raise ValueError("notch stop/transition bands must lie strictly inside Nyquist")
         if step.op == "reference":
             donors = p["ref_channels"]
             if donors != "average" and (
@@ -97,7 +102,7 @@ def compile_steps(method: MethodSpec, record, data, parameters):
                 "average" if donors == "average" else "channels:" + ",".join(donors)
             )
         if (
-            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter", "resample",
+            step.op in ("epoch", "eog_fit", "amplitude_windows", "filter", "notch", "resample",
                         "detect_bad_channels", "interpolate_bad_channels", "asr_clean")
             and kind != "raw"
         ):

@@ -6,7 +6,7 @@ from pathlib import Path
 import platform
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from ..schemas import Contract, UnitSpec
 from ..storage import file_hash, digest
 
@@ -30,6 +30,19 @@ class FilterParams(Contract):
     method: Literal["iir"]
     phase: Literal["zero"]
     picks: list[str] = Field(min_length=1)
+
+
+class NotchParams(Contract):
+    freqs: list[Literal[50.0, 60.0]] = Field(min_length=1, max_length=2)
+    picks: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def distinct_frequencies_and_picks(self):
+        if self.freqs != sorted(set(self.freqs)):
+            raise ValueError("notch frequencies must be unique and increasing")
+        if len(self.picks) != len(set(self.picks)):
+            raise ValueError("notch picks must be unique")
+        return self
 
 
 class DetrendParams(Contract):
@@ -83,6 +96,7 @@ class MarkParams(Contract):
 
 
 class DetectBadParams(Contract):
+    selection_policy: Literal["consensus_v2"] = "consensus_v2"
     adaptation_scope: Literal["record_unlabeled"]
     window_s: float = Field(default=1, ge=0.5, le=5)
     flat_duration_s: float = Field(default=5, ge=1, le=30)
@@ -90,6 +104,17 @@ class DetectBadParams(Contract):
     deviation_z: float = Field(default=5, ge=3, le=10)
     correlation_threshold: float = Field(default=0.4, ge=0, le=0.8)
     bad_window_fraction: float = Field(default=0.1, gt=0, le=1)
+    persistent_low_corr_fraction: float = Field(default=0.5, ge=0.3, le=1)
+    persistent_low_corr_seconds: float = Field(default=5, ge=1, le=60)
+    shared_correlation_threshold: float = Field(default=0.7, gt=0, le=1)
+
+    @model_validator(mode="after")
+    def diagnostic_relations(self):
+        if self.shared_correlation_threshold <= self.correlation_threshold:
+            raise ValueError("shared_correlation_threshold must exceed correlation_threshold")
+        if self.persistent_low_corr_fraction < self.bad_window_fraction:
+            raise ValueError("persistent_low_corr_fraction must be >= bad_window_fraction")
+        return self
 
 
 class InterpolateBadParams(Contract):
@@ -97,6 +122,7 @@ class InterpolateBadParams(Contract):
 
 
 class AsrCleanParams(Contract):
+    on_insufficient_calibration: Literal["error", "identity"] = "error"
     adaptation_scope: Literal["record_unlabeled"]
     cutoff: float = Field(default=20, ge=10, le=100)
     win_len: float = Field(default=0.5, ge=0.5, le=2)
@@ -116,6 +142,7 @@ OPERATIONS = {
     ("EEG-ASR-AUTO", "asr_clean"): AsrCleanParams,
     ("EEG-DETREND", "detrend"): DetrendParams,
     ("EEG-FILTER", "filter"): FilterParams,
+    ("EEG-FILTER", "notch"): NotchParams,
     ("EEG-RESAMPLE", "resample"): ResampleParams,
     ("EEG-REREFERENCE", "reference"): ReferenceParams,
     ("EEG-EPOCH", "epoch"): EpochParams,

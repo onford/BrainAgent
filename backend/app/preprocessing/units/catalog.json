@@ -70,7 +70,33 @@
     },
     "implementation": {
       "module": "eeg_filter",
-      "entry": "eeg_filter"
+      "entry": "eeg_filter",
+      "constraints": {
+        "notch": {
+          "stages": [
+            "continuous"
+          ],
+          "freqs_hz": [
+            50,
+            60
+          ],
+          "explicit_eeg_picks": true,
+          "method": "fir",
+          "phase": "zero",
+          "fir_design": "firwin",
+          "notch_widths": "freqs/200",
+          "trans_bandwidth_hz": 1.0,
+          "nyquist_guard": "freq + freq/400 + 0.5 < sfreq/2",
+          "fit_permissions": "none",
+          "labels_used": false,
+          "trial_rejection": false,
+          "kernel_changed": false,
+          "optional_not_default": true,
+          "directURL": "https://raw.githubusercontent.com/mne-tools/mne-python/v1.10.2/mne/filter.py",
+          "locator": "notch_filter: notch_widths, tb_2, lows, highs",
+          "reliability": "official pinned source reviewed alongside installed MNE1.10.2"
+        }
+      }
     },
     "validation": {
       "source_syntax": "passed",
@@ -1302,20 +1328,32 @@
   {
     "id": "EEG-AUTO-BAD-CHANNEL",
     "source": {
-      "version": "brainagent-engineering-adapter-1",
-      "code_sha256": "83e005806340d29ee5c82071716e102ff4023ed91b2596d0e463e7303fed134c",
+      "version": "brainagent-engineering-adapter-3",
+      "code_sha256": "076a4cf36391cc4dabca33e65d5726009adfa87175149b199b61ae60dbba7097",
       "references": [
         {
           "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
-          "locator": "Detection of Noisy Channels",
+          "locator": "Detecting noisy or outlier channels; Overview of the referencing procedure",
           "reliability": "primary paper",
-          "relationship": "inspiration only; engineered MAD/max-peer detector, not PREP reproduction"
+          "relationship": "Engineering consensus of MAD/max-peer diagnostics; PREP independently combines deviation/correlation/predictability/noisiness and robust-reference iteration"
         },
         {
           "directURL": "https://mne.tools/1.10/generated/mne.io.Raw.html#mne.io.Raw.interpolate_bads",
           "locator": "interpolate_bads, method eeg=spline, origin=auto",
           "reliability": "official versioned API",
           "relationship": "direct library invocation"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/sccn/clean_rawdata/master/clean_channels.m",
+          "locator": "MaxBrokenTime; flagged/removed_channels",
+          "reliability": "official source",
+          "relationship": "duration principle only; spatial-prediction thresholds not transferred to peer correlation"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/sccn/clean_rawdata/master/clean_flatlines.m",
+          "locator": "max_flatline_duration; zero_intervals",
+          "reliability": "official source",
+          "relationship": "5-second precedent; physical PTP criterion is engineering adaptation"
         }
       ],
       "fields": {
@@ -1349,7 +1387,26 @@
           "MISSING_GEOMETRY",
           "DUPLICATE_GEOMETRY",
           "GEOMETRY_FRAME"
-        ]
+        ],
+        "diagnostic_contract": {
+          "schema_version": "2",
+          "algorithm_version": "brainagent-channel-consensus-2",
+          "selection_policy": "consensus_v2",
+          "threshold_evidence": "engineering_prior_not_PREP_reproduction",
+          "auto_mark": [
+            "flat",
+            "joint_amplitude_low_correlation",
+            "persistent_low_correlation"
+          ],
+          "report_only": [
+            "suspected_correlated_artifact",
+            "amplitude_outlier_uncertain",
+            "intermittent_low_correlation",
+            "no_criterion_triggered"
+          ],
+          "high_correlation_implies_normal": false,
+          "eog_classification": false
+        }
       },
       "extra_dependencies": {}
     },
@@ -1362,8 +1419,8 @@
   {
     "id": "EEG-ASR-AUTO",
     "source": {
-      "version": "brainagent-engineering-adapter-1",
-      "code_sha256": "83e005806340d29ee5c82071716e102ff4023ed91b2596d0e463e7303fed134c",
+      "version": "brainagent-engineering-adapter-3",
+      "code_sha256": "076a4cf36391cc4dabca33e65d5726009adfa87175149b199b61ae60dbba7097",
       "references": [
         {
           "directURL": "https://pypi.org/project/asrpy/0.0.8/",
@@ -1371,10 +1428,22 @@
           "reliability": "official package release"
         },
         {
-          "directURL": "https://raw.githubusercontent.com/DiGyt/asrpy/main/asrpy/asr.py",
+          "directURL": "https://raw.githubusercontent.com/DiGyt/asrpy/0.0.8/asrpy/asr.py",
           "locator": "ASR.fit, ASR.transform, asr_process",
-          "reliability": "official upstream source (main mutable)",
+          "reliability": "official release-tag source",
           "relationship": "release source review additionally captured by runtime code hashes"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/DiGyt/asrpy/0.0.8/asrpy/asr_utils.py",
+          "locator": "block_covariance allocation and idx_range",
+          "reliability": "official release-tag source",
+          "relationship": "endpoint mismatch reviewed and corrected by explicit adapter"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/sccn/clean_rawdata/master/asr_calibrate.m",
+          "locator": "calculate the sample covariance matrices U",
+          "reliability": "official source",
+          "relationship": "complete-block and last-sample repetition semantics"
         }
       ],
       "fields": {
@@ -1434,7 +1503,25 @@
           "ASR_DEPENDENCY",
           "ASR_SFREQ_UNSUPPORTED",
           "DISCONTINUOUS_INPUT"
-        ]
+        ],
+        "algorithm_version": "brainagent-asrpy-complete-blocks-3",
+        "calibration_covariance": "SCCN complete-block indexing with replicated final sample, locally bound into ASRpy calibration; no upstream global mutation",
+        "insufficient_calibration_policy": {
+          "parameter": "on_insufficient_calibration",
+          "default": "error",
+          "choices": [
+            "error",
+            "identity"
+          ],
+          "identity_allowlist": [
+            "ASR_CALIBRATION_TOO_SHORT"
+          ],
+          "identity_status": "not_applicable",
+          "identity_asr_applied": false,
+          "identity_preserves": "exact complete step input",
+          "all_other_failures": "error",
+          "cohort_reporting": "separate applied/not_applicable/failed/not_reached; fixed panel denominator"
+        }
       },
       "extra_dependencies": {
         "asrpy": "0.0.8"
