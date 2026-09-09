@@ -203,8 +203,48 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
                 )
             subject_scores.append(sum(recalls) / len(recalls))
         assert sum(subject_scores) / len(subject_scores) == pytest.approx(
-            selection["score"]
+            selection["selected_receipt"]["macro_ba"]
         )
+        # Recompute selection from the exported predictions, independently of
+        # the receipt's precomputed model scores and utility summary.
+        assessment_index = json.loads(archive.read("evaluation/assessment-index.json"))
+        utility = json.loads(archive.read(assessment_index["utility_receipt"]))
+        primary_suite = ["csp_lda", "fbcsp", "ts_lr"]
+        assert utility["primary_suite"] == primary_suite
+        panel = json.loads(panel_bytes)
+        frozen = {t["event_id"]: t for t in panel["trials"] if t["eligible"] and t["role"] == "development"}
+        candidate_root = store.root.parent / "candidates" / selection["selected_candidate_id"]
+        model_scores = []
+        for name in primary_suite:
+            learner = utility["learners"][name]
+            assert learner["status"] == "evaluated"
+            prediction_ref = learner["predictions"]
+            member = "evaluation/" + Path(prediction_ref["path"]).relative_to(candidate_root).as_posix()
+            payload = archive.read(member)
+            assert hashlib.sha256(payload).hexdigest() == prediction_ref["sha256"]
+            model_rows = json.loads(payload)
+            assert len(model_rows) == len(frozen)
+            assert {row["event_id"] for row in model_rows} == set(frozen)
+            for row in model_rows:
+                trial = frozen[row["event_id"]]
+                assert (row["subject"], row["label"]) == (trial["subject"], trial["label"])
+            model_subject_scores = []
+            for subject in panel["development_subjects"]:
+                subject_rows = [row for row in model_rows if row["subject"] == subject]
+                recalls = []
+                for label in panel["class_labels"].values():
+                    class_rows = [row for row in subject_rows if row["label"] == label]
+                    assert class_rows
+                    recalls.append(sum(row["prediction"] == label for row in class_rows) / len(class_rows))
+                model_subject_scores.append(sum(recalls) / len(recalls))
+            model_scores.append(sum(model_subject_scores) / len(model_subject_scores))
+        independently_scored = sum(model_scores) / len(primary_suite)
+        assert independently_scored == pytest.approx(selection["score"])
+        assert independently_scored == pytest.approx(assessment_index["selection_score"])
+        # This fixture separates the two scores, so a CSP-only projection fails.
+        assert independently_scored != pytest.approx(selection["selected_receipt"]["macro_ba"])
+        assert f"三模型训练效用 selection_score：{selection['score']:.4f}" in rendered
+        assert f"核心 CSP 锚点 macro_ba={selection['selected_receipt']['macro_ba']:.4f}" in rendered
         for entry in manifest["files"]:
             assert (
                 hashlib.sha256(archive.read(entry["name"])).hexdigest()
