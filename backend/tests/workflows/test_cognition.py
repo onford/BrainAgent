@@ -189,6 +189,36 @@ async def test_bad_model_plan_is_repaired_and_executed(source, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_screening_retry_reuses_completed_retrieval(source, tmp_path):
+    class ScreeningLLM(WorkflowLLM):
+        resume = False
+
+        async def structured_output(self, messages, model):
+            if model.__name__ == "LiteratureScreening" and not self.resume:
+                raise RuntimeError("screening interrupted")
+            return await super().structured_output(messages, model)
+
+    llm = ScreeningLLM()
+    prep = PreprocessingService(tmp_path / "prep")
+    service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
+    service.registry = build_agent_registry(preprocessing=prep, workflow=service)
+    state = service.create(
+        OWNER, WorkflowRequest(source_root=str(source), subjects=["S001"], runs=[4])
+    )
+    first = await finish(service, state["id"])
+    assert first["status"] == "failed"
+    source_path = service.folder(state["id"]) / "survey/sources.json"
+    original = source_path.read_bytes()
+    calls = llm.calls.count("ResearchBatch")
+    llm.resume = True
+    service.retry(OWNER, state["id"])
+    result = await finish(service, state["id"])
+    assert result["status"] == "completed", result["error"]
+    assert llm.calls.count("ResearchBatch") == calls
+    assert source_path.read_bytes() == original
+
+
+@pytest.mark.asyncio
 async def test_invented_quote_or_unread_paper_rejected():
     sources = ResearchSources(
         documents=[

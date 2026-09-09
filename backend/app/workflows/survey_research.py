@@ -25,6 +25,8 @@ from .survey_contracts import (
     SurveyPlan,
 )
 
+SCREENING_OPERATION = "筛选方法文献与仓库，注明下游用途"
+
 
 def available_tools(catalog, medium):
     category = "code" if medium == "repository" else "literature"
@@ -434,12 +436,19 @@ async def research(agent, survey):
         literature = agent.load("survey/literature.json", LiteratureReview)
         validate_screening(agent, literature, sources)
     else:
-        missing = await retrieve(
-            agent, plan, inputs, sources, catalog, "literature_review", 32
-        )
+        if any(r.operation == SCREENING_OPERATION for r in agent.log.records):
+            # Reaching screening means retrieval already finished (or exhausted
+            # its budget). Resume the failed decision using its saved sources.
+            missing = missing_tasks(
+                sources, plan.literature, catalog, "literature_review"
+            )
+        else:
+            missing = await retrieve(
+                agent, plan, inputs, sources, catalog, "literature_review", 32
+            )
         selection = ScreeningSelection(sources)
         selected_passages = await agent.ask(
-            "筛选方法文献与仓库，注明下游用途",
+            SCREENING_OPERATION,
             selection.model,
             {
                 "request": agent.state["request"],

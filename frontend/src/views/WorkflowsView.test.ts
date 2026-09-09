@@ -65,6 +65,21 @@ describe('WorkflowsView', () => {
     wrapper.unmount()
   })
 
+  it('keeps long stage errors collapsed outside the stage grid', async () => {
+    const state = workflow('failed')
+    const message = 'quote must occur verbatim in its retrieved source; '.repeat(30)
+    Object.assign(state.stages[4], { error: message })
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    await flushPromises()
+    const details = wrapper.get('details.stage-error')
+    expect(details.attributes('open')).toBeUndefined()
+    expect(details.get('summary').text()).toContain('数据报告：查看错误详情')
+    expect(details.get('.error').text()).toBe(message.trim())
+    expect(wrapper.get('.stages').text()).not.toContain('quote must occur')
+    wrapper.unmount()
+  })
+
   it('shows every artifact while a workflow is incomplete, including all provenance and candidates', async () => {
     const state = {
       ...workflow('failed'),
