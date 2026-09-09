@@ -1,4 +1,18 @@
 export type SearchStrategy = 'adaptive' | 'random' | 'exhaustive' | 'one_shot'
+export interface OperatorUsage {
+  summary: {
+    schema_version: string
+    record_count: number
+    evidence_issue_records: number
+    record_execution_counts: Record<string, number>
+    operators: Record<string, {
+      unit_id: string; op: string; denominator: number; configured_records: number
+      counts: { applied: number; not_applicable: number; failed: number; not_reached: number }
+      reason_counts: Record<string, Record<string, number>>
+    }>
+  }
+  artifact: { path: string; sha256: string; bytes: number }
+}
 export type SearchStatus = 'preparing' | 'running' | 'completed' | 'stopped' | 'failed' | 'cancelled' | 'interrupted'
 export type SearchEvaluationMode = 'group_cross_validation' | 'subject_holdout'
 export type SearchAdaptation = 'none' | 'subject_scale' | 'euclidean_alignment' | 'conditional_alignment'
@@ -151,6 +165,9 @@ export interface SearchCandidate {
   status: string
   job_id?: string | null
   receipt?: {
+    assessment?: { selection_score: number | null; [key: string]: unknown } | null
+    assessment_path?: string | null
+    operator_usage?: OperatorUsage | null
     evaluator_version?: number
     evaluation_mode?: SearchEvaluationMode | null
     folds?: SearchFold[]
@@ -236,7 +253,8 @@ export interface SearchPanel {
 
 export interface SearchState extends SearchSummary {
   schema_version?: string
-  protocol?: { version?: string; evaluator?: string; [key: string]: unknown }
+  protocol?: { version?: string; evaluator?: string; space?: SearchOperatorSpace; [key: string]: unknown }
+  registry?: SearchRecipeEntry[]
   request: SearchRequest
   deadline?: number
   phase?: string | null
@@ -246,4 +264,24 @@ export interface SearchState extends SearchSummary {
   candidates?: SearchCandidate[]
   actions?: SearchAction[]
   artifacts?: { name: string; description?: string; url?: string }[]
+}
+
+export interface SearchRecipeEntry {
+  id: string
+  title: string
+  origin: 'basic' | 'literature' | 'literature_adaptation'
+  seed_id: string
+  parent_id: string | null
+  recipe: { nodes: { id: string; operator: string; parameters: Record<string, unknown> }[]; adaptation: { adaptation: SearchAdaptation; alignment_threshold: number } }
+  edits: { action: string; [key: string]: unknown }[]
+  deviations: string[]
+  evidence_ids: string[]
+  prior_challenges: Record<string, string>
+}
+
+export interface SearchOperatorSpace {
+  operators: { id: string; title: string; input_stage: string; output_stage: string; required: boolean; domains: Record<string, { kind: string; minimum?: number; maximum?: number; choices?: unknown[]; unit: string; rationale: string; origin: string }>; requires: string[]; input_highpass?: { minimum_hz: number; window_parameter: string; minimum_cycles: number; rationale: string } | null; separations?: { upper_parameter: string; lower_parameter: string; minimum: number; rationale: string }[] }[]
+  methods: { id: string; title: string; origin: string }[]
+  priors: { id: string; strength: 'hard' | 'soft'; condition: string; rationale: string; evidence_ids: string[] }[]
+  evidence: Record<string, { source_url: string; locator: string; text: string }>
 }

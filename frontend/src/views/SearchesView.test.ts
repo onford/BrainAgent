@@ -81,7 +81,7 @@ describe('SearchesView', () => {
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
     expect(post[0]).toBe('/api/searches')
     expect(JSON.parse(post[1].body)).toEqual({ workflow_id: 'source-1', strategy: 'adaptive', seed: 42,
-      budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } })
+      budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
     expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
     expect(wrapper.get('h1').text()).toContain('准备中')
     expect(wrapper.get('nav[aria-label="选择搜索"]').text()).toContain('search-1')
@@ -112,7 +112,7 @@ describe('SearchesView', () => {
     expect(wrapper.get('.strategy-hint').text()).toContain('不根据中途评价调整提案')
     await wrapper.get('form').trigger('submit'); await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
-    expect(JSON.parse(post[1].body)).toEqual({ ...state().request, strategy: 'one_shot' })
+    expect(JSON.parse(post[1].body)).toEqual({ ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
     expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
     expect(wrapper.get('.page-heading').text()).toContain('一次性提案对照')
   })
@@ -514,7 +514,7 @@ describe('SearchesView', () => {
 
   it('accepts backend subject maps and panel summaries and hides successful model-decision wrappers', async () => {
     const latest = state({ status: 'stopped', stop_reason: 'candidate_budget_exhausted',
-      request: { ...state().request, strategy: 'one_shot' },
+      request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } },
       panel: { trial_count: 200, eligible_count: 180, train_subjects: ['S001', 'S002'], development_subjects: ['S003'], records: {}, output_contract: { sfreq: 160 }, panel_hash: 'hash' },
       candidates: [{ id: 'c1', status: 'evaluated', receipt: { subjects: { S003: { ba: .75, delta: .03, eligible_trials: 40 } }, coverage: { original: 45, eligible: 40, predicted: 40, missing: 0, train: { original: 80, eligible: 75 }, development: { original: 45, eligible: 40, predicted: 40 } } } }],
       actions: [{ index: 0, action: 'model_decision', status: 'completed', reason: '不重复展示的包装记录', result: { decision: { action: 'propose_candidate' } } },
@@ -552,9 +552,9 @@ describe('SearchesView', () => {
     await wrapper.get('form').trigger('submit')
     expect(wrapper.get('[role="alert"]').text()).toContain('至少 64 MB')
     await wrapper.get('input[aria-label="内存上限（MB）"]').setValue('')
-    await wrapper.get('input[aria-label="候选数"]').setValue(33)
+    await wrapper.get('input[aria-label="候选数"]').setValue(257)
     await wrapper.get('form').trigger('submit')
-    expect(wrapper.get('[role="alert"]').text()).toContain('不能超过 32')
+    expect(wrapper.get('[role="alert"]').text()).toContain('不能超过 256')
     await wrapper.get('input[aria-label="候选数"]').setValue(6)
     await wrapper.get('input[aria-label="提议数"]').setValue(0)
     apiRequest.mockResolvedValueOnce(state())
@@ -895,7 +895,7 @@ describe('SearchesView', () => {
   it('falls back to backend elapsed without a deadline and labels a running one-shot initial schedule', async () => {
     let planning = true
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({
-      status: 'running', request: { ...state().request, strategy: 'one_shot' }, phase: 'freeze_panel',
+      status: 'running', request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } }, phase: 'freeze_panel',
       usage: { elapsed_seconds: 12.5 }, actions: [{ index: 0, action: 'initial_schedule', status: planning ? 'running' : 'completed' }],
     }))
     const { wrapper } = await open('/searches?id=search-1')
@@ -903,7 +903,7 @@ describe('SearchesView', () => {
     expect(phase()).toContain('制定初始计划')
     expect(phase()).not.toContain('冻结开发面板')
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()
-    expect(wrapper.get('[role="progressbar"][aria-label="耗时（秒）"]').attributes('aria-valuetext')).toBe('12.5 / 3,600')
+    expect(wrapper.get('[role="progressbar"][aria-label="耗时（秒）"]').attributes('aria-valuetext')).toBe('12.5 / 86,400')
     planning = false
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()
     expect(phase()).toContain('冻结开发面板')
