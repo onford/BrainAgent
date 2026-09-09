@@ -1,0 +1,425 @@
+import asyncio
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from app.preprocessing.schemas import PreprocessInput
+from app.search.catalog import BASELINE_ID, catalog, select
+from app.search.contracts import Decision, SearchBudget, SearchRequest
+from app.search.io import read, write
+from app.search.service import SearchService
+from tests.preprocessing.conftest import make_dataset
+
+
+class Decisions:
+    def __init__(self, actions=()):
+        self.actions = list(actions)
+        self.contexts = []
+
+    async def structured_output(self, messages, schema):
+        self.contexts.append(json.loads(messages[-1]["content"]))
+        if not self.actions:
+            return schema.model_validate(
+                {
+                    "decision": {
+                        "action": "finish",
+                        "reason": "没有新的可区分假设",
+                        "unresolved": [],
+                    }
+                }
+            )
+        value = self.actions.pop(0)
+        if isinstance(value, Exception):
+            raise value
+        if callable(value):
+            value = value(self.contexts[-1])
+        return schema.model_validate(value)
+
+
+def propose(identity, parent=BASELINE_ID):
+    return {
+        "decision": {
+            "action": "propose_candidate",
+            "candidate_id": identity,
+            "base_candidate_id": parent,
+            "reason": "依据已有反馈改变频带或参考",
+            "expected_result": "测量配对开发效用差",
+            "decision_branches": {
+                "improvement": "继续该方向",
+                "no_improvement": "换参考或结束",
+            },
+        }
+    }
+
+
+class SimulatedSearch(SearchService):
+    """Only numerical subprocesses are substituted; protocol/ledger/model loop are real."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.executed = []
+        self.scores = {}
+        self.failures = {}
+
+    async def child(self, state, stage, candidate_id=None):
+        self.guard(state)
+        root = self.folder(state["id"])
+        if stage == "verify":
+            return 0
+        if stage == "prepare":
+            write(
+                root / "panel.json",
+                {
+                    "panel_hash": "test-panel",
+                    "train_subjects": ["S001"],
+                    "development_subjects": ["S002"],
+                    "records": {},
+                    "trials": [{"eligible": True}],
+                    "output_contract": {
+                        "sfreq": 160.0,
+                        "tmin": 0.0,
+                        "tmax": 1.0,
+                        "channels": ["C3", "C4"],
+                    },
+                },
+            )
+            return 0
+        self.executed.append(candidate_id)
+        failure = self.failures.get(candidate_id)
+        if isinstance(failure, list):
+            failure = failure.pop(0) if failure else None
+        score = self.scores.get(candidate_id, 0.5)
+        delta = None if candidate_id == BASELINE_ID else score - 0.5
+        coverage = {
+            "original": 2,
+            "eligible": 2,
+            "available": 2,
+            "predicted": 2,
+            "missing": 0,
+            "common_invalid": 0,
+            "common_invalid_reasons": {},
+        }
+        value = (
+            {"status": failure, "error": "injected failure"}
+            if failure
+            else {
+                "status": "evaluated",
+                "macro_ba": score,
+                "mean_delta": delta,
+                "predictions_path": "originalpredictions.tsv",
+                "subjects": {
+                    "S002": {
+                        "ba": score,
+                        "delta": delta,
+                        "recalls": {"left": score, "right": score},
+                        "recall_left": score,
+                        "recall_right": score,
+                        "original_trials": 2,
+                        "eligible_trials": 2,
+                        "available_trials": 2,
+                        "predicted_trials": 2,
+                        "missing": 0,
+                    }
+                },
+                "coverage": {
+                    **coverage,
+                    "development": coverage,
+                    "train": {**coverage, "predicted": 0},
+                },
+            }
+        )
+        write(root / "candidates" / candidate_id / "receipt.json", value)
+        write(
+            root / "candidates" / candidate_id / "plan.json",
+            {"estimated_disk_bytes": 1},
+        )
+        return 0
+
+
+@pytest.fixture
+def factory(tmp_path, monkeypatch):
+    import app.search.service as module
+
+    monkeypatch.setattr(module, "search_engine_hash", lambda: "fixed-search-engine")
+    original = make_dataset(tmp_path / "data")
+    raw = original.model_dump(mode="json")
+    raw["survey"].update(dataset_id="eegmmidb", task="left_right_motor_imagery")
+    raw["collection"]["dataset_id"] = "eegmmidb"
+    data = PreprocessInput.model_validate(raw)
+    source = tmp_path / "source"
+    write(source / "collection/input.json", data.model_dump(mode="json"))
+    write(
+        source / "survey/sources.json",
+        {
+            "documents": [
+                {
+                    "id": "source-1",
+                    "title": "Methods",
+                    "url": "https://example.org/method",
+                    "text": "reference choice and filter context",
+                    "sha256": "text-hash",
+                }
+            ]
+        },
+    )
+    source_state = {
+        "outputs": {
+            "data_collection": {},
+            "data_survey": {
+                "records": [
+                    {"id": r.id, "subject": f"S{i + 1:03}"}
+                    for i, r in enumerate(data.collection.records)
+                ]
+            },
+        },
+        "request": {"tmin": 0.0, "tmax": 1.0},
+    }
+    workflows = SimpleNamespace(
+        get=lambda *args: source_state,
+        folder=lambda _: source,
+        preprocessing=SimpleNamespace(allowed_roots=[tmp_path]),
+        llm=None,
+    )
+    count = 0
+
+    def create(actions=(), strategy="adaptive", **budget):
+        nonlocal count
+        count += 1
+        llm = Decisions(actions)
+        service = SimulatedSearch(tmp_path / f"searches{count}", workflows, llm)
+        request = SearchRequest(
+            workflow_id="a" * 32, strategy=strategy, budget=SearchBudget(**budget)
+        )
+        state = service.create("owner", request, start=False)
+        return service, llm, state
+
+    return create
+
+
+async def run(service, state):
+    await service.run("owner", state["id"])
+    return service.get("owner", state["id"])
+
+
+@pytest.mark.asyncio
+async def test_feedback_changes_next_candidate_and_fixed_tie_selection(factory):
+    first = "bp1-40-average"
+
+    def next_action(context):
+        score = context["results"][-1]["receipt"]["macro_ba"]
+        return propose("bp4-40-average" if score > 0.5 else "bp8-30-original", first)
+
+    chosen = []
+    for score in (0.7, 0.4):
+        service, llm, state = factory([propose(first), next_action], max_candidates=3)
+        service.scores[first] = score
+        result = await run(service, state)
+        assert result["usage"]["candidates"] == 3
+        assert result["stop_reason"] == "candidate_budget_exhausted"
+        assert len(llm.contexts) == 2
+        assert "trials" not in llm.contexts[1]["panel"]
+        assert llm.contexts[1]["results"][-1]["receipt"]["macro_ba"] == score
+        chosen.append(service.executed[-1])
+    assert chosen == ["bp4-40-average", "bp8-30-original"]
+    candidates = [
+        {"id": e["id"], "receipt": {"status": "evaluated", "macro_ba": 0.5}}
+        for e in reversed(catalog())
+    ]
+    assert select(candidates) == BASELINE_ID
+
+
+@pytest.mark.asyncio
+async def test_invalid_and_duplicate_proposals_consume_budget(factory):
+    service, llm, state = factory(
+        [propose(BASELINE_ID), propose("not-in-catalog")], max_proposals=2
+    )
+    result = await run(service, state)
+    assert result["usage"]["proposals"] == 2
+    assert result["usage"]["candidates"] == 1
+    assert service.executed == [BASELINE_ID]
+    assert result["stop_reason"] == "proposal_budget_exhausted"
+    assert sum(a["status"] == "rejected" for a in result["actions"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_schema_rejections_are_counted_without_extra_model_corrections(factory):
+    service, _, state = factory(
+        [{"decision": {"action": "propose_candidate"}}], max_proposals=1
+    )
+    result = await run(service, state)
+    assert result["usage"]["llm_calls"] == result["usage"]["proposals"] == 1
+    assert result["stop_reason"] == "proposal_budget_exhausted"
+
+
+@pytest.mark.asyncio
+async def test_evidence_read_budget_and_duplicate_are_durable(factory):
+    evidence = {
+        "decision": {
+            "action": "request_evidence",
+            "source_id": "source-1",
+            "query": "reference",
+            "question": "参考是什么",
+            "affects_choice": "参考组合",
+            "reason": "可能改变候选选择",
+        }
+    }
+    service, _, state = factory(
+        [evidence, evidence, evidence], max_evidence_reads=1, max_proposals=2
+    )
+    result = await run(service, state)
+    assert result["usage"]["evidence_reads"] == 1
+    assert result["usage"]["proposals"] == 2
+    read_action = next(
+        a
+        for a in result["actions"]
+        if a["action"] == "request_evidence" and a["status"] == "completed"
+    )
+    assert "reference" in read_action["result"]["excerpts"][0]
+
+
+@pytest.mark.asyncio
+async def test_reference_failure_stops_comparison_and_preserves_null_score(factory):
+    service, llm, state = factory()
+    service.failures[BASELINE_ID] = "candidate_invalid"
+    result = await run(service, state)
+    assert result["stop_reason"] == "reference_failed"
+    assert result["selected_candidate_id"] is None
+    assert not llm.contexts
+
+
+@pytest.mark.asyncio
+async def test_transient_retry_charged_but_successful_reference_never_reruns(factory):
+    candidate = "bp1-40-average"
+    service, _, state = factory([propose(candidate)], max_candidates=2)
+    service.failures[candidate] = ["execution_failure", None]
+    result = await run(service, state)
+    assert result["usage"]["retries"] == 1
+    assert service.executed == [BASELINE_ID, candidate, candidate]
+    assert result["candidates"][-1]["attempts"] == 2
+
+
+@pytest.mark.asyncio
+async def test_exhaustive_uses_catalog_order_and_candidate_budget(factory):
+    service, llm, state = factory(max_candidates=3, strategy="exhaustive")
+    result = await run(service, state)
+    assert service.executed == [c["id"] for c in catalog()][:3]
+    assert not llm.contexts
+    assert result["usage"]["proposals"] == 2
+
+
+@pytest.mark.asyncio
+async def test_expired_resume_does_not_reset_budget_or_execute(factory):
+    service, _, state = factory()
+    saved = service.get("owner", state["id"])
+    saved["deadline"] = 0
+    service.save(saved)
+    result = await run(service, state)
+    assert result["stop_reason"] == "time_budget_exhausted"
+    assert not service.executed
+
+
+@pytest.mark.asyncio
+async def test_resume_reuses_completed_candidate_and_rejects_changed_input(factory):
+    service, _, state = factory()
+    result = await run(service, state)
+    assert result["status"] == "completed"
+    result.update(status="interrupted")
+    service.save(result)
+    again = await run(service, state)
+    assert service.executed == [BASELINE_ID]
+    root = service.folder(state["id"])
+    data = read(root / "input.json")
+    data["collection"]["selection_reason"] = "changed"
+    write(root / "input.json", data)
+    again.update(status="interrupted")
+    service.save(again)
+    failed = await run(service, state)
+    assert failed["status"] == "failed" and "冻结" in failed["error"]
+    assert service.executed == [BASELINE_ID]
+
+
+def test_state_and_artifacts_are_owner_scoped(factory):
+    service, _, state = factory()
+    with pytest.raises(KeyError):
+        service.get("another-owner", state["id"])
+    with pytest.raises(ValueError):
+        service.artifact("owner", state["id"], "../escape")
+
+
+def test_action_schema_requires_both_decision_branches():
+    proposal = propose("bp1-40-average")
+    del proposal["decision"]["decision_branches"]["no_improvement"]
+    with pytest.raises(ValueError):
+        Decision.model_validate(proposal)
+
+
+@pytest.mark.asyncio
+async def test_one_shot_schedule_is_frozen_before_reference_feedback(factory):
+    service,llm,state=factory([{"candidate_ids":["bp1-40-average","bp8-30-original"],"reason":"固定初始候选"}],strategy="one_shot",max_candidates=3,max_proposals=2)
+    result=await run(service,state)
+    assert result["usage"]["proposals"]==2
+    assert len(llm.contexts)==1 and llm.contexts[0]["results"]==[]
+    assert service.executed==[BASELINE_ID,"bp1-40-average","bp8-30-original"]
+
+
+@pytest.mark.asyncio
+async def test_model_timeout_stops_without_retry_or_budget_reset(factory):
+    service,_,state=factory(max_seconds=1)
+    class Slow:
+        async def structured_output(self,*args):
+            await asyncio.sleep(30)
+    service.llm=Slow()
+    result=await run(service,state)
+    assert result["stop_reason"]=="time_budget_exhausted"
+    assert result["usage"]["retries"]==0
+    assert result["selected_candidate_id"]==BASELINE_ID
+
+
+@pytest.mark.asyncio
+async def test_cancel_interrupts_model_and_preserves_reserved_call_cost(factory):
+    service,_,state=factory()
+    entered=asyncio.Event()
+    class Slow:
+        async def structured_output(self,*args):
+            entered.set()
+            await asyncio.sleep(30)
+    service.llm=Slow()
+    service.start("owner",state["id"])
+    await asyncio.wait_for(entered.wait(),timeout=5)
+    service.cancel("owner",state["id"])
+    await service.tasks[state["id"]]
+    result=service.get("owner",state["id"])
+    assert result["status"]=="cancelled"
+    assert result["usage"]["llm_calls"]==1 and result["usage"]["elapsed_seconds"]>0
+
+
+@pytest.mark.asyncio
+async def test_real_subprocess_api_search_and_owner_boundary(factory,tmp_path):
+    import httpx
+    from fastapi import FastAPI
+    from app.api.routes.searches import router
+    fixture,_,_=factory()
+    service=SearchService(tmp_path/"real-subprocess",fixture.workflows,Decisions())
+    app=FastAPI()
+    app.state.searches=service
+    app.state.settings=SimpleNamespace(default_owner_id="owner")
+    app.include_router(router,prefix="/api")
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app),base_url="http://test") as client:
+        response=await client.post("/api/searches",json={"workflow_id":"a"*32,"strategy":"exhaustive","budget":{"max_candidates":2,"max_seconds":60}})
+        assert response.status_code==202,response.text
+        identity=response.json()["id"]
+        await asyncio.wait_for(service.tasks[identity],timeout=65)
+        state=(await client.get(f"/api/searches/{identity}")).json()
+        assert state["status"]=="stopped",state["error"]
+        assert [c["status"] for c in state["candidates"]]==["evaluated","evaluated"]
+        assert state["usage"]["candidates"]==2
+        assert state["usage"]["peak_worker_memory_bytes"]>0
+        receipt=state["candidates"][0]["receipt"]
+        assert receipt["coverage"]["eligible"]==receipt["coverage"]["predicted"]
+        assert receipt["coverage"]["train"]["predicted"]==0
+        assert state["panel"]["train_subjects"]!=state["panel"]["development_subjects"]
+        report=await client.get(f"/api/searches/{identity}/artifacts/report.html?download=false")
+        assert report.status_code==200 and "开发面板" in report.text
+        assert (await client.get(f"/api/searches/{identity}",headers={"X-Brain-Agent-Owner-ID":"other"})).status_code==404
+        assert (await client.post(f"/api/searches/{identity}/retry")).status_code==422

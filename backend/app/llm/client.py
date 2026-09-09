@@ -67,9 +67,14 @@ class OpenAICompatibleClient(LLMClient):
         self,
         config: LLMConfig,
         transport: httpx.AsyncBaseTransport | None = None,
+        *,
+        max_retries: int = _MAX_RETRIES,
     ) -> None:
+        if type(max_retries) is not int or max_retries < 0:
+            raise ValueError("max_retries must be a nonnegative integer")
         self.config = config
         self._transport = transport
+        self._max_retries = max_retries
 
     async def chat(self, messages: list[dict[str, str]]) -> str:
         started_at = perf_counter()
@@ -103,7 +108,7 @@ class OpenAICompatibleClient(LLMClient):
                 request = client.build_request(
                     "POST", endpoint, headers=headers, json=payload
                 )
-                for attempt in range(1, _MAX_RETRIES + 2):
+                for attempt in range(1, self._max_retries + 2):
                     try:
                         response = await client.send(request)
                         response.raise_for_status()
@@ -133,10 +138,10 @@ class OpenAICompatibleClient(LLMClient):
                         details = (
                             f"model={self.config.model} provider={provider} "
                             f"status_code={status} request_id={request_id} "
-                            f"attempt={attempt}/{_MAX_RETRIES + 1} "
+                            f"attempt={attempt}/{self._max_retries + 1} "
                             f"error={type(exc).__name__}"
                         )
-                        if not retryable or attempt > _MAX_RETRIES:
+                        if not retryable or attempt > self._max_retries:
                             raise RuntimeError(
                                 f"LLM request failed: {details}"
                             ) from exc
@@ -159,7 +164,7 @@ class OpenAICompatibleClient(LLMClient):
                 f"model={self.config.model} provider={provider} "
                 f"status_code={response.status_code} "
                 f"request_id={response.headers.get('x-request-id', '-')} "
-                f"attempt={attempt}/{_MAX_RETRIES + 1}"
+                f"attempt={attempt}/{self._max_retries + 1}"
             )
             try:
                 response_body = response.json()

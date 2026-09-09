@@ -2,6 +2,8 @@
 
 六模块训练数据流程已接入本地 EEGMMIDB：LLM 调研官网与论文、核对接入语义、拆解候选预处理方案并根据编译反馈修订；独立 Worker 执行数值处理，随机选择后生成报告和训练数据包。页面入口为 `/workflows`，运行方式见 [完整流程说明](docs/training-workflow.md)，职责与固定过程文件见 [模型工作流设计](docs/llm-workflow-redesign.md)。
 
+已标准化的数据还可进入[有预算的离线预处理搜索](docs/offline-preprocessing-search.md)：冻结训练/开发被试及评价协议，由 LLM 根据实际评分逐轮选择有限候选，按开发指标选出方案。运行页提供「预算预处理搜索」入口；支持随机、一次性提案和枚举对照。
+
 Data Preprocess 首版已接入真实 EEG 执行。功能范围、上游协议、独立 Worker 和验收脚本见 [实现与运行说明](docs/data-preprocessing-implementation.md)。EEG 路径使用 Python 3.12，并安装 `--extra eeg`；原有对话开发环境可单独使用。
 
 ## 1. 开发环境要求

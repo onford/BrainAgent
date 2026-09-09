@@ -1,0 +1,224 @@
+<script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { cancelSearch, createSearch, fetchSearch, fetchSearches, retrySearch, searchArtifactUrl } from '../api/searches'
+import type { SearchBudget, SearchRequest, SearchState, SearchStrategy, SearchSubject, SearchSummary } from '../types/search'
+
+const route = useRoute(), router = useRouter()
+const searches = ref<SearchSummary[]>([]), current = ref<SearchState | null>(null)
+const loading = ref(false), listLoading = ref(false), busy = ref(false)
+const error = ref(''), listError = ref('')
+const tab = ref('candidates'), inspectedId = ref(''), reportName = ref('')
+const workflowId = ref(''), strategy = ref<SearchStrategy>('adaptive'), seed = ref(42)
+const trainSubjects = ref(''), developmentSubjects = ref('')
+const formBudget = reactive({ max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: '' as number | string, max_disk_mb: '' as number | string })
+const statuses: Record<string, string> = { preparing: '准备中', running: '执行中', completed: '已完成', stopped: '已停止', failed: '失败', cancelled: '已取消', interrupted: '等待恢复', pending: '待执行', queued: '排队中', proposed: '已提议', evaluating: '评估中', evaluated: '已评估', reserved: '待执行', execution_failure: '执行失败', resource_failure: '资源不足', rejected: '已拒绝', skipped: '已跳过', succeeded: '成功' }
+const phases: Record<string, string> = { freeze_panel: '冻结开发面板', candidate: '评估候选', decision: '选择下一步', finished: '搜索结束' }
+const actionLabels: Record<string, string> = { initial_schedule: '制定初始计划', model_decision: '决定下一步', enumerate_remaining: '穷举剩余候选', invalid_proposal: '无效提议', finish: '结束搜索', request_evidence: '补充证据', propose_candidate: '提出候选' }
+const stopReasons: Record<string, string> = { cancelled_by_user: '用户停止', service_interrupted: '服务中断', time_budget_exhausted: '时间预算耗尽', candidate_budget_exhausted: '候选预算耗尽', proposal_budget_exhausted: '提议预算耗尽', memory_budget_exhausted: '内存预算耗尽', disk_budget_exhausted: '磁盘预算耗尽', execution_conditions_unavailable: '执行条件不可用', reference_failed: '基线评估失败', catalog_exhausted: '候选目录已遍历', schedule_exhausted: '计划已执行完毕', model_finished: '模型决定结束搜索' }
+const strategies: Record<SearchStrategy, string> = { adaptive: '自适应', random: '随机', exhaustive: '穷举', one_shot: '一次性 LLM 对照' }
+const createStrategies = { adaptive: strategies.adaptive, random: strategies.random, exhaustive: strategies.exhaustive }
+const tabs = { candidates: '候选比较', rounds: '轮次时间线', subjects: '开发被试', artifacts: '报告 / 文件' }
+const budgetFields = [
+  { key: 'max_candidates', label: '候选数', min: 1, max: 32 },
+  { key: 'max_proposals', label: '提议数', min: 0, max: 64 },
+  { key: 'max_evidence_reads', label: '证据读取数', min: 0, max: 16 },
+  { key: 'max_seconds', label: '时限（秒）', min: 1, max: undefined },
+] as const
+const id = computed(() => typeof route.query.id === 'string' ? route.query.id : '')
+const active = computed(() => current.value && ['preparing', 'running'].includes(current.value.status))
+const canRetry = computed(() => current.value && ['failed', 'interrupted', 'cancelled'].includes(current.value.status))
+const candidates = computed(() => current.value?.candidates ?? [])
+const actions = computed(() => (current.value?.actions ?? []).filter(action => action.action !== 'model_decision' || !['completed', 'succeeded'].includes(action.status)))
+const panel = computed(() => typeof current.value?.panel === 'object' ? current.value?.panel : null)
+const panelTrainCount = computed(() => Array.isArray(panel.value?.train_subjects) ? panel.value.train_subjects.length : undefined)
+const panelDevelopmentCount = computed(() => Array.isArray(panel.value?.development_subjects) ? panel.value.development_subjects.length : undefined)
+const inspected = computed(() => candidates.value.find(c => c.id === inspectedId.value) ?? candidates.value.find(c => c.id === current.value?.selected_candidate_id) ?? candidates.value[0])
+const subjectRows = computed<SearchSubject[]>(() => {
+  const rows = inspected.value?.receipt?.subjects
+  if (!rows) return []
+  return Array.isArray(rows) ? rows : Object.entries(rows).map(([subject, values]) => ({ ...values, subject }))
+})
+const budget = computed(() => current.value?.budget ?? current.value?.request?.budget)
+const meters = computed(() => [
+  { label: '候选', used: current.value?.usage?.candidates, limit: budget.value?.max_candidates },
+  { label: '提议', used: current.value?.usage?.proposals, limit: budget.value?.max_proposals },
+  { label: '证据读取', used: current.value?.usage?.evidence_reads, limit: budget.value?.max_evidence_reads },
+  { label: '耗时（秒）', used: current.value?.usage?.elapsed_seconds, limit: budget.value?.max_seconds },
+])
+const artifacts = computed(() => current.value?.artifacts ?? [])
+const reports = computed(() => artifacts.value.filter(a => /\.(html?|pdf)$/i.test(a.name)))
+const report = computed(() => reports.value.find(a => a.name === reportName.value) ?? reports.value[0])
+let timer: ReturnType<typeof setTimeout> | undefined
+let generation = 0, disposed = false
+let pendingState: SearchState | null = null
+
+function label(status: string) { return statuses[status] ?? status }
+function count(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? value.toLocaleString('zh-CN', { maximumFractionDigits: 1 }) : '—' }
+function percent(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? `${(value * 100).toFixed(1)}%` : '—' }
+function delta(value: unknown) { return typeof value === 'number' && Number.isFinite(value) ? `${value > 0 ? '+' : ''}${(value * 100).toFixed(1)} pp` : '—' }
+function date(value: string) { return new Date(value).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }
+function detail(value: unknown): string { return typeof value === 'string' ? value : JSON.stringify(value, null, 2) ?? '—' }
+function message(reason: unknown) { return reason instanceof Error ? reason.message : String(reason) }
+function ratio(used?: number, limit?: number) { return used == null || !limit ? 0 : Math.max(0, Math.min(100, used / limit * 100)) }
+function upsert(state: SearchSummary) { searches.value = [state, ...searches.value.filter(s => s.id !== state.id)] }
+function clearPoll() { if (timer) clearTimeout(timer); timer = undefined }
+function schedule(searchId: string, version: number) {
+  clearPoll()
+  if (!disposed && version === generation && active.value) timer = setTimeout(() => void refresh(searchId, version), 2000)
+}
+async function refresh(searchId = id.value, version = generation) {
+  if (!searchId) return
+  clearPoll()
+  try {
+    const state = await fetchSearch(searchId)
+    if (disposed || version !== generation || id.value !== searchId) return
+    current.value = state; upsert(state); error.value = ''
+  } catch (reason) {
+    if (!disposed && version === generation) error.value = message(reason)
+  } finally {
+    if (!disposed && version === generation) { loading.value = false; schedule(searchId, version) }
+  }
+}
+async function loadList() {
+  listLoading.value = true
+  try {
+    const items = await fetchSearches()
+    if (disposed) return
+    searches.value = current.value ? [current.value, ...items.filter(s => s.id !== current.value!.id)] : items
+    listError.value = ''
+  } catch (reason) { if (!disposed) listError.value = message(reason) }
+  finally { if (!disposed) listLoading.value = false }
+}
+function subjects(value: string) { return [...new Set(value.split(/[\s,，;；]+/).filter(Boolean))] }
+function request(): SearchRequest {
+  if (!workflowId.value.trim()) throw new Error('请填写来源流程 ID。')
+  for (const field of budgetFields) {
+    const value = Number(formBudget[field.key])
+    if (!Number.isInteger(value) || value < field.min) throw new Error(`${field.label}需为不小于 ${field.min} 的整数。`)
+    if (field.max != null && value > field.max) throw new Error(`${field.label}不能超过 ${field.max}。`)
+  }
+  if (!Number.isSafeInteger(Number(seed.value)) || String(seed.value).trim() === '' || Number(seed.value) < 0 || Number(seed.value) > 4294967295) throw new Error('随机种子需为 0–4294967295 的整数。')
+  const optionalLimit = (value: string | number) => {
+    if (String(value).trim() === '') return null
+    if (!Number.isInteger(Number(value)) || Number(value) < 64) throw new Error('内存和磁盘预算需为至少 64 MB 的整数，或留空自动设置。')
+    return Number(value)
+  }
+  const train = subjects(trainSubjects.value), development = subjects(developmentSubjects.value)
+  if (!!train.length !== !!development.length) throw new Error('训练被试与开发被试须同时指定，或同时留空。')
+  if (train.some(subject => development.includes(subject))) throw new Error('训练被试与开发被试不能重叠。')
+  const selectedBudget: SearchBudget = {
+    max_candidates: Number(formBudget.max_candidates), max_proposals: Number(formBudget.max_proposals),
+    max_evidence_reads: Number(formBudget.max_evidence_reads), max_seconds: Number(formBudget.max_seconds),
+    max_memory_mb: optionalLimit(formBudget.max_memory_mb), max_disk_mb: optionalLimit(formBudget.max_disk_mb),
+  }
+  return { workflow_id: workflowId.value.trim(), strategy: strategy.value, budget: selectedBudget, seed: Number(seed.value),
+    ...(train.length ? { train_subjects: train } : {}), ...(development.length ? { development_subjects: development } : {}) }
+}
+async function start() {
+  if (busy.value) return
+  let body: SearchRequest
+  try { body = request() } catch (reason) { error.value = message(reason); return }
+  const version = generation
+  busy.value = true; error.value = ''
+  try {
+    const state = await createSearch(body)
+    if (disposed) return
+    upsert(state)
+    if (version !== generation) return
+    pendingState = state
+    await router.push({ path: '/searches', query: { id: state.id } })
+  } catch (reason) { if (!disposed && version === generation) error.value = message(reason) }
+  finally { busy.value = false }
+}
+async function control(action: 'cancel' | 'retry') {
+  if (!current.value || busy.value) return
+  const searchId = current.value.id, version = ++generation
+  clearPoll(); busy.value = true; error.value = ''
+  try {
+    const state = await (action === 'cancel' ? cancelSearch(searchId) : retrySearch(searchId))
+    if (disposed || version !== generation || id.value !== searchId) return
+    current.value = state; upsert(state)
+  } catch (reason) { if (!disposed && version === generation) error.value = message(reason) }
+  finally {
+    busy.value = false
+    if (!disposed && version === generation) schedule(searchId, version)
+  }
+}
+watch(() => [route.query.id, route.query.workflow], () => {
+  const version = ++generation
+  clearPoll(); error.value = ''; current.value = null; inspectedId.value = ''; reportName.value = ''; tab.value = 'candidates'
+  loading.value = !!id.value
+  if (id.value) {
+    if (pendingState?.id === id.value) {
+      current.value = pendingState; pendingState = null; loading.value = false; schedule(id.value, version)
+    } else void refresh(id.value, version)
+  } else {
+    workflowId.value = typeof route.query.workflow === 'string' ? route.query.workflow : ''
+  }
+}, { immediate: true })
+onMounted(() => void loadList())
+onBeforeUnmount(() => { disposed = true; generation++; clearPoll() })
+</script>
+
+<template>
+  <main class="search-page">
+    <header class="topbar"><RouterLink to="/workflows">← 数据工作区</RouterLink><strong>Brain Agent <span> / 离线预算搜索</span></strong><RouterLink :to="{ path: '/searches', query: current ? { workflow: current.workflow_id } : {} }">＋ 新建搜索</RouterLink></header>
+    <div class="search-layout">
+      <aside class="sidebar" aria-label="搜索列表">
+        <div class="section-heading"><h2>搜索记录 <small>{{ searches.length }}</small></h2><button :disabled="listLoading" aria-label="刷新搜索列表" @click="loadList">↻</button></div>
+        <p v-if="listError" class="error" role="alert">{{ listError }}</p>
+        <p v-if="!searches.length" class="empty">{{ listLoading ? '正在载入记录…' : '暂无搜索，从已接入的数据开始。' }}</p>
+        <nav aria-label="选择搜索"><RouterLink v-for="item in searches" :key="item.id" :to="{ path: '/searches', query: { id: item.id } }" class="search-item" :class="{ chosen: id === item.id }" :aria-current="id === item.id ? 'page' : undefined"><span><strong>{{ item.id }}</strong><span class="badge" :class="item.status">{{ label(item.status) }}</span></span><small>来源 {{ item.workflow_id }}</small><small>{{ date(item.created_at) }} · 候选 {{ count(item.usage?.candidates) }} / {{ count(item.budget?.max_candidates) }}</small></RouterLink></nav>
+      </aside>
+      <section class="main-content" :aria-busy="loading">
+        <p v-if="error" class="error" role="alert">{{ error }} <button v-if="id" :disabled="busy || loading" @click="refresh()">重新连接</button></p>
+        <template v-if="!id">
+          <header class="page-heading"><p class="eyebrow">OFFLINE SEARCH</p><h1>预算预处理搜索</h1><p class="muted">设定有限预算，比较预处理候选，保留每轮决策与评估记录。</p></header>
+          <p class="notice">开发面板选择，不代表独立泛化或神经信号质量。</p>
+          <form class="card create-form" aria-label="创建预算搜索" @submit.prevent="start">
+            <label class="wide">来源流程 ID<input v-model="workflowId" required aria-label="来源流程 ID" placeholder="已完成数据接入的流程 ID" /><small>使用该流程已接入的数据。</small></label>
+            <fieldset class="wide"><legend>搜索策略</legend><div class="strategy-options"><label v-for="(name, key) in createStrategies" :key="key" :class="{ chosen: strategy === key }"><input v-model="strategy" type="radio" name="strategy" :value="key" />{{ name }}</label></div></fieldset>
+            <label v-for="field in budgetFields" :key="field.key">{{ field.label }}<input v-model.number="formBudget[field.key]" type="number" :min="field.min" :max="field.max" step="1" required :aria-label="field.label" /></label>
+            <label>内存上限（MB）<input v-model="formBudget.max_memory_mb" type="number" min="64" step="1" placeholder="自动" aria-label="内存上限（MB）" /></label>
+            <label>磁盘上限（MB）<input v-model="formBudget.max_disk_mb" type="number" min="64" step="1" placeholder="自动" aria-label="磁盘上限（MB）" /></label>
+            <label>随机种子<input v-model.number="seed" type="number" min="0" max="4294967295" step="1" required aria-label="随机种子" /></label>
+            <details class="wide optional-subjects"><summary>指定训练 / 开发被试（可选）</summary><p class="muted">两组同时留空由后端分配；手动指定时须覆盖全部接入被试。ID 用空格或逗号分隔，两组不可重叠。</p><div class="subject-fields"><label>训练被试<input v-model="trainSubjects" aria-label="训练被试" placeholder="如 S001, S002" /></label><label>开发被试<input v-model="developmentSubjects" aria-label="开发被试" placeholder="如 S003, S004" /></label></div></details>
+            <div class="form-footer wide"><span class="muted">内存、磁盘留空时自动设置。</span><button class="primary" :disabled="busy">{{ busy ? '正在创建…' : '开始预算搜索 →' }}</button></div>
+          </form>
+        </template>
+        <template v-else-if="current">
+          <header class="page-heading run-heading"><div><p class="eyebrow">OFFLINE SEARCH · {{ current.id }}</p><h1>预算预处理搜索 <span class="badge" :class="current.status">{{ label(current.status) }}</span></h1><p class="muted"><RouterLink :to="{path:'/workflows',query:{id:current.workflow_id}}">来源流程 {{ current.workflow_id }} ↗</RouterLink> · {{ strategies[current.request?.strategy] ?? current.request?.strategy ?? '—' }} · 种子 {{ current.request?.seed ?? '—' }} · 更新于 {{ date(current.updated_at) }}</p></div><div class="run-controls"><button v-if="active" :disabled="busy" @click="control('cancel')">{{ busy ? '正在处理…' : '停止搜索' }}</button><button v-if="canRetry" class="primary" :disabled="busy" @click="control('retry')">{{ busy ? '正在处理…' : '重试搜索' }}</button></div></header>
+          <p class="notice">开发面板选择，不代表独立泛化或神经信号质量。</p>
+          <section class="card budget-panel" aria-label="进度与预算">
+            <div class="section-heading"><h2>进度与预算</h2><span role="status">{{ current.phase ? (phases[current.phase] ?? current.phase) : label(current.status) }}<template v-if="current.message"> · {{ current.message }}</template></span></div>
+            <div class="budget-grid"><div v-for="meter in meters" :key="meter.label" class="meter"><div><span>{{ meter.label }}</span><strong>{{ count(meter.used) }} <small>/ {{ count(meter.limit) }}</small></strong></div><div class="meter-track" role="progressbar" :aria-label="meter.label" :aria-valuenow="meter.used == null || meter.limit == null ? undefined : ratio(meter.used, meter.limit)" aria-valuemin="0" aria-valuemax="100" :aria-valuetext="`${count(meter.used)} / ${count(meter.limit)}`"><i :style="{ width: `${ratio(meter.used, meter.limit)}%` }" /></div></div></div>
+            <div class="budget-meta"><span>LLM 调用 {{ count(current.usage?.llm_calls) }}</span><span>重试 {{ count(current.usage?.retries) }}</span><span>内存 {{ !budget ? '—' : budget.max_memory_mb == null ? '自动' : `${count(budget.max_memory_mb)} MB` }}</span><span>磁盘 {{ !budget ? '—' : budget.max_disk_mb == null ? '自动' : `${count(budget.max_disk_mb)} MB` }}</span><span>后端选中 {{ current.selected_candidate_id || '尚未选择' }}</span></div>
+            <p v-if="current.stop_reason" class="stop-reason">停止原因：{{ stopReasons[current.stop_reason] ?? current.stop_reason }}</p>
+            <details v-if="current.error" class="error" open><summary>搜索错误</summary><pre>{{ current.error }}</pre></details>
+            <p v-if="typeof current.panel === 'string'" class="panel-summary">开发面板：{{ current.panel }}</p>
+            <div v-else-if="panel" class="panel-summary"><div class="budget-meta"><span>训练被试 {{ count(panelTrainCount) }}</span><span>开发被试 {{ count(panelDevelopmentCount) }}</span><span>原始 trial {{ count(panel.trial_count) }}</span><span>合格 trial {{ count(panel.eligible_count) }}</span></div><details><summary>开发面板详情</summary><pre>{{ detail(panel) }}</pre></details></div>
+            <details v-if="current.request?.train_subjects?.length || current.request?.development_subjects?.length" class="panel-summary"><summary>被试划分</summary><p>训练：{{ current.request.train_subjects?.join('、') || '自动分配' }}</p><p>开发：{{ current.request.development_subjects?.join('、') || '自动分配' }}</p></details>
+          </section>
+          <section class="card results">
+            <nav class="tabs" aria-label="搜索结果视图"><button v-for="(name, key) in tabs" :key="key" :aria-pressed="tab === key" @click="tab = key">{{ name }}<small v-if="key === 'candidates'">{{ candidates.length }}</small><small v-if="key === 'rounds'">{{ actions.length }}</small><small v-if="key === 'artifacts'">{{ artifacts.length }}</small></button></nav>
+            <section v-if="tab === 'candidates'" class="tab-content" aria-label="候选比较">
+              <div class="section-heading"><h2>开发面板 BA 比较</h2><span class="muted">BA 为平衡准确率 · Δ 为百分点 · 覆盖统计为开发组</span></div>
+              <div v-if="candidates.length" class="table-scroll"><table><thead><tr><th>候选 / 参数</th><th>状态</th><th>宏平均 BA</th><th>平均 Δ</th><th>覆盖（预测 / 合格）</th><th>选择</th><th>详情</th></tr></thead><tbody><tr v-for="candidate in candidates" :key="candidate.id" :class="{ selected: candidate.id === current.selected_candidate_id }"><td><strong>{{ candidate.title || candidate.id }}</strong><small>{{ candidate.id }} · {{ candidate.parameters?.l_freq ?? '—' }}–{{ candidate.parameters?.h_freq ?? '—' }} Hz · {{ candidate.parameters?.reference === 'average' ? '平均参考' : candidate.parameters?.reference === 'original' ? '原始参考' : '参考未知' }}</small></td><td>{{ label(candidate.status) }}<small v-if="candidate.receipt?.status">回执：{{ label(candidate.receipt.status) }}</small><details v-if="candidate.error" class="candidate-error"><summary>错误</summary><pre>{{ candidate.error }}</pre></details></td><td class="score">{{ percent(candidate.receipt?.macro_ba) }}</td><td>{{ delta(candidate.receipt?.mean_delta) }}</td><td>{{ count(candidate.receipt?.coverage?.predicted) }} / {{ count(candidate.receipt?.coverage?.eligible) }}</td><td><span v-if="candidate.id === current.selected_candidate_id" class="selection-mark">✓ 后端选中</span><span v-else class="muted">—</span></td><td><button :aria-label="`查看候选 ${candidate.id} 的开发被试`" @click="inspectedId = candidate.id; tab = 'subjects'">查看被试 →</button></td></tr></tbody></table></div>
+              <p v-else class="empty">尚无候选。搜索开始后将在此展示参数与开发面板评估。</p>
+            </section>
+            <section v-else-if="tab === 'rounds'" class="tab-content" aria-label="轮次时间线"><div class="section-heading"><h2>每轮决策与结果</h2><span class="muted">按执行记录顺序</span></div><ol v-if="actions.length" class="timeline"><li v-for="action in actions" :key="action.index"><span class="round-number">{{ action.index }}</span><div class="round-body"><div class="section-heading"><h3>{{ actionLabels[action.action] ?? action.action }}</h3><span>{{ label(action.status) }} · {{ count(action.cost_seconds) }} 秒</span></div><p>{{ action.reason || '暂无决策说明' }}</p><p v-if="action.base_candidate_id || action.candidate_id" class="muted">{{ action.base_candidate_id || '起始' }} → {{ action.candidate_id || '—' }}</p><details v-if="action.expected_result != null || action.decision_branches != null"><summary>预期结果与决策分支</summary><pre v-if="action.expected_result != null">{{ detail(action.expected_result) }}</pre><pre v-if="action.decision_branches != null">{{ detail(action.decision_branches) }}</pre></details><details v-if="action.result != null"><summary>执行结果</summary><pre>{{ detail(action.result) }}</pre></details><details v-if="action.error" class="error"><summary>本轮错误</summary><pre>{{ action.error }}</pre></details></div></li></ol><p v-else class="empty">尚无轮次记录。</p></section>
+            <section v-else-if="tab === 'subjects'" class="tab-content" aria-label="开发被试明细"><h2>开发被试明细</h2><nav v-if="candidates.length" class="candidate-tabs" aria-label="查看候选"><button v-for="candidate in candidates" :key="candidate.id" :aria-pressed="inspected?.id === candidate.id" @click="inspectedId = candidate.id">{{ candidate.title || candidate.id }}<span v-if="candidate.id === current.selected_candidate_id"> · 后端选中</span></button></nav><template v-if="inspected"><div class="section-heading"><h3>{{ inspected.title || inspected.id }}</h3><span class="muted">任务 {{ inspected.job_id || '—' }}</span></div><div class="diagnostics"><span>原始（开发） {{ count(inspected.receipt?.coverage?.original) }}</span><span>合格（开发） {{ count(inspected.receipt?.coverage?.eligible) }}</span><span>预测（开发） {{ count(inspected.receipt?.coverage?.predicted) }}</span><span>缺失 {{ count(inspected.receipt?.coverage?.missing) }}</span><span>下限比例 {{ percent(inspected.receipt?.diagnostics?.floor_fraction) }}</span><span>收敛 {{ inspected.receipt?.diagnostics?.converged === true ? '是' : inspected.receipt?.diagnostics?.converged === false ? '否' : '—' }}</span></div><details v-if="inspected.receipt?.coverage?.train || inspected.receipt?.coverage?.development" class="panel-summary"><summary>训练 / 开发覆盖明细</summary><pre>{{ detail(inspected.receipt.coverage) }}</pre></details><p v-if="inspected.error" class="error">{{ inspected.error }}</p><div v-if="subjectRows.length" class="table-scroll"><table><thead><tr><th>开发被试</th><th>BA</th><th>Δ（百分点）</th><th>完整记录</th></tr></thead><tbody><tr v-for="subject in subjectRows" :key="subject.subject"><td>{{ subject.subject }}</td><td class="score">{{ percent(subject.ba) }}</td><td>{{ delta(subject.delta) }}</td><td><details><summary>查看记录</summary><pre>{{ detail(subject) }}</pre></details></td></tr></tbody></table></div><p v-else class="empty">该候选暂无开发被试回执。</p></template><p v-else class="empty">候选生成后可查看开发被试。</p></section>
+            <section v-else class="tab-content" aria-label="报告与文件"><h2>报告与文件</h2><div v-if="reports.length" class="report-reader"><nav class="candidate-tabs" aria-label="选择搜索报告"><button v-for="item in reports" :key="item.name" :aria-pressed="report?.name === item.name" @click="reportName = item.name">{{ item.description || item.name }}</button></nav><iframe v-if="report && searchArtifactUrl(current.id, report, false)" :key="`${current.id}/${report.name}`" :src="searchArtifactUrl(current.id, report, false)" :title="report.description || report.name" sandbox="allow-same-origin" /></div><ul v-if="artifacts.length" class="artifact-list"><li v-for="artifact in artifacts" :key="artifact.name"><div><strong>{{ artifact.name }}</strong><p class="muted">{{ artifact.description || '搜索产物' }}</p></div><a v-if="searchArtifactUrl(current.id, artifact)" :href="searchArtifactUrl(current.id, artifact)" target="_blank" rel="noopener noreferrer">下载 ↗</a><span v-else class="muted">链接不可用</span></li></ul><p v-else class="empty">尚无报告或文件，生成后会自动显示。</p></section>
+          </section>
+        </template>
+        <p v-else class="empty">{{ loading ? '正在载入搜索…' : '未能载入搜索，请重新连接。' }}</p>
+      </section>
+    </div>
+  </main>
+</template>
+
+<style scoped>
+.search-page{min-height:100dvh;background:#f2f5f3;color:#263e31;font:14px/1.6 system-ui,-apple-system,'Segoe UI',sans-serif}.search-page *{box-sizing:border-box}h1,h2,h3,p{margin:0}h1{font-size:25px;letter-spacing:-.03em}h2{font-size:15px}h3{font-size:14px}a{color:#285e43;text-decoration:none}a:hover{text-decoration:underline}button,input{font:inherit}button{cursor:pointer;border:1px solid #d6e1d9;background:white;border-radius:7px;padding:7px 12px;color:#365a43}button:hover{background:#edf4ef}button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid #39845b;outline-offset:3px}.primary{background:#285e43;color:white;border-color:#285e43}.primary:hover{background:#1e4c34}.muted,small{color:#708477;font-size:12px}.topbar{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 28px;border-bottom:1px solid #dce6df;background:#f9fbf9}.topbar strong span{font-weight:400;color:#708477}.search-layout{display:grid;grid-template-columns:250px minmax(0,1fr);max-width:1760px;margin:auto}.sidebar{padding:24px 16px;border-right:1px solid #dce6df;max-height:calc(100dvh - 68px);overflow:auto;position:sticky;top:0}.section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.section-heading>span{font-size:12px;overflow-wrap:anywhere}.sidebar .section-heading button{padding:2px 9px}.sidebar h2 small{margin-left:8px}.search-item{display:block;padding:14px 12px;margin-bottom:9px;border:1px solid transparent;border-radius:9px;color:#466550}.search-item:hover{background:#eaf1ec;text-decoration:none}.search-item.chosen{background:#fff;border-color:#afc8b7;box-shadow:0 3px 12px #244c3410}.search-item>span{display:flex;justify-content:space-between;gap:8px;align-items:center}.search-item strong{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:105px}.search-item>small{display:block;margin-top:6px;overflow-wrap:anywhere;font-size:11px}.badge{display:inline-block;border-radius:20px;padding:2px 9px;background:#eaf1ed;color:#52705d;font-size:11px;font-weight:500;white-space:nowrap;vertical-align:middle}.badge.running,.badge.preparing{background:#e4eef7;color:#3c698d}.badge.failed{background:#f9e9e4;color:#a14d38}.badge.completed{background:#dceee1;color:#286242}.main-content{padding:28px;min-width:0}.page-heading{margin-bottom:20px}.page-heading h1{margin:5px 0 8px}.eyebrow{font-size:10px;color:#789681;letter-spacing:.12em;overflow-wrap:anywhere}.notice{background:#e9efe5;border:1px solid #d9e3d2;padding:10px 14px;border-radius:7px;color:#64744f;font-size:12px;margin-bottom:20px}.card{background:white;border:1px solid #dce6df;border-radius:12px;padding:22px;margin-bottom:20px}.create-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;max-width:900px}.create-form label{display:flex;flex-direction:column;gap:7px;font-size:12px;color:#526b5b}.create-form input:not([type=radio]){width:100%;border:1px solid #d1ddd4;border-radius:7px;padding:10px 12px;color:#284733;background:#fcfdfc}.wide{grid-column:1/-1}.create-form fieldset{padding:0;border:0;margin:0}.create-form legend{font-size:12px;color:#526b5b;margin-bottom:10px}.strategy-options{display:flex;gap:10px}.strategy-options label{flex:1;flex-direction:row;align-items:center;justify-content:center;border:1px solid #d6e1d9;border-radius:8px;padding:12px;cursor:pointer}.strategy-options .chosen{background:#edf5ef;border-color:#7da98b;color:#285e43}.strategy-options input{accent-color:#285e43}.optional-subjects{border-top:1px solid #e5ece7;padding-top:14px}.optional-subjects p{margin:10px 0}.subject-fields{display:grid;grid-template-columns:1fr 1fr;gap:18px}.form-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:5px}.run-heading{display:flex;justify-content:space-between;align-items:center;gap:18px}.run-heading h1 .badge{margin-left:8px}.run-controls{flex-shrink:0}.budget-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}.meter>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:10px}.meter strong{font-size:15px;font-variant-numeric:tabular-nums}.meter small{font-weight:400}.meter-track{height:5px;border-radius:5px;background:#eaf0eb;overflow:hidden}.meter-track i{height:100%;display:block;background:#558d68;border-radius:5px;transition:width .25s}.budget-meta,.diagnostics{display:flex;flex-wrap:wrap;gap:8px 22px;color:#718678;font-size:12px;margin-top:18px}.stop-reason{margin-top:14px;border-top:1px solid #e7ede8;padding-top:12px;color:#806647;font-size:12px}.panel-summary{margin-top:12px;font-size:12px;color:#637b6a}.results{padding:0;overflow:hidden}.tabs{display:flex;gap:22px;padding:0 22px;border-bottom:1px solid #e1e9e3;overflow:auto}.tabs button{padding:16px 0;border:0;border-radius:0;border-bottom:2px solid transparent;white-space:nowrap;background:transparent;color:#788c7f}.tabs button[aria-pressed=true]{color:#285e43;border-bottom-color:#285e43;font-weight:600}.tabs small{margin-left:7px}.tab-content{padding:22px;min-height:260px}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left;font-size:12px}th{font-size:11px;color:#7c8f81;font-weight:500;background:#f7f9f7}th,td{padding:14px 12px;border-bottom:1px solid #e8eee9;white-space:nowrap;vertical-align:top}td:first-child{min-width:200px}td strong{display:block;max-width:310px;white-space:normal}td small{display:block;font-size:10px;margin-top:5px}td button{font-size:11px;padding:4px 8px}.selected td{background:#f0f7f1}.score{font-size:16px;font-weight:600;color:#305e41;font-variant-numeric:tabular-nums}.selection-mark{font-size:11px;color:#347046}.empty{padding:40px 15px;text-align:center;color:#829487;font-size:13px}.error{margin:0 0 16px;padding:12px;border:1px solid #ecd8ca;border-radius:7px;color:#a05d3d;background:#fff8f4;font-size:12px;overflow-wrap:anywhere}.budget-panel .error{margin-top:14px;margin-bottom:0}.error button{margin-left:8px}summary{cursor:pointer;color:#577460;font-size:12px}.error summary,.candidate-error summary{color:#a05d3d}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.7 system-ui;max-height:260px;overflow:auto;min-width:180px;max-width:100%;margin:10px 0 0}.timeline{list-style:none;margin:0;padding:0}.timeline li{display:flex;gap:16px;position:relative;padding-bottom:24px}.round-number{border:1px solid #cfdfd3;border-radius:50%;width:28px;height:28px;display:grid;place-items:center;flex-shrink:0;background:#f1f6f2;font-size:12px}.round-body{flex:1;min-width:0;padding-bottom:20px;border-bottom:1px solid #e5ede7}.round-body .section-heading{margin-bottom:7px}.round-body p{font-size:13px;margin-bottom:8px;overflow-wrap:anywhere}.round-body details{margin-top:10px}.candidate-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 20px}.candidate-tabs button{font-size:12px;max-width:100%;overflow-wrap:anywhere}.candidate-tabs button[aria-pressed=true]{background:#edf5ef;border-color:#80a38c;color:#285e43}.diagnostics{background:#f5f8f5;border-radius:7px;padding:12px;margin:12px 0 20px}.report-reader iframe{width:100%;height:65dvh;min-height:360px;border:1px solid #dce6df;border-radius:7px;background:#fff}.artifact-list{padding:0;list-style:none;margin:20px 0 0}.artifact-list li{display:flex;justify-content:space-between;gap:20px;padding:15px 0;border-bottom:1px solid #e5ede7}.artifact-list strong{font-size:12px;overflow-wrap:anywhere}.artifact-list a{flex-shrink:0;font-size:12px}.artifact-list li>div{min-width:0}
+@media(min-width:1500px){.main-content{padding:32px 42px}.budget-panel{padding:24px 28px}}@media(max-width:1100px){.search-layout{grid-template-columns:205px minmax(0,1fr)}.main-content{padding:22px 18px}.budget-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.run-heading{align-items:flex-start}.run-heading h1{font-size:21px}.tabs{gap:16px}}@media(max-width:720px){.topbar{padding:12px 16px;font-size:12px;flex-wrap:wrap}.topbar strong{display:none}.search-layout{display:block}.sidebar{position:static;max-height:220px;border-right:0;border-bottom:1px solid #dce6df;padding:12px 16px}.sidebar .section-heading{margin-bottom:8px}.sidebar nav{display:flex;gap:8px;overflow-x:auto}.search-item{min-width:220px;max-width:220px;margin:0}.sidebar .empty{padding:12px}.main-content{padding:20px 12px}.card{padding:16px}.results{padding:0}.tab-content{padding:16px}.tabs{padding:0 16px;gap:20px}.tabs button{font-size:12px}.run-heading{flex-direction:column;gap:8px}.run-heading h1{font-size:22px}.create-form{gap:16px}.form-footer{align-items:flex-start;flex-direction:column}.form-footer button{width:100%}.subject-fields{grid-template-columns:1fr}.section-heading{align-items:flex-start;flex-wrap:wrap}.budget-grid{gap:16px}.strategy-options{gap:6px}.strategy-options label{padding:10px 5px}.budget-meta{gap:7px 16px}}
+</style>

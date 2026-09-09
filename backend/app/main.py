@@ -19,7 +19,8 @@ from app.integrations.registry import ExternalToolRegistry
 from app.integrations.security import CredentialCipher
 from app.tools.registry import ToolRegistry
 from app.workflows.service import WorkflowService
-from app.api.routes import workflows
+from app.api.routes import workflows, searches
+from app.search.service import SearchService
 
 
 def create_app(
@@ -72,6 +73,9 @@ def create_app(
         workflow_llm,
         tool_registry,
     )
+    search_service = SearchService(
+        workflow_service.root.parent / "offline-search", workflow_service, workflow_llm
+    )
     registry = build_agent_registry(
         llm, tool_registry, preprocessing_service, workflow_service
     )
@@ -84,7 +88,9 @@ def create_app(
         if app_settings.db_create_tables:
             await database.create_tables()
         await workflow_service.resume()
+        await search_service.resume()
         yield
+        await search_service.close()
         await workflow_service.close()
         await database.dispose()
 
@@ -98,6 +104,7 @@ def create_app(
     app.state.tool_registry = tool_registry
     app.state.preprocessing = preprocessing_service
     app.state.workflows = workflow_service
+    app.state.searches = search_service
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[app_settings.frontend_origin],
@@ -111,6 +118,7 @@ def create_app(
     app.include_router(integrations.router, prefix="/api")
     app.include_router(preprocessing.router, prefix="/api")
     app.include_router(workflows.router, prefix="/api")
+    app.include_router(searches.router, prefix="/api")
 
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:
