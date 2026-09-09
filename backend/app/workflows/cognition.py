@@ -537,6 +537,8 @@ class WorkflowCognition:
     async def narrative(self):
         research_path = self.research_prefix() + "/research.json"
         findings = self.load(research_path, ResearchFindings)
+        actual = results_context(self.state["outputs"])
+        selection = actual.pop("data_evaluation")
 
         def validate(value):
             if not set(value.finding_ids) <= {f.id for f in findings.facts}:
@@ -547,11 +549,11 @@ class WorkflowCognition:
             ReportNarrative,
             {
                 "research": findings.model_dump(),
-                "selected_policy": self.state["outputs"]["data_evaluation"],
+                "selected_policy": selection,
                 "executed_methods": self.state["outputs"]["data_preprocessing"][
                     "methods"
                 ],
-                "actual_results": results_context(self.state["outputs"]),
+                "actual_results": actual,
                 **self.survey_context(),
             },
             "Write only concise interpretation to fill fixed report sections. Actual numeric tables are rendered by code. "

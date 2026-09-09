@@ -3,6 +3,85 @@
 import json
 
 
+def evaluation_context(data):
+    """Report interpretation needs measured summaries, not duplicated array indexes."""
+    receipt = data.get("selected_receipt") or {}
+    panel = data.get("panel") or {}
+    protocol = data.get("evaluation_protocol") or {}
+    representation = data.get("representation") or {}
+    return {
+        **{
+            key: data[key]
+            for key in (
+                "selection_policy",
+                "score",
+                "evaluation_scope",
+                "selected_candidate_id",
+                "selected_method_ref",
+                "reason",
+                "candidate_summary",
+            )
+            if key in data
+        },
+        "protocol": {
+            key: protocol[key]
+            for key in (
+                "version",
+                "evaluator",
+                "secondary_evaluator",
+                "evaluation_mode",
+                "metric",
+                "information_permissions",
+                "parameter_provenance",
+                "confirmation",
+            )
+            if key in protocol
+        },
+        "panel": {
+            "train_subject_count": len(panel.get("train_subjects", [])),
+            "development_subject_count": len(panel.get("development_subjects", [])),
+            "record_count": len(panel.get("records", {})),
+            "trial_count": panel.get("trial_count"),
+            "eligible_count": panel.get("eligible_count"),
+            "folds": [
+                {
+                    "id": f["id"],
+                    "train_subject_count": len(f["train_subjects"]),
+                    "development_subject_count": len(f["development_subjects"]),
+                }
+                for f in panel.get("folds", [])
+            ],
+        },
+        "metrics": {
+            key: receipt[key]
+            for key in (
+                "primary_learner",
+                "secondary_learner",
+                "secondary_macro_ba",
+                "mean_delta",
+                "paired_subject_ci",
+                "coverage",
+            )
+            if key in receipt
+        },
+        "diagnostics": (receipt.get("diagnostics") or {}).get("summary"),
+        "representation": {
+            key: representation[key]
+            for key in (
+                "policy",
+                "unit",
+                "transductive",
+                "fit_scope",
+                "gate_metric",
+                "gate_subject_count",
+                "gate_passed_subject_count",
+                "gate_fraction",
+            )
+            if key in representation
+        },
+    }
+
+
 def grouped_records(records, identity="id", omit=()):
     groups = {}
     for record in records:
@@ -16,6 +95,9 @@ def grouped_records(records, identity="id", omit=()):
 def results_context(outputs):
     result = {}
     for stage, data in outputs.items():
+        if stage == "data_evaluation":
+            result[stage] = evaluation_context(data)
+            continue
         result[stage] = {
             k: v for k, v in data.items() if k not in {"records", "channel_sets"}
         }
