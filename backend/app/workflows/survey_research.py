@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import Field, create_model
 from .source_reader import abstract_only
 from .planning_contracts import survey_plan_contract
+from .screening import ScreeningSelection, urls
 
 from .cognition_contracts import (
     ResearchAction,
@@ -19,23 +20,10 @@ from .survey_contracts import (
     LITERATURE_TARGETS,
     LiteratureCoverage,
     LiteratureReview,
-    LiteratureScreening,
     LocalInspection,
     SELECTION_CRITERIA,
     SurveyPlan,
 )
-
-
-def urls(value):
-    if isinstance(value, dict):
-        return set().union(*(urls(v) for v in value.values())) if value else set()
-    if isinstance(value, list):
-        return set().union(*(urls(v) for v in value)) if value else set()
-    return (
-        {value}
-        if isinstance(value, str) and value.startswith(("https://", "http://"))
-        else set()
-    )
 
 
 def available_tools(catalog, medium):
@@ -249,14 +237,21 @@ def validate_verification(agent, value, sources, local):
         raise ValueError("; ".join(problems))
 
 
-def validate_screening(agent, value, sources):
+def validate_screening(agent, value, sources, reserved_finding_ids=()):
     docs = {d.id: d for d in sources.documents}
     observations = {o.sequence: o for o in sources.observations}
     ids, problems = set(), []
+    finding_ids = set(reserved_finding_ids)
     for entry in value.entries:
         if entry.id in ids:
             problems.append(f"{entry.id}: literature entry IDs must be unique")
         ids.add(entry.id)
+        for fact in entry.findings:
+            if fact.id in finding_ids:
+                problems.append(
+                    f"{entry.id}: finding ID {fact.id} must be unique across entries and verification"
+                )
+            finding_ids.add(fact.id)
         try:
             validate_entry(agent, entry, sources, docs, observations)
         except ValueError as exc:
@@ -334,7 +329,7 @@ def validate_entry(agent, entry, sources, docs, observations):
         metric = getattr(q, name)
         if metric is not None and not any(item.get(name) == metric for item in matched):
             raise ValueError(
-                f"{entry.id}: {name} must match an associated search result; use null if unknown"
+                f"{name} must match an associated search result; use null if unknown"
             )
 
 
@@ -442,28 +437,34 @@ async def research(agent, survey):
         missing = await retrieve(
             agent, plan, inputs, sources, catalog, "literature_review", 32
         )
-        screening = await agent.ask(
+        selection = ScreeningSelection(sources)
+        selected_passages = await agent.ask(
             "筛选方法文献与仓库，注明下游用途",
-            LiteratureScreening,
+            selection.model,
             {
                 "request": agent.state["request"],
                 "verification": verification.model_dump(),
                 "criteria": SELECTION_CRITERIA,
                 "destinations": DESTINATIONS,
-                "sources": agent.source_context(sources),
-                "observations": [o.model_dump() for o in sources.observations],
+                "source_passages": selection.context,
                 "retrieval_gaps": missing,
             },
             "Screen the actual read sources separately as usage_analysis, usage_algorithm, dataset_discussion and preprocessing_methods, for papers and repositories. "
-            "Include/exclude/defer each relevant candidate with a concrete reason. Included entries need substantive exact quoted findings; abstract-only material is deferred. "
+            "Include/exclude/defer each relevant candidate with a concrete reason. Findings select passage_id from that source's schema enum; choose substantive passages supporting the statement. Source IDs, verbatim quotations and observed metrics are filled by code. Do not output quote, finding.source_id or quality fields. Abstract-only material is deferred. "
             "For usage_analysis and usage_algorithm, the work itself must actually use the target dataset: citing another work in related work is not sufficient; defer it and follow the primary work. "
             "Analysis means substantive analysis of data or signals, not merely a comparison of classifier accuracies. "
             "Keep coverage gaps explicit, never relabel unrelated papers to fill a category. A source may support multiple goals with distinct reasons/evidence. "
             "Extract dataset-discussion subject/run exclusions as reported claims, not execution commands. related_urls may only copy URLs in that source links, its original read URL or its associated search result; omit inferred DOI URLs. "
-            "Record venue/citations/stars ONLY when matched to associated tool items and observation IDs, otherwise null. "
+            "Use the supplied observed_quality as context for screening; missing metrics remain unknown, and code preserves their provenance. "
             "Full_text requires full document access within the provided context; previews, abstracts and truncation are partial. Finding IDs must be unique across all entries and distinct from verification facts.",
-            lambda value: validate_screening(agent, value, sources),
+            lambda value: validate_screening(
+                agent,
+                selection.project(value),
+                sources,
+                [f.id for f in verification.facts],
+            ),
         )
+        screening = selection.project(selected_passages)
         literature = LiteratureReview(
             **screening.model_dump(),
             criteria=SELECTION_CRITERIA,

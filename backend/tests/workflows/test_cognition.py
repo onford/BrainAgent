@@ -428,7 +428,7 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
                     model.model_json_schema()["properties"]["supporting_facts"][
                         "items"
                     ]["enum"]
-                ) == {"f1", "f2", "f3"}
+                ) == {f["id"] for f in inputs["research"]["facts"]}
                 if self.calls.count("CollectionReview") == 1:
                     self.survey_hash = file_hash(folder / "survey/research.json")
                     value.task_mappings[0].status = "unresolved"

@@ -191,6 +191,18 @@ class WorkflowLLM(LLMClient):
                     gaps=["官方论文待确认"],
                     conflicts=[],
                 )
+            finding = base.facts[2].model_dump()
+            if "source_passages" in data:
+                source = next(
+                    s for s in data["source_passages"] if s["source_id"] == "paper"
+                )
+                passage = next(
+                    p for p in source["passages"] if finding["quote"] in p["text"]
+                )
+                finding = {
+                    k: v for k, v in finding.items() if k not in {"quote", "source_id"}
+                }
+                finding.update(id="literature-f3", passage_id=passage["id"])
             return model(
                 summary="筛选方法资料",
                 entries=[
@@ -202,9 +214,9 @@ class WorkflowLLM(LLMClient):
                         "decision": "included",
                         "reason": "有可核验的方法内容",
                         "reading_scope": "partial_text",
-                        "findings": [base.facts[2].model_dump()],
+                        "findings": [finding],
                         "related_urls": ["https://example.org/paper"],
-                        "quality": {},
+                        **({} if "source_passages" in data else {"quality": {}}),
                     }
                 ],
                 gaps=["其他分类未找到通过筛选的资料"],
