@@ -21,7 +21,7 @@ const webLink = (v: string) => /^https?:\/\//i.test(v)
     <div v-if="mode === 'methods'" class="method-layout">
       <aside>
         <label class="search-label">查找方法<input v-model="query" type="search" placeholder="方法名称或编号" /></label>
-        <nav aria-label="候选配方"><button v-for="item in entries" :key="item.id" :aria-pressed="entry?.id === item.id" @click="selected = item.id"><strong>{{ item.title }}</strong><small>{{ item.parent_id ? '探索候选' : origin(item.origin) }} · {{ item.recipe.nodes.length }} 个算子</small></button></nav>
+        <nav aria-label="候选配方"><button v-for="item in entries" :key="item.id" :aria-pressed="entry?.id === item.id" @click="selected = item.id"><strong>{{ item.title }}</strong><small>{{ item.parent_id ? '探索候选' : origin(item.origin) }} · {{ item.recipe.nodes.length + (item.recipe.adaptation.adaptation === 'none' ? 0 : 1) }} 个算子</small></button></nav>
       </aside>
       <article v-if="entry" class="recipe-detail">
         <header><span class="kicker">{{ origin(entry.origin) }}</span><h3>{{ entry.title }}</h3><p class="muted">{{ entry.id }}</p></header>
