@@ -61,6 +61,12 @@ def test_selected_passage_is_expanded_exactly_and_cannot_cross_sources():
         documents=[document("one"), document("two")], observations=[]
     )
     contract = ScreeningSelection(sources)
+    schema = contract.model.model_json_schema()
+    assert all(
+        "source_id" in definition["required"]
+        for name, definition in schema["$defs"].items()
+        if name.endswith("LiteratureSelection")
+    )
     value = selection(contract)
     result = contract.project(contract.model.model_validate(value))
     finding = result.entries[0].findings[0]

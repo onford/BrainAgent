@@ -127,7 +127,7 @@ class ScreeningSelection:
                             "related_urls",
                         }
                     },
-                    source_id=(Literal[doc.id], doc.id),
+                    source_id=(Literal[doc.id], ...),
                     medium=(
                         Literal["paper" if doc.kind == "paper" else "repository"],
                         "paper" if doc.kind == "paper" else "repository",
