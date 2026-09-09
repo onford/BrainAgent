@@ -116,6 +116,7 @@ export interface SearchPanel {
 export interface SearchState extends SearchSummary {
   schema_version: '1'
   request: SearchRequest
+  deadline?: number
   phase?: string | null
   message?: string | null
   error?: string | null

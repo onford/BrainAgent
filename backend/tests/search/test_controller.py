@@ -429,6 +429,29 @@ async def test_one_shot_schedule_is_frozen_before_reference_feedback(factory):
 
 
 @pytest.mark.asyncio
+async def test_one_shot_can_include_reference_without_running_or_charging_it_twice(
+    factory,
+):
+    plan = {
+        "candidate_ids": [BASELINE_ID, "bp1-40-average", "bp8-30-original"],
+        "reason": "固定参考和两项对照",
+    }
+    service, llm, state = factory(
+        [RuntimeError("temporary network failure"), plan],
+        strategy="one_shot",
+        max_candidates=3,
+        max_proposals=2,
+    )
+    result = await run(service, state)
+    assert result["usage"]["candidates"] == 3
+    assert result["usage"]["proposals"] == 2
+    assert result["usage"]["retries"] == 1
+    assert result["usage"]["llm_calls"] == 2
+    assert all(c["results"] == [] for c in llm.contexts)
+    assert service.executed == [BASELINE_ID, "bp1-40-average", "bp8-30-original"]
+
+
+@pytest.mark.asyncio
 async def test_model_timeout_stops_without_retry_or_budget_reset(factory):
     service, _, state = factory(max_seconds=1)
 

@@ -58,7 +58,7 @@ async def decide(llm, state, sources, *, one_shot=False, capture=None):
         # Initial schedule is frozen before the baseline is run.
         context["results"] = []
         context["previous_actions"] = []
-        instruction += "这是一次性提案对照。按目录给出不含参考的候选顺序与理由；后续不会向你反馈数值或要求重排。"
+        instruction += "这是一次性提案对照。按目录给出候选顺序与理由；固定参考必定首先执行一次，列表可包含它，也可省略它。后续不会向你反馈数值或要求重排。"
     messages = [
         {
             "role": "system",

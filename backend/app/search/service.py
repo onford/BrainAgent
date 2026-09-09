@@ -624,12 +624,25 @@ class SearchService:
         self.save(state)
         strategy = state["request"]["strategy"]
         if strategy == "one_shot" and state["schedule"] is None:
-            plan = await self.model_action(state, documents, one_shot=True)
-            valid = {c["id"] for c in catalog()} - {BASELINE_ID}
-            ids = plan["candidate_ids"]
+            while True:
+                try:
+                    plan = await self.model_action(state, documents, one_shot=True)
+                    break
+                except (BudgetStop, IntegrityFailure):
+                    raise
+                except RuntimeError:
+                    if state["usage"]["retries"] >= state["budget"]["max_retries"]:
+                        raise
+                    state["usage"]["retries"] += 1
+                    self.save(state)
+            valid = {c["id"] for c in catalog()}
+            proposed = plan["candidate_ids"]
+            # The compulsory reference is run once regardless of whether the
+            # initial list includes it. Preserve every other proposed position.
+            ids = [identity for identity in proposed if identity != BASELINE_ID]
             if (
-                len(ids) != len(set(ids))
-                or not set(ids) <= valid
+                len(proposed) != len(set(proposed))
+                or not set(proposed) <= valid
                 or len(ids) > state["budget"]["max_proposals"]
             ):
                 state["usage"]["proposals"] += 1
@@ -739,7 +752,7 @@ class SearchService:
                         error=str(exc)[:2000],
                     )
                     continue
-                except BudgetStop:
+                except (BudgetStop, IntegrityFailure):
                     raise
                 except RuntimeError:
                     if state["usage"]["retries"] >= state["budget"]["max_retries"]:

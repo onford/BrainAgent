@@ -12,6 +12,8 @@ const tab = ref('candidates'), inspectedId = ref(''), reportName = ref('')
 const artifactQuery = ref('')
 const artifactOpened = ref<Record<string, boolean>>({}), artifactPages = ref<Record<string, number>>({})
 const artifactPageSize = 30
+const artifactsLoading = ref(false), artifactRetries = ref(0)
+const maxArtifactRetries = 10
 const workflowId = ref(''), strategy = ref<SearchStrategy>('adaptive'), seed = ref(42)
 const trainSubjects = ref(''), developmentSubjects = ref('')
 const formBudget = reactive({ max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: '' as number | string, max_disk_mb: '' as number | string })
@@ -29,6 +31,9 @@ const budgetFields = [
 ] as const
 const id = computed(() => typeof route.query.id === 'string' ? route.query.id : '')
 const active = computed(() => current.value && ['preparing', 'running'].includes(current.value.status))
+const terminalStatuses = new Set(['completed', 'stopped', 'failed', 'cancelled'])
+const finishedCandidateStatuses = new Set(['evaluated', 'completed', 'candidate_invalid', 'data_unevaluable', 'execution_failure', 'resource_failure', 'failed', 'cancelled', 'skipped', 'rejected'])
+const terminal = computed(() => !!current.value && terminalStatuses.has(current.value.status))
 const canRetry = computed(() => current.value && ['failed', 'interrupted', 'cancelled'].includes(current.value.status))
 const candidates = computed(() => current.value?.candidates ?? [])
 const actions = computed(() => (current.value?.actions ?? []).filter(action => action.action !== 'model_decision' || !['completed', 'succeeded'].includes(action.status)))
@@ -42,13 +47,30 @@ const subjectRows = computed<SearchSubject[]>(() => {
   return Array.isArray(rows) ? rows : Object.entries(rows).map(([subject, values]) => ({ ...values, subject }))
 })
 const budget = computed(() => current.value?.budget ?? current.value?.request?.budget)
+const displayedElapsed = computed(() => {
+  const state = current.value, elapsed = state?.usage?.elapsed_seconds
+  const deadline = state?.deadline, seconds = budget.value?.max_seconds
+  if (!active.value || typeof deadline !== 'number' || !Number.isFinite(deadline) || typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds <= 0) return elapsed
+  // A fresh lightweight state response invalidates this computation every two seconds.
+  const reported = typeof elapsed === 'number' && Number.isFinite(elapsed) ? elapsed : 0
+  return Math.max(reported, Date.now() / 1000 - (deadline - seconds), 0)
+})
+const displayedPhase = computed(() => {
+  if (active.value && current.value?.request.strategy === 'one_shot' && current.value.actions?.some(action => action.action === 'initial_schedule' && action.status === 'running')) return '制定初始计划'
+  const state = current.value
+  return state?.phase ? (phases[state.phase] ?? state.phase) : state ? label(state.status) : ''
+})
 const meters = computed(() => [
   { label: '候选', used: current.value?.usage?.candidates, limit: budget.value?.max_candidates },
   { label: '提议', used: current.value?.usage?.proposals, limit: budget.value?.max_proposals },
   { label: '证据读取', used: current.value?.usage?.evidence_reads, limit: budget.value?.max_evidence_reads },
-  { label: '耗时（秒）', used: current.value?.usage?.elapsed_seconds, limit: budget.value?.max_seconds },
+  { label: '耗时（秒）', used: displayedElapsed.value, limit: budget.value?.max_seconds },
 ])
 const artifacts = computed(() => current.value?.artifacts ?? [])
+const finalArtifactsReady = computed(() => {
+  const names = new Set(artifacts.value.map(file => file.name))
+  return names.has('report.html') && names.has('files.json')
+})
 type Artifact = NonNullable<SearchState['artifacts']>[number]
 type ArtifactGroup = { key: string; title: string; path: string; files: Artifact[] }
 const matchedArtifacts = computed(() => {
@@ -108,25 +130,51 @@ function upsert(state: SearchSummary) { searches.value = [state, ...searches.val
 function clearPoll() { if (timer) clearTimeout(timer); timer = undefined }
 function schedule(searchId: string, version: number) {
   clearPoll()
-  if (!disposed && version === generation && active.value) timer = setTimeout(() => void refresh(searchId, version), 2000)
+  if (disposed || version !== generation || artifactsLoading.value) return
+  if (active.value) {
+    timer = setTimeout(() => void refresh(searchId, version, false), 2000)
+  } else if (tab.value === 'artifacts' && terminal.value && !finalArtifactsReady.value && artifactRetries.value < maxArtifactRetries) {
+    timer = setTimeout(() => {
+      artifactRetries.value++
+      void refresh(searchId, version, true)
+    }, 2000)
+  }
 }
-async function refresh(searchId = id.value, version = generation, includeArtifacts = !current.value || tab.value === 'artifacts') {
+function completionChanged(previous: SearchState, next: SearchState) {
+  const searchFinished = previous.status !== next.status && terminalStatuses.has(next.status)
+  const previousCandidates = new Map((previous.candidates ?? []).map(candidate => [candidate.id, candidate.status]))
+  const candidateFinished = (next.candidates ?? []).some(candidate => finishedCandidateStatuses.has(candidate.status) && previousCandidates.get(candidate.id) !== candidate.status)
+  return searchFinished || candidateFinished
+}
+async function refresh(searchId = id.value, version = generation, includeArtifacts = !current.value) {
   if (!searchId) return
   const serial = ++refreshSerial
   clearPoll()
+  artifactsLoading.value = includeArtifacts
   try {
     const state = await fetchSearch(searchId, includeArtifacts)
     if (disposed || version !== generation || serial !== refreshSerial || id.value !== searchId) return
-    if (!includeArtifacts && current.value?.id === searchId) state.artifacts = current.value.artifacts
-    current.value = state; upsert(state); error.value = ''
+    const previous = current.value?.id === searchId ? current.value : null
+    const refreshFiles = !includeArtifacts && tab.value === 'artifacts' && previous && completionChanged(previous, state)
+    if (previous?.status !== state.status) artifactRetries.value = 0
+    const displayedState = !includeArtifacts && previous ? { ...state, artifacts: previous.artifacts } : state
+    current.value = displayedState; upsert(displayedState); error.value = ''
+    if (refreshFiles) await refresh(searchId, version, true)
   } catch (reason) {
     if (!disposed && version === generation && serial === refreshSerial) error.value = message(reason)
   } finally {
-    if (!disposed && version === generation && serial === refreshSerial) { loading.value = false; schedule(searchId, version) }
+    if (!disposed && version === generation && serial === refreshSerial) {
+      loading.value = false; artifactsLoading.value = false; schedule(searchId, version)
+    }
   }
 }
+function refreshFiles() {
+  if (current.value && !busy.value && !artifactsLoading.value) void refresh(id.value, generation, true)
+}
 watch(tab, value => {
-  if (value === 'artifacts' && current.value && !busy.value) void refresh(id.value, generation, true)
+  clearPoll()
+  if (value === 'artifacts') refreshFiles()
+  else schedule(id.value, generation)
 })
 async function loadList() {
   listLoading.value = true
@@ -186,10 +234,11 @@ async function start() {
 async function control(action: 'cancel' | 'retry') {
   if (!current.value || busy.value) return
   const searchId = current.value.id, version = ++generation
-  clearPoll(); busy.value = true; error.value = ''
+  clearPoll(); artifactsLoading.value = false; busy.value = true; error.value = ''
   try {
     const state = await (action === 'cancel' ? cancelSearch(searchId) : retrySearch(searchId))
     if (disposed || version !== generation || id.value !== searchId) return
+    if (current.value.status !== state.status) artifactRetries.value = 0
     current.value = state; upsert(state)
   } catch (reason) { if (!disposed && version === generation) error.value = message(reason) }
   finally {
@@ -201,6 +250,7 @@ watch(() => [route.query.id, route.query.workflow], () => {
   const version = ++generation
   clearPoll(); error.value = ''; current.value = null; inspectedId.value = ''; reportName.value = ''; tab.value = 'candidates'
   artifactQuery.value = ''; artifactOpened.value = {}; artifactPages.value = {}
+  artifactsLoading.value = false; artifactRetries.value = 0
   loading.value = !!id.value
   if (id.value) {
     if (pendingState?.id === id.value) {
@@ -244,7 +294,7 @@ onBeforeUnmount(() => { disposed = true; generation++; clearPoll() })
           <header class="page-heading run-heading"><div><p class="eyebrow">OFFLINE SEARCH · {{ current.id }}</p><h1>预算预处理搜索 <span class="badge" :class="current.status">{{ label(current.status) }}</span></h1><p class="muted"><RouterLink :to="{path:'/workflows',query:{id:current.workflow_id}}">来源流程 {{ current.workflow_id }} ↗</RouterLink> · {{ strategies[current.request?.strategy] ?? current.request?.strategy ?? '—' }} · 种子 {{ current.request?.seed ?? '—' }} · 更新于 {{ date(current.updated_at) }}</p></div><div class="run-controls"><button v-if="active" :disabled="busy" @click="control('cancel')">{{ busy ? '正在处理…' : '停止搜索' }}</button><button v-if="canRetry" class="primary" :disabled="busy" @click="control('retry')">{{ busy ? '正在处理…' : '重试搜索' }}</button></div></header>
           <p class="notice">开发面板选择，不代表独立泛化或神经信号质量。</p>
           <section class="card budget-panel" aria-label="进度与预算">
-            <div class="section-heading"><h2>进度与预算</h2><span role="status">{{ current.phase ? (phases[current.phase] ?? current.phase) : label(current.status) }}<template v-if="current.message"> · {{ current.message }}</template></span></div>
+            <div class="section-heading"><h2>进度与预算</h2><span role="status">{{ displayedPhase }}<template v-if="current.message"> · {{ current.message }}</template></span></div>
             <div class="budget-grid"><div v-for="meter in meters" :key="meter.label" class="meter"><div><span>{{ meter.label }}</span><strong>{{ count(meter.used) }} <small>/ {{ count(meter.limit) }}</small></strong></div><div class="meter-track" role="progressbar" :aria-label="meter.label" :aria-valuenow="meter.used == null || meter.limit == null ? undefined : ratio(meter.used, meter.limit)" aria-valuemin="0" aria-valuemax="100" :aria-valuetext="`${count(meter.used)} / ${count(meter.limit)}`"><i :style="{ width: `${ratio(meter.used, meter.limit)}%` }" /></div></div></div>
             <div class="budget-meta"><span>LLM 调用 {{ count(current.usage?.llm_calls) }}</span><span>重试 {{ count(current.usage?.retries) }}</span><span>内存 {{ !budget ? '—' : budget.max_memory_mb == null ? '自动' : `${count(budget.max_memory_mb)} MB` }}</span><span>磁盘 {{ !budget ? '—' : budget.max_disk_mb == null ? '自动' : `${count(budget.max_disk_mb)} MB` }}</span><span>后端选中 {{ current.selected_candidate_id || '尚未选择' }}</span></div>
             <p v-if="current.stop_reason" class="stop-reason">停止原因：{{ stopReasons[current.stop_reason] ?? current.stop_reason }}</p>
@@ -262,7 +312,7 @@ onBeforeUnmount(() => { disposed = true; generation++; clearPoll() })
             </section>
             <section v-else-if="tab === 'rounds'" class="tab-content" aria-label="轮次时间线"><div class="section-heading"><h2>每轮决策与结果</h2><span class="muted">按执行记录顺序</span></div><ol v-if="actions.length" class="timeline"><li v-for="action in actions" :key="action.index"><span class="round-number">{{ action.index }}</span><div class="round-body"><div class="section-heading"><h3>{{ actionLabels[action.action] ?? action.action }}</h3><span>{{ label(action.status) }} · {{ count(action.cost_seconds) }} 秒</span></div><p>{{ action.reason || '暂无决策说明' }}</p><p v-if="action.base_candidate_id || action.candidate_id" class="muted">{{ action.base_candidate_id || '起始' }} → {{ action.candidate_id || '—' }}</p><details v-if="action.expected_result != null || action.decision_branches != null"><summary>预期结果与决策分支</summary><pre v-if="action.expected_result != null">{{ detail(action.expected_result) }}</pre><pre v-if="action.decision_branches != null">{{ detail(action.decision_branches) }}</pre></details><details v-if="action.result != null"><summary>执行结果</summary><pre>{{ detail(action.result) }}</pre></details><details v-if="action.error" class="error"><summary>本轮错误</summary><pre>{{ action.error }}</pre></details></div></li></ol><p v-else class="empty">尚无轮次记录。</p></section>
             <section v-else-if="tab === 'subjects'" class="tab-content" aria-label="开发被试明细"><h2>开发被试明细</h2><nav v-if="candidates.length" class="candidate-tabs" aria-label="查看候选"><button v-for="candidate in candidates" :key="candidate.id" :aria-pressed="inspected?.id === candidate.id" @click="inspectedId = candidate.id">{{ candidate.title || candidate.id }}<span v-if="candidate.id === current.selected_candidate_id"> · 后端选中</span></button></nav><template v-if="inspected"><div class="section-heading"><h3>{{ inspected.title || inspected.id }}</h3><span class="muted">任务 {{ inspected.job_id || '—' }}</span></div><div class="diagnostics"><span>原始（开发） {{ count(inspected.receipt?.coverage?.original) }}</span><span>合格（开发） {{ count(inspected.receipt?.coverage?.eligible) }}</span><span>预测（开发） {{ count(inspected.receipt?.coverage?.predicted) }}</span><span>缺失 {{ count(inspected.receipt?.coverage?.missing) }}</span><span>下限比例 {{ percent(inspected.receipt?.diagnostics?.floor_fraction) }}</span><span>收敛 {{ inspected.receipt?.diagnostics?.converged === true ? '是' : inspected.receipt?.diagnostics?.converged === false ? '否' : '—' }}</span></div><details v-if="inspected.receipt?.diagnostics?.warnings?.length" class="panel-summary"><summary>诊断警告（{{ inspected.receipt.diagnostics.warnings.length }}）</summary><ul><li v-for="(warning, index) in inspected.receipt.diagnostics.warnings" :key="index">{{ warning }}</li></ul></details><details v-if="inspected.receipt?.coverage?.train || inspected.receipt?.coverage?.development" class="panel-summary"><summary>训练 / 开发覆盖明细</summary><pre>{{ detail(inspected.receipt.coverage) }}</pre></details><p v-if="inspected.error" class="error">{{ inspected.error }}</p><div v-if="subjectRows.length" class="table-scroll"><table><thead><tr><th>开发被试</th><th>BA</th><th>Δ（百分点）</th><th>完整记录</th></tr></thead><tbody><tr v-for="subject in subjectRows" :key="subject.subject"><td>{{ subject.subject }}</td><td class="score">{{ percent(subject.ba) }}</td><td>{{ delta(subject.delta) }}</td><td><details><summary>查看记录</summary><pre>{{ detail(subject) }}</pre></details></td></tr></tbody></table></div><p v-else class="empty">该候选暂无开发被试回执。</p></template><p v-else class="empty">候选生成后可查看开发被试。</p></section>
-            <section v-else class="tab-content" aria-label="报告与文件"><h2>报告与文件</h2><div v-if="reports.length" class="report-reader"><nav class="candidate-tabs" aria-label="选择搜索报告"><button v-for="item in reports" :key="item.name" :aria-pressed="report?.name === item.name" @click="reportName = item.name">{{ item.description || item.name }}</button></nav><iframe v-if="report && searchArtifactUrl(current.id, report, false)" :key="`${current.id}/${report.name}`" :src="searchArtifactUrl(current.id, report, false)" :title="report.description || report.name" sandbox="allow-same-origin" /></div><div v-if="artifacts.length" class="artifact-browser">
+            <section v-else class="tab-content" aria-label="报告与文件"><div class="section-heading"><h2>报告与文件</h2><button :disabled="artifactsLoading || busy" @click="refreshFiles">{{ artifactsLoading ? '正在刷新文件…' : '刷新文件' }}</button></div><p v-if="terminal && !finalArtifactsReady" class="notice" role="status"><template v-if="artifactRetries < maxArtifactRetries || artifactsLoading">正在整理产物，等待报告与文件索引。自动检查 {{ artifactRetries }} / {{ maxArtifactRetries }} 次。</template><template v-else>自动检查已达 {{ maxArtifactRetries }} 次，部分产物仍未就绪。请稍后点击“刷新文件”。</template></p><div v-if="reports.length" class="report-reader"><nav class="candidate-tabs" aria-label="选择搜索报告"><button v-for="item in reports" :key="item.name" :aria-pressed="report?.name === item.name" @click="reportName = item.name">{{ item.description || item.name }}</button></nav><iframe v-if="report && searchArtifactUrl(current.id, report, false)" :key="`${current.id}/${report.name}`" :src="searchArtifactUrl(current.id, report, false)" :title="report.description || report.name" sandbox="allow-same-origin" /></div><div v-if="artifacts.length" class="artifact-browser">
                 <div class="artifact-toolbar"><label>查找文件<input v-model="artifactQuery" type="search" aria-label="查找搜索文件" placeholder="文件名、候选 ID 或说明…" /></label><span class="muted">{{ matchedArtifacts.length }} / {{ artifacts.length }} 个文件</span></div>
                 <p class="muted">核心文件直接展示；候选过程和数值文件按组展开，每页最多 30 个。</p>
                 <details v-for="group in artifactGroups" :key="`${current.id}/${group.key}`" class="artifact-group" :data-group="group.key" :open="artifactGroupOpen(group.key)">

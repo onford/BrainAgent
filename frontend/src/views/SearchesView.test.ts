@@ -476,6 +476,8 @@ describe('SearchesView', () => {
     await button(wrapper, '下一页').trigger('click')
     latest = { ...latest, artifacts: [...files, { name: 'engine/runs/job-1/S65/signal_V.npy' }, { name: 'candidates/c2/receipt.json' }] }
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('.artifact-pagination').text()).toContain('共 65 个')
+    await button(wrapper, '刷新文件').trigger('click'); await flushPromises()
     expect(wrapper.get('[data-group="engine/runs/job-1"]').attributes('open')).toBeDefined()
     expect(wrapper.get('.artifact-pagination').text()).toContain('第 2 / 3 页 · 共 66 个')
     expect(wrapper.get('[data-group="candidates/c2"]').attributes('open')).toBeUndefined()
@@ -488,7 +490,7 @@ describe('SearchesView', () => {
     expect(wrapper.get('.artifact-pagination').text()).toContain('第 1 / 3 页')
   })
 
-  it('uses lightweight polling outside the file tab, retains file counts, and refreshes all artifacts immediately on entry', async () => {
+  it('uses lightweight polling in every tab, retains file counts, and refreshes all artifacts on entry or manual refresh', async () => {
     let fullArtifacts = [{ name: 'search.json' }]
     apiRequest.mockImplementation(async (path: string) => {
       if (path === '/api/searches') return []
@@ -507,6 +509,9 @@ describe('SearchesView', () => {
     expect(wrapper.findAll('.artifact-list a')).toHaveLength(2)
     fullArtifacts = [...fullArtifacts, { name: 'protocol.json' }]
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+    expect(wrapper.findAll('.artifact-list a')).toHaveLength(2)
+    await button(wrapper, '刷新文件').trigger('click'); await flushPromises()
     expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=true')
     expect(wrapper.findAll('.artifact-list a')).toHaveLength(3)
     await button(wrapper, '候选比较').trigger('click')
@@ -529,6 +534,183 @@ describe('SearchesView', () => {
     expect(wrapper.text()).toContain('最新完整文件状态')
     expect(wrapper.text()).not.toContain('旧轮询状态')
     expect(wrapper.findAll('.artifact-list a')).toHaveLength(2)
+  })
+
+  it('refreshes files once when a candidate finishes, while unchanged file-tab polling stays lightweight', async () => {
+    let candidateStatus = 'running'
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({
+      status: 'running', candidates: [{ id: 'c1', status: candidateStatus }],
+      artifacts: path.endsWith('include_artifacts=true') ? [{ name: 'search.json' }, ...(candidateStatus === 'evaluated' ? [{ name: 'candidates/c1/receipt.json' }] : [])] : [],
+    }))
+    const fullCalls = () => apiRequest.mock.calls.filter(([path]) => path.endsWith('include_artifacts=true')).length
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(fullCalls()).toBe(2)
+    await vi.advanceTimersByTimeAsync(6000); await flushPromises()
+    expect(fullCalls()).toBe(2)
+    candidateStatus = 'evaluated'
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(fullCalls()).toBe(3)
+    expect(wrapper.find('[data-group="candidates/c1"]').exists()).toBe(true)
+    await vi.advanceTimersByTimeAsync(8000); await flushPromises()
+    expect(fullCalls()).toBe(3)
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+  })
+
+  it('waits for both late terminal artifacts and stops automatic checks once the report and index arrive', async () => {
+    let status: SearchState['status'] = 'running'
+    let files = [{ name: 'search.json' }]
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ status,
+      artifacts: path.endsWith('include_artifacts=true') ? [...files] : [],
+    }))
+    const fullCalls = () => apiRequest.mock.calls.filter(([path]) => path.endsWith('include_artifacts=true')).length
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    status = 'completed'
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(fullCalls()).toBe(3)
+    expect(wrapper.get('h1').text()).toContain('已完成')
+    expect(wrapper.get('section[aria-label="报告与文件"]').text()).toContain('正在整理产物')
+    files = [...files, { name: 'report.html' }]
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.find('iframe').exists()).toBe(true)
+    expect(wrapper.get('section[aria-label="报告与文件"]').text()).toContain('正在整理产物')
+    files = [...files, { name: 'files.json' }]
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('iframe').attributes('src')).toContain('/report.html?download=false')
+    expect(wrapper.findAll('.artifact-list a').map(link => link.text())).toContain('files.json')
+    expect(wrapper.get('section[aria-label="报告与文件"]').text()).not.toContain('正在整理产物')
+    expect(fullCalls()).toBe(5)
+    const total = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(30000)
+    expect(apiRequest).toHaveBeenCalledTimes(total)
+  })
+
+  it.each(['missing', 'errors'])('bounds late artifact checks to ten attempts (%s), then permits manual recovery', async outcome => {
+    let fullCalls = 0, ready = false
+    apiRequest.mockImplementation(async (path: string) => {
+      if (path === '/api/searches') return []
+      if (path.endsWith('include_artifacts=true')) {
+        fullCalls++
+        if (!ready && outcome === 'errors' && fullCalls > 2) throw new Error('暂时无法扫描文件')
+      }
+      return state({ artifacts: ready ? [{ name: 'report.html' }, { name: 'files.json' }] : [] })
+    })
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(fullCalls).toBe(1)
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(fullCalls).toBe(1)
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(fullCalls).toBe(2)
+    expect(wrapper.get('section[aria-label="报告与文件"]').text()).toContain('正在整理产物')
+    await vi.advanceTimersByTimeAsync(20000); await flushPromises()
+    expect(fullCalls).toBe(12)
+    expect(wrapper.text()).toContain('自动检查已达 10 次')
+    expect(button(wrapper, '刷新文件').attributes('disabled')).toBeUndefined()
+    const total = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(60000)
+    expect(apiRequest).toHaveBeenCalledTimes(total)
+    ready = true
+    await button(wrapper, '刷新文件').trigger('click'); await flushPromises()
+    expect(fullCalls).toBe(13)
+    expect(wrapper.find('iframe').exists()).toBe(true)
+    expect(wrapper.text()).not.toContain('自动检查已达')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(fullCalls).toBe(13)
+  })
+
+  it('cancels terminal artifact retries when leaving the file tab and on unmount', async () => {
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ artifacts: [] }))
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.text()).toContain('自动检查 1 / 10 次')
+    await button(wrapper, '候选比较').trigger('click')
+    const calls = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(60000)
+    expect(apiRequest).toHaveBeenCalledTimes(calls)
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(apiRequest).toHaveBeenCalledTimes(calls + 1)
+    expect(wrapper.text()).toContain('自动检查 1 / 10 次')
+    wrappers.splice(wrappers.indexOf(wrapper), 1); wrapper.unmount()
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(apiRequest).toHaveBeenCalledTimes(calls + 1)
+  })
+
+  it('does not scan files for completion events in other tabs, and loads the final files on entry', async () => {
+    let finished = false
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({
+      status: finished ? 'completed' : 'running', candidates: [{ id: 'c1', status: finished ? 'evaluated' : 'running' }],
+      artifacts: finished && path.endsWith('include_artifacts=true') ? [{ name: 'report.html' }, { name: 'files.json' }] : [],
+    }))
+    const { wrapper } = await open('/searches?id=search-1')
+    finished = true
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('h1').text()).toContain('已完成')
+    expect(apiRequest.mock.calls.filter(([path]) => path.endsWith('include_artifacts=true'))).toHaveLength(1)
+    const total = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(apiRequest).toHaveBeenCalledTimes(total)
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(wrapper.find('iframe').exists()).toBe(true)
+    expect(apiRequest.mock.calls.filter(([path]) => path.endsWith('include_artifacts=true'))).toHaveLength(2)
+  })
+
+  it('does not overlap full file scans while a manual refresh is pending', async () => {
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ status: 'running' }))
+    const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    const scan = deferred<SearchState>()
+    apiRequest.mockReturnValueOnce(scan.promise)
+    await button(wrapper, '刷新文件').trigger('click')
+    expect(button(wrapper, '正在刷新文件').attributes('disabled')).toBeDefined()
+    const total = apiRequest.mock.calls.length
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(apiRequest).toHaveBeenCalledTimes(total)
+    scan.resolve(state({ status: 'running' })); await flushPromises()
+    await vi.advanceTimersByTimeAsync(2000)
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+  })
+
+  it('advances the active elapsed display from the deadline and uses only the final backend elapsed after stopping', async () => {
+    const deadline = Date.now() / 1000 - 200 + 3600
+    let status: SearchState['status'] = 'running', elapsed = 125
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ status, deadline,
+      usage: { elapsed_seconds: elapsed }, artifacts: [],
+    }))
+    const { wrapper } = await open('/searches?id=search-1')
+    const meter = () => wrapper.get('[role="progressbar"][aria-label="耗时（秒）"]').attributes('aria-valuetext')
+    expect(meter()).toBe('200 / 3,600')
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(meter()).toBe('202 / 3,600')
+    expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/search-1?include_artifacts=false')
+    elapsed = 300
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(meter()).toBe('300 / 3,600')
+    status = 'stopped'; elapsed = 190
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(meter()).toBe('190 / 3,600')
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(meter()).toBe('190 / 3,600')
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('falls back to backend elapsed without a deadline and labels a running one-shot initial schedule', async () => {
+    let planning = true
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({
+      status: 'running', request: { ...state().request, strategy: 'one_shot' }, phase: 'freeze_panel',
+      usage: { elapsed_seconds: 12.5 }, actions: [{ index: 0, action: 'initial_schedule', status: planning ? 'running' : 'completed' }],
+    }))
+    const { wrapper } = await open('/searches?id=search-1')
+    const phase = () => wrapper.get('section[aria-label="进度与预算"] [role="status"]').text()
+    expect(phase()).toContain('制定初始计划')
+    expect(phase()).not.toContain('冻结开发面板')
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('[role="progressbar"][aria-label="耗时（秒）"]').attributes('aria-valuetext')).toBe('12.5 / 3,600')
+    planning = false
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(phase()).toContain('冻结开发面板')
   })
 })
 
