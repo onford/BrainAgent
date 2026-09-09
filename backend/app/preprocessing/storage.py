@@ -9,6 +9,8 @@ import time
 from contextlib import contextmanager
 from uuid import uuid4
 
+from app.file_publish import replace_file
+
 from .schemas import Ref, RunResult
 
 
@@ -45,11 +47,14 @@ def within(root: Path, relative: str) -> Path:
 def write_json(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(path.name + "." + uuid4().hex + ".tmp")
-    with temp.open("w", encoding="utf-8", newline="\n") as stream:
-        stream.write(canonical(value))
-        stream.flush()
-        os.fsync(stream.fileno())
-    os.replace(temp, path)
+    try:
+        with temp.open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(canonical(value))
+            stream.flush()
+            os.fsync(stream.fileno())
+        replace_file(temp, path)
+    finally:
+        temp.unlink(missing_ok=True)
 
 
 class Storage:

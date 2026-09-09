@@ -3,6 +3,7 @@
 import json
 from pathlib import Path
 from uuid import uuid4
+from app.file_publish import replace_file
 from app.preprocessing.storage import file_hash
 
 from .contracts import ProcessData, ProcessIndex, ReportData, STAGE_CONTRACTS
@@ -29,7 +30,7 @@ def write_readable(path, value):
             json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + "\n",
             encoding="utf-8",
         )
-        temporary.replace(path)
+        replace_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

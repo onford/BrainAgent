@@ -132,7 +132,7 @@ def render(root: Path, state):
             (
                 "预测核对",
                 "；".join(
-                    f"{c['metric']}：{ {'matched': '符合预测', 'contradicted': '与预测相反', 'unavailable': '未能测量'}.get(c['status'], c['status']) }（{c.get('before')} → {c.get('after')}）"
+                    f"{c['metric']}：{ {'matched': '符合预测', 'contradicted': '未满足预测条件', 'unavailable': '未能测量'}.get(c['status'], c['status']) }（{c.get('before')} → {c.get('after')}）"
                     for c in checks
                 ),
             ),

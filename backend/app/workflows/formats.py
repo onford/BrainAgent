@@ -6,6 +6,7 @@ from uuid import uuid4
 
 from pydantic import Field, model_validator
 
+from app.file_publish import replace_file
 from app.preprocessing.schemas import (
     Contract,
     ExecutionPlan,
@@ -305,7 +306,7 @@ def write_table(path, rows, fields):
             )
             writer.writeheader()
             writer.writerows(records)
-        temporary.replace(path)
+        replace_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

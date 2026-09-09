@@ -8,6 +8,8 @@ from math import prod
 from pathlib import Path
 from uuid import uuid4
 
+from app.file_publish import replace_file
+
 from app.preprocessing.runner import verify_result
 from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import digest, file_hash, within
@@ -185,7 +187,7 @@ def _publish_archive(archive, folder, members, manifest, validate):
                         raise ValueError("交付压缩包内容校验失败")
         validate()
         checksum = file_hash(temporary)
-        temporary.replace(archive)
+        replace_file(temporary, archive)
         return checksum
     finally:
         temporary.unlink(missing_ok=True)

@@ -60,7 +60,9 @@ def catalog():
 
 def search_engine_hash():
     root = Path(__file__).parent
-    return digest({p.name: file_hash(p) for p in sorted(root.glob("*.py"))})
+    hashes = {p.name: file_hash(p) for p in sorted(root.glob("*.py"))}
+    hashes["../file_publish.py"] = file_hash(root.parent / "file_publish.py")
+    return digest(hashes)
 
 
 def method(entry, panel):

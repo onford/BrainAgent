@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 from uuid import uuid4
 
+from app.file_publish import replace_file
+
 
 def read(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -18,7 +20,7 @@ def write(path, value):
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        temporary.replace(path)
+        replace_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 

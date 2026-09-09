@@ -16,6 +16,7 @@ import time
 
 import portalocker
 
+from app.file_publish import replace_file
 from app.preprocessing.inputs import validate_input
 from app.preprocessing.methods import check_mapping
 from app.preprocessing.resources import MIB, ResourceError, require_capacity
@@ -131,7 +132,7 @@ def write_json(path: Path, value) -> None:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        replace_file(temporary, path)
     finally:
         if temporary is not None:
             temporary.unlink(missing_ok=True)

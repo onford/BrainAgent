@@ -163,7 +163,9 @@ def environment() -> dict[str, str]:
 def engine_hash() -> str:
     root = ROOT.parent
     files = [*root.rglob("*.py"), ROOT / "catalog.json"]
-    return digest({p.relative_to(root).as_posix(): file_hash(p) for p in sorted(files)})
+    hashes = {p.relative_to(root).as_posix(): file_hash(p) for p in sorted(files)}
+    hashes["../file_publish.py"] = file_hash(root.parent / "file_publish.py")
+    return digest(hashes)
 
 
 def invoke(unit_id: str, op: str, x, model=None, **params):
