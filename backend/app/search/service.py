@@ -696,7 +696,16 @@ class SearchService:
             state["error"] = baseline.get("error") or "固定参考流程未能完成共同面板评价"
             await self.stop(state, "failed", "reference_failed")
             return
-        # Complete a reserved numeric action before asking for a different one.
+        # Reconcile the proposal as well as the numerical candidate. A crash can
+        # occur before candidate reservation or after its receipt was saved.
+        for action in state["actions"]:
+            if action["action"] == "propose_candidate" and action["status"] in {
+                "reserved",
+                "running",
+                "interrupted",
+            }:
+                await self.candidate_action(state, action, recovering=True)
+        # Retain support for reserved numerical work without a proposal record.
         for pending in state["candidates"]:
             if pending["id"] != BASELINE_ID and pending["status"] in {
                 "reserved",
@@ -880,23 +889,106 @@ class SearchService:
                     action.update(status="rejected", error=str(exc))
                     self.save(state)
                     continue
-            result = await self.candidate(state, proposal["candidate_id"])
-            parent = next(
-                c
-                for c in state["candidates"]
-                if c["id"] == proposal["base_candidate_id"]
+            await self.candidate_action(state, action)
+
+    async def candidate_action(self, state, action, *, recovering=False):
+        proposal = action.get("request") or {}
+        if (
+            proposal.get("candidate_id") != action["candidate_id"]
+            or proposal.get("base_candidate_id") != action["base_candidate_id"]
+        ):
+            raise IntegrityFailure("候选动作与保存的原提案不一致")
+        parent = next(
+            (c for c in state["candidates"] if c["id"] == action["base_candidate_id"]),
+            None,
+        )
+        if parent is None or parent["status"] != "evaluated":
+            raise IntegrityFailure("候选动作缺少已验证的父候选评价")
+        if recovering and proposal.get("hypothesis"):
+            validate_hypothesis(proposal, state["candidates"])
+
+        def candidate_record():
+            return next(
+                (c for c in state["candidates"] if c["id"] == action["candidate_id"]),
+                None,
+            )
+
+        if recovering:
+            previous = candidate_record()
+            result = dict(action.get("result") or {})
+            result["recovery_history"] = [
+                *result.get("recovery_history", []),
+                {
+                    "status": action["status"],
+                    "error": action.get("error"),
+                    "candidate_status": previous["status"] if previous else None,
+                    "candidate_attempts": previous["attempts"] if previous else 0,
+                    "retries_used": state["usage"]["retries"],
+                    "resumed_at": now(),
+                },
+            ]
+            action["result"] = result
+        action.update(status="running", error=None)
+        self.save(state)
+
+        def finish(result, error=None, *, interrupted=False):
+            status = result["status"] if result else "interrupted"
+            if status in {"reserved", "running", "interrupted"}:
+                status = "interrupted"
+            receipt = (result.get("receipt") or {}) if result else {}
+            # A failed/retried worker can leave an older receipt on the record.
+            # Only a normally returned, evaluated candidate supplies measurements.
+            measured = (
+                error is None
+                and status == "evaluated"
+                and receipt.get("status") == "evaluated"
             )
             action.update(
-                status="completed",
+                status="interrupted"
+                if interrupted or status == "interrupted"
+                else "completed"
+                if measured
+                else "failed",
+                error=error or (result.get("error") if result else None),
                 result={
-                    "candidate_id": result["id"],
-                    "status": result["status"],
+                    **(action.get("result") or {}),
+                    "candidate_id": action["candidate_id"],
+                    "status": status,
                     "prediction_checks": check_predictions(
-                        proposal, parent["receipt"], result.get("receipt") or {}
+                        proposal,
+                        parent.get("receipt") or {},
+                        receipt if measured else {},
                     ),
                 },
             )
             self.save(state)
+
+        try:
+            result = candidate_record()
+            if result is None or result["status"] in {
+                "reserved",
+                "running",
+                "interrupted",
+                "execution_failure",
+            }:
+                result = await self.candidate(state, action["candidate_id"])
+            elif result["status"] == "resource_failure":
+                raise BudgetStop("resource_unavailable")
+            elif result["status"] == "data_unevaluable":
+                raise IntegrityFailure(result.get("error") or "共同输入不可评价")
+        except (asyncio.CancelledError, Exception) as exc:
+            reason = (
+                "搜索已中断，尚未产生完整评价"
+                if isinstance(exc, asyncio.CancelledError)
+                else str(exc)
+            )
+            finish(
+                candidate_record(),
+                error=reason,
+                interrupted=isinstance(exc, asyncio.CancelledError),
+            )
+            raise
+        finish(result)
 
     @staticmethod
     def interrupt_pending(state, reason):

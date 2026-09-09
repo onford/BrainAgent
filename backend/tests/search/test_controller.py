@@ -10,7 +10,7 @@ from app.search.catalog import BASELINE_ID, catalog, select
 from app.search.contracts import Decision, SearchBudget, SearchRequest
 from app.search.evaluation_contracts import EvaluationReceipt, LearnerMetadata
 from app.search.io import read, write
-from app.search.service import SearchService
+from app.search.service import BudgetStop, SearchService
 from tests.preprocessing.conftest import make_dataset
 
 
@@ -442,6 +442,179 @@ async def test_resume_reuses_completed_candidate_and_rejects_changed_input(facto
     failed = await run(service, state)
     assert failed["status"] == "failed" and "冻结" in failed["error"]
     assert service.executed == [BASELINE_ID]
+
+
+class ProcessCrash(BaseException):
+    """Abrupt process loss, bypassing orderly cancellation/error handlers."""
+
+
+def crash_at_candidate_checkpoint(service, identity, checkpoint):
+    original_save = service.save
+
+    def save(state):
+        original_save(state)
+        action = next(
+            (
+                a
+                for a in state["actions"]
+                if a["action"] == "propose_candidate" and a["candidate_id"] == identity
+            ),
+            None,
+        )
+        candidate = next((c for c in state["candidates"] if c["id"] == identity), None)
+        if action is None:
+            return
+        hit = (
+            checkpoint == "proposal"
+            and action["status"] == "reserved"
+            and candidate is None
+            or checkpoint == "running"
+            and candidate is not None
+            and candidate["status"] == "running"
+            or checkpoint == "receipt"
+            and candidate is not None
+            and candidate["status"] == "evaluated"
+            and action["status"] != "completed"
+        )
+        if hit:
+            raise ProcessCrash(checkpoint)
+
+    service.save = save
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("checkpoint", ["proposal", "running", "receipt"])
+async def test_resume_finishes_original_proposal_at_each_commit_boundary(
+    factory, checkpoint
+):
+    parent, target = "bp1-40-average", "bp4-40-average"
+    service, llm, state = factory(
+        [propose(parent), propose(target, parent)], max_candidates=3
+    )
+    service.scores.update({parent: 0.8, target: 0.6})
+    crash_at_candidate_checkpoint(service, target, checkpoint)
+    with pytest.raises(ProcessCrash):
+        await run(service, state)
+    saved = service.get("owner", state["id"])
+    original = next(a for a in saved["actions"] if a["candidate_id"] == target)
+    assert original["status"] in {"reserved", "running"}
+    completed = [a for a in saved["actions"] if a["status"] == "completed"]
+
+    resumed = SimulatedSearch(service.root, service.workflows, llm)
+    resumed.scores.update(service.scores)
+    await resumed.resume()
+    await resumed.tasks[state["id"]]
+    result = resumed.get("owner", state["id"])
+    action = next(a for a in result["actions"] if a["candidate_id"] == target)
+    assert action["index"] == original["index"]
+    assert action["request"] == original["request"]
+    assert action["status"] == "completed" and action["error"] is None
+    signal, utility = action["result"]["prediction_checks"]["checks"]
+    assert signal["status"] == "matched" and signal["difference"] == 0
+    assert utility["before"] == 0.8 and utility["after"] == 0.6
+    assert utility["difference"] == pytest.approx(-0.2)
+    assert (
+        utility["status"] == "contradicted"
+    )  # Against the named parent, not .5 baseline.
+    history = action["result"]["recovery_history"]
+    assert len(history) == 1 and history[0]["status"] == original["status"]
+    assert history[0]["candidate_attempts"] == (0 if checkpoint == "proposal" else 1)
+    assert len(result["actions"]) == len(saved["actions"])
+    assert [
+        a for a in result["actions"] if a["index"] in {c["index"] for c in completed}
+    ] == completed
+    assert result["usage"]["candidates"] == 3 and result["usage"]["proposals"] == 2
+    assert result["usage"]["llm_calls"] == 2
+    assert result["usage"]["retries"] == (1 if checkpoint == "running" else 0)
+    assert service.executed + resumed.executed == [BASELINE_ID, parent, target]
+    assert result["stop_reason"] == "candidate_budget_exhausted"
+
+
+@pytest.mark.asyncio
+async def test_retry_retains_interrupted_action_history_and_completes_checks(factory):
+    target = "bp1-40-average"
+    service, llm, state = factory([propose(target)], max_candidates=2)
+    entered = asyncio.Event()
+    original_child = service.child
+
+    async def child(state, stage, candidate_id=None):
+        if stage == "candidate" and candidate_id == target:
+            entered.set()
+            await asyncio.Future()
+        return await original_child(state, stage, candidate_id)
+
+    service.child = child
+    service.start("owner", state["id"])
+    await asyncio.wait_for(entered.wait(), timeout=5)
+    service.cancel("owner", state["id"])
+    await service.tasks[state["id"]]
+    saved = service.get("owner", state["id"])
+    interrupted = next(a for a in saved["actions"] if a["candidate_id"] == target)
+    assert interrupted["status"] == "interrupted" and interrupted["error"]
+    assert all(
+        c["status"] == "unavailable"
+        for c in interrupted["result"]["prediction_checks"]["checks"]
+    )
+
+    resumed = SimulatedSearch(service.root, service.workflows, llm)
+    resumed.scores[target] = 0.7
+    resumed.retry("owner", state["id"])
+    await resumed.tasks[state["id"]]
+    result = resumed.get("owner", state["id"])
+    action = next(a for a in result["actions"] if a["candidate_id"] == target)
+    assert action["status"] == "completed" and action["error"] is None
+    assert action["request"] == interrupted["request"]
+    assert action["result"]["recovery_history"][0]["status"] == "interrupted"
+    assert action["result"]["recovery_history"][0]["error"] == interrupted["error"]
+    assert action["result"]["prediction_checks"]["checks"][1]["after"] == 0.7
+    assert result["usage"]["retries"] == 1
+    assert result["usage"]["proposals"] == 1 and result["usage"]["llm_calls"] == 1
+    assert result["candidates"][-1]["attempts"] == 2
+    assert resumed.executed == [target]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "failure", ["candidate_invalid", "execution_failure", "resource_failure", "budget"]
+)
+async def test_resumed_failed_or_budget_stopped_action_has_no_measured_checks(
+    factory, failure
+):
+    target = "bp1-40-average"
+    service, llm, state = factory([propose(target)], max_candidates=2)
+    crash_at_candidate_checkpoint(service, target, "running")
+    with pytest.raises(ProcessCrash):
+        await run(service, state)
+    resumed = SimulatedSearch(service.root, service.workflows, llm)
+    if failure == "budget":
+        original_child = resumed.child
+
+        async def child(state, stage, candidate_id=None):
+            if stage == "candidate" and candidate_id == target:
+                raise BudgetStop("time_budget_exhausted")
+            return await original_child(state, stage, candidate_id)
+
+        resumed.child = child
+    else:
+        resumed.failures[target] = failure
+    await resumed.resume()
+    await resumed.tasks[state["id"]]
+    result = resumed.get("owner", state["id"])
+    action = next(a for a in result["actions"] if a["candidate_id"] == target)
+    assert action["status"] == ("interrupted" if failure == "budget" else "failed")
+    assert action["error"]
+    checks = action["result"]["prediction_checks"]["checks"]
+    assert len(checks) == 2
+    for check in checks:
+        assert check["status"] == "unavailable"
+        assert (
+            check["before"] is None
+            and check["after"] is None
+            and check["difference"] is None
+        )
+    assert result["usage"]["retries"] == 1 and result["usage"]["candidates"] == 2
+    assert result["usage"]["proposals"] == 1
+    assert result["candidates"][-1]["status"] != "evaluated"
 
 
 def test_state_and_artifacts_are_owner_scoped(factory):
