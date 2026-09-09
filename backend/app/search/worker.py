@@ -34,7 +34,12 @@ from app.preprocessing.storage import Storage, digest, file_hash, within
 from app.preprocessing.units import engine_hash, environment
 from app.preprocessing.worker import Worker
 
-from .catalog import BASELINE_ID, catalog, method as catalog_method, search_engine_hash
+from .catalog import (
+    BASELINE_ID,
+    entries_at,
+    method as catalog_method,
+    search_engine_hash,
+)
 from .evaluation_contracts import EvaluationReceipt
 from .panel import DataUnevaluable, freeze_panel, validate_panel
 
@@ -103,10 +108,13 @@ def _normalize_receipt(value) -> dict:
     return EvaluationReceipt.model_validate(value).model_dump(mode="json")
 
 
-def _check_catalog_method(spec: MethodSpec, candidate_id: str, panel: dict) -> None:
-    entry = next((item for item in catalog() if item["id"] == candidate_id), None)
+def _check_catalog_method(
+    spec: MethodSpec, candidate_id: str, panel: dict, root: Path
+) -> None:
+    entry = entries_at(root).get(candidate_id)
+    protocol = read_json(root / "protocol.json")
     if entry is None or spec.model_dump(mode="json") != catalog_method(
-        entry, panel
+        entry, panel, protocol["space"], protocol.get("space_context")
     ).model_dump(mode="json"):
         raise CandidateInvalid(
             f"{candidate_id}: method differs from the frozen catalog recipe"
@@ -139,6 +147,10 @@ def write_json(path: Path, value) -> None:
 
 
 def failure_status(exc: Exception) -> str:
+    from .utility_parallel import UtilityExecutionError
+
+    if isinstance(exc, UtilityExecutionError):
+        return "resource_failure" if exc.code in {"memory_budget", "memory_pressure", "timeout"} else "execution_failure"
     if isinstance(exc, (ResourceError, MemoryError)) or (
         isinstance(exc, OSError)
         and (
@@ -173,6 +185,12 @@ def prepare(root: Path) -> dict:
             request = {**request, "train_subjects": None, "development_subjects": None}
         panel = freeze_panel(data, **request)
         write_json(root / "panel.json", panel)
+        protocol_path = root / "protocol.json"
+        if protocol_path.exists() and read_json(protocol_path).get("assessment"):
+            from .reconstruction_evaluation import freeze_probe_panel
+
+            design = read_json(protocol_path)["assessment"]["reconstruction_design"]
+            write_json(root / "probe-panel.json", freeze_probe_panel(panel, design=design))
         (root / "prepare-error.json").unlink(missing_ok=True)
         return panel
     except Exception as exc:
@@ -290,10 +308,11 @@ class _VerificationStorage(Storage):
 
 def _verify_candidate(root, store, entry, data, panel):
     identity = entry["id"]
-    if identity not in {item["id"] for item in catalog()}:
+    entries = entries_at(root)
+    if identity not in entries:
         raise RuntimeError("cached candidate is not in the catalog")
     output = within(root, f"candidates/{identity}")
-    policy = next(item for item in catalog() if item["id"] == identity)
+    policy = entries[identity]
     if read_json(output / "policy.json") != policy:
         raise RuntimeError(f"{identity}: policy differs from frozen catalog")
     receipt = _normalize_receipt(read_json(output / "receipt.json"))
@@ -341,7 +360,7 @@ def _verify_candidate(root, store, entry, data, panel):
                     )
 
         method = MethodSpec.model_validate(read_json(output / "method.json"))
-    _check_catalog_method(method, identity, panel)
+    _check_catalog_method(method, identity, panel, root)
     # Mirror register_method's deterministic mapping checks without registering.
     method.checks = sorted(set(method.checks + check_mapping(method)))
     method_hash = digest(method.model_dump(mode="json"))
@@ -381,6 +400,46 @@ def _verify_candidate(root, store, entry, data, panel):
 
     result_value = read_json(output / "result.json")
     result = RunResult.model_validate(result_value)
+    if receipt.get("operator_usage") is not None:
+        from .operator_usage import OperatorUsageReport
+
+        usage = receipt["operator_usage"]
+        usage_path = within(output, usage["artifact"]["path"])
+        if file_hash(usage_path) != usage["artifact"]["sha256"] or usage_path.stat().st_size != usage["artifact"]["bytes"]:
+            raise RuntimeError(f"{identity}: operator application artifact differs")
+        native_usage = OperatorUsageReport.model_validate(read_json(usage_path))
+        if native_usage.summary.model_dump(mode="json") != usage["summary"] or native_usage.plan_sha256 != digest(plan_value) or native_usage.result_sha256 != digest(result_value):
+            raise RuntimeError(f"{identity}: operator application bindings differ")
+    if read_json(root / "protocol.json").get("assessment"):
+        from .assessment import verify_assessment
+        from .reconstruction_evaluation import freeze_probe_panel
+
+        if receipt.get("assessment") is None or not receipt.get("assessment_path") or not receipt.get("core_receipt_path"):
+            raise RuntimeError(f"{identity}: required multi-axis assessment missing")
+        if receipt.get("operator_usage") is None:
+            raise RuntimeError(f"{identity}: required operator application record missing")
+        assessed = verify_assessment(
+            within(output, receipt["assessment_path"]), receipt["assessment"],
+            panel_hash=panel["panel_hash"], candidate_id=identity,
+        )
+        probe = read_json(root / "probe-panel.json")
+        protocol = read_json(root / "protocol.json")
+        if assessed["utility"]["receipt_artifact"] is not None:
+            native_utility_protocol = read_json(
+                within(output, receipt["assessment_path"]) / "utility" / "protocol.json"
+            )
+            if native_utility_protocol != protocol["utility_protocol"]:
+                raise RuntimeError(f"{identity}: assessment utility protocol differs from frozen search")
+        if probe != freeze_probe_panel(panel, design=protocol["assessment"]["reconstruction_design"]):
+            raise RuntimeError("frozen reconstruction design differs")
+        for key, expected in {
+            "candidate_hash": digest(policy), "plan_hash": digest(plan_value),
+            "result_hash": digest(result_value), "input_hash": panel["input_hash"],
+            "core_receipt_hash": digest(read_json(within(output, receipt["core_receipt_path"]))),
+            "probe_panel_hash": digest(probe),
+        }.items():
+            if assessed["bindings"][key] != expected:
+                raise RuntimeError(f"{identity}: assessment {key} binding differs")
     if (
         result.job_id != receipt["job_id"]
         or result.plan_ref != plan_ref
@@ -485,7 +544,8 @@ def verify(root: Path) -> dict:
 def candidate(root: Path, candidate_id: str) -> dict:
     root = Path(root).resolve()
     # Never turn a malformed ID into a filesystem write outside candidates/.
-    if candidate_id not in {entry["id"] for entry in catalog()}:
+    entries = entries_at(root)
+    if candidate_id not in entries:
         raise CandidateInvalid("unknown catalog candidate")
     output = within(root, f"candidates/{candidate_id}")
     started = time.perf_counter()
@@ -494,6 +554,7 @@ def candidate(root: Path, candidate_id: str) -> dict:
     job_id = plan_ref = plan = service = None
     versions = {"worker_version": WORKER_VERSION}
     receipt = None
+    operator_usage = None
     try:
         data, allowed = _input(root)
         panel = read_json(root / "panel.json")
@@ -511,13 +572,13 @@ def candidate(root: Path, candidate_id: str) -> dict:
         service = PreprocessingService(engine_root, allowed)
         limits = read_json(root / "limits.json")
         try:
-            policy = next(entry for entry in catalog() if entry["id"] == candidate_id)
+            policy = entries[candidate_id]
             if read_json(output / "policy.json") != policy:
                 raise CandidateInvalid(
                     "policy differs from the frozen candidate catalog"
                 )
             method = MethodSpec.model_validate(read_json(output / "method.json"))
-            _check_catalog_method(method, candidate_id, panel)
+            _check_catalog_method(method, candidate_id, panel, root)
             method_ref = service.register_method(OWNER, method)
         except ValueError as exc:
             raise CandidateInvalid(str(exc)) from exc
@@ -631,7 +692,10 @@ def candidate(root: Path, candidate_id: str) -> dict:
                     raise RuntimeError(
                         "another candidate has unfinished work in the private engine"
                     )
-            result = Worker(service.store, allowed).run_once()
+            concurrency = read_json(root / "protocol.json").get("record_workers", 1)
+            result = Worker(
+                service.store, allowed, max_record_workers=concurrency
+            ).run_once()
             if result is None or result.job_id != job_id or result.plan_ref != plan_ref:
                 raise RuntimeError("Worker did not execute the selected candidate job")
         write_json(
@@ -644,6 +708,19 @@ def candidate(root: Path, candidate_id: str) -> dict:
         )
         write_json(output / "result.json", result.model_dump(mode="json"))
         _check_result(result, plan)
+        if read_json(root / "protocol.json").get("assessment"):
+            from .operator_usage import aggregate_operator_usage
+
+            usage_report = aggregate_operator_usage(plan, result, engine_root)
+            usage_attempt = 1
+            while (output / "operator-usage" / f"u{usage_attempt}.json").exists():
+                usage_attempt += 1
+            usage_path = output / "operator-usage" / f"u{usage_attempt}.json"
+            write_json(usage_path, usage_report)
+            operator_usage = {"summary": usage_report["summary"], "artifact": {
+                "path": usage_path.relative_to(output).as_posix(),
+                "sha256": file_hash(usage_path), "bytes": usage_path.stat().st_size,
+            }}
         if (
             result.status != "completed"
             or result.cancel_requested
@@ -672,6 +749,32 @@ def candidate(root: Path, candidate_id: str) -> dict:
         if not isinstance(receipt, dict) or not isinstance(receipt.get("status"), str):
             raise RuntimeError("evaluator did not return a status receipt")
         receipt = dict(receipt)
+        protocol = read_json(root / "protocol.json")
+        if receipt["status"] == "evaluated" and protocol.get("assessment"):
+            from .assessment import assess_candidate
+            from .reconstruction_evaluation import freeze_probe_panel
+            from .utility_evaluation import utility_protocol
+
+            if protocol["utility_protocol"] != utility_protocol(execution=protocol.get("utility_execution")):
+                raise RuntimeError("utility model protocol or dependency versions changed")
+            probe = read_json(root / "probe-panel.json")
+            if probe != freeze_probe_panel(panel, design=protocol["assessment"]["reconstruction_design"]):
+                raise RuntimeError("reconstruction panel differs from frozen design")
+            attempts = output / "assessment"
+            attempt_number = 1
+            while (attempts / f"a{attempt_number}").exists() or (
+                output / "core-receipts" / f"a{attempt_number}.json"
+            ).exists():
+                attempt_number += 1
+            assessment_path = f"assessment/a{attempt_number}"
+            core_path = f"core-receipts/a{attempt_number}.json"
+            write_json(output / core_path, receipt)
+            assessment = assess_candidate(
+                plan, result, engine_root, panel, policy, receipt,
+                output / assessment_path, probe,
+                utility_execution=protocol.get("utility_execution"),
+            )
+            receipt.update(assessment=assessment, assessment_path=assessment_path, core_receipt_path=core_path)
         receipt["error"] = (
             None
             if receipt["status"] == "evaluated"
@@ -692,6 +795,7 @@ def candidate(root: Path, candidate_id: str) -> dict:
             evaluation_seconds = now - evaluation_started
     receipt.update(
         candidate_id=candidate_id,
+        operator_usage=operator_usage,
         job_id=job_id,
         plan_ref=plan_ref.model_dump() if plan_ref is not None else None,
         preprocessing_seconds=preprocessing_seconds,
@@ -727,7 +831,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--stage", choices=("prepare", "candidate", "verify"), required=True
     )
-    parser.add_argument("--candidate", choices=[entry["id"] for entry in catalog()])
+    parser.add_argument("--candidate")
     parser.add_argument("--parent-pid", type=int)
     args = parser.parse_args(argv)
     if args.stage == "candidate" and args.candidate is None:

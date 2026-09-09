@@ -1,0 +1,3728 @@
+{
+  "schema_version": "1",
+  "scope": "EEG preprocessing evaluation evidence and benchmark comparability",
+  "interpretation": "Research designs and comparison evidence; executable formulas and applicability are frozen separately in the evaluator code and per-run protocol. Listed designs do not claim all metrics are implemented.",
+  "quality": {
+    "scope": "EEG 物理信号质量、任务信息保留、半合成重建与预处理评价指标的研究目录",
+    "sources": [
+      {
+        "id": "PREP",
+        "title": "Bigdely-Shamlo et al. 2015, PREP",
+        "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+        "reliability": "peer_reviewed_full_text",
+        "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+        "shortQuote": "somewhat correlated (but not too correlated)",
+        "limits": "原始方法论文；检测阈值与窗口属 PREP 场景，不能直接移植为 MI 合格线。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "WELCH",
+        "title": "MNE psd_array_welch API",
+        "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+        "reliability": "official_api",
+        "locator": "Parameters: average, window, remove_dc; Returns: psds",
+        "shortQuote": "corrected for its bias relative to the mean",
+        "limits": "核实 API 语义；stable 页面核查时显示 1.12.1，应锁运行版本。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "NUMPY_RANK",
+        "title": "NumPy matrix_rank API",
+        "directURL": "https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_rank.html",
+        "reliability": "official_api",
+        "locator": "Parameters tol; Notes",
+        "shortQuote": "Return matrix rank of array using SVD method",
+        "limits": "数值秩定义可靠；不是统计有效维数。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "BASELINE",
+        "title": "MNE baseline.rescale API",
+        "directURL": "https://mne.tools/stable/generated/mne.baseline.rescale.html",
+        "reliability": "official_api",
+        "locator": "Parameters mode='percent'",
+        "shortQuote": "subtracting the mean of baseline values followed by dividing by the mean of baseline values",
+        "limits": "此 API 不乘 100；本地报告合同要求乘 100。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ERDS1999",
+        "title": "Pfurtscheller & Lopes da Silva 1999",
+        "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+        "reliability": "peer_reviewed_full_text_institutional_copy",
+        "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+        "shortQuote": "the latter is not phase-locked to the event",
+        "limits": "经典原文；明确正负号历史差异。具体 MI ROI/窗仍由范式决定。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ERDS_MNE",
+        "title": "MNE ERDS example",
+        "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+        "reliability": "official_example",
+        "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+        "shortQuote": null,
+        "limits": "示例参数不是通用标准；本地合同禁用显著性遮罩。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ICA",
+        "title": "MNE ICA API",
+        "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+        "reliability": "official_api",
+        "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+        "shortQuote": null,
+        "limits": "核实分解/重建语义，删除 IC 与 PCA 降维需区分。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ICLABEL",
+        "title": "MNE-ICALabel official API",
+        "directURL": "https://mne.tools/mne-icalabel/stable/generated/api/mne_icalabel.iclabel.iclabel_label_components.html",
+        "reliability": "official_api",
+        "locator": "Opening assumptions; Returns labels_pred_proba",
+        "shortQuote": "classification performance might be negatively impacted",
+        "limits": "分类输入域 CAR、1–100 Hz、extended infomax；概率不是神经真实性证明。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "HAPPE",
+        "title": "Gabard-Durnam et al. 2018 HAPPE",
+        "directURL": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2018.00097/full",
+        "reliability": "peer_reviewed_full_text",
+        "locator": "Quality assessment; Figures 4–6; Tables 4–5",
+        "shortQuote": null,
+        "limits": "儿童/高伪迹资料；仅支持指标维度，不据此赋成人 MI 阈值或排名。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "AUTOMAGIC",
+        "title": "Automagic calcQuality official code",
+        "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+        "reliability": "official_code_pinned",
+        "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+        "shortQuote": null,
+        "limits": "源码核实 OHA/THV/CHV 语义；注释中的 mV 不采用，单位遵循本地 µV 合同；原生 CHV 可先忽略尖峰，本地合同不采用该变体。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "MWF",
+        "title": "Somers official mwf_performance code",
+        "directURL": "https://github.com/exporl/mwf-artifact-removal/blob/85115641b36b711a4263eeb83f60e4706ea4e732/mwf/mwf_performance.m",
+        "reliability": "official_code_pinned",
+        "locator": "L25–49: masks, weights, per-channel dB, weighted sum",
+        "shortQuote": "Otherwise, the artifact is approximated by the raw data.",
+        "limits": "精确公式来自作者代码；无 d_real 的 ARR 是近似，不是干净真值恢复分数。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "RELAX_METRICS",
+        "title": "RELAX v2.0.1 metrics wrapper",
+        "directURL": "https://github.com/NeilwBailey/RELAX/blob/v2.0.1/RELAX_metrics_final_SER_and_ARR.m",
+        "reliability": "official_code_tag",
+        "locator": "Final block: average reference, d subtraction, mwf_performance call",
+        "shortQuote": null,
+        "limits": "运行须核实实际依赖版本与掩码对齐，不能只核函数名。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "RELAX_PAPER",
+        "title": "Bailey et al. 2023 RELAX Part 1",
+        "directURL": "https://pubmed.ncbi.nlm.nih.gov/36822997/",
+        "reliability": "peer_reviewed_abstract_only",
+        "locator": "Abstract Methods and Results; DOI 10.1016/j.clinph.2023.01.017",
+        "shortQuote": null,
+        "limits": "期刊 DOI 访问失败，核查时只核实作者摘要；精确公式用官方代码，不宣称已读期刊全文。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "RELAX_MUSCLE",
+        "title": "RELAX muscle metric source",
+        "directURL": "https://github.com/NeilwBailey/RELAX/blob/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_metrics_muscle.m",
+        "reliability": "official_code_pinned",
+        "locator": "L74–100 spectrum/slope; L110–135 threshold and aggregate fields",
+        "shortQuote": null,
+        "limits": "7–75 Hz log-log 斜率；AnyChannel 字段并非严格二元比率，见工程问题。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "MUSCLE_MNE",
+        "title": "MNE annotate_muscle_zscore API",
+        "directURL": "https://mne.tools/stable/generated/mne.preprocessing.annotate_muscle_zscore.html",
+        "reliability": "official_api",
+        "locator": "Description; filter_freq; min_length_good; scores_muscle",
+        "shortQuote": null,
+        "limits": "默认 110–140 Hz；仅可在完整频带可用原生视图计算，不能挪用 45 Hz 副本。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "WHITHAM",
+        "title": "Whitham et al. 2007 neuromuscular blockade experiment",
+        "directURL": "https://pubmed.ncbi.nlm.nih.gov/17574912/",
+        "reliability": "peer_reviewed_abstract_only",
+        "locator": "Abstract Methods/Results/Conclusions; DOI 10.1016/j.clinph.2007.04.027",
+        "shortQuote": null,
+        "limits": "直接实验但仅两名被试，本文仅核摘要；支持 EMG 污染风险，不支持把所有 >20 Hz 都判伪迹。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "BRIDGE",
+        "title": "MNE compute_bridged_electrodes API",
+        "directURL": "https://mne.tools/stable/generated/mne.preprocessing.compute_bridged_electrodes.html",
+        "reliability": "official_api",
+        "locator": "Description and lm_cutoff units",
+        "shortQuote": "pairwise variance between electrodes",
+        "limits": "官方实现基于电位差方差，默认阈值不是通用桥接真值。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ASR_DOC",
+        "title": "EEGLAB clean_rawdata documentation",
+        "directURL": "https://eeglab.org/plugins/clean_rawdata/Documentation.html",
+        "reliability": "official_historical_documentation",
+        "locator": "How it is organized; parameter discussion; reproducibility section",
+        "shortQuote": null,
+        "limits": "官方历史文档夹带作者评论/未发表实验，不将推荐 cutoff 当通用标准。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ASR_PROCESS",
+        "title": "ASR asr_process code",
+        "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+        "reliability": "official_code_pinned",
+        "locator": "L152–184 running covariance, keep mask, R, raised-cosine blending",
+        "shortQuote": null,
+        "limits": "精确版本需记录，keep 掩码通常需运行时额外导出；不能由最终 EEG 完整反推。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ASR_CALIBRATE",
+        "title": "ASR asr_calibrate code",
+        "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_calibrate.m",
+        "reliability": "official_code_pinned",
+        "locator": "L182–210 robust covariance, RMS fitting, threshold matrix T",
+        "shortQuote": null,
+        "limits": "cutoff 倍数针对频率整形和分布拟合后的尺度，不是原始 EEG 高斯 SD。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "RIEMANN",
+        "title": "pyRiemann 0.12 distance_riemann API",
+        "directURL": "https://pyriemann.readthedocs.io/en/v0.12/generated/pyriemann.geometry.distance.distance_riemann.html",
+        "reliability": "official_api_versioned",
+        "locator": "Definition equation and SPD/HPD requirements",
+        "shortQuote": "Affine-invariant Riemannian distance between SPD/HPD matrices.",
+        "limits": "已核实平方和的正 1/2 次方；旧 0.2.4 文档有负指数显示错误，不使用。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "ICC",
+        "title": "Koo & Li 2016 ICC guideline",
+        "directURL": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4913118/",
+        "reliability": "peer_reviewed_indexed_excerpt_only",
+        "locator": "Model/type/definition selection, Table 3 intended locator",
+        "shortQuote": null,
+        "limits": "全文不可获取，仅核实检索返回的作者段落；ICC 代数式采用标准 ANOVA 工程表达，使用具体实现前须核对一致性。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "BLAND",
+        "title": "Bland & Altman 2007",
+        "directURL": "https://www-users.york.ac.uk/~mb55/meas/bland2007.pdf",
+        "reliability": "peer_reviewed_full_text_author_copy",
+        "locator": "Agreement between methods with multiple observations per individual; introductory LoA and repeated-observation models",
+        "shortQuote": null,
+        "limits": "论文针对两方法多次观测；不可无条件等同于同一方法多 Session。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "LEAKAGE",
+        "title": "scikit-learn common pitfalls",
+        "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+        "reliability": "official_documentation",
+        "locator": "§12.2 Data leakage and §12.2.1",
+        "shortQuote": "Test data should never be used to make choices about the model.",
+        "limits": "通用训练测试边界；本文将其扩展到 EEG 方法搜索、ASR/ICA 拟合与频带选择，明确为工程推论。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "CSP",
+        "title": "MNE CSP API",
+        "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+        "reliability": "official_api",
+        "locator": "rank; component_order; patterns_; fit/transform",
+        "shortQuote": null,
+        "limits": "核查时 stable 的 API 有新增默认参数，应用必须锁版，不能假定本地旧配置等同最新 API。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "BAL_ACC",
+        "title": "scikit-learn balanced_accuracy_score",
+        "directURL": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html",
+        "reliability": "official_api",
+        "locator": "Definition; adjusted=False; Notes",
+        "shortQuote": null,
+        "limits": "定义类别 recall 平均，不能证明解码来自脑源。",
+        "accessed": "2026-09-10"
+      },
+      {
+        "id": "PERM",
+        "title": "scikit-learn permutation_test_score",
+        "directURL": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.permutation_test_score.html",
+        "reliability": "official_api",
+        "locator": "groups; cv; n_permutations; pvalue",
+        "shortQuote": null,
+        "limits": "固定划分与受限置换必须分别管理，不能用一个 groups 偷换两种语义。",
+        "accessed": "2026-09-10"
+      }
+    ],
+    "metrics": [
+      {
+        "id": "psd_welch",
+        "name": "Welch PSD 中心谱",
+        "family": "spectrum",
+        "definitionOrigin": "local_contract_and_official_api",
+        "formula": "S_w(f)=a_f |Σ_n h_n(x_n−mean(x))exp(−i2πfn/fs)|²/(fs Σ_n h_n²); 单边谱内部频点 a_f=2，DC/Nyquist=1。中心为经偏差校正的 median Welch。",
+        "unit": "µV²/Hz；显示 10log10(S/[1 µV²/Hz])",
+        "stage": "原生 Raw；共同谱视图各阶段",
+        "prerequisites": "有效连续区间；真实 fs、采集通带；4 s Hamming、50% 重叠、n_fft=n_per_seg、去 DC。整体 0.5–100 Hz，条件 4–40 Hz，按真实带宽缩限。",
+        "denominatorAndAggregation": "每记录先跨 Welch 段求中心，再通道中位数；条件内 Trial 均值→同条件 Session 等权→被试等权；线性域汇总再转 dB。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无全局好坏方向；低功率可能是低噪声也可能是信号损失。"
+        },
+        "missingStatus": "not_computable: 无有效窗/未知单位；not_comparable: 无共同通带或配对；非正功率不转 dB。",
+        "overCleaningAndLeakageRisk": "median 隐藏短突发；滤波和参考变化可制造改善；不能将屏幕 dB 曲线再平均。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "保留完整谱及窗级尾部；不作为单目标最小化。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §3.1",
+        "notes": "V²/Hz→µV²/Hz 乘 10^12；断点不拼接后估谱。"
+      },
+      {
+        "id": "psd_window_quantiles",
+        "name": "窗级 PSD 第10/50/90百分位与时间频率结构",
+        "family": "spectrum",
+        "definitionOrigin": "local_contract",
+        "formula": "Q_p(f)=quantile_w{median_c S_cw(f)}, p∈{0.1,0.5,0.9}；另存每窗 S_cw(f)。",
+        "unit": "µV²/Hz；dB 显示",
+        "stage": "原生及共同谱视图",
+        "prerequisites": "不重叠 4 s 质量窗；尾窗 2–4 s 记录实际长度；不因伪迹标记删除窗。",
+        "denominatorAndAggregation": "分母为实际可计算窗数；记录窗长度，百分位按窗等权，与 duration-weighted 均值不同。保留记录→Session→被试层次。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "P90 下降仅提示高功率尾部下降，无质量单调性。"
+        },
+        "missingStatus": "not_computable: 无窗；partial: 某窗缺失并报覆盖；缺失窗不能填零。",
+        "overCleaningAndLeakageRisk": "只报告 median 会掩盖残余；预筛好窗使尾部虚降。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "必须与中心谱一起报告；尾部阈值若校准可作告警，不自动删除。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §3；visualization-methods §3.1",
+        "notes": "2–4 s 尾窗的真实分辨率低于4 s，补零只能统一网格。"
+      },
+      {
+        "id": "band_power_integral",
+        "name": "频带积分功率",
+        "family": "spectrum",
+        "definitionOrigin": "engineering_extension",
+        "formula": "P_B=∫_B S(f)df≈Σ_k S(f_k)Δf_k；边界采用预先固定的数值积分规则。",
+        "unit": "µV²；10log10(P_B/[1 µV²])",
+        "stage": "共同谱视图；μ 8–12、β 13–30 Hz 或预注册范式频带",
+        "prerequisites": "完整频带与非负 PSD；频带先固定；边界裁切和积分实现留痕。",
+        "denominatorAndAggregation": "先逐 Trial×通道积分，再 ROI 平均、Trial→Session→被试等权。分母无；带宽必须记录。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无单调方向；μ/β 降低可能是真实 ERD 或过度清理。"
+        },
+        "missingStatus": "not_computable: 频带不完整/未知谱标度；不以残缺 β 称完整 β。",
+        "overCleaningAndLeakageRisk": "脑与肌电频谱重叠；按最终分类得分调整带宽造成泄漏。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅在独立干净片段或半仿真校准容许衰减后，作为保真约束；默认不开阈值。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；不替换既有 Topography 频点平均",
+        "notes": "不同于下项频带平均 PSD，字段与单位不得合并。"
+      },
+      {
+        "id": "band_mean_psd_topography",
+        "name": "μ/β 频带平均 PSD 与功率 Topography",
+        "family": "spectrum",
+        "definitionOrigin": "local_contract",
+        "formula": "D_cB=mean_{f_k∈B} S_c(f_k)；按通道绘图，最终显示 10log10(D_cB/[1 µV²/Hz])。",
+        "unit": "µV²/Hz；dB(µV²/Hz)",
+        "stage": "Raw 原生；跨阶段共同空间/谱视图",
+        "prerequisites": "有效真实电极坐标；共同通道和参考；默认 μ8–12、β13–30 Hz。",
+        "denominatorAndAggregation": "每 Trial 各通道频点平均→Trial→Session→被试；不先跨通道抹掉空间分布。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无单调方向；空间形态与幅度分别评估。"
+        },
+        "missingStatus": "not_computable: 频带不足；无位置时图 not_applicable 但通道表仍可算；not_comparable: 参考不统一。",
+        "overCleaningAndLeakageRisk": "插值使地图更平滑却未恢复独立信息；颜色范围改变会掩盖幅度损失。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "共同色限、逐通道值、插值标记；不以图平滑程度选方法。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §3.2",
+        "notes": "采样频点平均不是积分功率；必须保留 /Hz。"
+      },
+      {
+        "id": "relative_band_power",
+        "name": "相对频带功率",
+        "family": "spectrum",
+        "definitionOrigin": "engineering_extension",
+        "formula": "R_B=P_B/P_D，D 为预先固定且完整覆盖的分母频带；B⊆D。",
+        "unit": "0–1 比例；显示 %",
+        "stage": "共同谱视图",
+        "prerequisites": "声明 D（例如1–45 Hz仅为工程候选）；P_D>0；相同陷波/通带/频点规则。",
+        "denominatorAndAggregation": "逐对象先求积分比，再按 Trial/Session/被试汇总；不得将群体总功率比当个体平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无单调方向；分母下降即可使 R_B 升高。"
+        },
+        "missingStatus": "not_computable: P_D≤0、非有限或 D 未覆盖。",
+        "overCleaningAndLeakageRisk": "相对 μ 增加可能只是高频被滤掉；分母选择可操纵结论。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "与绝对积分功率并列；禁止单独优化。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展",
+        "notes": "不默认混用 1–30、1–45、0.5–100 Hz 分母。"
+      },
+      {
+        "id": "psd_paired_change",
+        "name": "前后配对频谱/频带变化",
+        "family": "spectrum",
+        "definitionOrigin": "local_contract",
+        "formula": "Δ_dB,s(f)=10log10(S_after,s(f)/S_before,s(f))；频带版本用同定义 P_B；组级为 mean_s Δ_dB,s。",
+        "unit": "dB",
+        "stage": "共同谱视图前后",
+        "prerequisites": "同被试、Session、Trial、时间、通道和滤波支持；两端功率>0。",
+        "denominatorAndAggregation": "被试内配对；组级被试等权；5000次被试 bootstrap，seed42。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无全局方向；目标脑频段与窄工频峰分别解释。"
+        },
+        "missingStatus": "not_comparable: 配对失败/已不可逆削掉频带；not_computable: 功率无效。",
+        "overCleaningAndLeakageRisk": "只分析共同保留的干净 Trial 会有幸存者偏差；必须并报全体保留率。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "独立校准的干净目标频带损失上限可作约束；不能要求所有频率都下降。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §2、3.1",
+        "notes": "组级 PSD 曲线相减通常不等于被试配对 dB 平均。"
+      },
+      {
+        "id": "line_noise_ratio",
+        "name": "工频及谐波局部谱比",
+        "family": "artifact_spectrum",
+        "definitionOrigin": "local_contract_with_implementation_detail",
+        "formula": "L(f0)=10log10(D_[f0−1,f0+1]/((D_[f0−3,f0−1)+D_[f0+1,f0+3])/2))；D 为频带平均 PSD。缩窄邻带时仍按实际带宽归一。",
+        "unit": "dB",
+        "stage": "不额外陷波、覆盖工频的共同测量副本；每阶段原生滤波历史保留",
+        "prerequisites": "工频优先元数据；无值按原始50/60 Hz可覆盖局部谱比判断并记证据；完整目标与邻带、谐波须在可靠通带内。",
+        "denominatorAndAggregation": "逐通道×窗；目标和两侧各约2 Hz；每谐波独立报；记录有效通道窗/总窗，Session与被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "在同频响、同分母背景下越小意味着较弱窄带峰；并非整体质量单调。"
+        },
+        "missingStatus": "not_computable: 带宽不足/邻带无效/功率非正；not_comparable: 仅有已陷波输出而目标是去工频能力比较。",
+        "overCleaningAndLeakageRisk": "低通/陷波制造低值；高旁带噪声也使比值低；频率选择不能按清理后曲线重定。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "明确噪声目标且采样可观测、邻带稳定，经校准上限可约束残余；同时检查邻带绝对功率和MI保真。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §1.2、3；quality_metrics.py:_line_ratio_db",
+        "notes": "无陷波副本不能逆转此前陷波；原生滤波后残余仍可描述，不能冒充可比的未陷波测量。当前本地闭区间端点重叠，见工程问题。"
+      },
+      {
+        "id": "drift_low_frequency_ratio",
+        "name": "低频漂移谱比",
+        "family": "artifact_spectrum",
+        "definitionOrigin": "engineering_extension",
+        "formula": "L_drift=10log10(P_[0.1,0.5]/P_[1,30])；以30 s连续窗估计，频带/窗须版本化。",
+        "unit": "dB",
+        "stage": "原生、未额外高通的长窗视图；可比原生处理阶段",
+        "prerequisites": "采集高通允许0.1 Hz；≥30 s连续段；使用相同去DC和谱窗；分母>0。",
+        "denominatorAndAggregation": "逐通道长窗→记录；持续时间和低频实际周期数一并报告；Session→被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较低只表示该低频带减少；无神经质量单调性。"
+        },
+        "missingStatus": "not_computable: 只有0.5 Hz高通输出/长窗不足；不能将不存在的低频记0。",
+        "overCleaningAndLeakageRisk": "慢皮层电位和任务准备也在低频；更强高通可机械优化此值并破坏时间结构。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "只诊断漂移；不自动要求最小化，MI若只分析8–30 Hz仍须记录滤波边缘。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；既有PSD图覆盖漂移但未定义专用标量",
+        "notes": "0.1–0.5/1–30和30 s是工程提案，不是PREP规定。"
+      },
+      {
+        "id": "drift_slope",
+        "name": "漂移线性斜率及拟合相关",
+        "family": "artifact_time",
+        "definitionOrigin": "engineering_extension",
+        "formula": "b=Σ(t−t̄)(x−x̄)/Σ(t−t̄)²；辅报 r(x,t) 与分段斜率。",
+        "unit": "µV/s；相关无量纲",
+        "stage": "原生未额外高通；固定30 s连续窗",
+        "prerequisites": "真实时间、不跨采集断点；记录参考、时间窗、滤波历史。",
+        "denominatorAndAggregation": "每通道每窗绝对斜率中位数/P90及有符号值；窗数、时长、被试分母独立。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "|b|更低只表示线性漂移弱；非线性漂移可漏检。"
+        },
+        "missingStatus": "not_computable: 时间无变化/不足2点；常数输入相关缺失而斜率可为0。",
+        "overCleaningAndLeakageRisk": "高通/去趋势使指标归零但不保证脑信号；选择窗长看结果会偏倚。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "与低频谱和原始波形合看，不作通用质量界值。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；PREP Fig.2支持斜率诊断",
+        "notes": "30 s为工程固定候选；局部非线性漂移不能用全段一条直线概括。"
+      },
+      {
+        "id": "hf_noise_ratio",
+        "name": "30–45/1–30 Hz 高频噪声比",
+        "family": "artifact_spectrum",
+        "definitionOrigin": "local_contract_with_implementation_detail",
+        "formula": "R_HF=10log10(D_[30,45]/D_[1,30])，D=频点平均PSD（当前本地实现）。若改为积分，须另立ID：10log10(P_[30,45]/P_[1,30])。",
+        "unit": "dB",
+        "stage": "共同高频谱视图；非默认幅度测量滤波的统计复用",
+        "prerequisites": "完整45 Hz支持，实际低通/过渡带足够；分母>0；记录30 Hz边界归属。",
+        "denominatorAndAggregation": "当前实现先通道中位谱再求带均值比；建议另保留逐通道窗，不与积分版混列；记录分母频带。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "噪声假设下倾向低；不具质量单调性。"
+        },
+        "missingStatus": "not_computable: 实际上限<45 Hz，包括35–45 Hz；高采样率但已低通30 Hz仍不可算。",
+        "overCleaningAndLeakageRisk": "β/γ神经活动也在分子；强低通必降；低频伪迹增大分母也让值下降。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "只能在固定频响及独立EMG校准下与保真约束联合使用。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "WELCH",
+            "directURL": "https://mne.tools/stable/generated/mne.time_frequency.psd_array_welch.html",
+            "locator": "Parameters: average, window, remove_dc; Returns: psds",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "WHITHAM",
+            "directURL": "https://pubmed.ncbi.nlm.nih.gov/17574912/",
+            "locator": "Abstract Methods/Results/Conclusions; DOI 10.1016/j.clinph.2007.04.027",
+            "reliability": "peer_reviewed_abstract_only",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §3；quality_metrics.py:spectral_quality",
+        "notes": "合同写功率比但本地实现用带均值，连续极限相差10log10(15/29)≈−2.86 dB；须版本区分，不能静默修正。"
+      },
+      {
+        "id": "relax_muscle_slope",
+        "name": "RELAX 原生肌电斜率及命中率",
+        "family": "artifact_spectrum",
+        "definitionOrigin": "official_code_native",
+        "formula": "b_cw=OLS_slope(log f,log P_cw(f)), f=7:75 Hz；q_c=Σ_w 1[b_cw>τ]/W，源码默认 τ=−0.59。超阈值均值 mean{b_cw:b_cw≥τ} 另列。",
+        "unit": "斜率无量纲；q为比例",
+        "stage": "RELAX原生输入/清理后对应1 s窗",
+        "prerequisites": "真实7–75 Hz谱、原生Hanning mtmfft参数；源码清理后1 s窗每0.5 s起始；通带<75 Hz不能计算。",
+        "denominatorAndAggregation": "每通道窗口命中数/实际窗数；保存窗级斜率。所有窗口为零命中时命中率0、超阈均值缺失。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较平斜率可能提示EMG；脑谱变化与陷波也影响，不全局单调。"
+        },
+        "missingStatus": "not_applicable: 未运行RELAX且无对应对象；not_computable: 通带/谱非正/字段不可追溯。",
+        "overCleaningAndLeakageRisk": "方法自己生成模板再自评可循环；不能将7–75斜率与30–45比当同一肌电指标。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "默认仅原生诊断；经外部校准才能形成条件约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "RELAX_MUSCLE",
+            "directURL": "https://github.com/NeilwBailey/RELAX/blob/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_metrics_muscle.m",
+            "locator": "L74–100 spectrum/slope; L110–135 threshold and aggregate fields",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "WHITHAM",
+            "directURL": "https://pubmed.ncbi.nlm.nih.gov/17574912/",
+            "locator": "Abstract Methods/Results/Conclusions; DOI 10.1016/j.clinph.2007.04.027",
+            "reliability": "peer_reviewed_abstract_only",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4",
+        "notes": "源码 AnyChannel 字段=mean_w(min(1,Σ_c max(b−τ,0)))，并非 any(b>τ) 的严格比例；不同含义独立保存。"
+      },
+      {
+        "id": "muscle_envelope_z",
+        "name": "MNE 原生高频包络肌电 z 分数",
+        "family": "artifact_spectrum",
+        "definitionOrigin": "official_api_native",
+        "formula": "e_c(t)=|analytic(bandpass_[110,140](x_c))(t)|；z_c=(e_c−mean(e_c))/sd(e_c)；z(t)=LP_4Hz(Σ_c z_c/√C)。超阈时间集合按原生短好段合并规则形成注释。",
+        "unit": "z无量纲；标记时长比例",
+        "stage": "原生高采样率视图",
+        "prerequisites": "完整110–140 Hz及过渡带；统一EEG类型；原生算法阈值与归一数据范围保存。",
+        "denominatorAndAggregation": "每通道包络按原生实现标准化，跨通道除√C；注释区间取并集/可观察时长，不累加重叠。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较高提示局部高频爆发；各阶段分别重算z不保证幅度可比。"
+        },
+        "missingStatus": "not_computable: fs≤280 Hz或既有低通不足；not_applicable: 未选此诊断。",
+        "overCleaningAndLeakageRisk": "250 Hz共同副本无法支持；若降到30–45计算须另名，不能沿用110–140阈值；自标准化会隐藏持续EMG。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "仅在适用原生视图作附加诊断；不默认选择约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "MUSCLE_MNE",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.annotate_muscle_zscore.html",
+            "locator": "Description; filter_freq; min_length_good; scores_muscle",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "扩展原生指标；不替代合同高频比",
+        "notes": "analytic代表Hilbert解析包络的工程表达，细节以锁定MNE源码为准。"
+      },
+      {
+        "id": "oha",
+        "name": "OHA 高幅度比例曲线",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "OHA_w(τ)=Σ_{c,t∈w}1[|x_ct|>τ]/(C N_w)，τ=30,50,100,150 µV。",
+        "unit": "比例0–1；阈值µV",
+        "stage": "0.5–45 Hz共同幅度视图；原生另名",
+        "prerequisites": "已转µV；有效相同通道/窗；严格大于；不额外删尖峰。",
+        "denominatorAndAggregation": "通道×样点分母；窗汇总按样点数加权可得记录比例；2–4 s尾窗与4 s窗不可盲目等权；Session→被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较低不保证质量；零信号全部为0。"
+        },
+        "missingStatus": "not_computable: 单位/有效样点缺失；partial需报非有限样点损失，不能NaN按未超阈处理。",
+        "overCleaningAndLeakageRisk": "强缩放、削顶、删除污染窗会改善；应配合平坦/功率/保留率。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "阈值只是响应曲线，不用任一值自动判合格。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "AUTOMAGIC",
+            "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+            "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "记录级OHA与逐窗OHA是不同的统计量，必须分别注明时间粒度及分母。"
+      },
+      {
+        "id": "thv",
+        "name": "THV 跨通道标准差超阈时间比例",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "s_t=√(Σ_c(x_ct−mean_c x_ct)²/C)；THV_w(τ)=Σ_t1[s_t>τ]/N_w，τ=15,30,50 µV。",
+        "unit": "比例；阈值µV",
+        "stage": "共同幅度视图",
+        "prerequisites": "至少2有效通道；固定通道集；ddof=0遵循本地实现。",
+        "denominatorAndAggregation": "分母时间样点数，非通道×样点；记录比例按窗样点加权，Session/被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无全局单调；空间信号被抹平也会降低。"
+        },
+        "missingStatus": "not_computable: 无有效空间样点/通道不足；不将NaN当不命中。",
+        "overCleaningAndLeakageRisk": "插值/CAR改变空间方差；减少通道数改变比较语义。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "保存阈值曲线及GFP；不单独约束质量。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "AUTOMAGIC",
+            "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+            "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2；quality_metrics.py L247",
+        "notes": "Automagic MATLAB std默认ddof=1，与本地ddof=0不同，不能共列为完全同定义。"
+      },
+      {
+        "id": "chv",
+        "name": "CHV 时间标准差超阈通道比例",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "s_cw=√(Σ_{t∈w}(x_ct−mean_w x_c)²/N_w)；CHV_w(τ)=Σ_c1[s_cw>τ]/C，τ=15,30,50 µV。记录整体CHV另用整段时间SD重算。",
+        "unit": "比例；阈值µV",
+        "stage": "共同幅度视图",
+        "prerequisites": "至少2样点；ddof0；阈值前不删尖峰。",
+        "denominatorAndAggregation": "每窗分母为通道数；记录整体CHV不等于各窗CHV平均，二者独立ID/aggregation_kind；Session→被试。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高可指坏道或任务反应；低可来自过清，无质量单调性。"
+        },
+        "missingStatus": "not_computable: 无有效通道/单位未核；部分窗缺失另报。",
+        "overCleaningAndLeakageRisk": "挑掉异常时间点再算SD会自证改善；少量通道时比例离散，不能套大阵列标准。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "仅描述阈值反应；不直接判坏道。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "AUTOMAGIC",
+            "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+            "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "当前本地仅全段CHV，契约要求逐窗；不可用平均窗值冒充全段值。"
+      },
+      {
+        "id": "flat_fraction",
+        "name": "平坦比例与连续段长度",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "先在连续记录标记 |x_c,t−x_c,t−1|≤0.1 µV 连续达到5 s的样点集合F_c；q_cw=|F_c∩w|/N_w。",
+        "unit": "比例；最长平坦段s",
+        "stage": "原生采集诊断及共同幅度视图各自保存",
+        "prerequisites": "跨4 s边界先识别平坦段；采集断点必须断开；共同滤波下的平坦与原生ADC恒值分开。",
+        "denominatorAndAggregation": "每通道样点分母；窗口按实际样点权重；记录总平坦时长及最长段。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较低提示断线少，但加入噪声也能消除平坦，无质量全局单调。"
+        },
+        "missingStatus": "not_computable: 无连续样点；0命中是有效0；未知fs则无法判5 s。",
+        "overCleaningAndLeakageRisk": "插值掩盖坏道；滤波边缘可破坏或制造恒值；0.1 µV每样点差与fs有关。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "采集常数/非有限通道可作为输入不可用约束；合同平坦比例本身只告警，阈值外部校准。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_DOC",
+            "directURL": "https://eeglab.org/plugins/clean_rawdata/Documentation.html",
+            "locator": "How it is organized; parameter discussion; reproducibility section",
+            "reliability": "official_historical_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §1.2、2",
+        "notes": "当前实现round(5fs)−1个差分；记录边界约定，精确持续时间按样点端点有1/fs差异。"
+      },
+      {
+        "id": "peak_to_peak",
+        "name": "峰峰值与跨通道P90/P99",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "PTP_cw=max_t x_ct−min_t x_ct；每窗跨通道报告median、Q90、Q99。",
+        "unit": "µV",
+        "stage": "共同幅度视图",
+        "prerequisites": "固定窗长度、通道和显示/测量带宽；边界和非有限段排除留痕。",
+        "denominatorAndAggregation": "逐通道窗→窗内跨通道分位；记录窗分布，不将窗P99平均称整体P99。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "仅在已确认尖峰背景下偏高不利；过低也可信号丢失。"
+        },
+        "missingStatus": "not_computable: 无有效样点；不同窗长不直接比较极值。",
+        "overCleaningAndLeakageRisk": "削顶与强低通可降低；窗越长越容易出现大极值。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "先定位原始波形；不设通用µV合格线。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "AUTOMAGIC",
+            "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+            "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "来源支持幅度诊断背景；精确PTP定义由本地合同给出。"
+      },
+      {
+        "id": "robust_dispersion",
+        "name": "1.4826×MAD 稳健离散度",
+        "family": "amplitude",
+        "definitionOrigin": "local_contract",
+        "formula": "sMAD_cw=1.4826 median_t|x_ct−median_t x_ct|；每窗跨通道median。",
+        "unit": "µV",
+        "stage": "共同幅度视图",
+        "prerequisites": "有效非空窗，单位正确；保存0作为真实离散度0。",
+        "denominatorAndAggregation": "逐通道窗再通道中位；保留每窗，Session/被试等权；统计尺度校正常数为高斯一致性常数。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "无单调性；噪声与脑信号皆贡献。"
+        },
+        "missingStatus": "not_computable: 无样点；MAD=0不直接填小正数。",
+        "overCleaningAndLeakageRisk": "不能用MAD小证明清理好；大多数样点相同会MAD0但仍存在尖峰。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "与PTP/平坦并列。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "PREP常用0.7413×IQR，不等于本地1.4826×MAD；两种稳健尺度不可合并。"
+      },
+      {
+        "id": "channel_correlation",
+        "name": "通道间98百分位绝对相关",
+        "family": "spatial",
+        "definitionOrigin": "local_contract",
+        "formula": "r_cw=Q_0.98({|corr(x_cw,x_jw)|:j≠c})；主摘要median_c r_cw。",
+        "unit": "无量纲0–1",
+        "stage": "共同幅度视图；PREP原生另列",
+        "prerequisites": "≥2非恒定通道、≥2样点；通道集、参考相同；对角线剔除。",
+        "denominatorAndAggregation": "每通道对所有其他有效通道求分位，不是max；通道数少时报告候选对数；Session/被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "不是越高越好：桥接/共同噪声/插值都提高相关。"
+        },
+        "missingStatus": "not_computable: 恒值导致r未定义/可用同行不足；恒值相关不得填0。",
+        "overCleaningAndLeakageRisk": "插值会自证高相关；CAR删除共同噪声后相关下降可能是合理变化。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "只观察；配合桥接与有效秩。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "合同4 s/0.5–45 Hz与PREP原生1 s/<50 Hz不同。"
+      },
+      {
+        "id": "low_correlation_fraction",
+        "name": "低相关通道比例",
+        "family": "spatial",
+        "definitionOrigin": "local_contract",
+        "formula": "q_w=Σ_c1[r_cw<0.4]/C_valid_corr,w。",
+        "unit": "比例0–1",
+        "stage": "共同幅度视图",
+        "prerequisites": "依赖channel_correlation；保留全体共同通道数与有效相关通道数。",
+        "denominatorAndAggregation": "分母仅有限r通道，同时单列无效r/C_total；记录窗级分母，不能静默排除恒值使q变好。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较低只是低相关状态少；不是坏道真值。"
+        },
+        "missingStatus": "not_computable: C_valid_corr=0；partial: 部分无效并报原因。",
+        "overCleaningAndLeakageRisk": "低密度电极或远距离通道天然低相关；重复通道可伪造高质量。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "0.4只能描述，不自动判坏道/排被试。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2",
+        "notes": "原生PREP还有窗占比判据，本地q不是原生坏道率。"
+      },
+      {
+        "id": "prep_deviation",
+        "name": "PREP 原生稳健幅度z",
+        "family": "bad_channel_native",
+        "definitionOrigin": "official_method_native",
+        "formula": "d_c=0.7413 IQR_t(x_c)；z_c=(d_c−median_j d_j)/(0.7413 IQR_j(d_j))；具体版本的尺度实现要核实。",
+        "unit": "无量纲稳健z",
+        "stage": "PREP原生坏道检测输入及迭代阶段",
+        "prerequisites": "足够通道估计群体分布；分母>0；阶段参考和原生阈值留存。",
+        "denominatorAndAggregation": "通道群体是标准化参考；原生>5为论文默认，输出原值、阈值、命中与最终动作。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高值提示相对离群，不是绝对质量；群体都坏时会正常。"
+        },
+        "missingStatus": "not_computable: IQR=0/通道不足；not_applicable: 未运行此检测。",
+        "overCleaningAndLeakageRisk": "跨方法重新标准化使尺度不可比；高幅神经源可被当异常。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "仅原生规则命中用于方法过程审计；本系统不提升为普适选择约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §3.2.2",
+        "notes": "与本地MAD离散度字段分开；原生输出优先。"
+      },
+      {
+        "id": "prep_hf_noisiness",
+        "name": "PREP 原生高频噪声z",
+        "family": "bad_channel_native",
+        "definitionOrigin": "official_method_native",
+        "formula": "l=LP_50Hz(x),h=x−l；q_c=MAD_t(h_c)/MAD_t(l_c)；z_c=(q_c−median_j q_j)/(0.7413 IQR_j q_j)。",
+        "unit": "比率与稳健z",
+        "stage": "PREP原生检测阶段",
+        "prerequisites": "可观测50 Hz以上频谱；原生滤波与MAD定义、单位、参考核实。",
+        "denominatorAndAggregation": "逐通道比例→跨通道稳健标准化；论文默认z>5只作方法参数记录。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高表示相对HF异常，无全局质量方向。"
+        },
+        "missingStatus": "not_computable: MAD(l)=0/跨通道IQR0/通带不足。",
+        "overCleaningAndLeakageRisk": "不能把此MAD比当30–45/1–30功率比；低采样率无法重现。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "用于解释原生坏道原因，不跨定义合并。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §3.2.2",
+        "notes": "检测信号频带与共同幅度副本不相同。"
+      },
+      {
+        "id": "ransac_predictability",
+        "name": "RANSAC 通道可预测相关",
+        "family": "bad_channel_native",
+        "definitionOrigin": "official_method_native",
+        "formula": "ρ_cw=corr(x_cw, x̂_cw)，x̂由不含目标通道的随机通道子集球样条预测并按原生规则合并；q_c=mean_w 1[ρ_cw<τ]。",
+        "unit": "相关；异常窗比例",
+        "stage": "坏道删除/插值前原生视图",
+        "prerequisites": "足够真实电极坐标与空间覆盖；目标通道不参与预测；固定种子和原生子集/窗参数。",
+        "denominatorAndAggregation": "每通道有效窗为分母；同时记录原生τ及坏窗率阈值、最终判定；不能把重叠窗计为独立样本。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "低预测性可提示坏道；高可来自空间过平滑，不全局单调。"
+        },
+        "missingStatus": "not_computable: 坐标/可预测通道不足；not_applicable: 未执行原生RANSAC。",
+        "overCleaningAndLeakageRisk": "插值后再评会循环；PREP正文对窗长存在5 s与4 s描述，必须锁代码而不凭论文数字猜。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "原生输出审计；阈值不用于跨方法通用选择。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ASR_DOC",
+            "directURL": "https://eeglab.org/plugins/clean_rawdata/Documentation.html",
+            "locator": "How it is organized; parameter discussion; reproducibility section",
+            "reliability": "official_historical_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §3.2.2",
+        "notes": "不将无位置通道间相关冒充RANSAC预测。"
+      },
+      {
+        "id": "electrical_distance_bridge",
+        "name": "电位差方差与桥接候选",
+        "family": "spatial",
+        "definitionOrigin": "official_api_native",
+        "formula": "ED_ij,w=Var_t(x_iw−x_jw)，对低ED分布局部极小和跨窗持续比例应用原生桥接规则。",
+        "unit": "µV²；命中窗比例",
+        "stage": "原生插值前；同一参考",
+        "prerequisites": "真实相邻电极关系、足够窗；固定原生滤波和方差ddof；保存单位转换。",
+        "denominatorAndAggregation": "每电极对每窗；分母为该对可用窗数；候选桥接图而非全通道平均ED。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "极小提示桥接；相关大本身不充分；过小/过大都非质量单调。"
+        },
+        "missingStatus": "not_computable: 无有效电极对；无位置时保留ED表但空间判定受限。",
+        "overCleaningAndLeakageRisk": "插值/重复数组同样形成低ED；参考、体积传导需区分。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "经原始采集证据确认的短接通道可限制可用独立通道；API默认阈值不自动拒绝整条记录。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BRIDGE",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.compute_bridged_electrodes.html",
+            "locator": "Description and lm_cutoff units",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "扩展空间结构诊断",
+        "notes": "算法标记是候选；MNE/EEGLAB默认阈值不同，不硬编码为通用医学标准。"
+      },
+      {
+        "id": "numerical_rank",
+        "name": "数值秩及阶段轨迹",
+        "family": "rank_covariance",
+        "definitionOrigin": "local_contract",
+        "formula": "X0=X−mean_t X；σ=svd(X0)；r=Σ_i1[σ_i>σ_max max(C,N) eps(dtype)]。",
+        "unit": "整数维数；附r/C",
+        "stage": "原始、共同视图、ICA输入、插值后、ICA应用后、最终",
+        "prerequisites": "相同通道类型/单位及明确dtype；有限矩阵；保存奇异值谱、阈值、C、N。",
+        "denominatorAndAggregation": "每记录/窗秩独立，不把多个窗拼成一个平均秩；被试摘要报范围/中位而不称整数实际秩。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高秩可由噪声补满；低秩可由合法CAR/投影造成，不全局单调。"
+        },
+        "missingStatus": "not_computable: 非有限/矩阵失败；零矩阵r=0为有效且约束失败；不存在阶段not_applicable。",
+        "overCleaningAndLeakageRisk": "插值增加通道数不增独立信息；eps阈值受长记录N影响；不能误名熵有效秩。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "训练折实际可用秩必须支持拟合组件数；共同输入r<2不运行CSP；r≥2仍不保证min(4,C)组件可拟合。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "NUMPY_RANK",
+            "directURL": "https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_rank.html",
+            "locator": "Parameters tol; Notes",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §2；visualization-methods §4.4；classification-csp-svm",
+        "notes": "ICA删除后不把r=C当目标；保留原生与共同视图两条轨迹。"
+      },
+      {
+        "id": "covariance_condition",
+        "name": "协方差谱、条件数与可逆性",
+        "family": "rank_covariance",
+        "definitionOrigin": "engineering_extension",
+        "formula": "Σ=X0X0ᵀ/(N−1)；κ=λ_max/λ_min（SPD）；支持子空间版κ+=λ_max/λ_min_positive另名。",
+        "unit": "Σ:µV²；κ无量纲",
+        "stage": "共同任务8–30 Hz或预注册带；ICA/解码训练折",
+        "prerequisites": "N>1，样本不足/平均参考引起奇异需显式标记；收缩/投影策略事先固定。",
+        "denominatorAndAggregation": "逐Trial/窗，报告特征值与秩；不可将不同降维空间的κ混比；训练折估计。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较低κ只改善数值条件，白噪声κ近1不代表优质。"
+        },
+        "missingStatus": "not_computable: 非有限；singular协方差κ数学上∞，JSON值null reason=singular_covariance并保留状态，不填有限上限。",
+        "overCleaningAndLeakageRisk": "添加对角噪声/过强收缩可改善κ但抹掉CSP；不能为某方法单独调正则化。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "依下游需要SPD/可白化支持子空间检验可用性；没有通用κ合格阈值。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "NUMPY_RANK",
+            "directURL": "https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_rank.html",
+            "locator": "Parameters tol; Notes",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "RIEMANN",
+            "directURL": "https://pyriemann.readthedocs.io/en/v0.12/generated/pyriemann.geometry.distance.distance_riemann.html",
+            "locator": "Definition equation and SPD/HPD requirements",
+            "reliability": "official_api_versioned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；既有秩轨迹的数值补充",
+        "notes": "经验协方差N−1为本工程定义，和各库cov_est须显式区分。"
+      },
+      {
+        "id": "covariance_participation_rank",
+        "name": "协方差参与率有效维数",
+        "family": "rank_covariance",
+        "definitionOrigin": "engineering_extension",
+        "formula": "r_PR=(Σ_i λ_i)²/(Σ_i λ_i²)，λ_i≥0；也可单列谱熵秩 exp(−Σ p_i log p_i)，p_i=λ_i/Σλ_i。",
+        "unit": "连续有效维数",
+        "stage": "共同固定通带和窗口",
+        "prerequisites": "对称PSD协方差，trace>0；浮点负特征值容差记录；各定义独立ID。",
+        "denominatorAndAggregation": "每窗/Trial→Session→被试；不能等同SVD数值秩；不可对λ先跨被试平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "噪声可升维，真实同步可降维；无质量单调。"
+        },
+        "missingStatus": "not_computable: trace=0/非PSD超容差。",
+        "overCleaningAndLeakageRisk": "优化到最大会鼓励白噪声；插值/参考/神经同步皆改变谱。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "只用来发现谱塌缩，与数值秩及MI效应合看。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "NUMPY_RANK",
+            "directURL": "https://numpy.org/doc/stable/reference/generated/numpy.linalg.matrix_rank.html",
+            "locator": "Parameters tol; Notes",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "RIEMANN",
+            "directURL": "https://pyriemann.readthedocs.io/en/v0.12/generated/pyriemann.geometry.distance.distance_riemann.html",
+            "locator": "Definition equation and SPD/HPD requirements",
+            "reliability": "official_api_versioned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "工程扩展",
+        "notes": "公式为本调研提出的数学摘要，未声称原始EEG论文验证过此质量阈值。"
+      },
+      {
+        "id": "covariance_shape_distance",
+        "name": "协方差形状变化与跨窗结构",
+        "family": "rank_covariance",
+        "definitionOrigin": "engineering_extension",
+        "formula": "Σ̃=Σ/tr(Σ)；d_R(A,B)=√Σ_i log² λ_i(A,B)，用于共同支持空间的Σ̃_before,Σ̃_after；另报未归一尺度变化。",
+        "unit": "无量纲距离",
+        "stage": "共同同通道/参考/通带及配对窗；训练数据确定支持空间",
+        "prerequisites": "两矩阵在同一固定投影空间SPD；降秩时不能直接用全传感器AIRM；收缩参数固定。",
+        "denominatorAndAggregation": "逐配对窗/Trial距离→Session→被试；保留时间轨迹；不对不同子空间距离混算。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "接近0仅表示接近原始结构，原始结构可能是伪迹。"
+        },
+        "missingStatus": "not_comparable: 子空间/参考不同；not_computable: SPD不足；不能默加epsilon掩盖秩损失。",
+        "overCleaningAndLeakageRisk": "过度约束原始协方差会阻止有效清理；白化使形状一致但去除任务信息。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅在独立指定低伪迹片段的结构偏移校准后限制损伤；污染窗不要求距离0。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "RIEMANN",
+            "directURL": "https://pyriemann.readthedocs.io/en/v0.12/generated/pyriemann.geometry.distance.distance_riemann.html",
+            "locator": "Definition equation and SPD/HPD requirements",
+            "reliability": "official_api_versioned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展",
+        "notes": "AIRM数学可靠，作为MI保真门限是工程提案；trace归一会隐藏能量损失，须并报带功率。"
+      },
+      {
+        "id": "waveform_change",
+        "name": "配对波形改变：NRMSE与相关",
+        "family": "time_structure",
+        "definitionOrigin": "engineering_extension",
+        "formula": "NRMSE=√mean((y−x)²)/√mean(x²)；ρ=corr(x,y)；另报RMSE=√mean((y−x)²)。",
+        "unit": "NRMSE/ρ无量纲；RMSEµV",
+        "stage": "共同幅度/目标通带视图，前后同样点",
+        "prerequisites": "同参考/滤波/事件；分母RMS(x)>0；相关需两端方差>0；明确x是原始或独立干净真值。",
+        "denominatorAndAggregation": "先每通道窗，通道/Trial/Session/被试逐层；不把corr²称方差保留率。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "若x是干净真值，NRMSE低/ρ高代表保真；原始污染x时不成立。"
+        },
+        "missingStatus": "not_comparable: 时轴错位；not_computable: 零分母/常数相关。",
+        "overCleaningAndLeakageRisk": "未处理原样输出可最优于原始相似度；神经信号移相相关下降亦可能是滤波边缘。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "只对独立干净段或半仿真真值作保真约束；污染段仅描述改变。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；visualization-methods §4.5已有波形诊断",
+        "notes": "NRMSE分母用RMS而非SD为工程固定选择；两种版本不能混列。"
+      },
+      {
+        "id": "gfp",
+        "name": "GFP 空间标准差时间轨迹",
+        "family": "time_structure",
+        "definitionOrigin": "local_contract",
+        "formula": "GFP(t)=√(Σ_c(x_ct−mean_c x_ct)²/C)，ddof0；同时记录全通道波形。",
+        "unit": "µV",
+        "stage": "共同幅度视图，真实事件对齐",
+        "prerequisites": "固定通道集、滤波和参考；≥2通道；保持MI任务前/中/后窗口。",
+        "denominatorAndAggregation": "逐样点；可按固定任务窗平均但不替代时间曲线；多被试先被试内事件平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "更小可能伪迹减少也可能神经源被删除；非单调。"
+        },
+        "missingStatus": "not_computable: 无可比通道时间；单被试无组CI。",
+        "overCleaningAndLeakageRisk": "空间平滑/插值可降低GFP；零信号GFP0并非最优。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "固定诊断触发时输出overlay及完整Trial；不按图形美观打分。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "AUTOMAGIC",
+            "directURL": "https://github.com/methlabUZH/automagic/blob/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/src/calcQuality.m",
+            "locator": "L2–11, L74–105; calcTHV.m and calcCHV.m at same commit",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §4.5",
+        "notes": "GFP与THV底层空间SD一致，THV是其阈值曲线，不应双重加权。"
+      },
+      {
+        "id": "eog_correlation",
+        "name": "EEG–EOG 窗级残余相关",
+        "family": "residual_artifact",
+        "definitionOrigin": "local_contract",
+        "formula": "r_cw,e=|corr(EEG_cw,EOG_ew)|；每个VEOG/HEOG独立报max_c r_cw,e及逐通道值。",
+        "unit": "绝对相关0–1",
+        "stage": "共同幅度视图前后；辅助通道保持同一来源",
+        "prerequisites": "真实同步VEOG/HEOG；同窗同辅助信号、事件；两端方差非零。",
+        "denominatorAndAggregation": "每窗先EEG通道相关，再max（不是通道间98分位）；VEOG/HEOG不混，Session→被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "低提示线性耦合弱，不保证眼伪迹消失；真实共同任务变化也可相关。"
+        },
+        "missingStatus": "not_acquired: 无EOG；not_computable: 常数/非有限/不同步；不得虚构额极为实测EOG。",
+        "overCleaningAndLeakageRisk": "最大值依赖通道数；删除相关脑源会减分子；EOG本身受清理会改变参照。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅可在独立验证EOG伪迹关联、共同输入及保真保护下设残余上限；默认描述。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4",
+        "notes": "信号派生伪EOG须另ID/来源级别，不满足真实EOG前提。"
+      },
+      {
+        "id": "ecg_correlation",
+        "name": "EEG–ECG 窗级残余相关",
+        "family": "residual_artifact",
+        "definitionOrigin": "local_contract",
+        "formula": "r_cw=|corr(EEG_cw,ECG_w)|；主值max_c r_cw。",
+        "unit": "绝对相关0–1",
+        "stage": "共同幅度视图前后",
+        "prerequisites": "真实同步ECG，同一来源；方差非零；记录采样率变换及延迟。",
+        "denominatorAndAggregation": "每窗、每通道→max；有效窗分母；Session/被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "低仅提示线性心电污染弱；不能保证全部心搏相关场被去除。"
+        },
+        "missingStatus": "not_acquired: 无ECG；not_computable: 无有效同步辅助输入。",
+        "overCleaningAndLeakageRisk": "移相可能降低相关但不去伪迹；任务相关心率变化可产生混杂。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "与R峰锁定残余及脑信号保留联合，阈值独立校准。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4",
+        "notes": "ECG缺失不得将MNE合成ECG与真实ECG混为同项。"
+      },
+      {
+        "id": "event_locked_residual",
+        "name": "眨眼/R峰锁定平均与残余比",
+        "family": "residual_artifact",
+        "definitionOrigin": "local_contract_plus_engineering_scalar",
+        "formula": "A_stage,c(τ)=mean_e EEG_stage,c(t_e+τ)；R_event=RMS_{c,τ}(A_after)/RMS_{c,τ}(A_before)，ΔA=A_after−A_before。",
+        "unit": "平均/差µV；R_event比例",
+        "stage": "共同视图；眨眼−0.5–1.0 s、ECG−0.5–0.8 s",
+        "prerequisites": "同一真实事件清单与共同可用事件；固定事件窗、参考、ROI、基线校正策略；RMS_before>0。",
+        "denominatorAndAggregation": "先被试×Session内同事件平均，组级被试等权；报告总事件、共同事件及各原因丢失数。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "R下降仅为锁定平均能量衰减，事件数/时序变化亦影响；不是全局质量。"
+        },
+        "missingStatus": "not_acquired: 辅助源未采集；not_computable: 无合法事件/零分母；边缘事件只列未配对。",
+        "overCleaningAndLeakageRisk": "清理后重新检眨眼会让事件少；平均会抵消非锁相残余；脑反应与眨眼同步可一起被删。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "平均波形固定输出；RMS残余比为工程定义，校准前不作硬约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4；visualization-methods §4.4",
+        "notes": "本地仅规定残余比输出未给精确标量；本项明示RMS比，不能假称为RELAX原生眨眼比。"
+      },
+      {
+        "id": "ser_native",
+        "name": "RELAX/MWF Signal-to-Error Ratio",
+        "family": "residual_artifact",
+        "definitionOrigin": "official_code_native",
+        "formula": "令x为配对平均参考原始数据，d=x−y；C为mask=0，A为mask=1；a_c=max(Var_A(x_c)−Var_C(x_c),0)，p_c=a_c/Σ_j a_j；SER_c=10log10(Var_C(x_c)/Var_C(d_c))；SER=Σ_c p_c SER_c。",
+        "unit": "dB",
+        "stage": "同一次RELAX/MWF原生输入/输出/掩码",
+        "prerequisites": "精确匹配坏段删除、通道、参考与时间；mask来自同一运行；clean/artifact均≥2样点；MATLAB var默认N−1；Σa>0。",
+        "denominatorAndAggregation": "先通道dB、再伪迹功率权重平均，不是先汇总能量再log；各运行单列，再Session/被试等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "可信clean-mask内SER高倾向保真；完全不清理SER可∞，须和ARR联合。"
+        },
+        "missingStatus": "not_applicable: 未运行或未产出掩码；not_computable: 空mask、非正方差、零权重和非有限；原生∞保留rawStatus而JSON value=null。",
+        "overCleaningAndLeakageRisk": "clean mask可能含伪迹；由候选方法重选clean区会自证好；不改数据可使SER无限大但无清理。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅同模板/同配对范围或外部固定模板下，校准SER损失下限并同时约束ARR/MI；默认报告二维。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "MWF",
+            "directURL": "https://github.com/exporl/mwf-artifact-removal/blob/85115641b36b711a4263eeb83f60e4706ea4e732/mwf/mwf_performance.m",
+            "locator": "L25–49: masks, weights, per-channel dB, weighted sum",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "RELAX_METRICS",
+            "directURL": "https://github.com/NeilwBailey/RELAX/blob/v2.0.1/RELAX_metrics_final_SER_and_ARR.m",
+            "locator": "Final block: average reference, d subtraction, mwf_performance call",
+            "reliability": "official_code_tag",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "RELAX_PAPER",
+            "directURL": "https://pubmed.ncbi.nlm.nih.gov/36822997/",
+            "locator": "Abstract Methods and Results; DOI 10.1016/j.clinph.2023.01.017",
+            "reliability": "peer_reviewed_abstract_only",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4",
+        "notes": "RELAX wrapper只传三参数；跨算法若掩码不同不可直接同列排名。"
+      },
+      {
+        "id": "arr_native",
+        "name": "RELAX/MWF Artifact-to-Residue Ratio",
+        "family": "residual_artifact",
+        "definitionOrigin": "official_code_native",
+        "formula": "沿用SER权重p。若真值a_true可用：ARR_c=10log10(Var_A(a_true,c)/Var_A(a_true,c−d_c))；无真值时代a_true=x_A，故ARR_c=10log10(Var_A(x_c)/Var_A(y_c))；ARR=Σ_c p_c ARR_c。",
+        "unit": "dB",
+        "stage": "同次原生输入/清理后/伪迹mask；半仿真真值版另ID",
+        "prerequisites": "A和C均充分，Σa>0；真值版需已知注入伪迹且对齐；三参数版无脑源真值。",
+        "denominatorAndAggregation": "每通道方差比→dB→按p平均；不等同原始伪迹总能量下降。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "真值充分时高较好；近似ARR可因删除脑信号一起变高，无全局质量单调。"
+        },
+        "missingStatus": "not_computable: Var≤0、权重未定义、空区间；不将零残余的∞变成任意大有限分数。",
+        "overCleaningAndLeakageRisk": "将y置零近似ARR趋∞；需要SER和MI保真共同检查；同方法模板形成自评偏差。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅固定模板及证据可比下用于去伪迹约束；与SER成二维，不加权平均综合分。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "MWF",
+            "directURL": "https://github.com/exporl/mwf-artifact-removal/blob/85115641b36b711a4263eeb83f60e4706ea4e732/mwf/mwf_performance.m",
+            "locator": "L25–49: masks, weights, per-channel dB, weighted sum",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "RELAX_METRICS",
+            "directURL": "https://github.com/NeilwBailey/RELAX/blob/v2.0.1/RELAX_metrics_final_SER_and_ARR.m",
+            "locator": "Final block: average reference, d subtraction, mwf_performance call",
+            "reliability": "official_code_tag",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §4",
+        "notes": "真实伪迹版和raw-as-artifact近似版必须different variant_id。"
+      },
+      {
+        "id": "ica_treatment_fraction",
+        "name": "ICA 处理数、比例与原因交集",
+        "family": "ica_specific",
+        "definitionOrigin": "local_contract",
+        "formula": "n_treat=|∪_r ICIDs_reason_r|；q_treat=n_treat/K；原因命中数与交集计数分别列；删除与wICA清理分开。",
+        "unit": "个数；比例0–1",
+        "stage": "同一次ICA对象及实际应用后",
+        "prerequisites": "成功分解、稳定IC编号、K、拟合rank、最终处理列表及版本；不同Session不能按编号认同一IC。",
+        "denominatorAndAggregation": "分母该运行实际K，非通道数；Session先求比再等权，被试等权；失败运行另入覆盖分母。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "比例无优劣方向，代表处理强度。"
+        },
+        "missingStatus": "not_applicable: 未运行ICA；not_computable: 缺K/列表/对象编号映射；ICA失败不能算零处理。",
+        "overCleaningAndLeakageRisk": "处理少未必残余少；处理多未必保留差；重复原因不可多计。",
+        "selectionRole": "process_observation",
+        "selectionRule": "默认仅操作审计；可有预注册最大损伤预算但不能把高/低比例当质量结论。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "HAPPE",
+            "directURL": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2018.00097/full",
+            "locator": "Quality assessment; Figures 4–6; Tables 4–5",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §4.2；index §3.2.3",
+        "notes": "所有IC maps/scores分页保留；已处理IC给properties/sources/overlay。"
+      },
+      {
+        "id": "ica_class_probabilities",
+        "name": "IC 类别概率、阈值边距和保留成分伪迹概率",
+        "family": "ica_specific",
+        "definitionOrigin": "local_contract_and_official_api",
+        "formula": "p_ik=P_model(class=k|IC_i features)，k为brain,muscle,eye,heart,line,channel,other；margin_ik=p_ik−τ_k；保留IC的mean/median p_ik另报。",
+        "unit": "概率0–1；边距−1–1",
+        "stage": "ICA拟合输入及对应分类器输出；清理后另分解应另stage",
+        "prerequisites": "保存全7类概率、模型版本、输入滤波/CAR/算法；输入域偏离必须标记。",
+        "denominatorAndAggregation": "每IC→运行按IC等权摘要；再Session/被试等权；不按K汇集所有被试直接平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "brain概率高不是脑能量/MI保留保证；伪迹概率降低可能分解变化。"
+        },
+        "missingStatus": "not_applicable: 无分类器；not_computable: 类顺序/版本/概率缺失；domain_mismatch标partial而非当0。",
+        "overCleaningAndLeakageRisk": "依据分类器删成分再用同分类器评剩余天然循环；类别概率不是百分比信号组成。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "只作原生判断证据；输入域校准、独立验证和MI指标满足后才能参与约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICLABEL",
+            "directURL": "https://mne.tools/mne-icalabel/stable/generated/api/mne_icalabel.iclabel.iclabel_label_components.html",
+            "locator": "Opening assumptions; Returns labels_pred_proba",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "HAPPE",
+            "directURL": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2018.00097/full",
+            "locator": "Quality assessment; Figures 4–6; Tables 4–5",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §4.2",
+        "notes": "1–100 Hz不可从已45 Hz低通数据恢复；不为跑ICLabel擅改报告共同通带。"
+      },
+      {
+        "id": "ica_numerical_integrity",
+        "name": "ICA 收敛与无删除重建误差",
+        "family": "ica_specific",
+        "definitionOrigin": "engineering_extension",
+        "formula": "保存converged,n_iter,tolerance,rank,K；e0=||X−reconstruct_all_IC_plus_restored_PCA(X)||_F/||X||_F，使用同一白化/均值/PCA回填策略。",
+        "unit": "布尔/迭代数；相对误差",
+        "stage": "ICA拟合后、任何IC删除前",
+        "prerequisites": "完整ICA对象、全部PCA残差和拟合预处理信息；||X||>0；以原生库apply(exclude=[])重建核对。",
+        "denominatorAndAggregation": "每运行单独验；不跨方法比较迭代数大小；重建误差分母同对象能量。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "e0接近数值容差表示对象一致，不代表分离准确；迭代多无质量方向。"
+        },
+        "missingStatus": "failed: 算法失败；partial: 未收敛但有对象；not_computable: 缺残差/参数，不能用删后重建代替。",
+        "overCleaningAndLeakageRisk": "算法可能收敛到不合适解；PCA预先降维故意丢失不应被当ICA自身重建故障。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "以运行成功/有限参数/一致映射为执行门禁；收敛警告触发诊断，默认不擅自删被试。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "index §3.2.3；工程重建核查扩展",
+        "notes": "容差依dtype/算法校准，不给通用1e−x阈值；MNE保留未送ICA的PCA分量必须算入。"
+      },
+      {
+        "id": "ica_variance_change",
+        "name": "ICA 应用前后方差变化（非脑信号保留率）",
+        "family": "ica_specific",
+        "definitionOrigin": "engineering_extension",
+        "formula": "V_ratio=tr Cov(Y)/tr Cov(X)；removed_difference_energy=||X−Y||_F²/||X||_F² 另列，不用1−该值冒充V_ratio。",
+        "unit": "比例；可>1",
+        "stage": "同一次ICA应用前后共同通道时间",
+        "prerequisites": "同参考、同滤波、同样点；分母>0；明确是否wICA/删除/PCA截断。",
+        "denominatorAndAggregation": "每运行；先计算再Session/被试等权；报告每通道及总trace。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高保留可能保留伪迹，低也可能有效清理；不是单调脑保真。"
+        },
+        "missingStatus": "not_computable: 零分母/不同阶段不可配；not_applicable: 无ICA应用。",
+        "overCleaningAndLeakageRisk": "IC在传感器空间不一定正交，方差不简单可加；残差与输出可相关。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "联合残余/ERDS观察；本工程比率不冒名HAPPE原生percent variance retained。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "HAPPE",
+            "directURL": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2018.00097/full",
+            "locator": "Quality assessment; Figures 4–6; Tables 4–5",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "既有信号保留维度扩展",
+        "notes": "若读HAPPE原生字段，必须额外核它的计算源码/阶段，核查时不声称V_ratio等于其原公式。"
+      },
+      {
+        "id": "asr_calibration_coverage",
+        "name": "ASR 校准覆盖及阈值来源",
+        "family": "asr_specific",
+        "definitionOrigin": "engineering_extension",
+        "formula": "q_cal=unique_duration(calibration_intervals)/eligible_training_duration；T=diag(μ+kσ)Vᵀ，μ,σ由频率整形后投影RMS分布拟合；保存M,T,k与谱/幅度诊断。",
+        "unit": "比例；时长s；k无量纲",
+        "stage": "ASR校准原生训练/适应片段",
+        "prerequisites": "真实校准区间和运行日志；不存在有效clean分布时失败；至少满足实现所需窗口，不能只检查总时长。",
+        "denominatorAndAggregation": "校准区间按并集取时长；分母为允许的训练/校准时长，不是整数据偷偷含测试；按Run/Session单列。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "覆盖大不必更好，校准污染会抬阈；k不是质量方向。"
+        },
+        "missingStatus": "not_computable: 未保存区间/M/T；failed: 拟合无足够参考；not_applicable: 无ASR。",
+        "overCleaningAndLeakageRisk": "把MI高能量状态当校准异常会过清；用测试Session全段校准使inductive评估泄漏。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "校准来源可追溯、与验证目标相容、拟合有限是门禁；没有通用最短秒数或q_cal合格线。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_CALIBRATE",
+            "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_calibrate.m",
+            "locator": "L182–210 robust covariance, RMS fitting, threshold matrix T",
+            "reliability": "official_code_pinned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "ASR新增原生过程指标",
+        "notes": "允许显式transductive/online适应协议，但必须另报不能声称纯留出泛化。"
+      },
+      {
+        "id": "asr_directional_exceedance",
+        "name": "ASR 方向方差超阈比",
+        "family": "asr_specific",
+        "definitionOrigin": "engineering_extension_from_official_code",
+        "formula": "g_iw=D_iw/||T v_iw||²；原生keep_iw=(D_iw<||Tv_iw||²) OR protected_dimension_iw；记录g、keep、maxdims，不能以g>1直接推实际删维。",
+        "unit": "无量纲比",
+        "stage": "ASR运行中频率整形滑动协方差",
+        "prerequisites": "同次M,T与窗口特征向量/特征值；原生windowlen/stepsize/滤波状态，阈值分母>0。",
+        "denominatorAndAggregation": "每更新点每方向；另报max_i g、超阈维数；窗口重叠不计为独立证据。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高提示相对校准偏离，但MI也可非平稳；低不保证脑保真。"
+        },
+        "missingStatus": "not_computable: 无运行内部量；不可由终态EEG重构日志；非正阈值失败。",
+        "overCleaningAndLeakageRisk": "候选k改变分母会自动变好；受保护维/最大删维约束使超阈不等于删除。",
+        "selectionRole": "process_observation",
+        "selectionRule": "说明ASR触发，不作为跨k的独立质量目标。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_PROCESS",
+            "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+            "locator": "L152–184 running covariance, keep mask, R, raised-cosine blending",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ASR_CALIBRATE",
+            "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_calibrate.m",
+            "locator": "L182–210 robust covariance, RMS fitting, threshold matrix T",
+            "reliability": "official_code_pinned",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "ASR新增",
+        "notes": "源码严格<；恰等阈且非protected时不保留，记录边界。"
+      },
+      {
+        "id": "asr_reconstructed_time",
+        "name": "ASR 重建影响时长比例",
+        "family": "asr_specific",
+        "definitionOrigin": "engineering_extension",
+        "formula": "q_recon=duration(∪{intervals with nonidentity current/previous reconstruction blend})/eligible_input_duration；辅报q_delta=mean_t 1[||Y_t−X_t||>ε_abs+ε_rel||X_t||]，二者不同。",
+        "unit": "比例；s",
+        "stage": "ASR运行过程及同时间轴原生输入输出",
+        "prerequisites": "记录实际R、前一R与交叉淡化区间；数值差法仅作为proxy，容差预先固定。",
+        "denominatorAndAggregation": "区间取并集且包含blend影响；分母ASR进入时长；按原始时间映射各条件，不累加窗长。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "影响多表示处理强，不是坏也不是好。"
+        },
+        "missingStatus": "not_computable: 无R日志时原生q_recon缺失，可另输出q_delta；不能把删去样点设为重建样点。",
+        "overCleaningAndLeakageRisk": "浮点误差使逐样点!=统计近100%；只数触发窗遗漏淡化影响。",
+        "selectionRole": "process_observation",
+        "selectionRule": "独立校准后可作为最大干预预算；不能最小化当质量。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_PROCESS",
+            "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+            "locator": "L152–184 running covariance, keep mask, R, raised-cosine blending",
+            "reliability": "official_code_pinned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "ASR新增",
+        "notes": "ASR后clean_windows删段独立计；keep count不等于被重建传感器数。"
+      },
+      {
+        "id": "asr_reconstructed_subspace",
+        "name": "ASR 重建维数比例和分布",
+        "family": "asr_specific",
+        "definitionOrigin": "engineering_extension",
+        "formula": "q_dim,w=Σ_i1[keep_iw=false]/C_ASR；输出每更新时间的整数维数、P50/P90/max及q_dim,w轨迹。",
+        "unit": "维数；比例",
+        "stage": "ASR运行中",
+        "prerequisites": "实际keep/maxdims/通道数；若先投影则分母为ASR实际空间维数，另报传感器C。",
+        "denominatorAndAggregation": "按更新时间或持续时间权重必须写清；重叠窗口不能当独立被试；按Session汇总。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "大只是干预强；增减可能均有代价。"
+        },
+        "missingStatus": "not_computable: 无keep日志；不由ICA后秩下降反推ASR删维。",
+        "overCleaningAndLeakageRisk": "时变ASR局部降维后拼整段可能仍满秩；全段秩掩盖局部损伤。",
+        "selectionRole": "process_observation",
+        "selectionRule": "与目标频段、局部秩、重建时长一起审计；最大干预预算需校准。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_PROCESS",
+            "directURL": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+            "locator": "L152–184 running covariance, keep mask, R, raised-cosine blending",
+            "reliability": "official_code_pinned",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "ASR新增",
+        "notes": "一个PC影响多个电极，不能报告为“坏道比例”。"
+      },
+      {
+        "id": "rejected_duration",
+        "name": "坏段/ASR后拒绝时长与条件分布",
+        "family": "retention",
+        "definitionOrigin": "local_contract_plus_asr_extension",
+        "formula": "q_bad=duration(∪ bad_intervals)/valid_input_duration；q_delete=duration(∪ actually_deleted_intervals)/valid_input_duration；r_duration=output_mapped_duration/valid_input_duration。",
+        "unit": "s；比例0–1",
+        "stage": "各原生阶段，ASR、clean_windows、Epoch拒绝分开",
+        "prerequisites": "原始时间映射、注释原因与实际删除操作；采集断点与技术丢失另列。",
+        "denominatorAndAggregation": "重叠原因按区间并集去重；条件重叠时按固定事件归属；多Session先比率再等权。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "保留多未必干净，删除多未必好；清理后duration=100%也可能全被重建。"
+        },
+        "missingStatus": "not_computable: 输出时间映射丢失；not_applicable: 没有坏段检测时标记率NA但时长保留可算。",
+        "overCleaningAndLeakageRisk": "删掉难Trial造成标签分布和谱改善；只报告留存数据会隐藏偏倚。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "可按预注册最低时长/每条件trial数设资源和分析可行性约束，同时报判坏未删与实际删除。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ASR_DOC",
+            "directURL": "https://eeglab.org/plugins/clean_rawdata/Documentation.html",
+            "locator": "How it is organized; parameter discussion; reproducibility section",
+            "reliability": "official_historical_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §4.3；index §3.2.4",
+        "notes": "ASR重建、标记和最终剔除必须至少三独立字段。"
+      },
+      {
+        "id": "erds_tfr",
+        "name": "Trial级 ERD/ERS 时频图",
+        "family": "mi_fidelity",
+        "definitionOrigin": "local_contract_and_original_method",
+        "formula": "对每Trial×通道×频率，B=mean_{t∈baseline}P(t)；ERDS(t)=100(P(t)−B)/B。先单Trial功率归一，再Trial平均；不得先平均波形再求功率。",
+        "unit": "%；ERD负、ERS正",
+        "stage": "Raw及每清理阶段的共同任务TFR视图",
+        "prerequisites": "真实Trial/条件/基线；TFR默认multitaper4:40Hz步1Hz,n_cycles=freqs,time_bandwidth4,average=False,decim1；基线不与MI重叠且排卷积边缘。",
+        "denominatorAndAggregation": "逐Trial基线分母独立；Trial→被试×Session×条件→Session等权→被试等权；像素N和有效Trial数留存。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "更负不等于更保真；ERDS幅度可因基线或伪迹改变。"
+        },
+        "missingStatus": "not_computable: B≤0/非有限/无真实基线；not_comparable: 事件/参考/时间不一致；边缘不足像素缺失。",
+        "overCleaningAndLeakageRisk": "优化ERD强度可鼓励抬高基线或删低反应Trial；ROI/频带看结果才挑构成双重使用数据。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "固定ROI/基线/任务窗后，可在独立验证集用预注册非劣效或保真区间联合判断；默认仅任务观测。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "BASELINE",
+            "directURL": "https://mne.tools/stable/generated/mne.baseline.rescale.html",
+            "locator": "Parameters mode='percent'",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ERDS_MNE",
+            "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+            "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+            "reliability": "official_example",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §5；visualization-methods §5.1",
+        "notes": "MNE percent再乘100；基线无可见节律时数学百分比可算，但生理“去同步”解释须保留限度。"
+      },
+      {
+        "id": "erds_band_roi_curve",
+        "name": "μ/β ROI 时间曲线和任务效应表",
+        "family": "mi_fidelity",
+        "definitionOrigin": "local_contract",
+        "formula": "P_BROI,j(t)=mean_{f∈B,c∈ROI}P_jcf(t)；E_j(t)=100(P_BROI,j(t)−mean_baseline P_BROI,j)/mean_baseline P_BROI,j；效应E_j,W=mean_{t∈W}E_j(t)。",
+        "unit": "%；时间s",
+        "stage": "共同任务TFR视图",
+        "prerequisites": "ROI、μ8–12/β13–30或范式频带、任务窗在看结果前固定；左/右手、足部ROI按布局；正基线。",
+        "denominatorAndAggregation": "先Trial线性功率频率/ROI平均，再基线化，再Trial/Session/被试平均；不能将每频点百分比均值冒充该定义。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "任务ERD/ERS强弱不单调；人际差异真实存在。"
+        },
+        "missingStatus": "not_computable: ROI缺失/通带不全/基线无效；零有效Trial不能填0；单被试不给组CI。",
+        "overCleaningAndLeakageRisk": "挑最负窗、最反应通道或最优频带泄漏；平滑把瞬态扩散至基线。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "预注册低伪迹/半仿真保真约束；组级效应大小不能作为排被试阈值。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "BASELINE",
+            "directURL": "https://mne.tools/stable/generated/mne.baseline.rescale.html",
+            "locator": "Parameters mode='percent'",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.2",
+        "notes": "250 ms居中滑动只用于显示；统计未平滑。表保留subject/session/condition/ROI/band/window/baseline/n_trials/reference/view/status。"
+      },
+      {
+        "id": "erds_lateralization",
+        "name": "对侧−同侧 ERDS 差",
+        "family": "mi_fidelity",
+        "definitionOrigin": "local_contract_with_engineering_sign_freeze",
+        "formula": "L_j,W=E_contralateral,j,W−E_ipsilateral,j,W；先按任务手别映射ROI；足部另报中央ROI，不强造左右差。",
+        "unit": "百分点（pp）",
+        "stage": "共同任务ROI结果",
+        "prerequisites": "左右手真实标签/通道位置；至少一组可信双侧ROI；两侧各自基线定义一致。",
+        "denominatorAndAggregation": "Trial配对双侧差→条件/Session→被试；不能把不同手别在同一固定物理电极差中直接平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "手MI常期望对侧ERD较负但不是每被试必须；L非越负越好。"
+        },
+        "missingStatus": "not_applicable: 足部/无左右手；not_computable: 单侧ROI缺失/标签方向未知。",
+        "overCleaningAndLeakageRisk": "固定套生理模板会过拟合典型模式并惩罚真实个体差异；标签参与ROI选择须放训练/预注册。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅保持经独立数据证实的受试者效应方向/幅度区间；默认不以符号排除。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.1固定差值；本提案锁定contra−ipsi符号",
+        "notes": "两百分数的差是百分点，不称相对%变化。"
+      },
+      {
+        "id": "erds_topography",
+        "name": "μ/β ERDS Topography",
+        "family": "mi_fidelity",
+        "definitionOrigin": "local_contract",
+        "formula": "每通道先Trial级B频带线性功率平均再基线化，E_c,W=mean_t∈W E_c(t)；按Trial/Session/被试聚合并绘真实电极值。",
+        "unit": "%",
+        "stage": "共同任务空间视图",
+        "prerequisites": "有效坐标、共同参考和通道；同任务窗/频带；基线正常。",
+        "denominatorAndAggregation": "每电极独立聚合；缺失不插值进统计；画图插值值不是新增测量。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "地图更局灶或更对称均非通用优劣方向。"
+        },
+        "missingStatus": "not_applicable: 无可靠位置则用通道表/布局点图；not_comparable: 空间视图失败。",
+        "overCleaningAndLeakageRisk": "插值产生虚假中心热点；按最强图选择时窗/色标会偏倚。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "同频带共同对称色限，均值之外提供被试CI/一致率支持；不把图作为单独选择分数。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ERDS_MNE",
+            "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+            "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+            "reliability": "official_example",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.2；quality-metric-contract §6",
+        "notes": "局部坐标不足不得制造标准电极；支持图逐通道N。"
+      },
+      {
+        "id": "mi_temporal_structure",
+        "name": "MI 时序结构、效应时延与β反弹",
+        "family": "mi_fidelity",
+        "definitionOrigin": "engineering_extension",
+        "formula": "固定窗W内E_W=mean_t E(t)；t_peak=argmin_W E_mu(t)或argmax_W E_beta(t)，Δt_peak=after−before；RMS_curve=√mean_t(E_after−E_before)²。",
+        "unit": "效应%；峰时s；Δt毫秒或s；曲线RMS百分点",
+        "stage": "共同任务TFR/ROI曲线",
+        "prerequisites": "真实MI起止及恢复期；预先固定W和峰/平台并列规则；足够TFR支持；原始/清理曲线均可解释。",
+        "denominatorAndAggregation": "逐被试/条件峰先计算再汇总，不能先取组平均峰；记录实际时间频率分辨率。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "越早/越大均非普适；清理去伪迹会合理移动峰；无单调性。"
+        },
+        "missingStatus": "not_applicable: 没采恢复期不能算β反弹；not_computable: 无明确峰则t_peak缺失，不取噪声最小点冒充反应。",
+        "overCleaningAndLeakageRisk": "1 s TFR窗不能宣称毫秒精度；零相位滤波/居中平滑可产生刺激前扩散；峰搜索区随结果调整泄漏。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "只对预注册低伪迹参考或半仿真控制时延/波形失真；不能要求MI反弹必存在。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "ERDS_MNE",
+            "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+            "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+            "reliability": "official_example",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展；既有时间曲线/GFP/解码的量化支持",
+        "notes": "β反弹常见运动相关现象，不能从实际运动文献断言每个MI任务都有。"
+      },
+      {
+        "id": "spatial_pattern_similarity",
+        "name": "传感器任务图形状相似度",
+        "family": "mi_fidelity",
+        "definitionOrigin": "engineering_extension",
+        "formula": "ρ_topo=corr_c(E_before,c,W,E_after,c,W)；另报RMSE_topo=√mean_c(E_after−E_before)²及ROI幅度。",
+        "unit": "相关；RMSE百分点",
+        "stage": "共同任务空间视图",
+        "prerequisites": "同真实通道/参考/频带/窗；两图跨通道方差>0；插值通道要标记且与实测区别。",
+        "denominatorAndAggregation": "逐被试条件先比较；不能把插值网格像素当独立电极/样本；CI按被试。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "更似原始可能保留伪迹；高相关可伴随整体幅度消失。"
+        },
+        "missingStatus": "not_computable: 任一图常数/有效电极不足；not_comparable: 共同空间条件不成立。",
+        "overCleaningAndLeakageRisk": "强缩放仍相关1；选择最高相似候选可偏向不清理。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅独立干净基准下配合幅度误差作保真约束；否则仅诊断。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "扩展",
+        "notes": "ERDS图符号有意义，不能无条件取绝对相关；ICA/CSP任意符号匹配另处理。"
+      },
+      {
+        "id": "baseline_integrity",
+        "name": "基线完整率及处理前后基线功率变化",
+        "family": "mi_fidelity",
+        "definitionOrigin": "engineering_extension",
+        "formula": "q_B=valid_baseline_trials/eligible_original_trials；ΔB_dB=10log10(B_after/B_before)；每Trial保留B、实际baseline时长、基线受伪迹/边缘影响状态。",
+        "unit": "比例；µV²或一致TFR线性功率标度；dB",
+        "stage": "任务TFR基线化之前",
+        "prerequisites": "真实基线且全窗口支持；B两端>0；同Trial相同基线范围；不从任务期间补选替代基线。",
+        "denominatorAndAggregation": "分母原始合法Trial清单，另列共同配对数；ΔB逐Trial再Session/被试；不得只报ERDS而丢B。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较大/较小基线变化都可能改变ERDS，不单调。"
+        },
+        "missingStatus": "not_computable: 无真实基线/非正功率；partial: 部分Trial不支持；不得B加epsilon。",
+        "overCleaningAndLeakageRisk": "抬基线可制造强ERD；基线污染未清而任务已清会产生假效应。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "ERDS计算必须B有限>0且真实存在；基线幅度容许变化阈值需独立校准，属于附加软约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BASELINE",
+            "directURL": "https://mne.tools/stable/generated/mne.baseline.rescale.html",
+            "locator": "Parameters mode='percent'",
+            "reliability": "official_api",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          },
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "支持基础方法或风险背景；本指标操作化/阈值非来源原文"
+          }
+        ],
+        "localContract": "quality-metric-contract §5；工程新增基线伴随字段",
+        "notes": "baseline不覆盖滤波卷积污染仅靠时间不重叠不够；需要支持区检查。"
+      },
+      {
+        "id": "subject_uncertainty",
+        "name": "被试级 bootstrap CI 半宽与像素有效N",
+        "family": "uncertainty",
+        "definitionOrigin": "local_contract",
+        "formula": "以被试s重采样5000次(seed42)，T_b=mean_s* E_s；CI=[Q2.5(T_b),Q97.5(T_b)]；halfwidth=(hi−lo)/2；N_pixel=Σ_s1[finite(E_s,pixel)]。",
+        "unit": "与原指标同单位；N人数",
+        "stage": "组级PSD/TFR/Topography/配对差值",
+        "prerequisites": "至少2名有效被试；跨条件/阶段配对重采样同一被试索引；各像素mask留存。",
+        "denominatorAndAggregation": "独立单位=被试，Session先被试内等权；比例非独立窗不能用窗数给二项CI；单二元被试状态用Wilson。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "更窄可能样本多，也可能方差被抹平；非质量目标。"
+        },
+        "missingStatus": "insufficient_subjects: N<2不算CI；不可替代Trial bootstrap/Session内变异；像素N变化逐格报。",
+        "overCleaningAndLeakageRisk": "把Trial当独立样本伪增精度；选CI窄的方法可能鼓励过平滑/排离群被试。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "用于判断证据精度；CI是否跨0不是数据质量合格线。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS_MNE",
+            "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+            "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+            "reliability": "official_example",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §6；visualization-methods §2",
+        "notes": "PSD bootstrap在线性域组均值再dB；配对谱差先被试内dB比再bootstrap。"
+      },
+      {
+        "id": "subject_direction_support",
+        "name": "被试效应方向一致率",
+        "family": "uncertainty",
+        "definitionOrigin": "local_contract_plus_engineering_zero_rule",
+        "formula": "d_s=sign(E_s)；p_same=Σ_s1[d_s=sign(mean_s E_s)]/N_valid；另存n_positive,n_negative,n_zero；组均值恰0时一致率缺失。",
+        "unit": "比例0–1；人数",
+        "stage": "组级TFR/Topography支持图",
+        "prerequisites": "N≥2；同被试效应定义；数值零的判定容差预先固定，不能按颜色压缩设置。",
+        "denominatorAndAggregation": "分母每像素有效被试数；0效应计在分母但不当正/负方向；不以Trial作分母。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "一致率高不保证神经信号正确，共同伪迹也一致；非单调。"
+        },
+        "missingStatus": "insufficient_subjects: N<2；not_computable: 组均值0方向未定义；缺失N独立保存。",
+        "overCleaningAndLeakageRisk": "筛掉无效应或反方向被试使一致率虚高；只看平均符号掩盖群体双峰。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "不作为自动排除/排行榜；显示N和正负零人数。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS_MNE",
+            "directURL": "https://mne.tools/stable/auto_examples/time_frequency/time_frequency_erds.html",
+            "locator": "Compute and visualize ERDS maps; multitaper and baseline application",
+            "reliability": "official_example",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "quality-metric-contract §6",
+        "notes": "合同未写零值细节，本提案补充的规则标工程定义；也可预注册生理方向率但须新ID。"
+      },
+      {
+        "id": "icc_a1",
+        "name": "跨Session ICC(A,1) 绝对一致性",
+        "family": "reliability",
+        "definitionOrigin": "local_contract_with_standard_formula_proposal",
+        "formula": "平衡完整n被试×k固定Session设计：ICC(A,1)=(MS_subject−MS_error)/(MS_subject+(k−1)MS_error+k(MS_session−MS_error)/n)。报告95%CI，保留负值。",
+        "unit": "无量纲，负值允许",
+        "stage": "被试×Session×条件×ROI×频带×窗任务效应",
+        "prerequisites": "k≥2且完整配对n≥3；双向混合、绝对一致、单次测量；不是ICC(3,1)一致性版本直接替代。",
+        "denominatorAndAggregation": "被试×Session均值组成矩阵；每组合独立估计，不合并ROI/频段为总ICC；完整配对数与丢失数并报。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高可表示稳定伪迹；群体间异质性增大也升ICC，不全局质量单调。"
+        },
+        "missingStatus": "insufficient_subjects: n<3；n3–9描述性标不稳定；常数/分母异常缺失；CI无法验证时CI缺失不得伪造。",
+        "overCleaningAndLeakageRisk": "调清理参数最大化ICC可固化伪迹和抹掉真Session变化；删除变化大的被试夸大ICC。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "默认仅可靠性；若预注册复测用途可基于CI和允许误差另设约束。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ICC",
+            "directURL": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4913118/",
+            "locator": "Model/type/definition selection, Table 3 intended locator",
+            "reliability": "peer_reviewed_indexed_excerpt_only",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.3",
+        "notes": "来源全文访问受阻；公式为标准ANOVA工程表达，CI方法必须由实现单独验证；不能给未经核验的精确CI公式。"
+      },
+      {
+        "id": "bland_altman_two_sessions",
+        "name": "两Session Bland–Altman bias/LoA",
+        "family": "reliability",
+        "definitionOrigin": "local_contract_and_original_method",
+        "formula": "d_s=E_s2−E_s1，m_s=(E_s1+E_s2)/2；bias=mean_s d_s；LoA=bias±1.96 sd_s(d_s)，sd用n−1。",
+        "unit": "任务效应差为百分点；或输入单位",
+        "stage": "两完整配对Session任务结果",
+        "prerequisites": "被试独立；差分近似正态且误差量级相对稳定；每条件/ROI/频带/窗单独；系统Session变化须解释。",
+        "denominatorAndAggregation": "分母完整配对被试n；均值差CI和LoA不是同一种区间；所有被试点保留。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "bias近0/LoA窄表示一致性高，不保证信号真实。"
+        },
+        "missingStatus": "not_computable: n<2/变异不可估；不满足分布假设时标limits并用预定替代，不能报虚精度。",
+        "overCleaningAndLeakageRisk": "共同伪迹可稳定；只报相关系数不能代替一致性；选择最相似Session对会偏倚。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "复测用途且有预注册可接受差值时方可作条件约束；不用于质量排名。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BLAND",
+            "directURL": "https://www-users.york.ac.uk/~mb55/meas/bland2007.pdf",
+            "locator": "Agreement between methods with multiple observations per individual; introductory LoA and repeated-observation models",
+            "reliability": "peer_reviewed_full_text_author_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.3",
+        "notes": "对两Session作为两重复测量作描述；百分比ERDS差单位pp。"
+      },
+      {
+        "id": "agreement_multiple_sessions",
+        "name": "多Session 重复测量 agreement 的适用性门禁",
+        "family": "reliability",
+        "definitionOrigin": "local_contract_with_explicit_method_gap",
+        "formula": "若确有两种测量方法A/B在每被试多次配对：d_st=μ+b_s+e_st，LoA=μ±1.96√(σ_b²+σ_e²)为一种差分混合模型工程表达。只有同一方法的>2个Session时，该公式不直接适用，需另定多测量者/Session模型。",
+        "unit": "与任务差值同单位",
+        "stage": "多Session任务效应；或多方法重复配对结果",
+        "prerequisites": "必须先声明agreement对象及方差结构；Bland2007是两方法多次观测，不是任意多Session万能解；实现验证后才计算。",
+        "denominatorAndAggregation": "按被试聚类估计；不能把所有Session对展开为独立样本；分母是被试与重复次数两级。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "一致性无质量单调性。"
+        },
+        "missingStatus": "not_computable: 无核实模型/只有多Session而无相应适配；按合同保留无法执行，不任意截两Session。",
+        "overCleaningAndLeakageRisk": "多对同被试伪重复；不同Session真实练习/疲劳变化可被错误当噪声。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "阻止不合法agreement算法执行，不以其缺失阻断其他MI指标。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BLAND",
+            "directURL": "https://www-users.york.ac.uk/~mb55/meas/bland2007.pdf",
+            "locator": "Agreement between methods with multiple observations per individual; introductory LoA and repeated-observation models",
+            "reliability": "peer_reviewed_full_text_author_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §5.3",
+        "notes": "超过两次Session的重复测量需要相应统计模型，不能直接套用两次测量公式。"
+      },
+      {
+        "id": "trial_retention",
+        "name": "原始Trial保留率、类别不平衡与共同配对覆盖",
+        "family": "retention",
+        "definitionOrigin": "local_contract",
+        "formula": "r_srk=N_unique_kept_srk/N_original_eligible_srk；drop=|∪ reason_trial_ids|；q_common=N_common_trial_ids/N_original_eligible；Δr_class=max_k r_k−min_k r_k。",
+        "unit": "计数；比例；差值百分点",
+        "stage": "原生清理/切Epoch各阶段及共同评价集",
+        "prerequisites": "原始Trial ID稳定、合法条件/边界；原有Trial、技术不可用、清理剔除三者分开。",
+        "denominatorAndAggregation": "每被试×Session×Run×条件；原因交集去重；Session先比率再等权；共同子集和全部成功样本并列。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "保留高未必干净，保留低会减统计效能；无全局质量单调。"
+        },
+        "missingStatus": "not_computable: 无可追溯Trial；N_original=0是该条件未观察，非0%保留；失败输出不当全剔除。",
+        "overCleaningAndLeakageRisk": "搜索器可删除难分类Trial抬分；共同集交集随新增候选改变会使候选分数不可比。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "分析最小类别数/每类Trial数是可行性约束；最大损耗/类别保留差预算需预注册。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §3.2.4；classification-csp-svm",
+        "notes": "建议搜索先冻结独立评测Trial宇宙，用覆盖与共同配对两张表；不能让候选自行挑测试样本。"
+      },
+      {
+        "id": "bad_channel_burden",
+        "name": "坏道/删除/插值率与空间覆盖",
+        "family": "retention",
+        "definitionOrigin": "local_contract",
+        "formula": "r_bad=n_unique_bad/C_acquired；r_interp=n_interpolated/C_acquired；r_delete=n_deleted/C_acquired；逐电极bad_rate_s=bad_sessions_s/observed_sessions_s；保留ROI原生/插值/缺失状态。",
+        "unit": "计数；比例",
+        "stage": "方法原生坏道判定/插值后",
+        "prerequisites": "真实采集通道集合与原因/最终动作；规则保留/规则加入单独状态；不把未采集算好道。",
+        "denominatorAndAggregation": "每电极单Session跨被试Wilson，多Session先被试内Session比例再被试等权bootstrap；人数/Session分母齐全。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "坏道率低可能检测不敏感，插值多可能遮盖低秩；非单调。"
+        },
+        "missingStatus": "not_applicable: 方法未检测坏道；not_acquired: 该通道未采；not_computable: 通道谱系丢失。",
+        "overCleaningAndLeakageRisk": "插值通道若当作真实恢复会夸大空间保真；删除坏道使剩余均值改善。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "可约束真实ROI覆盖、最少独立通道及插值预算；阈值依任务/布局，不套通用坏道率。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PREP",
+            "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+            "locator": "Detecting noisy or outlier channels; Line noise removal; Fig. 2, 7",
+            "reliability": "peer_reviewed_full_text",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "ICA",
+            "directURL": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+            "locator": "Notes: fit/apply PCA restoration; rank deficiency; n_iter_; find_bads_eog/ecg",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "visualization-methods §4.1；index §3.2.2",
+        "notes": "C_common只是存在通道交集，插值状态仍需显式保留；不能让插值恢复“独立实测通道”。"
+      },
+      {
+        "id": "execution_coverage",
+        "name": "执行成功率与指标覆盖",
+        "family": "provenance",
+        "definitionOrigin": "local_contract",
+        "formula": "success_rate=N_success/N_entered；coverage_m=N_valid_metric/N_expected_applicable；另列failed,partial,not_applicable,not_acquired,not_comparable。",
+        "unit": "人数/记录数；比例",
+        "stage": "全流程每候选与各指标阶段",
+        "prerequisites": "明确进入名单和适用规则；失败阶段/错误/版本可追溯；不只扫描成功文件。",
+        "denominatorAndAggregation": "始终以全部进入者为执行分母；指标有效分母依适用性，但同时报entered；诊断触发至少8被试、75%覆盖。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "成功和覆盖高是可交付性证据，非信号质量；不能鼓励伪填补。"
+        },
+        "missingStatus": "无结果时status=failed/pending等，而非数值0；N_expected=0为not_applicable。",
+        "overCleaningAndLeakageRisk": "漏报失败被试造成幸存者偏差；用默认0补缺失虚增覆盖。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "要求所声称输出与输入真实对应；部分失败保留且继续独立指标；不要以单项缺失自动删整个候选。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §1、3.1、3.2.1；quality-metric-contract §7",
+        "notes": "本地规则是来源，不宣称官方ML文档定义了此EEG成功率。"
+      },
+      {
+        "id": "event_integrity",
+        "name": "事件/Trial 时间结构完整性",
+        "family": "provenance",
+        "definitionOrigin": "local_contract_plus_engineering_checks",
+        "formula": "Δt_e=t_e−t_e−1；n_duplicate=重复原始事件键数；n_out_of_bounds=越界事件数；δ_e=|mapped_time_after(e)−original_time(e)|；counts按条件/Run/Session分层。",
+        "unit": "s；样点；计数",
+        "stage": "采集Raw、重采样后、删段后、Epoch后",
+        "prerequisites": "原始事件/Trial ID、真实采样时间与删除映射；同时事件允许存在，重复须按范式键核查而非只看时间相同。",
+        "denominatorAndAggregation": "分母原始事件数；缺失/新增/配对率各列；时间容差按fs和重采样约定，不用任意ms。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "越界/错误映射应为0；真实事件间隔大小无单调方向。"
+        },
+        "missingStatus": "not_acquired: 无事件；not_computable: 映射不可重建；间隔异常规则未预定则只分布观察。",
+        "overCleaningAndLeakageRisk": "根据MI曲线反推事件时刻会泄漏；删段重编号错误会使ERP/ERDS对齐伪改善。",
+        "selectionRole": "hard_feasibility",
+        "selectionRule": "唯一可追溯配对、合法边界与正确标签是任务指标门禁；范式合法同时事件不能当错误删。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "ERDS1999",
+            "directURL": "https://doc.ml.tu-berlin.de/bbci/teaching/PfuSil99.pdf",
+            "locator": "§3.1 pp.1844–1845; p.1845 footnote 1; §3.2; §4",
+            "reliability": "peer_reviewed_full_text_institutional_copy",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "index §2.3.2；quality-metric-contract §1.2",
+        "notes": "不通过event jitter指标要求原样样点编号不变，重采样后比较真实时间和映射。"
+      },
+      {
+        "id": "balanced_accuracy",
+        "name": "CSP+SVM Balanced Accuracy",
+        "family": "decoding",
+        "definitionOrigin": "local_contract_and_official_api",
+        "formula": "BA=(1/K)Σ_k TP_k/(TP_k+FN_k)，由测试折原始Trial级OOF预测计算；K为正式任务类别。",
+        "unit": "0–1；可显示%",
+        "stage": "共同分类8–30 Hz视图；被试内/跨Run/跨Session各自独立",
+        "prerequisites": "≥2共同通道、秩≥2、≥2类且每类≥2Trial；统一原始Trial划分；CSP/scale/SVM训练折拟合；模板参数固定。",
+        "denominatorAndAggregation": "Session内OOF预测得分→Session等权→被试等权；类别不在测试集合时缺失，不改变K使分数变好。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "较高表示该验证协议下可分性高，不证明神经来源或清理质量。"
+        },
+        "missingStatus": "not_computable: 类/秩/折数不足；failed: 拟合失败；全量预处理拟合使用测试信息时标transductive，不作为纯泛化结果。",
+        "overCleaningAndLeakageRisk": "眼动/肌电可携带类别；搜索方法用同一测试分数调参造成选择泄漏；CSP先全数据fit再CV非法。",
+        "selectionRole": "conditional_constraint",
+        "selectionRule": "仅在独立锁定评价协议下联合神经保真/伪迹/保留约束；既有报告默认不排名，搜索用途另显式声明。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BAL_ACC",
+            "directURL": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html",
+            "locator": "Definition; adjusted=False; Notes",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "classification-csp-svm；visualization-methods §6",
+        "notes": "默认CSP min(4,C),reg=None,linear SVC C=1,class_weight=balanced；本任务新实现不擅自复现完整解码流水线。"
+      },
+      {
+        "id": "classification_auxiliary",
+        "name": "Accuracy、Macro-F1、每类Recall、support与混淆矩阵",
+        "family": "decoding",
+        "definitionOrigin": "local_contract",
+        "formula": "Accuracy=Σ_k TP_k/N；Recall_k=TP_k/(TP_k+FN_k)；F1_k=2TP_k/(2TP_k+FP_k+FN_k)；MacroF1=mean_k F1_k；ConfNorm_ij=Conf_ij/Σ_jConf_ij。",
+        "unit": "0–1；support/Conf整数",
+        "stage": "同一OOF预测集合",
+        "prerequisites": "与BA相同；每类support固定报告，zero_division策略明确；零support类缺失而非自动忽略。",
+        "denominatorAndAggregation": "每subject/session先原始Trial预测混淆与归一，再被试等权；不能先跨被试合并计数赋大样本被试大权重。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "高只证明任务标签可预测；不具信号质量单调性。"
+        },
+        "missingStatus": "not_computable: 无OOF预测/类support0；不以0填完全未观察的类别。",
+        "overCleaningAndLeakageRisk": "Accuracy受类不平衡；仅保留易Trial虚增所有指标。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "和BA并列诊断，不能重复加权成综合质量分。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "BAL_ACC",
+            "directURL": "https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html",
+            "locator": "Definition; adjusted=False; Notes",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "classification-csp-svm结果指标",
+        "notes": "公式为标准混淆计数定义；派生字段逐个保存，组合条目不意味着混成一个值。"
+      },
+      {
+        "id": "permutation_significance",
+        "name": "分组受限置换经验机会分布",
+        "family": "decoding",
+        "definitionOrigin": "local_contract_and_official_api",
+        "formula": "p=(1+Σ_b1[BA_perm,b≥BA_obs])/(B+1)，B=1000；保存Q2.5/Q50/Q97.5，理论1/K仅参考。",
+        "unit": "p值；BA分布0–1",
+        "stage": "各被试×验证目标×来源",
+        "prerequisites": "同一预先冻结CV对象；在Session或Run交换区块内置换；每次重新拟合所有标签依赖步骤。",
+        "denominatorAndAggregation": "1000有效置换为分母；失败置换保留并报告，未满1000不假称完整；组级不简单平均p作为总体显著性。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "p低说明可预测标签，不保证脑源或预处理保真。"
+        },
+        "missingStatus": "not_computable: 无合法可交换标签/大量fit失败；不以理论机会线代经验分布。",
+        "overCleaningAndLeakageRisk": "搜索候选后的最优p需校正选择；过滤支持跨折会泄漏；固定标签依赖CSP不重拟合导致错误零分布。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "经验显著性不是质量约束；仅作解码完整性证据。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "PERM",
+            "directURL": "https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.permutation_test_score.html",
+            "locator": "groups; cv; n_permutations; pvalue",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "classification-csp-svm经验机会分布",
+        "notes": "冻结CV split与置换blocks分别存，避免StratifiedKFold随置换重新分折。"
+      },
+      {
+        "id": "time_resolved_decoding",
+        "name": "时间分辨解码与precue控制",
+        "family": "decoding",
+        "definitionOrigin": "local_contract_plus_engineering_control",
+        "formula": "BA(t)用0.5 s窗、0.1 s步长；各折只在固定任务分析窗的训练Trial拟合CSP/scale/SVM，再预测测试Trial各时间窗。precue BA/任务BA分别保留。",
+        "unit": "0–1；时间s",
+        "stage": "共同基线+任务分类视图；scored grid与precue资源分离",
+        "prerequisites": "有真实precue覆盖才计算基线解码；完整filter/TFR支持；同Trial跨时间窗不跨折。",
+        "denominatorAndAggregation": "原始Trial为预测单位；先被试Session得分再被试等权CI；时间点相关，不逐点p当独立证据。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "任务BA高可来自伪迹；precue高可能泄漏/线索/序列规律，需诊断并非自动失败。"
+        },
+        "missingStatus": "not_acquired: 当前grid无precue时从只读全记录source派生并记谱系；source无对应范围则not_computable。",
+        "overCleaningAndLeakageRisk": "全记录零相位滤波可能把cue后信息带入precue；把baseline切出却不排卷积边缘不等于无泄漏。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "作为泄漏/任务时间结构诊断；阈值必须按范式和验证协议校准。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "classification-csp-svm时间分辨解码；本轮用户precue要求",
+        "notes": "读取source生成baseline副本合法，但不能宣称当前0–2s scored grid本身含基线。"
+      },
+      {
+        "id": "csp_patterns",
+        "name": "CSP patterns 空间诊断",
+        "family": "decoding",
+        "definitionOrigin": "local_contract_and_official_api",
+        "formula": "保存实际训练折/解释拟合的patterns_；线性解码解释中pattern可写A=Σ_X Wᵀ(Σ_Z)^−1，但以库对象空间/白化约定为准，非直接plot filters。",
+        "unit": "相对空间权重；原生单位/缩放约定",
+        "stage": "CSP训练折或全共同数据仅解释对象",
+        "prerequisites": "真实通道/坐标；记录fit用途及Trial IDs；跨被试成分顺序/符号不一致需先匹配。",
+        "denominatorAndAggregation": "每被试/来源/折分别保留；解释全量fit对象不参与性能估计；无直接符号敏感群平均。",
+        "direction": {
+          "globallyMonotonic": false,
+          "interpretation": "图像接近运动皮层不证明神经真实，权重大小非质量分。"
+        },
+        "missingStatus": "not_computable: fit失败/空间映射缺失；无位置保留权重表；仅解释对象不输出CV性能。",
+        "overCleaningAndLeakageRisk": "滤波器误作激活图；根据测试pattern调预处理属于泄漏。",
+        "selectionRole": "proxy_observation",
+        "selectionRule": "空间解释支持，不能独立决定候选最优。",
+        "thresholdForSelection": null,
+        "evidence": [
+          {
+            "sourceId": "CSP",
+            "directURL": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+            "locator": "rank; component_order; patterns_; fit/transform",
+            "reliability": "official_api",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          },
+          {
+            "sourceId": "LEAKAGE",
+            "directURL": "https://scikit-learn.org/stable/common_pitfalls.html",
+            "locator": "§12.2 Data leakage and §12.2.1",
+            "reliability": "official_documentation",
+            "supportScope": "按来源与本地契约边界解释，见 definitionOrigin 与 notes"
+          }
+        ],
+        "localContract": "classification-csp-svm解释patterns",
+        "notes": "标准线性pattern公式为补充工程表达，MNE实际patterns必须直接导出。"
+      }
+    ]
+  },
+  "benchmarks": {
+    "scope": "EEGMMIDB binary motor imagery benchmark evidence and evaluation-protocol comparability",
+    "sources": [
+      {
+        "id": "physionet",
+        "title": "EEG Motor Movement/Imagery Dataset v1.0.0",
+        "url": "https://physionet.org/content/eegmmidb/1.0.0/",
+        "kind": "official_dataset",
+        "locator": "Methods; Data Description; Usage Notes; Files",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected"
+      },
+      {
+        "id": "moabb_paper",
+        "title": "The largest EEG-based BCI reproducibility study for open science: the MOABB benchmark",
+        "url": "https://arxiv.org/html/2404.15319v1",
+        "kind": "primary_paper",
+        "locator": "§2 evaluation/nested CV; §3.1; Table 1",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "c78db5841dc9c480dfed4da683f84ebdab5c9b403fd95b94fa8cd467394c12cb"
+      },
+      {
+        "id": "moabb_results",
+        "title": "MOABB official benchmark results",
+        "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+        "kind": "official_results",
+        "locator": "Intro metric definition; Left vs Right Hand table, PhysionetMI column",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "0400676db93e9f2cbeea7c85e0169fc119bc39e41bd1d05b339998ddfabf75b4"
+      },
+      {
+        "id": "moabb_dataset",
+        "title": "MOABB Physionet loader",
+        "url": "https://github.com/NeuroTechX/moabb/blob/f027538273bde520cb7b20eea187895c6fa4b0dd/moabb/datasets/physionet_mi.py",
+        "kind": "official_code",
+        "locator": "__init__: hand_runs, interval, subjects; _get_single_subject_data",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "563049094a0239c30466f7d9bb10776d3bbd7f6d2a9925b62fb6078c9fdf054d"
+      },
+      {
+        "id": "moabb_fgmdm",
+        "title": "MOABB FgMDM pipeline",
+        "url": "https://github.com/NeuroTechX/moabb/blob/f027538273bde520cb7b20eea187895c6fa4b0dd/pipelines/FgMDM.yml",
+        "kind": "official_code",
+        "locator": "Covariances(estimator=oas); FgMDM(metric=riemann)",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "612831e9889c044d331423811e7b2a5d3a03eb8456c8220bcdc138c0b80ab1d5"
+      },
+      {
+        "id": "moabb_tssvm",
+        "title": "MOABB tangent-space SVM",
+        "url": "https://github.com/NeuroTechX/moabb/blob/f027538273bde520cb7b20eea187895c6fa4b0dd/pipelines/TSSVM_grid.yml",
+        "kind": "official_code",
+        "locator": "pipeline and param_grid",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "6fb2d99cae364e6364b959c0f4ea36f7105a9c87ba9d07ea98121552fb4af7fb"
+      },
+      {
+        "id": "moabb_fbcsp",
+        "title": "MOABB FBCSP pipeline",
+        "url": "https://github.com/NeuroTechX/moabb/blob/f027538273bde520cb7b20eea187895c6fa4b0dd/pipelines/FBCSP.py",
+        "kind": "official_code",
+        "locator": "lines 12–16: feature selection / nested classifier grid",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "26fbc99775ec7f1ab1a181a269de67699a185547a9d0a095a4f566c50297bf45"
+      },
+      {
+        "id": "wang",
+        "title": "An Accurate EEGNet-based Motor-Imagery Brain–Computer Interface for Low-Power Edge Computing",
+        "url": "https://arxiv.org/html/2004.00077v3",
+        "kind": "primary_paper",
+        "locator": "§III–III.A, §IV.A; Tables I–III",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "b806affe74cec174fbe078de9d07ce411bd8404bba1824e6f2a74a17192d17d3"
+      },
+      {
+        "id": "wang_loader",
+        "title": "Wang official data loader",
+        "url": "https://github.com/MHersche/eegnet-based-embedded-bci/blob/e8cfe0d3e1057cbd850186143f0b2ad90d5881ea/get_data.py",
+        "kind": "official_code",
+        "locator": "lines 63–81 exclusions/runs; 151–158 samples; 215–230 first seven/class",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "25e28f686159d3d16add862385c50a401eb41da4ee22a00cce74f2f7a4ff782e"
+      },
+      {
+        "id": "wang_train",
+        "title": "Wang official global training",
+        "url": "https://github.com/MHersche/eegnet-based-embedded-bci/blob/e8cfe0d3e1057cbd850186143f0b2ad90d5881ea/main_global.py",
+        "kind": "official_code",
+        "locator": "save_results lines 68–79; KFold/model.fit lines 129–150",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "e8ac1cadb6cad8348e5ad4284ea3801c493dde2457baaefb1b46e4bdac2d478e"
+      },
+      {
+        "id": "dose",
+        "title": "An End-to-end Deep Learning Approach to MI-EEG Signal Classification for BCIs",
+        "url": "https://backend.orbit.dtu.dk/ws/portalfiles/portal/152316980/1_s2.0_S0957417418305359_main.pdf",
+        "kind": "author_repository_paper",
+        "locator": "§4.3–4.4 PDF pp11–12; §5.1 PDF p12; Table 1 PDF p9; Table 5",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "8e9303f28e5ae7c30972a649820544b43017d78c0f1934de0a1d29a8cf1f1754"
+      },
+      {
+        "id": "kim",
+        "title": "Motor Imagery Classification Using Mu and Beta Rhythms of EEG with Strong Uncorrelating Transform Based Complex Common Spatial Patterns",
+        "url": "https://onlinelibrary.wiley.com/doi/10.1155/2016/1489692",
+        "kind": "primary_paper",
+        "locator": "§2.1; §3.1; Tables 1,2",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected"
+      },
+      {
+        "id": "kang",
+        "title": "Effects of Frontal Theta Rhythms in a Prior Resting State on the Subsequent Motor Imagery Brain-Computer Interface Performance",
+        "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2021.663101/full",
+        "kind": "primary_paper",
+        "locator": "Database; BCI Performance; Results / Decoding Performance",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "09353ab97a0430f4783a27190daafea43068a0a1181cedb766e4302d101cb412"
+      },
+      {
+        "id": "crossdataset",
+        "title": "Cross-Dataset Variability Problem in EEG Decoding With Deep Learning",
+        "url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2020.00103/full",
+        "kind": "primary_paper",
+        "locator": "§2.1, §2.5–2.6; Table 5; §3.2",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "4cfbd76fe0ca321da144995eb949498ec68882b4dcf75c3aba7883098f803cea"
+      },
+      {
+        "id": "ea",
+        "title": "Transfer Learning for Brain-Computer Interfaces: A Euclidean Space Data Alignment Approach",
+        "url": "https://arxiv.org/html/1808.05464",
+        "kind": "primary_methods_paper",
+        "locator": "§I offline unsupervised scenario; §IV datasets; §V",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "e0cadae8a04856e83af2925542c5f2afbddfe80812776736551c9435afb45c97"
+      },
+      {
+        "id": "ea_code",
+        "title": "Official EA implementation",
+        "url": "https://github.com/hehe03/EA",
+        "kind": "official_code",
+        "locator": "README official implementation and dataset instructions",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected"
+      },
+      {
+        "id": "ea_revisit",
+        "title": "Revisiting Euclidean Alignment for Transfer Learning in EEG-Based Brain-Computer Interfaces",
+        "url": "https://arxiv.org/html/2502.09203v1",
+        "kind": "primary_methods_paper",
+        "locator": "§2.1 Eq1–2; §2.2 EA placement",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "edecc9e9a8b0f95794b5ac15015f787b9d3d06c8badbdb2ee53e4d253aeb061a"
+      },
+      {
+        "id": "processing",
+        "title": "The Effect of Processing Techniques on the Classification Accuracy of Brain-Computer Interface Systems",
+        "url": "https://real.mtak.hu/217210/1/Adolf_et_al_2024_Brain_Sciences.pdf",
+        "kind": "author_repository_paper",
+        "locator": "§2.1 PDF p4; references 34–35",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "367cb5475e5d5c9315cfe772c2f3783d06f84ed0b7da511c1d26a13f31d9e9f9"
+      },
+      {
+        "id": "fusion",
+        "title": "Fusion Convolutional Neural Network for Cross-Subject EEG Motor Imagery Classification",
+        "url": "https://mdpi-res.com/d_attachment/computers/computers-09-00072/article_deploy/computers-09-00072.pdf",
+        "kind": "primary_paper",
+        "locator": "§2.1–2.2 pp3–4; §2.5 p5; Table 2 p7",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "f3cb726b6277c75ada375ba40c70aba3179a9365a88b557411dbc913ffef9c40"
+      },
+      {
+        "id": "fusion_code",
+        "title": "EEGNet Fusion official split code",
+        "url": "https://github.com/rootskar/EEGMotorImagery/blob/62bba0afc16cf102c77c1bda3a87bfc6fd3fb121/training_testing.py",
+        "kind": "official_code",
+        "locator": "train_test_split lines 113–122",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "7ed0b69ffa1041cf051e5885371a00d678cfdf67097bc343bac936f2fc072105"
+      },
+      {
+        "id": "honey",
+        "title": "Towards decoding motor imagery from EEG signal using optimized back propagation neural network with honey badger algorithm",
+        "url": "https://www.nature.com/articles/s41598-025-05423-0",
+        "kind": "primary_paper",
+        "locator": "Dataset; feature preprocessing; Parameters; Results Table 5",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected",
+        "sha256": "8b30bbb5faf84d52756a0754e74bbddfeb047b2ca39bf6165cf4cd53264ab674"
+      },
+      {
+        "id": "tcpl",
+        "title": "TCPL: task-conditioned prompt learning for few-shot cross-subject motor imagery EEG decoding",
+        "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2025.1689286/full",
+        "kind": "primary_paper",
+        "locator": "§2.6; §3.2–3.5; Tables 1,2,4; code release statement",
+        "accessed": "2026-09-10",
+        "verification": "full_text_or_code_inspected"
+      },
+      {
+        "id": "aefbcsp_lead",
+        "title": "AutoEncoder Filter Bank Common Spatial Patterns to Decode Motor Imagery From EEG",
+        "url": "https://ieeexplore.ieee.org/document/10041819/",
+        "kind": "unresolved_primary_lead",
+        "locator": "DOI 10.1109/JBHI.2023.3243698; full text inaccessible",
+        "accessed": "2026-09-10",
+        "verification": "abstract_only_not_numeric_evidence"
+      }
+    ],
+    "protocols": [
+      {
+        "id": "current",
+        "cohort": 109,
+        "excluded": [],
+        "runs": [
+          4,
+          8,
+          12
+        ],
+        "window": [
+          0,
+          2
+        ],
+        "channels": 64,
+        "sfreq_hz": 160,
+        "split": "5-fold subject-disjoint",
+        "metric": "balanced_accuracy",
+        "target_labels": "none",
+        "target_unlabeled": "whole-batch EA; exact per-subject vs pooled held-out scope must be serialized",
+        "aggregation": "not supplied; recommend subject-macro plus pooled and fold-macro",
+        "provenance": "user message 2026-09-10; not rerun"
+      },
+      {
+        "id": "moabb",
+        "cohort_declared": 109,
+        "actual_successful_subjects": "raw per-pipeline rows not recovered",
+        "excluded": "not stated",
+        "runs": [
+          4,
+          8,
+          12
+        ],
+        "window": [
+          0,
+          3
+        ],
+        "channels": 64,
+        "sfreq_hz": 160,
+        "filter_hz": [
+          8,
+          32
+        ],
+        "split": "within-subject/session stratified 5-fold; nested hyperparameter search",
+        "metric": "roc_auc",
+        "target_labels": "same-subject training trials",
+        "target_unlabeled": "no EA declared",
+        "aggregation": "mean and SD across subject/session fold-averaged scores",
+        "evidence": [
+          {
+            "source_id": "moabb_paper",
+            "url": "https://arxiv.org/html/2404.15319v1",
+            "locator": "§2, §3.1, Table 1",
+            "values": {
+              "subjects": 109,
+              "channels": 64,
+              "window_s": 3,
+              "sfreq_hz": 160,
+              "filter_hz": [
+                8,
+                32
+              ],
+              "folds": 5
+            }
+          },
+          {
+            "source_id": "moabb_dataset",
+            "url": "https://github.com/NeuroTechX/moabb/blob/f027538273bde520cb7b20eea187895c6fa4b0dd/moabb/datasets/physionet_mi.py",
+            "locator": "__init__ hand_runs",
+            "values": {
+              "runs": [
+                4,
+                8,
+                12
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "wang",
+        "cohort": 105,
+        "excluded": [
+          88,
+          92,
+          100,
+          104
+        ],
+        "runs": [
+          4,
+          8,
+          12
+        ],
+        "windows": [
+          [
+            0,
+            3
+          ],
+          [
+            0,
+            2
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "channels": 64,
+        "sfreq_hz": 160,
+        "trials_per_subject": 42,
+        "split": "5 contiguous subject blocks, unshuffled KFold over balanced subject-major trials",
+        "metric": "accuracy",
+        "target_labels": "none in global weight fitting; hyperparameter tuning overlaps later outer test subjects",
+        "target_unlabeled": "no batch EA",
+        "aggregation": "global fold mean; SS-TL is separate target-subject CV",
+        "complexity": "Table I 3204 weights for FOUR-class configuration; do not assign this exact count to binary model",
+        "evidence": [
+          {
+            "source_id": "wang",
+            "url": "https://arxiv.org/html/2004.00077v3",
+            "locator": "§III–IV.A, Table I–III",
+            "values": {
+              "cohort": 105,
+              "folds": 5,
+              "channels": 64,
+              "sfreq_hz": 160,
+              "windows_s": [
+                3,
+                2,
+                1
+              ],
+              "four_class_parameters": 3204
+            }
+          },
+          {
+            "source_id": "wang_loader",
+            "url": "https://github.com/MHersche/eegnet-based-embedded-bci/blob/e8cfe0d3e1057cbd850186143f0b2ad90d5881ea/get_data.py",
+            "locator": "lines 63–81, 151–158, 215–230",
+            "values": {
+              "excluded": [
+                88,
+                92,
+                100,
+                104
+              ],
+              "runs": [
+                4,
+                8,
+                12
+              ],
+              "first_trials_per_class_per_run": 7
+            }
+          }
+        ]
+      },
+      {
+        "id": "wang_ss",
+        "inherits": "wang",
+        "split": "4-fold target-subject CV after global pretraining",
+        "target_labels": "3/4 of target trials; supervised transfer",
+        "evidence": [
+          {
+            "source_id": "wang",
+            "url": "https://arxiv.org/html/2004.00077v3",
+            "locator": "§III.A",
+            "values": {
+              "target_folds": 4
+            }
+          }
+        ]
+      },
+      {
+        "id": "dose",
+        "cohort": 105,
+        "excluded": "IDs not named in inspected data section; do not substitute Wang IDs",
+        "runs": "3 L/R imagery runs by task description",
+        "windows": [
+          [
+            0,
+            3
+          ],
+          [
+            -1,
+            5
+          ]
+        ],
+        "channels": 64,
+        "sfreq_hz": 160,
+        "trials_per_subject": 42,
+        "split": "5 subject-disjoint folds, mean maximum accuracy reported",
+        "metric": "accuracy",
+        "target_labels": "reported fold maximum requires test/validation labels; separate independent inner selection not demonstrated",
+        "target_unlabeled": "none specified",
+        "complexity": "Table 1 total 305522 parameters, table configuration; parameter count changes with input length",
+        "evidence": [
+          {
+            "source_id": "dose",
+            "url": "https://backend.orbit.dtu.dk/ws/portalfiles/portal/152316980/1_s2.0_S0957417418305359_main.pdf",
+            "locator": "§4.3–4.4; §5.1; Table 1",
+            "values": {
+              "cohort": 105,
+              "folds": 5,
+              "trials_per_subject": 42,
+              "windows_s": [
+                3,
+                6
+              ],
+              "table_parameters": 305522
+            }
+          }
+        ]
+      },
+      {
+        "id": "dose_ss",
+        "inherits": "dose",
+        "target_labels": "supervised target-subject transfer",
+        "split": "subject-specific adaptation; not zero-label cross-subject"
+      },
+      {
+        "id": "kim",
+        "cohort_initial": 109,
+        "cohort_quality_retained": 105,
+        "cohort_main_scored": 24,
+        "excluded_quality": [
+          88,
+          92,
+          100,
+          104
+        ],
+        "excluded_performance": true,
+        "runs": "L/R imagery; explicit R numbers not located",
+        "window": [
+          0,
+          4
+        ],
+        "channels": 14,
+        "sfreq_hz": 160,
+        "split": "within-subject 5-fold repeated 30 times",
+        "metric": "accuracy",
+        "target_labels": "same-subject training and score-based subject selection",
+        "target_unlabeled": "no EA",
+        "complexity": "MEMD + complex CSP + RF; no measured runtime recovered",
+        "evidence": [
+          {
+            "source_id": "kim",
+            "url": "https://onlinelibrary.wiley.com/doi/10.1155/2016/1489692",
+            "locator": "§2.1; §3.1; Tables 1–2",
+            "values": {
+              "initial": 109,
+              "quality_retained": 105,
+              "scored": 24,
+              "excluded": [
+                88,
+                92,
+                100,
+                104
+              ],
+              "samples": 640,
+              "hz": 160,
+              "channels": 14,
+              "folds": 5,
+              "repeats": 30,
+              "selection_threshold_approx_percent": 64
+            }
+          }
+        ]
+      },
+      {
+        "id": "kang",
+        "cohort": 104,
+        "excluded": "five unspecified IDs",
+        "runs": "both L/R and hands/feet imagery included; results not unambiguously separated",
+        "window": [
+          0,
+          4
+        ],
+        "baseline": [
+          -2,
+          0
+        ],
+        "channels": 56,
+        "sfreq_hz": 160,
+        "split": "within-subject 5x5 randomized trial CV",
+        "metric": "accuracy",
+        "target_labels": "same-subject training; subsequent max across four classifiers used to define performance groups",
+        "target_unlabeled": "no EA",
+        "complexity": "FBCSP with QDA; time/parameter count not reported",
+        "evidence": [
+          {
+            "source_id": "kang",
+            "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2021.663101/full",
+            "locator": "Database; BCI Performance; Results",
+            "values": {
+              "cohort": 104,
+              "channels": 56,
+              "hz": 160,
+              "window_s": 4,
+              "baseline_s": 2,
+              "folds": 5,
+              "repeats": 5
+            }
+          }
+        ]
+      },
+      {
+        "id": "crossdataset",
+        "cohort_declared": 109,
+        "excluded": "not specified",
+        "runs": "L/R imagery through dataset wrapper; explicit IDs not printed",
+        "window_seconds": 3,
+        "window_start": "not fully resolved",
+        "channels": [
+          "C3",
+          "Cz",
+          "C4"
+        ],
+        "sfreq_hz": 100,
+        "bands": [
+          [
+            4,
+            9
+          ],
+          [
+            8,
+            15
+          ],
+          [
+            15,
+            30
+          ]
+        ],
+        "split": "within-subject 80/10/10 trial train/validation/test, repeated 10 times",
+        "metric": "accuracy",
+        "target_labels": "same-subject training labels",
+        "target_unlabeled": "online prealignment conditional protocol; not EA bulk",
+        "complexity": "3-channel FBCSP-LDA; very low spatial dimension",
+        "evidence": [
+          {
+            "source_id": "crossdataset",
+            "url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2020.00103/full",
+            "locator": "§2.1, §2.6, Table 1 and Table 5",
+            "values": {
+              "cohort": 109,
+              "channels": 3,
+              "hz": 100,
+              "window_s": 3,
+              "repeats": 10,
+              "bands": [
+                [
+                  4,
+                  9
+                ],
+                [
+                  8,
+                  15
+                ],
+                [
+                  15,
+                  30
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "id": "fusion",
+        "cohort": 103,
+        "excluded": [
+          38,
+          88,
+          89,
+          92,
+          100,
+          104
+        ],
+        "runs": [
+          4,
+          8,
+          12
+        ],
+        "original_window": [
+          0,
+          4
+        ],
+        "segment_seconds": 0.5,
+        "segments_per_trial": 8,
+        "channels": 64,
+        "sfreq_hz": 160,
+        "split": "70/10/20 random segments after cutting; no subject/trial isolation",
+        "metric": "segment_accuracy",
+        "target_labels": "same subjects and sibling trial segments in train",
+        "target_unlabeled": "no EA",
+        "complexity": "3-branch EEGNet fusion; Table 2 107ms/sample on reported experimental setup; not portable inference estimate",
+        "evidence": [
+          {
+            "source_id": "fusion",
+            "url": "https://mdpi-res.com/d_attachment/computers/computers-09-00072/article_deploy/computers-09-00072.pdf",
+            "locator": "§2.1–2.2, §2.5, Table 2",
+            "values": {
+              "cohort": 103,
+              "excluded": [
+                38,
+                88,
+                89,
+                92,
+                100,
+                104
+              ],
+              "epoch_s": 4,
+              "segments": 8,
+              "samples_per_segment": 80,
+              "hz": 160,
+              "split_percent": [
+                70,
+                10,
+                20
+              ],
+              "time_ms": 107
+            }
+          },
+          {
+            "source_id": "fusion_code",
+            "url": "https://github.com/rootskar/EEGMotorImagery/blob/62bba0afc16cf102c77c1bda3a87bfc6fd3fb121/training_testing.py",
+            "locator": "train_test_split lines 113–122",
+            "values": {}
+          }
+        ]
+      },
+      {
+        "id": "honey",
+        "cohort": 5,
+        "subjects": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "runs": "not specified",
+        "classes": "L/R mapping not sufficiently explicit",
+        "window_samples": 128,
+        "window_seconds": "inconsistent 0.5s at 256Hz vs dataset 160Hz",
+        "channels": "dataset 64; exact retained set unresolved",
+        "split": "pooled first-five-subject random division; 10-fold result",
+        "metric": "accuracy",
+        "target_labels": "same-subject pool used for training",
+        "target_unlabeled": "not adequately specified",
+        "complexity": "hidden layers 20 and 10; HBA population20, 200iterations; HHT adds substantial extraction cost",
+        "evidence": [
+          {
+            "source_id": "honey",
+            "url": "https://www.nature.com/articles/s41598-025-05423-0",
+            "locator": "Dataset; Parameters; preprocessing; Results/Table 5",
+            "values": {
+              "subjects": [
+                1,
+                2,
+                3,
+                4,
+                5
+              ],
+              "samples": 128,
+              "claimed_hz": 256,
+              "dataset_hz": 160,
+              "folds": 10,
+              "hidden": [
+                20,
+                10
+              ],
+              "population": 20,
+              "iterations": 200
+            }
+          }
+        ]
+      },
+      {
+        "id": "tcpl",
+        "cohort_declared": 109,
+        "actual_retained": "not reported after noisy-trial/channel rejection",
+        "excluded": "ID list absent",
+        "runs": "L/R imagery stated, explicit R04/08/12 list absent",
+        "window": [
+          0,
+          4
+        ],
+        "baseline": [
+          -1,
+          0
+        ],
+        "channels_nominal": 64,
+        "sfreq_hz": 128,
+        "split": "10-fold grouped-subject meta-learning plus labeled target support/query",
+        "metric": "accuracy",
+        "target_labels": "10 per class for selected Table 2 result",
+        "target_unlabeled": "subjectwise zscore of data before evaluation; exact support/query normalization scope unclear",
+        "complexity": "TCN+Transformer; parameter/latency totals not verified; code promised but no official released package located",
+        "evidence": [
+          {
+            "source_id": "tcpl",
+            "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2025.1689286/full",
+            "locator": "§3.2–3.5; Table 2",
+            "values": {
+              "subjects": 109,
+              "channels": 64,
+              "epoch_s": 4,
+              "baseline_s": 1,
+              "resampled_hz": 128,
+              "folds": 10,
+              "labels_per_class": 10
+            }
+          }
+        ]
+      }
+    ],
+    "results": [
+      {
+        "id": "moabb_csp",
+        "model": "CSP+LDA",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 65.75,
+        "sd": 17.37,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / CSP+LDA / PhysionetMI",
+          "values": {
+            "value": 65.75,
+            "sd": 17.37
+          }
+        }
+      },
+      {
+        "id": "moabb_fbcsp",
+        "model": "FilterBank+SVM",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 58.45,
+        "sd": 13.93,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / FilterBank+SVM / PhysionetMI",
+          "values": {
+            "value": 58.45,
+            "sd": 13.93
+          }
+        }
+      },
+      {
+        "id": "moabb_fgmdm",
+        "model": "FgMDM",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 68.46,
+        "sd": 19.06,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / FgMDM / PhysionetMI",
+          "values": {
+            "value": 68.46,
+            "sd": 19.06
+          }
+        }
+      },
+      {
+        "id": "moabb_ts",
+        "model": "TS+SVM",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 68.18,
+        "sd": 19.92,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / TS+SVM / PhysionetMI",
+          "values": {
+            "value": 68.18,
+            "sd": 19.92
+          }
+        }
+      },
+      {
+        "id": "moabb_lr",
+        "model": "TS+LR",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 67.28,
+        "sd": 19.19,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / TS+LR / PhysionetMI",
+          "values": {
+            "value": 67.28,
+            "sd": 19.19
+          }
+        }
+      },
+      {
+        "id": "moabb_mdm",
+        "model": "MDM",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 54.76,
+        "sd": 16.79,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / MDM / PhysionetMI",
+          "values": {
+            "value": 54.76,
+            "sd": 16.79
+          }
+        }
+      },
+      {
+        "id": "moabb_eegnet",
+        "model": "EEGNet_8_2",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 59.55,
+        "sd": 15.95,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / EEGNet_8_2 / PhysionetMI",
+          "values": {
+            "value": 59.55,
+            "sd": 15.95
+          }
+        }
+      },
+      {
+        "id": "moabb_shallow",
+        "model": "ShallowConvNet",
+        "protocol_id": "moabb",
+        "metric": "roc_auc",
+        "value": 65.19,
+        "sd": 15.8,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "moabb_results",
+          "url": "https://moabb.neurotechx.com/docs/paper_results.html#motor-imagery-left-vs-right-hand",
+          "locator": "Left vs Right Hand table / ShallowConvNet / PhysionetMI",
+          "values": {
+            "value": 65.19,
+            "sd": 15.8
+          }
+        }
+      },
+      {
+        "id": "wang3",
+        "model": "EEGNet 3s",
+        "protocol_id": "wang",
+        "metric": "accuracy",
+        "value": 82.43,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "wang",
+          "url": "https://arxiv.org/html/2004.00077v3",
+          "locator": "Table II 2-class global",
+          "values": {
+            "value": 82.43,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "wang2",
+        "model": "EEGNet 2s",
+        "protocol_id": "wang",
+        "metric": "accuracy",
+        "value": 81.11,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "wang",
+          "url": "https://arxiv.org/html/2004.00077v3",
+          "locator": "Table III 2-class T=2s",
+          "values": {
+            "value": 81.11,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "wang1",
+        "model": "EEGNet 1s",
+        "protocol_id": "wang",
+        "metric": "accuracy",
+        "value": 79.86,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "wang",
+          "url": "https://arxiv.org/html/2004.00077v3",
+          "locator": "Table III 2-class T=1s",
+          "values": {
+            "value": 79.86,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "wangss",
+        "model": "EEGNet SS-TL",
+        "protocol_id": "wang_ss",
+        "metric": "accuracy",
+        "value": 84.32,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "wang",
+          "url": "https://arxiv.org/html/2004.00077v3",
+          "locator": "Table II 2-class SS-TL",
+          "values": {
+            "value": 84.32,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "dose3",
+        "model": "CNN 3s",
+        "protocol_id": "dose",
+        "metric": "accuracy",
+        "value": 80.38,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "dose",
+          "url": "https://backend.orbit.dtu.dk/ws/portalfiles/portal/152316980/1_s2.0_S0957417418305359_main.pdf",
+          "locator": "§5.1 first3s",
+          "values": {
+            "value": 80.38,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "dose6",
+        "model": "CNN 6s",
+        "protocol_id": "dose",
+        "metric": "accuracy",
+        "value": 87.98,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "dose",
+          "url": "https://backend.orbit.dtu.dk/ws/portalfiles/portal/152316980/1_s2.0_S0957417418305359_main.pdf",
+          "locator": "§5.1 full6s",
+          "values": {
+            "value": 87.98,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "dosess",
+        "model": "CNN SS-TL",
+        "protocol_id": "dose_ss",
+        "metric": "accuracy",
+        "value": 86.49,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "dose",
+          "url": "https://backend.orbit.dtu.dk/ws/portalfiles/portal/152316980/1_s2.0_S0957417418305359_main.pdf",
+          "locator": "Table5 this work 64ch subject",
+          "values": {
+            "value": 86.49,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "kim_high",
+        "model": "MEMD SUTCCSP RF selected pool",
+        "protocol_id": "kim",
+        "metric": "accuracy",
+        "value": 80.05,
+        "sd": 2.1,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "kim",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1155/2016/1489692",
+          "locator": "§3.1; Table1 RF",
+          "values": {
+            "value": 80.05,
+            "sd": 2.1
+          }
+        }
+      },
+      {
+        "id": "kim_low",
+        "model": "MEMD SUTCCSP RF excluded low performers",
+        "protocol_id": "kim",
+        "metric": "accuracy",
+        "value": 51.25,
+        "sd": 0.71,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "kim",
+          "url": "https://onlinelibrary.wiley.com/doi/10.1155/2016/1489692",
+          "locator": "Table2 RF",
+          "values": {
+            "value": 51.25,
+            "sd": 0.71
+          }
+        }
+      },
+      {
+        "id": "kang",
+        "model": "FBCSP QDA",
+        "protocol_id": "kang",
+        "metric": "accuracy",
+        "value": 58.8,
+        "sd": 5.8,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "kang",
+          "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2021.663101/full",
+          "locator": "Results Decoding Performance / Figure1 discussion",
+          "values": {
+            "value": 58.8,
+            "sd": 5.8
+          }
+        }
+      },
+      {
+        "id": "cross_fb",
+        "model": "FBCSP LDA no PS",
+        "protocol_id": "crossdataset",
+        "metric": "accuracy",
+        "value": 59,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "crossdataset",
+          "url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2020.00103/full",
+          "locator": "Table5 PhysionetMI FBCSP w/o PS",
+          "values": {
+            "value": 59,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "cross_fb_ps",
+        "model": "FBCSP LDA with PS",
+        "protocol_id": "crossdataset",
+        "metric": "accuracy",
+        "value": 61,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "crossdataset",
+          "url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2020.00103/full",
+          "locator": "Table5 PhysionetMI FBCSP w/ PS",
+          "values": {
+            "value": 61,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "fusion",
+        "model": "EEGNet Fusion",
+        "protocol_id": "fusion",
+        "metric": "segment_accuracy",
+        "value": 83.8,
+        "sd": null,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "fusion",
+          "url": "https://mdpi-res.com/d_attachment/computers/computers-09-00072/article_deploy/computers-09-00072.pdf",
+          "locator": "Table2 MI",
+          "values": {
+            "value": 83.8,
+            "sd": null
+          }
+        }
+      },
+      {
+        "id": "honey",
+        "model": "HHT PCMICSP BPNN-HBA",
+        "protocol_id": "honey",
+        "metric": "accuracy",
+        "value": 94.3,
+        "sd": 0.3,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "honey",
+          "url": "https://www.nature.com/articles/s41598-025-05423-0",
+          "locator": "Results/Table5",
+          "values": {
+            "value": 94.3,
+            "sd": 0.3
+          }
+        }
+      },
+      {
+        "id": "tcpl10",
+        "model": "TCPL 10-shot",
+        "protocol_id": "tcpl",
+        "metric": "accuracy",
+        "value": 80.6,
+        "sd": 1.7,
+        "unit": "percent",
+        "eligible_for_current_main_comparison": false,
+        "evidence": {
+          "source_id": "tcpl",
+          "url": "https://www.frontiersin.org/journals/neuroscience/articles/10.3389/fnins.2025.1689286/full",
+          "locator": "Table2 PhysioNet TCPL 10-shot",
+          "values": {
+            "value": 80.6,
+            "sd": 1.7
+          }
+        }
+      }
+    ],
+    "gaps": [
+      "No audited majority/full-cohort traditional study exactly matching109/0–2s/5fold/batch-EA/BA found.",
+      "MOABB per-pipeline actual successful subjects and historical result commit not recovered; current code pin is not the historical benchmark pin.",
+      "AE-FBCSP full text and code unavailable; abstract figures excluded.",
+      "No exhaustive2026 world-SOTA certification; more recent works were screened selectively.",
+      "Subject89 semantic label issue remains author-reported, not proven by EDF structural audit.",
+      "Current baseline prediction/split files not inspected; no performance rerun.",
+      "EA original experiments use other MI datasets; supports methodology, not a PhysioNet score."
+    ]
+  }
+}

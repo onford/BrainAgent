@@ -84,6 +84,18 @@ class SimulatedSearch(SearchService):
         self.scores = {}
         self.failures = {}
 
+    def create(self, owner, request, *, start=True):
+        # These ledger tests simulate only the core numeric evaluator. The real
+        # worker integration separately requires the complete multi-axis suite.
+        value = super().create(owner, request, start=False)
+        state = self.get(owner, value["id"])
+        state["protocol"].pop("assessment", None)
+        write(self.folder(value["id"]) / "protocol.json", state["protocol"])
+        self.save(state)
+        if start:
+            self.start(owner, value["id"])
+        return self.describe(owner, value["id"])
+
     async def child(self, state, stage, candidate_id=None):
         self.guard(state)
         root = self.folder(state["id"])
@@ -289,7 +301,11 @@ def factory(tmp_path):
         llm = Decisions(actions)
         service = SimulatedSearch(tmp_path / f"searches{count}", workflows, llm)
         request = SearchRequest(
-            workflow_id="a" * 32, strategy=strategy, budget=SearchBudget(**budget)
+            workflow_id="a" * 32,
+            strategy=strategy,
+            budget=SearchBudget(
+                **{**dict(max_candidates=6, max_proposals=8, max_retries=1), **budget}
+            ),
         )
         state = service.create("owner", request, start=False)
         return service, llm, state
@@ -303,12 +319,41 @@ async def run(service, state):
 
 
 @pytest.mark.asyncio
+async def test_resume_rebuilds_interrupted_registry_projection_but_rejects_changed_entries(factory):
+    service, _, state = factory(strategy="exhaustive", max_candidates=1)
+    root = service.folder(state["id"])
+    write(root / "registry.json", state["registry"][:1])
+    completed = await run(service, state)
+    assert completed["status"] == "stopped", completed.get("error")
+    assert read(root / "registry.json") == completed["registry"]
+    broken = read(root / "registry.json")
+    broken[0]["title"] = "different content"
+    write(root / "registry.json", broken)
+    rejected = await run(service, completed)
+    assert rejected["stop_reason"] == "integrity_failure"
+
+
+@pytest.mark.asyncio
 async def test_feedback_changes_next_candidate_and_fixed_tie_selection(factory):
-    first = "bp1-40-average"
+    first = "basic-broadband"
 
     def next_action(context):
         score = context["results"][-1]["receipt"]["macro_ba"]
-        return propose("bp4-40-average" if score > 0.5 else "bp8-30-original", first)
+        if score <= 0.5:
+            return propose("basic-acquisition-reference", first)
+        result = propose(None, first)
+        result["decision"].update(
+            title="adjust broad-band lower edge",
+            edits=[
+                {
+                    "action": "set_parameter",
+                    "node_id": "bandpass",
+                    "parameter": "l_freq",
+                    "value": 4.0,
+                }
+            ],
+        )
+        return result
 
     chosen = []
     for score in (0.7, 0.4):
@@ -326,7 +371,8 @@ async def test_feedback_changes_next_candidate_and_fixed_tie_selection(factory):
             json.loads(read(p)["messages"][-1]["content"]) for p in snapshots
         ] == llm.contexts
         chosen.append(service.executed[-1])
-    assert chosen == ["bp4-40-average", "bp8-30-original"]
+    assert chosen[0].startswith("candidate-")
+    assert chosen[1] == "basic-acquisition-reference"
     candidates = [
         {"id": e["id"], "receipt": {"status": "evaluated", "macro_ba": 0.5}}
         for e in reversed(catalog())
@@ -395,7 +441,7 @@ async def test_reference_failure_stops_comparison_and_preserves_null_score(facto
 
 @pytest.mark.asyncio
 async def test_transient_retry_charged_but_successful_reference_never_reruns(factory):
-    candidate = "bp1-40-average"
+    candidate = "basic-broadband"
     service, _, state = factory([propose(candidate)], max_candidates=2)
     service.failures[candidate] = ["execution_failure", None]
     result = await run(service, state)
@@ -428,7 +474,8 @@ async def test_expired_resume_does_not_reset_budget_or_execute(factory):
 async def test_resume_reuses_completed_candidate_and_rejects_changed_input(factory):
     service, _, state = factory()
     result = await run(service, state)
-    assert result["status"] == "completed"
+    assert result["status"] == "stopped"
+    assert result["stop_reason"] == "proposal_budget_exhausted"
     result.update(status="interrupted")
     service.save(result)
     again = await run(service, state)
@@ -487,7 +534,7 @@ def crash_at_candidate_checkpoint(service, identity, checkpoint):
 async def test_resume_finishes_original_proposal_at_each_commit_boundary(
     factory, checkpoint
 ):
-    parent, target = "bp1-40-average", "bp4-40-average"
+    parent, target = "basic-broadband", "basic-acquisition-reference"
     service, llm, state = factory(
         [propose(parent), propose(target, parent)], max_candidates=3
     )
@@ -532,7 +579,7 @@ async def test_resume_finishes_original_proposal_at_each_commit_boundary(
 
 @pytest.mark.asyncio
 async def test_retry_retains_interrupted_action_history_and_completes_checks(factory):
-    target = "bp1-40-average"
+    target = "basic-broadband"
     service, llm, state = factory([propose(target)], max_candidates=2)
     entered = asyncio.Event()
     original_child = service.child
@@ -580,7 +627,7 @@ async def test_retry_retains_interrupted_action_history_and_completes_checks(fac
 async def test_resumed_failed_or_budget_stopped_action_has_no_measured_checks(
     factory, failure
 ):
-    target = "bp1-40-average"
+    target = "basic-broadband"
     service, llm, state = factory([propose(target)], max_candidates=2)
     crash_at_candidate_checkpoint(service, target, "running")
     with pytest.raises(ProcessCrash):
@@ -638,7 +685,7 @@ async def test_terminal_state_waits_for_report_publication(factory, monkeypatch)
 
     monkeypatch.setattr(reporting, "render", render)
     result = await run(service, state)
-    assert result["status"] == "completed"
+    assert result["status"] == "stopped"
     path = service.artifact("owner", state["id"], "selection.json")
     path.write_text("{}", encoding="utf-8")
     with pytest.raises(ValueError, match="校验"):
@@ -711,7 +758,7 @@ async def test_provider_requests_are_charged_without_hidden_retries(factory):
 
 
 def test_action_schema_requires_both_decision_branches():
-    proposal = propose("bp1-40-average")
+    proposal = propose("basic-broadband")
     del proposal["decision"]["decision_branches"]["no_improvement"]
     with pytest.raises(ValueError):
         Decision.model_validate(proposal)
@@ -722,7 +769,7 @@ async def test_one_shot_schedule_is_frozen_before_reference_feedback(factory):
     service, llm, state = factory(
         [
             {
-                "candidate_ids": ["bp1-40-average", "bp8-30-original"],
+                "candidate_ids": ["basic-broadband", "basic-acquisition-reference"],
                 "reason": "固定初始候选",
             }
         ],
@@ -733,7 +780,11 @@ async def test_one_shot_schedule_is_frozen_before_reference_feedback(factory):
     result = await run(service, state)
     assert result["usage"]["proposals"] == 2
     assert len(llm.contexts) == 1 and llm.contexts[0]["results"] == []
-    assert service.executed == [BASELINE_ID, "bp1-40-average", "bp8-30-original"]
+    assert service.executed == [
+        BASELINE_ID,
+        "basic-broadband",
+        "basic-acquisition-reference",
+    ]
 
 
 @pytest.mark.asyncio
@@ -741,7 +792,11 @@ async def test_one_shot_can_include_reference_without_running_or_charging_it_twi
     factory,
 ):
     plan = {
-        "candidate_ids": [BASELINE_ID, "bp1-40-average", "bp8-30-original"],
+        "candidate_ids": [
+            BASELINE_ID,
+            "basic-broadband",
+            "basic-acquisition-reference",
+        ],
         "reason": "固定参考和两项对照",
     }
     service, llm, state = factory(
@@ -756,7 +811,11 @@ async def test_one_shot_can_include_reference_without_running_or_charging_it_twi
     assert result["usage"]["retries"] == 1
     assert result["usage"]["llm_calls"] == 2
     assert all(c["results"] == [] for c in llm.contexts)
-    assert service.executed == [BASELINE_ID, "bp1-40-average", "bp8-30-original"]
+    assert service.executed == [
+        BASELINE_ID,
+        "basic-broadband",
+        "basic-acquisition-reference",
+    ]
 
 
 @pytest.mark.asyncio

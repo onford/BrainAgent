@@ -4,6 +4,7 @@ import errno
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sqlite3
 import sys
 import time
@@ -13,9 +14,11 @@ import pytest
 from tests.preprocessing.conftest import make_dataset
 from app.preprocessing import worker as numerical_worker
 from app.preprocessing.resources import MIB, ResourceError
-from app.preprocessing.storage import Storage, file_hash
+from app.preprocessing.storage import Storage, file_hash, digest
 from app.search import evaluation, worker
 from app.search.catalog import BASELINE_ID, catalog, method
+from app.search.method_space import basic_space
+from app.search.method_space import seed_entries, edited_entry
 from app.search.evaluation_contracts import EvaluationReceipt
 
 
@@ -48,6 +51,11 @@ def search(tmp_path):
     )
     panel = worker.prepare(root)
     assert "panel_hash" in panel, panel
+    space = basic_space().model_dump(mode="json")
+    worker.write_json(
+        root / "protocol.json", {"space": space, "space_hash": digest(space)}
+    )
+    worker.write_json(root / "registry.json", catalog())
     for entry in catalog()[:2]:
         worker.write_json(root / "candidates" / entry["id"] / "policy.json", entry)
         worker.write_json(
@@ -131,6 +139,89 @@ def test_real_prepare_candidate_cli_and_full_inventory(search):
     assert '\n  "' in (search / "candidates" / BASELINE_ID / "receipt.json").read_text()
 
 
+def test_bounded_edit_executes_without_static_catalog_membership(search):
+    space = basic_space()
+    seeds = seed_entries(space)
+    entry = edited_entry(
+        seeds[0],
+        [
+            {
+                "action": "set_parameter",
+                "node_id": "bandpass",
+                "parameter": "l_freq",
+                "value": 4.0,
+            },
+            {
+                "action": "set_adaptation",
+                "policy": {"adaptation": "euclidean_alignment"},
+            },
+        ],
+        space,
+        title="4–30 with EA",
+        order=len(seeds),
+    )
+    worker.write_json(search / "registry.json", seeds + [entry])
+    output = search / "candidates" / entry["id"]
+    worker.write_json(output / "policy.json", entry)
+    worker.write_json(
+        output / "method.json",
+        method(entry, worker.read_json(search / "panel.json")).model_dump(mode="json"),
+    )
+    reference = worker.candidate(search, BASELINE_ID)
+    assert reference["status"] == "evaluated"
+    result = worker.candidate(search, entry["id"])
+    assert result["status"] == "evaluated", result
+    assert result["representation"]["policy"]["adaptation"] == "euclidean_alignment"
+    assert result["coverage"]["predicted"] == reference["coverage"]["predicted"]
+
+
+def test_parallel_record_execution_preserves_numerical_predictions(search):
+    parallel = search.with_name("parallel")
+    shutil.copytree(search, parallel)
+    protocol = worker.read_json(parallel / "protocol.json")
+    protocol["record_workers"] = 2
+    worker.write_json(parallel / "protocol.json", protocol)
+    serial_result = worker.candidate(search, BASELINE_ID)
+    parallel_result = worker.candidate(parallel, BASELINE_ID)
+    assert serial_result["status"] == parallel_result["status"] == "evaluated", (
+        parallel_result
+    )
+    assert serial_result["macro_ba"] == parallel_result["macro_ba"]
+    assert serial_result["predictions_sha256"] == parallel_result["predictions_sha256"]
+    import numpy as np
+
+    for identity, left in serial_result["representation"]["records"].items():
+        right = parallel_result["representation"]["records"][identity]
+        np.testing.assert_array_equal(
+            np.load(left["array_path"]), np.load(right["array_path"])
+        )
+
+
+def test_worker_runs_complete_multi_axis_assessment_in_fresh_attempt(search):
+    from app.search.utility_evaluation import utility_protocol
+    from app.search.assessment import verify_assessment
+
+    protocol = worker.read_json(search / "protocol.json")
+    protocol.update(assessment={"reconstruction_design": "balanced"}, utility_protocol=utility_protocol())
+    worker.write_json(search / "protocol.json", protocol)
+    panel = worker.prepare(search)
+    assert "panel_hash" in panel
+    orphan = search / "candidates" / BASELINE_ID / "core-receipts" / "a1.json"
+    worker.write_json(orphan, {"interrupted_before_assessment": True})
+    orphan_bytes = orphan.read_bytes()
+    receipt = worker.candidate(search, BASELINE_ID)
+    assert receipt["status"] == "evaluated", receipt
+    assert receipt["assessment_path"] == "assessment/a2"
+    assert orphan.read_bytes() == orphan_bytes
+    summary = receipt["assessment"]
+    assert summary is not None
+    assert summary["utility"]["status"] == "evaluated", summary["utility"]
+    assert summary["selection_score"] is not None
+    assert summary["quality"]["status"] != "failed", summary["quality"]
+    assert summary["reconstruction"]["status"] != "failed", summary["reconstruction"]
+    assert verify_assessment(search / "candidates" / BASELINE_ID / receipt["assessment_path"], summary) == summary
+
+
 def test_completed_job_not_executed_again_and_baseline_forwarded(search, monkeypatch):
     first = worker.candidate(search, BASELINE_ID)
     assert first["status"] == "evaluated", first
@@ -151,7 +242,7 @@ def test_completed_job_not_executed_again_and_baseline_forwarded(search, monkeyp
         return evaluate(*args, baseline=baseline, **kwargs)
 
     monkeypatch.setattr(evaluation, "evaluate", capture)
-    other = worker.candidate(search, "bp8-30-original")
+    other = worker.candidate(search, "basic-broadband")
     assert other["status"] == "evaluated", other
     assert seen == [second]
     assert other["mean_delta"] == pytest.approx(other["macro_ba"] - second["macro_ba"])
@@ -429,13 +520,13 @@ def test_verify_cached_evaluations_is_read_only_and_never_refits(
     cached_search, monkeypatch
 ):
     root = cached_search
-    receipt = worker.candidate(root, "bp8-30-original")
+    receipt = worker.candidate(root, "basic-broadband")
     assert receipt["status"] == "evaluated", receipt
     state = worker.read_json(root / "search.json")
     state["candidates"].extend(
         [
             {
-                "id": "bp8-30-original",
+                "id": "basic-broadband",
                 "status": "evaluated",
                 "receipt": receipt,
                 "job_id": receipt["job_id"],
@@ -474,7 +565,7 @@ def test_verify_cached_evaluations_is_read_only_and_never_refits(
     assert worker.read_json(root / "verification.json") == {
         "status": "verified",
         "error": None,
-        "verified_candidate_ids": [BASELINE_ID, "bp8-30-original"],
+        "verified_candidate_ids": [BASELINE_ID, "basic-broadband"],
     }
     assert hashes() == before
 

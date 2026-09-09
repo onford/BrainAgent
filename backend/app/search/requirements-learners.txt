@@ -1,0 +1,5 @@
+# Audited optional learner implementation; preserve existing EEG math pins.
+numpy==1.26.4
+scipy==1.15.3
+scikit-learn==1.6.1
+pyriemann==0.7

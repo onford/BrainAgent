@@ -20,10 +20,11 @@ def main():
         choices=("adaptive", "one_shot", "random", "exhaustive"),
         default="adaptive",
     )
-    parser.add_argument("--max-candidates", type=int, default=6)
-    parser.add_argument("--max-proposals", type=int, default=8)
-    parser.add_argument("--max-evidence-reads", type=int, default=2)
-    parser.add_argument("--max-seconds", type=float, default=3600)
+    defaults = SearchBudget()
+    parser.add_argument("--max-candidates", type=int, default=defaults.max_candidates)
+    parser.add_argument("--max-proposals", type=int, default=defaults.max_proposals)
+    parser.add_argument("--max-evidence-reads", type=int, default=defaults.max_evidence_reads)
+    parser.add_argument("--max-seconds", type=float, default=defaults.max_seconds)
     parser.add_argument("--max-memory-mb", type=int)
     parser.add_argument("--max-disk-mb", type=int)
     parser.add_argument("--seed", type=int, default=42)

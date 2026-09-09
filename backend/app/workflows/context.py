@@ -3,6 +3,15 @@
 import json
 
 
+def _assessment_context(value):
+    if isinstance(value, dict):
+        return {k: _assessment_context(v) for k, v in value.items()
+                if k not in {"artifacts", "artifact_manifest", "bindings", "receipt_artifact", "failure_artifact"}}
+    if isinstance(value, list):
+        return [_assessment_context(v) for v in value]
+    return value
+
+
 def evaluation_context(data):
     """Report interpretation needs measured summaries, not duplicated array indexes."""
     receipt = data.get("selected_receipt") or {}
@@ -34,6 +43,8 @@ def evaluation_context(data):
                 "information_permissions",
                 "parameter_provenance",
                 "confirmation",
+                "assessment",
+                "utility_protocol",
             )
             if key in protocol
         },
@@ -55,7 +66,6 @@ def evaluation_context(data):
         "metrics": {
             key: receipt[key]
             for key in (
-                "primary_learner",
                 "secondary_learner",
                 "secondary_macro_ba",
                 "mean_delta",
@@ -64,6 +74,9 @@ def evaluation_context(data):
             )
             if key in receipt
         },
+        "core_anchor": {"learner": receipt.get("primary_learner"), "macro_ba": receipt.get("macro_ba"),
+                        "role": "CSP/LDA anchor; selection uses assessment.selection_score"},
+        "assessment": _assessment_context(receipt.get("assessment") or {}),
         "diagnostics": (receipt.get("diagnostics") or {}).get("summary"),
         "representation": {
             key: representation[key]

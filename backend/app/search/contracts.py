@@ -4,16 +4,17 @@ from pydantic import Field, model_validator
 
 from app.preprocessing.schemas import Contract
 from .evaluation_contracts import EvaluationReceipt
+from .space_contracts import CandidateRecipe, PipelineEdit
 
 
 class SearchBudget(Contract):
-    max_candidates: int = Field(default=6, ge=1, le=32)
-    max_proposals: int = Field(default=8, ge=0, le=64)
-    max_evidence_reads: int = Field(default=2, ge=0, le=16)
-    max_seconds: float = Field(default=3600, gt=0)
+    max_candidates: int = Field(default=48, ge=1, le=256)
+    max_proposals: int = Field(default=128, ge=0, le=1024)
+    max_evidence_reads: int = Field(default=32, ge=0, le=256)
+    max_seconds: float = Field(default=86400, gt=0)
     max_memory_mb: int | None = Field(default=None, ge=64)
     max_disk_mb: int | None = Field(default=None, ge=64)
-    max_retries: Literal[0, 1] = 1
+    max_retries: int = Field(default=4, ge=0, le=32)
 
 
 class SearchRequest(Contract):
@@ -69,8 +70,10 @@ class MechanismHypothesis(Contract):
                 p.metric in {"macro_ba", "secondary_macro_ba", "mean_delta"}
                 or p.metric.endswith(".ba")
                 or p.metric.startswith("secondary_subjects.")
+                or p.metric == "assessment.selection_score"
+                or p.metric.startswith("assessment.utility.")
             )
-            signal = p.metric.startswith("diagnostics.")
+            signal = p.metric.startswith(("diagnostics.", "assessment.quality.", "assessment.reconstruction."))
             if (p.kind == "utility" and not utility) or (
                 p.kind == "signal" and not signal
             ):
@@ -80,7 +83,10 @@ class MechanismHypothesis(Contract):
 
 class ProposeCandidate(Contract):
     action: Literal["propose_candidate"]
-    candidate_id: str
+    candidate_id: str | None = None
+    edits: list[PipelineEdit] = Field(default_factory=list, max_length=8)
+    title: str | None = Field(default=None, max_length=160)
+    prior_challenges: dict[str, str] = Field(default_factory=dict)
     base_candidate_id: str
     reason: str = Field(min_length=1)
     expected_result: str = Field(min_length=1)
@@ -89,6 +95,10 @@ class ProposeCandidate(Contract):
 
     @model_validator(mode="after")
     def branches(self):
+        if bool(self.candidate_id) == bool(self.edits):
+            raise ValueError("选择已有方法起点，或提交父方案编辑；两者必须恰选一个")
+        if self.edits and not (self.title or "").strip():
+            raise ValueError("编辑候选需要简洁的方案名称")
         if set(self.decision_branches) != {"improvement", "no_improvement"} or not all(
             self.decision_branches.values()
         ):
@@ -109,6 +119,7 @@ class Finish(Contract):
     action: Literal["finish"]
     reason: str = Field(min_length=1)
     unresolved: list[str]
+    unexplored_edit_reasons: dict[str, str] = Field(default_factory=dict)
 
 
 class Decision(Contract):
@@ -118,7 +129,7 @@ class Decision(Contract):
 
 
 class InitialSchedule(Contract):
-    candidate_ids: list[str] = Field(max_length=64)
+    candidate_ids: list[str] = Field(max_length=256)
     reason: str = Field(min_length=1)
 
 
@@ -190,6 +201,7 @@ class SearchState(Contract):
     protocol: dict
     usage: Usage = Field(default_factory=Usage)
     candidates: list[Candidate] = Field(default_factory=list)
+    registry: list[CandidateRecipe] = Field(default_factory=list)
     actions: list[ActionRecord] = Field(default_factory=list)
     schedule: list[str] | None = None
     selected_candidate_id: str | None = None

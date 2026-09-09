@@ -227,7 +227,11 @@ class EvaluationOutput(Contract):
         if (
             self.selected_receipt.get("status") != "evaluated"
             or self.selected_receipt.get("candidate_id") != self.selected_candidate_id
-            or self.selected_receipt.get("macro_ba") != self.score
+            or (
+                self.selected_receipt["assessment"]["selection_score"]
+                if self.selected_receipt.get("assessment") is not None
+                else self.selected_receipt.get("macro_ba")
+            ) != self.score
             or self.selected_receipt.get("panel_hash") != self.panel.get("panel_hash")
             or self.selected_receipt.get("representation") != self.representation
         ):

@@ -18,6 +18,7 @@ pytest.importorskip("mne_bids")
 from app.preprocessing.methods import baseline_methods
 from app.preprocessing.storage import digest, file_hash
 from app.search.evaluation_contracts import EvaluationReceipt, LearnerMetadata
+from app.search.method_space import basic_space, seed_entries
 from app.workflows import outputs
 from app.workflows.contracts import DeliveryOutput
 from app.workflows.dataset import PROFILE
@@ -144,6 +145,10 @@ def complete_delivery_receipt(store, selection):
 
 
 def freeze_evidence(store, selection):
+    if not (store.root.parent / "registry.json").exists():
+        space = basic_space().model_dump(mode="json")
+        (store.root.parent / "protocol.json").write_text(json.dumps(dict(space=space, space_hash=digest(space))), encoding="utf-8")
+        (store.root.parent / "registry.json").write_text(json.dumps(seed_entries(space)), encoding="utf-8")
     panel = {
         k: v
         for k, v in selection["panel"].items()

@@ -76,9 +76,11 @@ def test_feedback_keeps_measured_paths_without_per_file_or_channel_payloads():
             "subjects": {"S001": {"channel_variance": [1.0] * 64}},
         },
         "representation": {"records": {"record": {"array_path": "a.npy"}}},
+        "operator_usage": {"summary": {"operators": {"asr": {"applied": 0, "not_applicable": 327}}}, "artifact": {"path": "full.json"}},
     }
     result = measured_feedback({"id": "candidate", "receipt": receipt})["receipt"]
     assert result["macro_ba"] == 0.7
     assert result["diagnostics"]["summary"]["mean_condition_before"] == 7.5
     assert "subjects" not in result["diagnostics"] and "representation" not in result
     assert "subjects" in receipt["diagnostics"]  # Source receipt remains complete.
+    assert result["operator_usage"] == {"summary": receipt["operator_usage"]["summary"]}

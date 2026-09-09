@@ -9,6 +9,8 @@ import math
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+from .assessment_contracts import AssessmentSummary
+from .operator_usage import OperatorUsage
 
 Count = Annotated[int, Field(ge=0)]
 Score = Annotated[float, Field(ge=0, le=1)]
@@ -544,7 +546,11 @@ class EvaluationVersions(EvaluationContract):
 
 
 class EvaluationReceipt(EvaluationContract):
+    operator_usage: OperatorUsage | None = None
     evaluator_version: Literal[2] = 2
+    assessment: AssessmentSummary | None = None
+    assessment_path: str | None = Field(default=None, pattern=r"^assessment/a[0-9]+$")
+    core_receipt_path: str | None = Field(default=None, pattern=r"^core-receipts/a[0-9]+\.json$")
     evaluation_mode: EvaluationMode | None = None
     folds: list[EvaluationFold] = Field(default_factory=list)
     primary_learner: Literal["csp4_reg0.1_shrinkage_lda"] = "csp4_reg0.1_shrinkage_lda"

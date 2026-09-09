@@ -59,6 +59,7 @@ METRIC_IDS = tuple(_SPECS)
 _RESIDUAL = {"emg_hf_proxy", "line_ratio_50hz", "line_ratio_60hz", "drift_power_ratio"}
 _CURVES = {"oha", "thv", "chv", "psd", "psd_window_quantiles"}
 _OP_NAMES = {"bandpass": ("EEG-FILTER", "filter"),
+             "notch": ("EEG-FILTER", "notch"),
              "highpass": ("EEG-FILTER", "filter"),
              "detect_bad_channels": ("EEG-AUTO-BAD-CHANNEL", "detect_bad_channels"),
              "interpolate_bad_channels": ("EEG-AUTO-BAD-CHANNEL", "interpolate_bad_channels"),

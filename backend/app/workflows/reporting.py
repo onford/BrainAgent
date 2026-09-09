@@ -11,6 +11,35 @@ def escape(value):
     return html.escape(str(value), quote=True)
 
 
+def evaluation_summary(selection):
+    if selection is None:
+        return "未取得开发评价回执"
+    from app.search.catalog import selection_score
+
+    receipt = selection.selected_receipt
+    if selection_score(receipt) != selection.score:
+        raise ValueError("报告分数与选中评价回执不同")
+    assessment = receipt.get("assessment")
+    if not assessment:
+        if selection.evaluation_protocol.get("assessment"):
+            raise ValueError("报告缺少冻结协议要求的 assessment")
+        return f"CSP/LDA 开发被试平均平衡准确率：{selection.score:.4f}；该面板参与候选选择，无独立确认。"
+    utility = assessment["utility"]
+    scores = utility["learner_scores"]
+    coverage = utility["learner_coverage"]["csp_lda"]
+    anchor = assessment["core_csp_macro_ba"]
+    return (
+        f"三模型训练效用 selection_score：{selection.score:.4f}；"
+        f"CSP/LDA={scores['csp_lda']:.4f}、FBCSP={scores['fbcsp']:.4f}、TS/LR={scores['ts_lr']:.4f}。"
+        "先计算各模型的开发被试平均平衡准确率，再对三个模型等权平均；缺失模型不产生选择分数。"
+        f"每模型开发分母：{coverage['subjects_available']}/{coverage['subjects_expected']} 被试、"
+        f"{coverage['trials_available']}/{coverage['eligible_trials_expected']} eligible trial。"
+        + (f"核心 CSP 锚点 macro_ba={anchor:.4f}。" if anchor is not None else "核心 CSP 锚点未取得。")
+        + f"质量状态：{assessment['quality']['status']}；重建状态：{assessment['reconstruction']['status']}；二者不加入选择总分。"
+        + f"搜索 {selection.search_id}；该面板参与候选选择，无独立确认。"
+    )
+
+
 def identifiers(values):
     values = list(values)
     return ", ".join(values[:8]) + (
@@ -372,13 +401,7 @@ def render_report(folder):
             ]
         ),
         selection_reason=escape(data.selection_reason),
-        evaluation_summary=escape(
-            f"开发被试平均平衡准确率：{selection.score:.4f}；搜索 {selection.search_id}；"
-            f"主评价器：{selection.selected_receipt.get('primary_learner', '见评价回执')}；"
-            "该面板参与候选选择，无独立确认。"
-            if selection
-            else "未取得开发评价回执"
-        ),
+        evaluation_summary=escape(evaluation_summary(selection)),
         candidate_rows=rows(
             [
                 [

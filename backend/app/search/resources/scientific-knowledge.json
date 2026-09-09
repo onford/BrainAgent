@@ -1,0 +1,5948 @@
+{
+  "schema_version": "1",
+  "domain": "EEG预处理顺序、参数与信息权限",
+  "interpretation": "完整覆盖本目录25类算子的两两关系；无证据、冲突与条件性结论明确保留。研究目录不等于全部算子已集成，也不能把矩阵条目直接转换为无条件顺序。",
+  "sources": [
+    {
+      "id": "S01",
+      "title": "MNE filtering and resampling",
+      "url": "https://mne.tools/stable/auto_tutorials/preprocessing/30_filtering_resampling.html",
+      "kind": "official_documentation",
+      "locator": "Resampling; Best practices，网页行445–597",
+      "version": "页面显示 MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关全文段落",
+      "limitations": "fs/3 是默认过渡带下的经验规则，不是采样定理；stable URL 可变"
+    },
+    {
+      "id": "S02",
+      "title": "MNE create_filter",
+      "url": "https://mne.tools/stable/generated/mne.filter.create_filter.html",
+      "kind": "official_documentation",
+      "locator": "Parameters: l_freq/h_freq, filter_length, l_trans_bandwidth, h_trans_bandwidth, phase",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读 API 参数段",
+      "limitations": "必须保存具体响应，不能仅保存 Hz 标签"
+    },
+    {
+      "id": "S03",
+      "title": "Widmann, Schröger & Maess 2015 — Digital filter design",
+      "url": "https://home.uni-leipzig.de/biocog/eprints/widmann_a2015jneuroscimeth250_34.pdf",
+      "kind": "original_paper",
+      "locator": "作者稿 PDF pp.3–6；§2.4 Roll-off, transition bandwidth, and filter order；§2.6 causality",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已下载到内存并读取相关 PDF 页",
+      "limitations": "作者稿版本；不是对所有滤波参数的普适最优性证明"
+    },
+    {
+      "id": "S04",
+      "title": "EEGLAB Filtering tutorial",
+      "url": "https://eeglab.org/tutorials/05_Preprocess/Filtering.html",
+      "kind": "official_documentation",
+      "locator": "Removing linear trends；段落 Removing data portions containing major artifacts；Filtering for connectivity analysis",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读官方正文",
+      "limitations": "连接性建议需区分指标；不据此禁止全部高通"
+    },
+    {
+      "id": "S05",
+      "title": "EEGLAB Firfilt FAQ",
+      "url": "https://eeglab.org/others/Firfilt_FAQ.html",
+      "kind": "official_documentation",
+      "locator": "GCA 段；passband edge vs cutoff frequency；pop_resample example",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关正文",
+      "limitations": "FAQ 的 GCA 示例不能代替一般抗混叠验证"
+    },
+    {
+      "id": "S06",
+      "title": "MNE notch_filter",
+      "url": "https://mne.tools/stable/generated/mne.filter.notch_filter.html",
+      "kind": "official_documentation",
+      "locator": "Parameters notch_widths, trans_bandwidth, method；网页行730–738",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读 API 参数段",
+      "limitations": "stop-band width 与 transition width 分开；频率/200 为当前默认"
+    },
+    {
+      "id": "S07",
+      "title": "EEGLAB CleanLine",
+      "url": "https://eeglab.org/plugins/cleanline/",
+      "kind": "official_documentation",
+      "locator": "Tips on running CleanLine；Bandwidth；Typical command-line example；网页行77–92,108–139",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读算法与参数正文",
+      "limitations": "教程示例 Bandwidth=2，help 默认=1；多锥带宽不等于 notch 宽度"
+    },
+    {
+      "id": "S08",
+      "title": "Bigdely-Shamlo et al. 2015 — PREP original paper",
+      "url": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+      "kind": "original_paper",
+      "locator": "Early stage preprocessing；Phase 1/2；Detecting noisy or outlier channels；Fig.6；Table5，网页行329–347,371–426,615–616",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读原始论文相关全文段落",
+      "limitations": "同一论文 RANSAC 窗长叙述同时出现5 s和4 s；PMC副本访问受阻，已改读出版社全文"
+    },
+    {
+      "id": "S09",
+      "title": "PREP official parameter documentation",
+      "url": "https://vislab.github.io/EEG-Clean-Tools/",
+      "kind": "official_documentation",
+      "locator": "correlationThreshold, badTimeThreshold, ransacWindowSeconds, ransacCorrelationThreshold, maxReferenceIterations",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读官方参数说明",
+      "limitations": "网站参数需与安装版本核对；RANSAC 5 s 与论文部分文字不同"
+    },
+    {
+      "id": "S10",
+      "title": "MNE setting EEG reference",
+      "url": "https://mne.tools/stable/auto_tutorials/preprocessing/55_setting_eeg_reference.html",
+      "kind": "official_documentation",
+      "locator": "Setting average reference；average reference as projection",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关正文",
+      "limitations": "投影存在不代表已应用；坏道与参考通道集合必须显式记录"
+    },
+    {
+      "id": "S11",
+      "title": "EEGLAB re-referencing",
+      "url": "https://eeglab.org/tutorials/05_Preprocess/rereferencing.html",
+      "kind": "official_documentation",
+      "locator": "Huber mean 段，网页行23–24",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读正文",
+      "limitations": "文档把 robust references 泛称为类似 PREP；不能据此将逐时 Huber 等同于 PREP 最终固定插值均值"
+    },
+    {
+      "id": "S12",
+      "title": "MNE ICA API",
+      "url": "https://mne.tools/stable/generated/mne.preprocessing.ICA.html",
+      "kind": "official_documentation",
+      "locator": "Warning high-pass；Notes baseline；rank-deficient data；n_components and n_pca_components",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关 API 段",
+      "limitations": "rank=C−1−插值数 仅是特定操作链的粗略数法；以实际有效子空间为准"
+    },
+    {
+      "id": "S13",
+      "title": "MNE ICA tutorial",
+      "url": "https://mne.tools/stable/auto_tutorials/preprocessing/40_artifact_correction_ica.html",
+      "kind": "official_documentation",
+      "locator": "Filtering to remove slow drifts；Ignoring the time domain；DC offsets after ICA",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关正文",
+      "limitations": "跨频率应用依赖空间模型一致；不是任意跨参考/跨 montage 投影许可"
+    },
+    {
+      "id": "S14",
+      "title": "EEGLAB RunICA",
+      "url": "https://eeglab.org/tutorials/06_RejectArtifacts/RunICA.html",
+      "kind": "official_documentation",
+      "locator": "Aggressive high-pass filter；rank deficiencies；aggressive automated artifact removal；re-referencing after ICA",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关正文",
+      "limitations": "页面内权重复制方向文字有歧义；采用清楚的 numbered steps：fit dataset2，apply dataset1"
+    },
+    {
+      "id": "S15",
+      "title": "Winkler et al. 2015 — ICA high-pass study",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/26737196/",
+      "kind": "original_abstract",
+      "locator": "Abstract；21 participants auditory oddball；1–2 Hz；DOI 10.1109/EMBC.2015.7319296",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读一手摘要",
+      "limitations": "未获得全文；只支持该研究报告的经验方向，不推断所有算法/人群最优值"
+    },
+    {
+      "id": "S16",
+      "title": "Klug & Gramann — ICA mobile/stationary study",
+      "url": "https://blogs.tu-berlin.de/bpn_bemobil/wp-content/uploads/sites/130/2021/03/Klug-2020-Key-factors-ICA.pdf",
+      "kind": "original_paper",
+      "locator": "PDF pp.1–3，Abstract与高通线性解释；搜索结果中的 cutoff×montage heatmap",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已下载到内存并读取相关 PDF 页",
+      "limitations": "仅提取设计和定性依赖；不编造各 cutoff 效果量"
+    },
+    {
+      "id": "S17",
+      "title": "Tanner, Morgan-Short & Luck 2015 — ERP filtering artifacts",
+      "url": "https://escholarship.org/content/qt1p7352t2/qt1p7352t2_noSplash_dc8a4b533a0a2ae98f47e054cce66668.pdf",
+      "kind": "original_paper",
+      "locator": "作者稿 PDF pp.1–4；Figs.1–2；DOI 10.1111/psyp.12437",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读原始作者稿相关页",
+      "limitations": "0.3 Hz 效应来自指定波形/语言实验及滤波器，不是所有 ERP 的数学阈值；PMC访问受阻"
+    },
+    {
+      "id": "S18",
+      "title": "EEGLAB clean_rawdata official guide",
+      "url": "https://eeglab.org/plugins/clean_rawdata/",
+      "kind": "official_documentation",
+      "locator": "Artifact Subspace Reconstruction；bad channel criteria；offline removal vs correction",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读官方正文",
+      "limitations": "GUI默认20；与低层API默认不同；Riemannian distance 被标 beta"
+    },
+    {
+      "id": "S19",
+      "title": "clean_artifacts.m pinned implementation",
+      "url": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/clean_artifacts.m",
+      "kind": "official_code",
+      "locator": "hlp_varargin2struct；clean_flatlines→clean_drifts→clean_channels→clean_asr→clean_windows",
+      "version": "85eab7d22f00f1ed36392c96eb0774752d62bd11",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读取 raw 源码及GitHub commit API",
+      "limitations": "低层 burst_crit 默认5；不能用 GUI 默认20替代；版本/调用入口必须记录"
+    },
+    {
+      "id": "S20",
+      "title": "asr_calibrate.m pinned implementation",
+      "url": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_calibrate.m",
+      "kind": "official_code",
+      "locator": "Header Input, RejectionCutoff, FilterB/A, WindowLength；默认初始化",
+      "version": "85eab7d22f00f1ed36392c96eb0774752d62bd11",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读源码相关部分（master当时固定为该SHA）",
+      "limitations": "30–60 s 是源码推荐量级；内部频谱加权只用于统计，不代表输出带通"
+    },
+    {
+      "id": "S21",
+      "title": "asr_process.m pinned implementation",
+      "url": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+      "kind": "official_code",
+      "locator": "Header Data/State/LookAhead/MaxDimensions；默认初始化",
+      "version": "85eab7d22f00f1ed36392c96eb0774752d62bd11",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读源码相关部分",
+      "limitations": "状态、校准滤波与后续数据一致；lookahead 是延迟预算，不应伪称零延迟"
+    },
+    {
+      "id": "S22",
+      "title": "Chang et al. — Evaluation of ASR",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/31329105/",
+      "kind": "original_abstract",
+      "locator": "Abstract METHODS/RESULTS/CONCLUSIONS；DOI 10.1109/TBME.2019.2930186",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读一手摘要",
+      "limitations": "20份模拟驾驶记录；20–30与后续ICA收益只在该评价中得到支持；online 2019/卷期2020"
+    },
+    {
+      "id": "S23",
+      "title": "Mullen et al. 2015 — wearable dry EEG",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4710679/",
+      "kind": "original_abstract",
+      "locator": "检索索引返回全文片段：online pipeline in order；128 Hz，c=7，0.5 s；DOI 10.1109/TBME.2015.2481482",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "仅一手论文索引片段；全文浏览遇到CAPTCHA/HTTP403",
+      "limitations": "未核全文；只把c=7视为历史实现样例，不作推荐值或独立硬约束证据"
+    },
+    {
+      "id": "S24",
+      "title": "Bailey et al. 2023 RELAX Part 1",
+      "url": "https://raw.githubusercontent.com/NeilwBailey/RELAX/v2.0.1/Bailey%20et%20al%20%282023%29%20RELAX%20part%201%20-%20algorithm%20and%20application%20to%20oscillations.pdf",
+      "kind": "original_paper",
+      "locator": "PDF pp.3–8，Fig.1，Tables1–2；p.6 interpolation→reference→remove interpolated channels→ICA；DOI 10.1016/j.clinph.2023.01.017",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "PDF浏览器不支持octet-stream；已用requests+pymupdf内存读取相关页",
+      "limitations": "论文2023实现；不能把当前v2.0.1新增策略归于原始论文"
+    },
+    {
+      "id": "S25",
+      "title": "Bailey et al. 2023 RELAX Part 2 ERP",
+      "url": "https://raw.githubusercontent.com/NeilwBailey/RELAX/v2.0.1/Bailey%20et%20al%20%282023%29%20-%20RELAX%20part%202%20-%20ERPs.pdf",
+      "kind": "original_paper",
+      "locator": "PDF pp.3–6，Fig.1，Table1，§2.4；DOI 10.1016/j.clinph.2023.01.018",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已用requests+pymupdf内存读取相关页",
+      "limitations": "0.25 Hz 是本论文设置；并非1 Hz ICA支路投影范式的强制例子"
+    },
+    {
+      "id": "S26",
+      "title": "RELAX v2.0.1 configuration",
+      "url": "https://github.com/NeilwBailey/RELAX/blob/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_SET_PARAMETERS_AND_RUN.m",
+      "kind": "official_code",
+      "locator": "固定SHA行274–280 LowPassFilterBeforeMWF；HighPassFilter/LowPassFilter；行326–338 MWF delays",
+      "version": "dd25438353c3d53b88c93167d8e9c6d13255a42a",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读固定SHA源码",
+      "limitations": "有MWF时把分析低通延后；参数注释含 informal testing，不等于同行评审结论"
+    },
+    {
+      "id": "S27",
+      "title": "RELAX v2.0.1 wrapper",
+      "url": "https://github.com/NeilwBailey/RELAX/blob/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_Wrapper.m",
+      "kind": "official_code",
+      "locator": "行174–217 lowpass branch；340/423/519 MWF；555–563 delayed lowpass；pop_resample调用",
+      "version": "dd25438353c3d53b88c93167d8e9c6d13255a42a",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读固定SHA源码",
+      "limitations": "源码注释说先低通再降采样，但延后分析低通支路依赖pop_resample内置抗混叠；不能机械生成矛盾顺序"
+    },
+    {
+      "id": "S28",
+      "title": "RELAX Butterworth helper",
+      "url": "https://github.com/NeilwBailey/RELAX/blob/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_filtbutter.m",
+      "kind": "official_code",
+      "locator": "ordIn转换；butter调用与filtfilt；行97–114",
+      "version": "dd25438353c3d53b88c93167d8e9c6d13255a42a",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读固定SHA源码",
+      "limitations": "ord 参数、原型阶数、带通阶数和双向总响应不能混用"
+    },
+    {
+      "id": "S29",
+      "title": "Jas et al. 2017 Autoreject paper",
+      "url": "https://arxiv.org/html/1612.08194",
+      "kind": "original_paper",
+      "locator": "arXiv v3；§2.1–2.3；§5.2 Autoreject in context of ICA/SSP/SSS",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关原文",
+      "limitations": "作者稿与正式文章同研究；不是另一份独立重复证据"
+    },
+    {
+      "id": "S30",
+      "title": "Autoreject + ICA workflow",
+      "url": "https://autoreject.github.io/stable/auto_examples/plot_autoreject_workflow.html",
+      "kind": "official_documentation",
+      "locator": "tldr行20；ICA行933–937；最后一轮Autoreject",
+      "version": "autoreject 0.4.2",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读官方流程与示例代码",
+      "limitations": "首轮用bad_epochs掩码筛原始epoch用于ICA，并不要求把逐epoch插值结果输入ICA"
+    },
+    {
+      "id": "S31",
+      "title": "Autoreject AutoReject API",
+      "url": "https://autoreject.github.io/stable/generated/autoreject.AutoReject.html",
+      "kind": "official_documentation",
+      "locator": "n_interpolate, consensus, cv, fit/transform",
+      "version": "autoreject 0.4.2",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读 API 参数正文",
+      "limitations": "默认插值候选[1,4,32]需按通道数裁剪；API默认不是评价推荐"
+    },
+    {
+      "id": "S32",
+      "title": "MNE EOGRegression API",
+      "url": "https://mne.tools/stable/generated/mne.preprocessing.EOGRegression.html",
+      "kind": "official_documentation",
+      "locator": "fit Notes desired reference；picks_artifact；proj；apply after fit",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读 API 参数正文",
+      "limitations": "无EOG时不能伪造已测量EOG；拟合系数的空间与参考需要一致"
+    },
+    {
+      "id": "S33",
+      "title": "MNE regression tutorial",
+      "url": "https://mne.tools/stable/auto_tutorials/preprocessing/35_artifact_correction_regression.html",
+      "kind": "official_documentation",
+      "locator": "Bipolar EOG；Comparison with ICA；blink/saccade evoked fit",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关正文",
+      "limitations": "比较是教程情景；不能保证EOG回归永远不删除神经信号"
+    },
+    {
+      "id": "S34",
+      "title": "Gratton, Coles & Donchin 1983",
+      "url": "https://experts.illinois.edu/en/publications/a-new-method-for-off-line-removal-of-ocular-artifact/",
+      "kind": "original_abstract",
+      "locator": "作者机构记录Abstract；DOI 10.1016/0013-4694(83)90135-9",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读机构收录的一手摘要",
+      "limitations": "摘要描述去除刺激锁定变异后估计传播系数；MNE线性回归不应被宣称逐步等价于完整原始EMCP"
+    },
+    {
+      "id": "S35",
+      "title": "MNE Epochs API",
+      "url": "https://mne.tools/stable/generated/mne.Epochs.html",
+      "kind": "official_documentation",
+      "locator": "Parameters baseline, detrend, reject, decim",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读相关 API 参数段",
+      "limitations": "detrend先于baseline是该API操作约定；峰峰值对常数平移不变，不对线性去趋势不变"
+    },
+    {
+      "id": "S36",
+      "title": "MNE regression-based baseline",
+      "url": "https://mne.tools/stable/auto_tutorials/epochs/15_baseline_regression.html",
+      "kind": "official_documentation",
+      "locator": "Introduction two reasons；Regression-based baselining design matrix",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读正文方法段",
+      "limitations": "条件特异设计矩阵是ERP统计分析；不得用待预测标签构造解码预处理"
+    },
+    {
+      "id": "S37",
+      "title": "Alday 2019 baseline GLM",
+      "url": "https://pure.mpg.de/pubman/item/item_3151193_4/component/file_3228427/Alday_2019_How%20much%20baseline%20correction%20do%20we%20need%20in%20ERP%20research.pdf",
+      "kind": "original_abstract",
+      "locator": "Abstract；DOI 10.1111/psyp.13451",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "检索可见摘要；直接抓取403；细节以S36官方实现佐证",
+      "limitations": "未完整读取论文；不据摘要断言普遍无需baseline"
+    },
+    {
+      "id": "S38",
+      "title": "He & Wu — Euclidean Alignment",
+      "url": "https://arxiv.org/html/1808.05464",
+      "kind": "original_paper",
+      "locator": "§III-A Eqs.(10)–(12)；§V offline；§VI-A/B online，网页行174–188,440–448；DOI 10.1109/TBME.2019.2913914",
+      "version": null,
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读原始作者稿公式与评估协议",
+      "limitations": "EA与RA、label alignment不同；原文XX^T的缩放/中心化约定应显式化；online2019/卷期2020"
+    },
+    {
+      "id": "S39",
+      "title": "MNE CSP API",
+      "url": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
+      "kind": "official_documentation",
+      "locator": "n_components, reg, log, norm_trace, rank；fit(X,y)",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读 API 参数正文",
+      "limitations": "CSP监督；norm_trace=False当前默认；无通用组件数或正则最优值"
+    },
+    {
+      "id": "S40",
+      "title": "MNE motor imagery CSP example",
+      "url": "https://mne.tools/stable/auto_examples/decoding/decoding_csp_eeg.html",
+      "kind": "official_documentation",
+      "locator": "Epochs 7–30 Hz example；Pipeline CSP/LDA；cross_val_score",
+      "version": "MNE 1.12.1",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读示例",
+      "limitations": "示例频带与组件数不是所有运动想象最佳值"
+    },
+    {
+      "id": "S41",
+      "title": "scikit-learn Common pitfalls",
+      "url": "https://scikit-learn.org/stable/common_pitfalls.html",
+      "kind": "official_documentation",
+      "locator": "Data leakage；How to avoid data leakage；Pipelines",
+      "version": "页面显示1.9.0",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读正文",
+      "limitations": "严格归纳评估边界；transductive/online协议需要另作显式定义"
+    },
+    {
+      "id": "S42",
+      "title": "PhysioNet EEGMMIDB v1.0.0",
+      "url": "https://physionet.org/content/eegmmidb/1.0.0/",
+      "kind": "official_documentation",
+      "locator": "Methods；Data Description；Usage Notes，网页行67–90",
+      "version": "1.0.0",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读数据集官方正文",
+      "limitations": "64 scalp EEG + annotation，160Hz；不声明存在真实EOG；任务标签随run而变"
+    },
+    {
+      "id": "S43",
+      "title": "MNE-ICALabel official automatic ICA tutorial",
+      "url": "https://mne.tools/mne-icalabel/stable/generated/examples/00_iclabel.html",
+      "kind": "official_documentation",
+      "locator": "Introduction，网页行9–10；recommended preprocessing domain",
+      "version": "stable网页快照",
+      "accessed_at": "2026-09-10",
+      "evidence_scope": "已读官方输入域说明",
+      "limitations": "extended Infomax、CAR、1–100Hz；偏离可运行但性能可能受影响，原ICLabel研究未比较这些预处理因素"
+    }
+  ],
+  "operators": [
+    {
+      "id": "HP",
+      "name": "高通",
+      "scope": "连续/epoch；可为拟合支路",
+      "stage": "fixed"
+    },
+    {
+      "id": "LP",
+      "name": "分析低通/带通上界",
+      "scope": "与重采样内置AA分开",
+      "stage": "fixed"
+    },
+    {
+      "id": "NT",
+      "name": "固定notch",
+      "scope": "窄带或宽带阻带",
+      "stage": "fixed"
+    },
+    {
+      "id": "LN",
+      "name": "自适应线噪去除",
+      "scope": "CleanLine；Zapline需另适配",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "RS",
+      "name": "重采样/抽取",
+      "scope": "resample与纯decimate分开",
+      "stage": "fixed"
+    },
+    {
+      "id": "BS",
+      "name": "坏时段检测/掩码",
+      "scope": "区分标注、拟合排除、实际删除",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "BC",
+      "name": "坏道检测",
+      "scope": "永久与暂态坏道、各检测器分开",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "DR",
+      "name": "排除坏道",
+      "scope": "通道集合变更",
+      "stage": "selection"
+    },
+    {
+      "id": "IP",
+      "name": "空间插值",
+      "scope": "固定全程与逐epoch插值分开",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "RF",
+      "name": "重参考",
+      "scope": "固定线性均值与逐时robust分开",
+      "stage": "fixed_or_adaptive"
+    },
+    {
+      "id": "IF",
+      "name": "ICA拟合",
+      "scope": "PCA/whitening/unmixing state",
+      "stage": "fit"
+    },
+    {
+      "id": "IA",
+      "name": "ICA应用/成分修复",
+      "scope": "删除IC或wICA另记mode",
+      "stage": "apply"
+    },
+    {
+      "id": "AC",
+      "name": "ASR校准",
+      "scope": "clean calibration state",
+      "stage": "fit"
+    },
+    {
+      "id": "AS",
+      "name": "ASR应用",
+      "scope": "reconstruct/reject两种模式",
+      "stage": "apply"
+    },
+    {
+      "id": "MW",
+      "name": "MWF",
+      "scope": "拟合/应用及时间延迟嵌入",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "EP",
+      "name": "epoch",
+      "scope": "事件与时间窗选择",
+      "stage": "selection"
+    },
+    {
+      "id": "BL",
+      "name": "baseline",
+      "scope": "常数减法与回归GLM分开",
+      "stage": "fixed_or_fit"
+    },
+    {
+      "id": "DT",
+      "name": "去趋势",
+      "scope": "constant/linear；连续或逐epoch",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "EF",
+      "name": "EOG回归拟合",
+      "scope": "系数估计",
+      "stage": "fit"
+    },
+    {
+      "id": "EAO",
+      "name": "EOG回归应用",
+      "scope": "保留独立EOG输入",
+      "stage": "apply"
+    },
+    {
+      "id": "AR",
+      "name": "Autoreject",
+      "scope": "内部CV fit/transform；前后轮节点",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "EA",
+      "name": "Euclidean Alignment",
+      "scope": "域内参考协方差fit/transform",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "CS",
+      "name": "CSP",
+      "scope": "监督fit/transform；特征输出",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "SC",
+      "name": "归一化/标准化",
+      "scope": "sensor/feature/per-trial分别建模",
+      "stage": "fit_apply"
+    },
+    {
+      "id": "SP",
+      "name": "划分/权限",
+      "scope": "subject/session/block及标签可见性声明",
+      "stage": "protocol"
+    }
+  ],
+  "rules": [
+    {
+      "id": "R01",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "LP",
+          "b": "RS",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "降采样前必须使折叠频谱贡献满足预先声明的容许误差；AA可在resample内部完成。",
+      "condition": "fs_new<fs_old；LP指抗混叠功能时，而非任意分析低通。",
+      "implication": "检查实际总响应与输入高频PSD；禁止无AA的纯抽取；fs_new≥3*f_lowpass只作为默认FIR的经验快捷筛。",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "derivation": "抽取频谱为原频谱平移副本之和；|f|≥fs_new/2的能量会折回。理想无混叠要求带限，有限滤波应检查残留而非声称严格为零。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R02",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "LP",
+          "relation": "interaction"
+        },
+        {
+          "a": "NT",
+          "b": "RS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "数字滤波参数须满足库的频率域和设计约束；Hz标签须包含边缘定义。",
+      "condition": "设计高/低/阻带及重采样滤波器时。",
+      "implication": "保存fs、pass/stop edges、transition、FIR taps/IIR SOS、phase、padding；非法边缘拒绝；不要把FIR passband 1Hz等同Butterworth -3dB 1Hz。",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R03",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "RS",
+          "b": "EP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "连续重采样减少逐epoch边缘处理，但会引入事件时间量化；先epoch再抽取也有适用场景。",
+      "condition": "ERP潜伏期精度或短脉冲事件重要。",
+      "implication": "候选A原采样率提取events并与Raw一同resample；候选B连续低通后epoch再整数decimate；记录事件映射、碰撞、偏移和原始时刻。",
+      "source_ids": [
+        "S01"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R04",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "EP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "LP",
+          "b": "EP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "NT",
+          "b": "EP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "LN",
+          "b": "EP",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "连续段内先滤波通常较短epoch逐个滤波更少边缘伪影。",
+      "condition": "存在足够长连续数据；不能跨break、删段拼接或trial边界。",
+      "implication": "每个物理连续段独立处理；只有epochs时带padding处理后crop，报告支持长度不足；CleanLine窗口不得跨不连续epoch。",
+      "source_ids": [
+        "S01",
+        "S04",
+        "S07"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R05",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "BS",
+          "b": "HP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "LP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "NT",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "LN",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "巨大尖峰/饱和区在滤波前识别，可避免滤波把伪影扩散到邻近好数据。",
+      "condition": "极端非生理幅度或采集跳变；不是所有眨眼都预删。",
+      "implication": "标注并分段、保留原时间映射；不要拼接后跨boundary滤波；mask扩张量随脉冲响应而定，不固定1秒。",
+      "source_ids": [
+        "S04",
+        "S03"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R06",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "LP",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "HP",
+          "b": "NT",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "LP",
+          "b": "NT",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "HP",
+          "b": "RF",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "LP",
+          "b": "RF",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "NT",
+          "b": "RF",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "HP",
+          "b": "IP",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "LP",
+          "b": "IP",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "NT",
+          "b": "IP",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "HP",
+          "b": "IA",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "LP",
+          "b": "IA",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "NT",
+          "b": "IA",
+          "relation": "commutes_if"
+        }
+      ],
+      "claim": "固定线性空间变换与所有通道一致的线性时间变换可交换；固定LTI滤波器在适当边界假设下可交换。",
+      "condition": "权重/坏道集合/IC mask均已冻结；同一时间算子、边界规则，且无中间阈值/重拟合/wICA。 IA仅在有效操作确为线性、没有未传播的加回均值/仿射偏置时适用；实际ICA.apply常含中心化与均值重建，需单独检查offset。",
+      "implication": "作为搜索等价类降重，不硬加任意方向；有限长度LTI两次滤波边界处理需实测等价；逐epoch变权、Huber、ASR、wICA不适用。",
+      "source_ids": [
+        "S03",
+        "S08",
+        "S13"
+      ],
+      "derivation": "X∈R^(C×T)，空间A、时间H时A(XH)=(AX)H；无限/一致扩展卷积h1*h2=h2*h1。浮点误差另计。 若实际操作为AX+b，则还需bH=b才有同样交换结论；HP通常不保留常数，因此不可直接套用。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R07",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "LN",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "LN",
+          "b": "RF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "PREP用临时高通副本估计并移除线噪，再从原数据减去所估线噪以保留低频。",
+      "condition": "选择PREP分支；漂移影响线噪估计；LN系数依数据而变。",
+      "implication": "区分fit_view与apply_view；不把自适应LN标为固定LTI可交换；不同参考/滤波可能改变检测和拟合结果。",
+      "source_ids": [
+        "S08",
+        "S07"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R08",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "LP",
+          "b": "NT",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "若分析带外线噪已被总响应充分衰减，额外notch可能无收益；频带重叠则会损失目标信号。",
+      "condition": "例如7–30Hz MI、50Hz工频；但transition泄漏或后续宽带支路仍可能需要处理。",
+      "implication": "同时探索none/narrow/broad或自适应LN；按实际PSD和目标频带验证，不能仅凭h_freq<50自动认定无需notch。",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S07"
+      ],
+      "derivation": "总响应H_total=H_LP*H_NT；只有总残留满足任务容限时才可省去notch。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R09",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "NT",
+          "b": "RS",
+          "relation": "interaction"
+        },
+        {
+          "a": "LN",
+          "b": "RS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "高于新Nyquist的工频及谐波必须由AA抑制，不能降采样后才在原工频位置补notch来消除已折叠成分。",
+      "condition": "下采样存在工频谐波；notch本身不等于完整AA。",
+      "implication": "按fs_new与通带只生成合法谐波候选；在resample前检查所有可折入目标带的能量。",
+      "source_ids": [
+        "S01",
+        "S06"
+      ],
+      "derivation": "混叠频率为将f折叠到[0,fs_new/2]；混叠后与同频神经信号不可唯一分离。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R10",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "NT",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "NT",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "NT",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "LN",
+          "b": "IF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "宽notch可覆盖漂移线噪但删除更宽神经频带；窄notch保护邻频但可能漏掉展宽噪声。",
+      "condition": "关注gamma/SSVEP谐波、谱斜率或ICA频谱分类时尤其重要。",
+      "implication": "报告阻带与过渡带，比较邻频功率损失和残留；RELAX 47–53Hz是其论文设置，不能普遍优先于窄带。",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S24",
+        "S07"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R11",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "BC",
+          "b": "RF",
+          "relation": "interaction"
+        },
+        {
+          "a": "BC",
+          "b": "DR",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "坏道和参考相互影响，未经处理的坏道参与普通均值会污染其他通道。",
+      "condition": "普通平均参考或PREP稳健参考；永久坏道与瞬时伪影分开。",
+      "implication": "先排除明显flat/NaN/saturation；再采用BC↔RF迭代或显式坏道排除的均值；记录收敛与参考集合。",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S10"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R12",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "BC",
+          "b": "IP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "DR",
+          "b": "IP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "必须明确哪些通道需要插值、哪些好通道作为供体及几何位置；不能把已删通道的顺序猜回去。",
+      "condition": "空间插值或恢复标准montage时。",
+      "implication": "保存原始通道顺序/类型/位置、坏道原因、供体列表；未知montage或无可靠供体则拒绝该插值候选。",
+      "source_ids": [
+        "S08",
+        "S31"
+      ],
+      "derivation": "插值定义为X_bad=W(montage,good,bad)X_good；缺少上述输入时操作未定义，而非一个可任意排序的黑盒。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R13",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "DR",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BC",
+          "b": "IF",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "排除坏道和极端坏段有利于ICA拟合；不应把所有可由ICA识别的眼动先删除。",
+      "condition": "全局ICA，充分样本与保留代表性伪影；排除并非重建。",
+      "implication": "允许ICA使用训练掩码子集；记录有效样本数、维数、收敛与IC稳定性。",
+      "source_ids": [
+        "S14",
+        "S29",
+        "S30"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R14",
+      "strength": "conflict",
+      "pairs": [
+        {
+          "a": "IP",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "IP",
+          "b": "IA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "插值可置于ICA前并显式降维，也可在ICA清理后恢复通道；没有普适的唯一顺序。",
+      "condition": "ICA前插值增加冗余；RELAX论文为均衡参考临时插值，再去掉这些通道后拟合ICA。",
+      "implication": "提供两条可审计分支；默认搜索保留原好道拟合/清理后插值；前插值时运行rank guard，别把MNE粗略减秩数法当定律。",
+      "source_ids": [
+        "S12",
+        "S24"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R15",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "RF",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "RF",
+          "b": "IA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ICA权重直接应用要求拟合与应用的参考、通道顺序/类型/单位、空间投影一致。",
+      "condition": "沿用原ICA权重而不做正确变换或重拟合。",
+      "implication": "reference/projector/channel schema hash不一致时拒绝直接apply；清理完成后可以更改下游参考，但旧ICA模型不得继续直接用。",
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "derivation": "若X'=AX，W通常不能直接用于X'；A可逆时可令W'=WA^-1，降秩则只能在兼容子空间处理。并非禁止一切ICA后的重参考。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R16",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "IA",
+          "b": "RF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "RF",
+          "b": "IF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "逐时Huber/median参考不同于固定权重线性参考，通常不宜在经典线性ICA前使用。",
+      "condition": "reference.mode为逐样本稳健估计；PREP最终固定坏道/插值后的均值不应混为此类。",
+      "implication": "把robust_reference拆为算法类型；Huber候选放在已完成ICA清理之后；如在前面探索，标模型假设受损并单独评价。",
+      "source_ids": [
+        "S11",
+        "S08"
+      ],
+      "derivation": "数据依赖r(X(t))使映射非固定矩阵；不再满足标准瞬时固定线性混合模型。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R17",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "RF",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "IP",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "IA",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "RF",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "IP",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "IA",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "RF",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "IP",
+          "b": "IF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "平均参考/插值/空间成分删除可能使数据或协方差奇异，逆、白化与ICA维度必须匹配实际有效子空间。",
+      "condition": "非满秩线性空间处理；不是凭通道数推断满秩。",
+      "implication": "计算有效秩与特征谱；n_ICA≤rank，n_CSP≤可识别维数；EA用明确降维或带正则方案。",
+      "source_ids": [
+        "S12",
+        "S38",
+        "S39"
+      ],
+      "derivation": "R=I−1w^T且w^T1=1时rank(R)=C−1，但rank(RX)可更低；IP不能增加独立信息。连续叠加的降秩量一般不能简单逐项相减。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R18",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "IF",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "ICA拟合支路通常从1–2Hz高通起探索，不能将该值强制用于ERP最终数据。",
+      "condition": "慢漂移损害分离；研究任务/移动状态不同；低频源重要时需对照。",
+      "implication": "fit_hp候选0.5/1/2Hz；扩展到0.25/3/4Hz仅为敏感性分支；低频分析支路独立保留。",
+      "source_ids": [
+        "S12",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R19",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "IF",
+          "b": "IA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "HP",
+          "b": "IA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "先拟合ICA再应用；高通拟合所得空间模型可以应用到较低高通数据，但空间与混合稳定性是前提。",
+      "condition": "仅改变一致的时间滤波；没有改变通道、参考、单位、空间清理模型。",
+      "implication": "保存fit-view/apply-view lineage；在低频支路评价残留漂移和清理失真；禁止将对新频率的有效性当数学保证。",
+      "source_ids": [
+        "S13",
+        "S14",
+        "S16"
+      ],
+      "derivation": "共享时间滤波保留固定混合矩阵A：XH=A(SH)，支持共享W；不保证被拟合滤波完全压制的源在低频能正确分离。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R20",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SC",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "IP",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "DR",
+          "b": "IA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ICA拟合后的传感器缩放、EA、插值或重排会改变坐标；原模型不能无检查应用。",
+      "condition": "这些变换位于IF和IA之间；feature级缩放在IA完成之后不在此限制内。",
+      "implication": "对所有空间状态变化设置model-invalidated事件；冻结同一变换或正确传递模型后才允许apply。",
+      "source_ids": [
+        "S12",
+        "S14",
+        "S38"
+      ],
+      "derivation": "形状相同不代表坐标相同；一般WAX≠WX。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R21",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "EP",
+          "b": "IF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ICA可拟合连续数据或合并的未baseline epochs；epoch先后不是数学硬顺序。",
+      "condition": "代表性样本足够，分段不引入额外不同通道变换；滤波在截段前处理。",
+      "implication": "同时允许continuous-fit与epoch-mask-fit；不要因数据已epoch就禁用ICA。",
+      "source_ids": [
+        "S12",
+        "S13"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R22",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "IF",
+          "b": "BL",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "DT",
+          "b": "IF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "逐epoch baseline产生不同偏移，官方建议ICA拟合前高通但不做baseline；去趋势不能当作等价高通替代。",
+      "condition": "IF输入为epochs；DT若逐段拟合会改变统计。",
+      "implication": "epochs.fit.baseline=None；DT none/linear另作对照；保留连续fit方案。",
+      "source_ids": [
+        "S12",
+        "S35"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R23",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "IA",
+          "b": "BL",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EAO",
+          "b": "BL",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "AS",
+          "b": "BL",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "ICA清理可能引入DC偏移，需要baseline时常放在ICA之后；其他修复后重查baseline。",
+      "condition": "ERP或明确需要均值基线的输出；AS/EAO次序是工程外推，非已证实最优。",
+      "implication": "BL作为末端分析分支；不得无条件二次baseline；检查拟合/清理是否更改offset。",
+      "source_ids": [
+        "S13",
+        "S35"
+      ],
+      "derivation": "对AS与EAO只是由修复可能改变偏移的工程检查需求推导；不声称有直接比较证据。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R24",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "DT",
+          "b": "BL",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EP",
+          "b": "BL",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EP",
+          "b": "DT",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "MNE Epochs先detrend再baseline；epoch基线窗口必须在已定义epoch内且含有效样本。",
+      "condition": "选择MNE内建detrend/baseline；连续去均值不是event baseline。",
+      "implication": "记录DT域和阶数；baseline=[tmin,tmax]及端点含义；比较none/mean/GLM需独立分支。",
+      "source_ids": [
+        "S35",
+        "S36"
+      ],
+      "derivation": "固定epoch常数均值是时间投影；linear detrend使用另一投影，两者次序不普遍可交换。API顺序属于合同而非自然定律。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R25",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "BL",
+          "b": "AR",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "BL",
+          "b": "BS",
+          "relation": "interaction"
+        },
+        {
+          "a": "BL",
+          "b": "BC",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "固定窗口内减常数不改变通道峰峰值；这不等于不影响所有拒绝指标或Autoreject整个优化过程。",
+      "condition": "仅检测指标ptp、同样窗口和mask；BL为每epoch每通道常数减法。",
+      "implication": "只对ptp阈值判定使用等价性；线性detrend、zscore、回归GLM或学习阈值不标可交换。",
+      "source_ids": [
+        "S35",
+        "S29"
+      ],
+      "derivation": "max(x−b)−min(x−b)=max(x)−min(x)。AR内部CV损失与跨trial统计可能改变，故不可把全AR标成无条件等价。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R26",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "BC",
+          "b": "LP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BC",
+          "b": "NT",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BC",
+          "b": "SC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "LP",
+          "b": "MW",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "高频噪声或异常幅度检测前过窄低通/标准化可能隐藏检测依据。",
+      "condition": "PREP HF-ratio或RELAX肌电谱斜率检测；检测专用副本可以与最终分析频带不同。",
+      "implication": "先保留宽带原幅度diagnostic view；最终MI 7–30Hz在诊断之后；RELAX肌电检测需保留其规定频段。",
+      "source_ids": [
+        "S08",
+        "S26"
+      ],
+      "derivation": "BC>NT/SC是检测特征会被变换改变的工程推断；具体优劣需消融。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R27",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "BS",
+          "b": "BC",
+          "relation": "interaction"
+        },
+        {
+          "a": "BS",
+          "b": "IP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "暂态伪影不能自动等同整条坏道；删段和坏道判断相互改变统计。",
+      "condition": "通道只在部分时段失效、运动污染或缺失多。",
+      "implication": "保存channel×time mask；先比较局部修复/整道删除的保留率及空间覆盖；无证据时不强制单向。",
+      "source_ids": [
+        "S08",
+        "S29",
+        "S31"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R28",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "HP",
+          "b": "AS",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "ASR校准与应用需相容的去漂移处理；0.5/1Hz是源码例子，GUI transition是另一参数语义。",
+      "condition": "asr_calibrate/asr_process；零均值和稳定校准。",
+      "implication": "同时记录外部HP与内部加权滤波B/A；不要把ASR阈值解释成原始EEG普通z-score。",
+      "source_ids": [
+        "S18",
+        "S20",
+        "S21"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R29",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "BC",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "DR",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "IP",
+          "b": "AC",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ASR校准前排除故障通道；插值的冗余会改变校准统计。",
+      "condition": "多通道ASR；校准与应用必须同通道空间。",
+      "implication": "优先可靠原好道校准，记录rank与条件数；前插值作为有秩检查的探索分支。",
+      "source_ids": [
+        "S19",
+        "S20"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R30",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "AC",
+          "b": "AS",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "RF",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "DR",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "AS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ASR先校准再应用；校准状态与数据的通道空间、参考、尺度、频谱处理及采样率必须相容。",
+      "condition": "复用ASR state；跨chunk延续状态。",
+      "implication": "空间/频谱/采样率变更使state失效时重校准或显式变换；在线传递state并登记lookahead。",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R31",
+      "strength": "conflict",
+      "pairs": [
+        {
+          "a": "AS",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "AS",
+          "b": "IA",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "适度ASR前处理可改善后续ICA，但激进重建可破坏可分离性、删除神经信号；不是越强越好。",
+      "condition": "ASR重建模式，与仅拒绝坏段模式不同。",
+      "implication": "探索ASR-only/ICA-only/ASR-mask→ICA/ASR-reconstruct→ICA；k=20/30作为经验起点，加no-ASR对照；清理收益和信号保真双评。",
+      "source_ids": [
+        "S22",
+        "S14",
+        "S18"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R32",
+      "strength": "unknown",
+      "pairs": [
+        {
+          "a": "IA",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "MW",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "AS",
+          "relation": "interaction"
+        },
+        {
+          "a": "EAO",
+          "b": "AS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "未核实足以支持ICA后再ASR、MWF+ASR、Autoreject+ASR或EOG回归+ASR的通用优先顺序。",
+      "condition": "不同修复方法叠加且共享同一原始信号。",
+      "implication": "允许预算化消融；总重建比例/失真/秩需追踪，不因工具兼容就默认串联。",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S29"
+      ],
+      "derivation": "来源用于界定方法范围；并不直接证明这些组合顺序。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R33",
+      "strength": "conflict",
+      "pairs": [
+        {
+          "a": "RF",
+          "b": "AC",
+          "relation": "interaction"
+        },
+        {
+          "a": "RF",
+          "b": "AS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ASR前/后平均参考均见实现路线；关键是校准空间一致和rank，不能固定一条跨库顺序。",
+      "condition": "Mullen历史样例ASR后CAR；通用ASR可在给定参考上校准。",
+      "implication": "按后端配方建分支；改变参考后不复用旧state；Huber另标非线性。",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S23"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R34",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "RS",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "RS",
+          "b": "AS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "若ASR是在目标采样率上运行，应先重采样再校准；校准后改变fs会改变窗口和内部频谱滤波含义。",
+      "condition": "sample-based state和统计窗口依赖fs。",
+      "implication": "冻结fs或重校准；不得把0.5秒硬编码成固定样本数跨fs复用。",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R35",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "AS",
+          "b": "EP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "AC",
+          "b": "EP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "连续ASR需要窗口、lookahead及状态；逐epoch运行若随意重置会改变算法。",
+      "condition": "应用原连续/在线ASR到epochs。",
+      "implication": "优先连续清理后epoch；只有epochs时明确每trial state reset、padding、校准方式，并另标算法变体。",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "derivation": "这是从状态ful实现推导的接口与边界风险，缺少普适顺序比较。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R36",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "BS",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "AS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "ASR的校准需相对干净而代表性的片段；没有足够校准数据时不能悄悄拿全程严重污染数据替代。",
+      "condition": "强污染、短记录或非平稳状态。",
+      "implication": "记录校准来源/时长/通过标准；源码建议不少于约30s、常用约1min；不足标needs_calibration，可继续其它独立候选。",
+      "source_ids": [
+        "S20",
+        "S19"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R37",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "AR",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "IA",
+          "b": "AR",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "Autoreject可先提供坏epoch掩码以拟合ICA，再在ICA清理后重新运行。",
+      "condition": "使用官方two-pass流程；两个AR实例/阶段分开。",
+      "implication": "AR_pre只用reject_log.bad_epochs筛选原epochs供IF；IA应用原待清理epochs；AR_post重新拟合/评价，保留前后日志。",
+      "source_ids": [
+        "S30",
+        "S29"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R38",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "EP",
+          "b": "AR",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "AutoReject API输入epochs；它的内部交叉验证不替代外部解码评估划分。",
+      "condition": "autoreject.AutoReject.fit/transform。",
+      "implication": "固定epochs边界、通道位置和类型；按可用trial数设CV；必须另外控制fit scope。",
+      "source_ids": [
+        "S31",
+        "S29",
+        "S41"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R39",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "BC",
+          "b": "AR",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "IP",
+          "b": "AR",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "RF",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "CS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "永久坏道处理与逐epoch局部插值需分开；局部插值使每trial空间变换不同，影响参考/协方差/后续空间滤波。",
+      "condition": "AR局部修复或先全局IP。",
+      "implication": "保存每trial插值mask；比较reject-only和repair；不把插值后高相关/高rank视为恢复独立观测。",
+      "source_ids": [
+        "S29",
+        "S31",
+        "S08"
+      ],
+      "derivation": "逐trial矩阵W_i不同，C_i变为W_i C_i W_i^T，改变CSP/EA的分布。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R40",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "RF",
+          "b": "EF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BC",
+          "b": "EF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "DR",
+          "b": "EF",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "EOG回归拟合前使用目标EEG参考并排除故障EEG/EOG通道。",
+      "condition": "使用MNE EOGRegression；有独立、可靠EOG预测变量。",
+      "implication": "按channel type选择；记录proj状态与EOG导联极性；无可靠EOG则该候选不适用，不以额极EEG静默代替。",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R41",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "EF",
+          "b": "EAO",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "RF",
+          "b": "EAO",
+          "relation": "interaction"
+        },
+        {
+          "a": "DR",
+          "b": "EAO",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "EAO",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "EOG回归先fit后apply；应用时EEG/EOG通道坐标、参考与单位需匹配拟合。",
+      "condition": "复用线性回归系数。",
+      "implication": "输入schema检查；若EEG/EOG缩放或重参考改变，重拟合或正确变换系数；保留EOG与EEG同一时间轴。",
+      "source_ids": [
+        "S32",
+        "S34"
+      ],
+      "derivation": "Y_clean=Y−BE；B依EEG和EOG坐标。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R42",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "LP",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "NT",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "RS",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "HP",
+          "b": "EAO",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "LP",
+          "b": "EAO",
+          "relation": "commutes_if"
+        },
+        {
+          "a": "NT",
+          "b": "EAO",
+          "relation": "commutes_if"
+        }
+      ],
+      "claim": "同一固定时间滤波施于EEG/EOG时，固定回归减法可交换；滤波后重新拟合系数则不保证等价。",
+      "condition": "EOG预测信号和EEG同步用同一H，B已固定。",
+      "implication": "fit-view/applied-view频带显式；不要套用ICA高通投影经验宣称任意EOG回归系数跨频率稳定。",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "derivation": "(Y−BE)H=YH−B(EH)；B_hat=(YE^T)(EE^T)^-1一般随H改变。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R43",
+      "strength": "unknown",
+      "pairs": [
+        {
+          "a": "EAO",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "EAO",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "EF",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "EF",
+          "b": "IA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "EOG回归和ICA是可替代或互补候选；没有已核实的普适叠加顺序。",
+      "condition": "眼动与任务信号相关、EOG含脑信号或ICA眼动分离不完整。",
+      "implication": "no ocular cleanup/EOG-only/ICA-only/两种顺序小规模对照；评价眨眼残留及任务信号损失，不按振幅越小评分越好。",
+      "source_ids": [
+        "S15",
+        "S33",
+        "S34"
+      ],
+      "derivation": "Gratton完整方法有处理刺激锁定变异的步骤；普通最小二乘回归不能自动继承这些保证。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R44",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "EP",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "BS",
+          "b": "EF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BL",
+          "b": "EF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "回归系数可在连续数据或眨眼/扫视evoked上估计；baseline/截段会改变拟合分布。",
+      "condition": "EOG方法与拟合信号明确。",
+      "implication": "保留continuous、artifact-evoked两种训练视图；生理伪影要有代表性；极端饱和段不参与拟合。",
+      "source_ids": [
+        "S32",
+        "S33",
+        "S34"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R45",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "MW",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BC",
+          "b": "MW",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "DR",
+          "b": "MW",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BS",
+          "b": "MW",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "MW",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "MW",
+          "b": "IA",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "RELAX论文以极端坏段标记、MWF、稳健参考、ICA/wICA等步骤处理。",
+      "condition": "选RELAX配方；MWF噪声/干净mask可靠。",
+      "implication": "MWF与wICA可独立或组合；mask不能全clean/全artifact；连续时间保留，临时NaN/坏段处理严格跟随后端。",
+      "source_ids": [
+        "S24",
+        "S25"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R46",
+      "strength": "conflict",
+      "pairs": [
+        {
+          "a": "LP",
+          "b": "MW",
+          "relation": "interaction"
+        },
+        {
+          "a": "RS",
+          "b": "MW",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "RELAX原论文先1–80Hz滤波；当前MWF实现建议把分析低通延后以减轻延迟嵌入矩阵秩问题。",
+      "condition": "RELAX版本、是否MWF、采样率/延迟嵌入不同。",
+      "implication": "实现两个versioned recipe；把AA和分析LP分开；低通延后不取消降采样AA；别拼接成相互矛盾的DAG。",
+      "source_ids": [
+        "S24",
+        "S26",
+        "S27"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R47",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "MW",
+          "b": "RF",
+          "relation": "interaction"
+        },
+        {
+          "a": "MW",
+          "b": "EP",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "MW",
+          "b": "IP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "RELAX可在临时参考副本检测drift，MWF清理后再最终参考；最终插值常在后续分析阶段。",
+      "condition": "配方内检测视图与输出视图不同。",
+      "implication": "分别命名RF_diagnostic/RF_final、IP_temp/IP_final；不得用单一RF/IP节点制造循环。",
+      "source_ids": [
+        "S24",
+        "S27"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R48",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SP",
+          "b": "IF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "AC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "EF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "AR",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "CS",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "SC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "MW",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "BC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SP",
+          "b": "LN",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "先声明评估划分及可见数据，所有数据驱动fit限定于协议允许范围。",
+      "condition": "严格归纳预测；离线整记录无监督清理可作为单独预声明的transductive recording protocol。",
+      "implication": "split单位用subject/session/block避免重叠trial；source-label与target-label权限分开；内部CV、无监督、无标签均不能自动豁免scope。",
+      "source_ids": [
+        "S41",
+        "S38"
+      ],
+      "derivation": "SP是权限声明节点，不要求每个独立固定滤波都在随机trial拆分后进行；泛化目标决定允许的fit数据。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R49",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SP",
+          "b": "CS",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EA",
+          "b": "CS",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "CSP用训练标签拟合；EA若选用，应在CSP看到的数据空间确定之后拟合CSP。",
+      "condition": "传感器级EA+CSP解码。",
+      "implication": "每outer fold内fit EA/CS；n_components和reg在inner CV选择；禁止全数据先CSP再CV。EA目标数据权限按R50。",
+      "source_ids": [
+        "S39",
+        "S40",
+        "S38",
+        "S41"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R50",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SP",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EA",
+          "b": "EP",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "EA无需标签但需要域内数据；全目标域无标签EA属于transductive，不能当严格inductive或真实online成绩。",
+      "condition": "按subject/session求mean covariance。",
+      "implication": "fit_scope枚举train_only/target_calibration_unlabeled/target_all_unlabeled/past_only；在线更新不读未来，预先规定当前trial是否参与及决策时刻。",
+      "source_ids": [
+        "S38",
+        "S41"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R51",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "EA",
+          "b": "RF",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "IP",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "SC",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "标准EA的全空间逆平方根要求正定；平均参考后通常奇异。",
+      "condition": "Rbar^-1/2定义在全传感器空间。",
+      "implication": "检测lambda_min及条件数；支持rank-subspace EA或shrinkage EA并标algorithm_variant；不要静默clip特征值后仍宣称精确原版EA。",
+      "source_ids": [
+        "S38",
+        "S12"
+      ],
+      "derivation": "Rbar=UΛU^T；Λ>0才能取普通Λ^-1/2。伪逆产生投影而非I；加λI后Q Rbar Q^T也一般不等于I。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R52",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "LP",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "NT",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EP",
+          "b": "EA",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "BL",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "DT",
+          "b": "EA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "EA参考协方差应从最终分析频带/窗/基线定义的数据估计，改变这些条件通常需重估。",
+      "condition": "已选择EA且目标是对这一数据视图均值协方差对齐。",
+      "implication": "先确定view再fit EA；多频带EA按band分开作为候选，不默认所有频带共享同一个Q。",
+      "source_ids": [
+        "S38"
+      ],
+      "derivation": "Q对C_view白化；换频带/时窗后C不同，旧Q不保证目标均值接近I。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R53",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "CS",
+          "b": "SC",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "SC",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "EA",
+          "b": "CS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "特征标准化可在CSP功率/log功率后；传感器标准化在CSP前是另一算法选择，不能混称一个normalize。",
+      "condition": "SC作用轴不同；CSP fit与transform一致。",
+      "implication": "schema记录sensor/epoch/feature axis；CSP log=False可能已有train mean/std标准化，避免隐式双重zscore。",
+      "source_ids": [
+        "S39",
+        "S41"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R54",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "SC",
+          "b": "RF",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "IP",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "AC",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "BC",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "单位换算、固定逐道尺度与数据驱动zscore有不同权限和空间影响。",
+      "condition": "固定μV↔V单位变换、按训练统计标准化、按trial标准化。",
+      "implication": "先统一物理单位；检测/修复参数始终带单位；per-trial zscore会删除trial幅值信息，需与none对照，不视为免费降噪。",
+      "source_ids": [
+        "S41",
+        "S08",
+        "S39"
+      ],
+      "derivation": "diag(s)一般不与参考/插值矩阵交换；全局标量在纯线性步骤可交换，但阈值/数值容限需同步缩放。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R55",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SP",
+          "b": "HP",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "LP",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "NT",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "RS",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "EP",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "DT",
+          "relation": "interaction"
+        },
+        {
+          "a": "SP",
+          "b": "BL",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "时间域非因果预处理可跨训练/测试时间边界传递信息；固定参数本身不等于没有时间泄漏。",
+      "condition": "同一记录按时间block留出；在线预测/预刺激解码。",
+      "implication": "按独立record/block处理或设置与有效滤波支持相符的guard interval；在线只用过去与声明延迟内样本，禁止filtfilt假装实时。",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S41"
+      ],
+      "derivation": "非因果卷积y(t)包含x(t+τ)，即使滤波系数固定也能访问未来样本；全段detrend/FFT resample同理。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R56",
+      "strength": "unknown",
+      "pairs": [
+        {
+          "a": "AR",
+          "b": "MW",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "MW",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "MW",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "LN",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "LN",
+          "b": "AR",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "这些自适应方法组合未获得覆盖各任务、噪声强度和评价目标的直接顺序证据。",
+      "condition": "超出已核实官方配方。",
+      "implication": "不生成强先验；小预算随机/析因顺序探索，记录所有fit scope、形状/秩与失败。",
+      "source_ids": [
+        "S24",
+        "S29",
+        "S38"
+      ],
+      "derivation": "所列文献定义方法及局部组合，不能视为这些算子对的直接比较证据。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R57",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "HP",
+          "b": "BL",
+          "relation": "interaction"
+        },
+        {
+          "a": "DT",
+          "b": "BL",
+          "relation": "interaction"
+        },
+        {
+          "a": "LP",
+          "b": "BL",
+          "relation": "interaction"
+        },
+        {
+          "a": "NT",
+          "b": "BL",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "高通、去趋势、传统baseline、GLM baseline解决的问题和失真不同，不能机械全部叠加。",
+      "condition": "ERP慢电位、长epoch、条件间prestimulus差异。",
+      "implication": "保留低HP+mean、低HP+GLM、低HP+none；分析原始和清理差波/潜伏期；GLM含条件标签只用于合适统计模型。",
+      "source_ids": [
+        "S17",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R58",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "SP",
+          "b": "BL",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "条件特异GLM baseline若用待预测标签构建设计矩阵，不允许作为未知标签解码输入。",
+      "condition": "BL.mode=regression且包含condition或interaction。",
+      "implication": "统计ERP分析与预测pipeline分离；prediction只使用决策时已知协变量，在训练集拟合。",
+      "source_ids": [
+        "S36",
+        "S41"
+      ],
+      "derivation": "若输入预处理依赖测试y，则预测已经读取答案；这属于协议违反而非baseline算法数学失效。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R59",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "BS",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "BS",
+          "b": "EA",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "EA",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "修复/拒绝可改变类别、被试和难度分布；仅对剩余容易trial计准确率可能误导。",
+      "condition": "不同pipeline保留不同样本集合。",
+      "implication": "同时报告共同样本上的性能、原始样本分母覆盖率/abstention、按类/被试保留率；无法输出不能作为缺失后静默删除。",
+      "source_ids": [
+        "S29",
+        "S38",
+        "S41"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R60",
+      "strength": "hard_math",
+      "pairs": [
+        {
+          "a": "IP",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "RF",
+          "b": "CS",
+          "relation": "interaction"
+        },
+        {
+          "a": "SC",
+          "b": "CS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "CSP广义特征分解要求协方差问题在有效空间可解；组件数/白化条件不能只依channel count。",
+      "condition": "常规full-space generalized eig或whitening实现。",
+      "implication": "rank-aware covariance、正则与数据尺度检查；reg∈[0,1]仅适用shrinkage权重；不同算法字符串需后端验证。",
+      "source_ids": [
+        "S39",
+        "S12"
+      ],
+      "derivation": "两类问题C1w=λ(C1+C2)w，若分母协方差奇异，需降维或明确正则；不是所有CSP算法都必须原始C1满秩。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R61",
+      "strength": "conditional_empirical",
+      "pairs": [
+        {
+          "a": "LP",
+          "b": "CS",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "HP",
+          "b": "CS",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "EP",
+          "b": "CS",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "CSP分析频带与时窗选择会改变学习目标；7–30Hz仅为官方MI示例。",
+      "condition": "运动想象mu/beta；与ERP/高gamma任务区分。",
+      "implication": "候选7–30、8–30、4–40Hz和filter-bank需在inner CV比较；滤波频带先冻结再fit CSP。",
+      "source_ids": [
+        "S39",
+        "S40"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R62",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "IP",
+          "b": "RF",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "插值前后重参考通常不是同一操作，但恰当的固定线性矩阵可组合；参考覆盖偏差需关注。",
+      "condition": "坏道分布不均或不同subjects需统一montage。",
+      "implication": "比较exclude-bads mean与interpolate-then-mean；最终reference写明包含哪些恢复道；根据总变换检查rank。",
+      "source_ids": [
+        "S08",
+        "S24"
+      ],
+      "derivation": "RF(IP(X))与IP(RF(X))矩阵乘积一般不同；只有特定权重兼容条件才交换。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R63",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "DT",
+          "b": "HP",
+          "relation": "interaction"
+        },
+        {
+          "a": "DT",
+          "b": "LP",
+          "relation": "interaction"
+        },
+        {
+          "a": "DT",
+          "b": "NT",
+          "relation": "interaction"
+        },
+        {
+          "a": "DT",
+          "b": "RS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "连续/逐epoch线性去趋势不是LTI；不能与滤波/截窗/重采样无条件换序。",
+      "condition": "detrend的设计矩阵依当前时间窗。",
+      "implication": "节点记录fit time support；长段趋势去除与epoch内去趋势分别探索；检查慢波保真。",
+      "source_ids": [
+        "S03",
+        "S35"
+      ],
+      "derivation": "DT=I−Z(Z^TZ)^-1Z^T为依有限窗口的投影；不同时间变换H一般不与DT交换。",
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R64",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "NT",
+          "b": "LN",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "notch和自适应线噪方法的参数语义不同，不能把相同数值Hz作为等价设置。",
+      "condition": "比较MNE notch/CleanLine/RELAX bandstop。",
+      "implication": "统一保存stopband width、transition width、multitaper bandwidth、line-scan range各自字段；可构建同残留水平的比较，但不强制同数值。",
+      "source_ids": [
+        "S06",
+        "S07",
+        "S24"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R65",
+      "strength": "engineering",
+      "pairs": [
+        {
+          "a": "RS",
+          "b": "IF",
+          "relation": "interaction"
+        },
+        {
+          "a": "RS",
+          "b": "EF",
+          "relation": "interaction"
+        },
+        {
+          "a": "RS",
+          "b": "AR",
+          "relation": "interaction"
+        },
+        {
+          "a": "RS",
+          "b": "BC",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "降采样可减少计算但会改变可用频谱、检测特征、事件精度及统计样本数。",
+      "condition": "为了加速拟合而降采样或ICA decim。",
+      "implication": "拟合支路保留AA及事件映射；不把ICA decim当自动带AA resample；保留原频谱用于HF坏道诊断；比较运行成本与保真。",
+      "source_ids": [
+        "S01",
+        "S12",
+        "S08"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R66",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "IF",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "AR",
+          "b": "IP",
+          "relation": "interaction"
+        },
+        {
+          "a": "AS",
+          "b": "BS",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "清理与剔除、fit mask与apply mask应是不同操作语义。",
+      "condition": "ICA/wICA、ASR reconstruction/rejection、Autoreject repair/reject。",
+      "implication": "保存被删除的IC、时间点、trial、插值通道、原样本ID；相同方法名下不同mode不得混算。",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S30",
+        "S31"
+      ],
+      "derivation": null,
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
+    },
+    {
+      "id": "R68",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "IF",
+          "b": "IA",
+          "relation": "interaction"
+        },
+        {
+          "a": "EF",
+          "b": "EAO",
+          "relation": "interaction"
+        }
+      ],
+      "claim": "EEGMMIDB没有真实EOG可用，EOG回归及依赖真实EOG的ICA自动眼动评估不适用；ICLabel在160Hz数据上偏离官方1–100Hz频带域。",
+      "condition": "仅使用原EEGMMIDB通道；没有另行采集EOG；Nyquist=80Hz。",
+      "implication": "no-EOG自动路线禁用EF/EAO；不把Fp1/Fp2重标为真实EOG；ICLabel输出保留domain_flags，未做目标域验证时exclude=[]。",
+      "source_ids": [
+        "S42",
+        "S43",
+        "S32"
+      ],
+      "derivation": "100Hz超过80Hz Nyquist；上采样不能恢复未采到的80–100Hz信息。domain mismatch不等于ICLabel必然失败，但不足以声称可靠自动选择。",
+      "scope": "EEGMMIDB及当前自动策略"
+    },
+    {
+      "id": "R69",
+      "strength": "hard_contract",
+      "pairs": [
+        {
+          "a": "AC",
+          "b": "RF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "AS",
+          "b": "RF",
+          "relation": "prefer_before"
+        },
+        {
+          "a": "AS",
+          "b": "IP",
+          "relation": "prefer_before"
+        }
+      ],
+      "claim": "ASRpy自动清理算子要求校准空间满秩；坏道标记后，在好道原参考上拟合与应用，随后恢复坏道并重参考。",
+      "condition": "EEG-ASR-AUTO的满秩校准合同。",
+      "implication": "满足至少30秒合格校准和固定空间合同；不适用或拟合失败须记录失败，不能声称已执行ASR。",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S12"
+      ],
+      "derivation": "这是本实现合同，不能升格为所有ASR必须在CAR前的数学定律。",
+      "scope": "当前可执行ASR算子的实现合同；不是所有ASR实现的普适顺序。"
+    }
+  ],
+  "parameters": [
+    {
+      "id": "P01",
+      "operator": "HP",
+      "parameter": "analysis_highpass_hz",
+      "source_anchors": [
+        "Tanner比较0.01/0.1/0.3/0.5/0.7/1Hz；RELAX ERP=0.25Hz；RELAX振荡=1Hz；v2.0.1 config=0.5Hz"
+      ],
+      "exploration_space": {
+        "ERP": [
+          null,
+          0.01,
+          0.1,
+          0.25,
+          0.5
+        ],
+        "oscillation": [
+          0.5,
+          1,
+          2
+        ],
+        "slow_potential": [
+          null,
+          0.01,
+          0.1
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "按目标成分和录制硬件高通选择；null不恢复硬件已丢失的低频",
+      "validity_gates": "解析各库边缘含义；检查filter support、漂移和人工波形失真；ERP≥0.3Hz不硬禁但需敏感性证据",
+      "source_ids": [
+        "S17",
+        "S24",
+        "S25",
+        "S26"
+      ]
+    },
+    {
+      "id": "P02",
+      "operator": "HP",
+      "parameter": "ica_fit_highpass_hz",
+      "source_anchors": [
+        "MNE常用1Hz；Winkler摘要1–2Hz；Klug移动/静态设置依赖"
+      ],
+      "exploration_space": {
+        "core": [
+          0.5,
+          1,
+          2
+        ],
+        "extended": [
+          0.25,
+          3,
+          4
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "只作用ICA拟合支路；允许投影回低HP分析支路",
+      "validity_gates": "通道/参考/投影一致；高通数值需附passband或-3/-6dB定义",
+      "source_ids": [
+        "S12",
+        "S15",
+        "S16"
+      ]
+    },
+    {
+      "id": "P03",
+      "operator": "LP",
+      "parameter": "analysis_lowpass_hz",
+      "source_anchors": [
+        "MNE MI示例7–30Hz；RELAX论文80Hz；v2.0.1备注低于75Hz会失去其肌电检测所需信息"
+      ],
+      "exploration_space": {
+        "ERP": [
+          30,
+          40,
+          80
+        ],
+        "MI": [
+          30,
+          40
+        ],
+        "wideband_diagnostic": [
+          80,
+          null
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "ERP候选集属工程探索；MI另可用4–40等任务带通；gamma/SSVEP按目标频率扩展",
+      "validity_gates": "h_freq<fs/2；保留transition空间；诊断带宽与分析带宽分开",
+      "source_ids": [
+        "S40",
+        "S24",
+        "S26"
+      ]
+    },
+    {
+      "id": "P04",
+      "operator": "HP",
+      "parameter": "filter_design_and_support",
+      "source_anchors": [
+        "MNE auto FIR和EEGLAB默认窗口FIR为起点；Widmann说明过渡带与长度/振铃权衡"
+      ],
+      "exploration_space": {
+        "method": [
+          "fir_hamming",
+          "butterworth_sos"
+        ],
+        "phase": [
+          "zero_offline",
+          "causal_with_delay"
+        ],
+        "transition_multiplier": [
+          0.5,
+          1,
+          2
+        ],
+        "butterworth_prototype_order": [
+          2,
+          4,
+          6
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "倍数相对后端合法auto值；IIR阶数只是工程搜索集合",
+      "validity_gates": "每候选验证响应；filtfilt响应平方、带通变换阶数必须记录；禁止极短epoch无边界诊断",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S28"
+      ]
+    },
+    {
+      "id": "P05",
+      "operator": "RS",
+      "parameter": "target_sfreq_hz",
+      "source_anchors": [
+        "MNE演示200Hz；RELAX可选250Hz且默认不降采样；Mullen索引历史128Hz"
+      ],
+      "exploration_space": {
+        "candidates": [
+          128,
+          200,
+          250,
+          256,
+          500,
+          "native"
+        ],
+        "resampler": [
+          "fft",
+          "polyphase"
+        ],
+        "integer_decimation": "仅在AA已满足且fs_old/fs_new为整数时"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "候选由任务最高有效频率、时间精度、成本筛选",
+      "validity_gates": "新Nyquist下残留混叠检查；不只看info.lowpass；保持events同步",
+      "source_ids": [
+        "S01",
+        "S26",
+        "S23"
+      ]
+    },
+    {
+      "id": "P06",
+      "operator": "NT",
+      "parameter": "notch_width_hz",
+      "source_anchors": [
+        "MNE notch_widths默认freq/200，50Hz时0.25Hz；RELAX论文阻带47–53Hz总宽6Hz"
+      ],
+      "exploration_space": {
+        "line_frequency": "从地区元数据与PSD核实50/60Hz",
+        "widths": [
+          0.25,
+          0.5,
+          1,
+          2,
+          4,
+          6
+        ],
+        "mode": [
+          "none",
+          "fixed_notch",
+          "adaptive_line"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "其余宽度为工程敏感性网格；宽度不含transition",
+      "validity_gates": "合法谐波低于Nyquist；不盲目删掉任务频率；保留邻频功率与line residual QC",
+      "source_ids": [
+        "S06",
+        "S24",
+        "S07"
+      ]
+    },
+    {
+      "id": "P07",
+      "operator": "NT",
+      "parameter": "transition_bandwidth_hz",
+      "source_anchors": [
+        "MNE trans_bandwidth当前默认1Hz"
+      ],
+      "exploration_space": {
+        "candidates": [
+          0.5,
+          1,
+          2,
+          4
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "比较窄/宽过渡带引入的长度与邻频失真",
+      "validity_gates": "分别检查上下transition；不与stopband width或IIR Q互换",
+      "source_ids": [
+        "S06",
+        "S03"
+      ]
+    },
+    {
+      "id": "P08",
+      "operator": "LN",
+      "parameter": "CleanLine_settings",
+      "source_anchors": [
+        "官方建议continuous窗口3–4s/50%overlap；示例Bandwidth=2Hz、LineAlpha=.01；help Bandwidth默认1Hz"
+      ],
+      "exploration_space": {
+        "window_seconds": [
+          3,
+          4,
+          6
+        ],
+        "overlap_fraction": [
+          0,
+          0.5
+        ],
+        "bandwidth_hz": [
+          1,
+          2,
+          4
+        ],
+        "line_alpha": [
+          0.01,
+          0.05
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "6s/4Hz/.05等为工程扩展；epoch要各自完整处理",
+      "validity_gates": "窗口与步长不跨trial；方法版本固定；line-scan范围单列；每候选检验残留与邻频损伤",
+      "source_ids": [
+        "S07"
+      ]
+    },
+    {
+      "id": "P09",
+      "operator": "BC",
+      "parameter": "flatline_seconds",
+      "source_anchors": [
+        "clean_artifacts FlatlineCriterion默认5s"
+      ],
+      "exploration_space": {
+        "candidates": [
+          2,
+          5,
+          10
+        ],
+        "feature": "原单位近零方差/饱和另检测"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "保留持续时长，采样率换算明确",
+      "validity_gates": "flat不等于所有低幅值生理信号；NaN/Inf单列结构错误",
+      "source_ids": [
+        "S19",
+        "S08"
+      ]
+    },
+    {
+      "id": "P10",
+      "operator": "BC",
+      "parameter": "PREP_deviation_robust_z",
+      "source_anchors": [
+        "PREP论文bad-by-deviation robust z>5"
+      ],
+      "exploration_space": {
+        "candidates": [
+          3,
+          5,
+          7
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "robust z定义按后端IQR/MAD缩放；不得换成普通z仍沿用阈值",
+      "validity_gates": "原幅度诊断视图；记录逐道指标而非只存最终bad list",
+      "source_ids": [
+        "S08"
+      ]
+    },
+    {
+      "id": "P11",
+      "operator": "BC",
+      "parameter": "correlation_threshold",
+      "source_anchors": [
+        "PREP max-correlation阈值0.4，坏窗比例0.01；clean_rawdata邻域预测相关默认0.8"
+      ],
+      "exploration_space": {
+        "PREP_correlation": [
+          0.3,
+          0.4,
+          0.5
+        ],
+        "PREP_bad_window_fraction": [
+          0.01,
+          0.05,
+          0.1
+        ],
+        "clean_rawdata_prediction_corr": [
+          0.7,
+          0.8,
+          0.9
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "两个不同检测器的阈值不能合并为一个corr参数",
+      "validity_gates": "存在/缺失位置时的fallback方法必须标明；保证数值∈[0,1]",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S18",
+        "S19"
+      ]
+    },
+    {
+      "id": "P12",
+      "operator": "BC",
+      "parameter": "PREP_RANSAC",
+      "source_anchors": [
+        "官方50个随机子集、通道比例0.25、相关阈值0.75、坏窗比例0.4、窗长5s；论文内部另有4s描述"
+      ],
+      "exploration_space": {
+        "n_samples": [
+          25,
+          50,
+          100
+        ],
+        "channel_fraction": [
+          0.25,
+          0.5
+        ],
+        "correlation": [
+          0.65,
+          0.75,
+          0.85
+        ],
+        "bad_fraction": [
+          0.2,
+          0.4
+        ],
+        "window_seconds": [
+          4,
+          5,
+          10
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "仅有足够可靠空间采样时；小头盔可关闭RANSAC作为对照",
+      "validity_gates": "可用供体数量/几何检查，seed固定；实际版本为默认值最终依据",
+      "source_ids": [
+        "S09",
+        "S08"
+      ]
+    },
+    {
+      "id": "P13",
+      "operator": "RF",
+      "parameter": "reference",
+      "source_anchors": [
+        "MNE支持当前参考/平均参考；PREP迭代robust reference；EEGLAB逐时Huber应放ICA后"
+      ],
+      "exploration_space": {
+        "candidates": [
+          "native",
+          "average_excluding_bads",
+          "PREP_robust",
+          "linked_mastoids_if_recorded",
+          "Huber_after_ICA_only"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "不默认平均参考总最好；reference channels可靠性与coverage需报告",
+      "validity_gates": "EOG/stim不混入EEG平均；投影是否应用、原始reference记录；Huber阈值不在本次已核参数范围内",
+      "source_ids": [
+        "S08",
+        "S10",
+        "S11"
+      ]
+    },
+    {
+      "id": "P14",
+      "operator": "IP",
+      "parameter": "interpolation_policy",
+      "source_anchors": [
+        "RELAX论文用spherical interpolation；ICA前临时插值参考后再删；AR局部修复"
+      ],
+      "exploration_space": {
+        "stage": [
+          "after_cleaning",
+          "before_ICA_rank_aware",
+          "PREP_temporary"
+        ],
+        "max_fraction_candidates": [
+          0.05,
+          0.1,
+          0.2
+        ],
+        "mode": [
+          "global_fixed",
+          "per_epoch"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "比例是工程门槛，非文献证明的安全上限；少通道尤其需谨慎",
+      "validity_gates": "位置可用、供体可靠、rank与条件数检查；超过门槛标该候选不可比或abstain而非静默继续",
+      "source_ids": [
+        "S24",
+        "S29",
+        "S12"
+      ]
+    },
+    {
+      "id": "P15",
+      "operator": "IF",
+      "parameter": "ICA_method_dimension_iterations",
+      "source_anchors": [
+        "MNE FastICA/Infomax/Picard；extended Infomax可增强某些情况下稳定性；n_components须匹配rank"
+      ],
+      "exploration_space": {
+        "method": [
+          "fastica",
+          "extended_infomax",
+          "picard"
+        ],
+        "dimension": [
+          "estimated_effective_rank",
+          "explicit_rank_restricted"
+        ],
+        "max_iter": [
+          500,
+          1000,
+          2000
+        ],
+        "seeds": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "迭代/seed网格为工程敏感性；不是稳定性保证",
+      "validity_gates": "实际rank、收敛、样本量、重复seed分离稳定性；PCA降维与ICA删除分开记录",
+      "source_ids": [
+        "S12",
+        "S14"
+      ]
+    },
+    {
+      "id": "P16",
+      "operator": "IA",
+      "parameter": "artifact_component_policy",
+      "source_anchors": [
+        "MNE人工/EOG相关检测；RELAX wICA_ICLabel是另一重建模式"
+      ],
+      "exploration_space": {
+        "mode": [
+          "none",
+          "ICA_subtraction",
+          "wICA_versioned"
+        ],
+        "selection": [
+          "verified_manual",
+          "method_specific_classifier"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "不把分类概率当校准可信度；本次未核实所有ICLabel/自动EOG阈值",
+      "validity_gates": "保存每IC分数、类别、删除理由和残留；阈值范围留null待独立方法卡验证",
+      "source_ids": [
+        "S13",
+        "S24"
+      ]
+    },
+    {
+      "id": "P17",
+      "operator": "AS",
+      "parameter": "ASR_burst_cutoff",
+      "source_anchors": [
+        "当前官方GUI默认20；已固定clean_artifacts/asr_calibrate低层默认5；Chang模拟驾驶评估20–30；Mullen历史索引c=7"
+      ],
+      "exploration_space": {
+        "core": [
+          20,
+          30
+        ],
+        "stress": [
+          5,
+          10,
+          50,
+          100
+        ],
+        "control": [
+          "off"
+        ],
+        "mode": [
+          "reject_windows",
+          "reconstruct"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "stress为工程对照，5更激进；不是普通raw EEG SD或确定的坏道百分比",
+      "validity_gates": "逐样本/窗口重建比例、保留率、秩/谱保真、校准质量；不能跨实现只凭k比较",
+      "source_ids": [
+        "S18",
+        "S19",
+        "S20",
+        "S22",
+        "S23"
+      ]
+    },
+    {
+      "id": "P18",
+      "operator": "AC",
+      "parameter": "ASR_calibration",
+      "source_anchors": [
+        "源码建议not much less than30s，通常1min或更多；同cap，理想同subject/session"
+      ],
+      "exploration_space": {
+        "seconds": [
+          30,
+          60,
+          120,
+          "all_qualified"
+        ],
+        "source": [
+          "separate_clean",
+          "training_clean_segments",
+          "past_only_online"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "时长候选不保证质量；全污染记录不得凑时长",
+      "validity_gates": "scope许可，通道/参考/fs/HP兼容；记录clean selection criterion和每段ID",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S41"
+      ]
+    },
+    {
+      "id": "P19",
+      "operator": "AS",
+      "parameter": "ASR_window_and_max_dimensions",
+      "source_anchors": [
+        "asr_calibrate window_len默认.5s、window_overlap .66；asr_process maxdims .66"
+      ],
+      "exploration_space": {
+        "window_seconds": [
+          0.25,
+          0.5,
+          1
+        ],
+        "calibration_overlap": [
+          0.5,
+          0.66
+        ],
+        "maxdims_fraction": [
+          0.33,
+          0.5,
+          0.66
+        ],
+        "lookahead": "固定后端实值并报告ms"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "扩展网格属工程设计；calibration overlap不等于asr_process stepsize",
+      "validity_gates": "stepsize与fs单位明确；在线延迟/状态一致；不手动混合不同后端实现",
+      "source_ids": [
+        "S20",
+        "S21"
+      ]
+    },
+    {
+      "id": "P20",
+      "operator": "AR",
+      "parameter": "Autoreject_hyperparameters",
+      "source_anchors": [
+        "API默认n_interpolate=[1,4,32]、consensus linspace(0,1,11)、cv=10；workflow示例小通道候选[1,2,3,4]"
+      ],
+      "exploration_space": {
+        "n_interpolate": [
+          1,
+          2,
+          4,
+          8,
+          16,
+          32
+        ],
+        "consensus": [
+          0.1,
+          0.2,
+          0.3,
+          0.5,
+          0.7,
+          0.9
+        ],
+        "cv": [
+          5,
+          10
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "按实际好道数量裁剪；阈值数据驱动，不人为固定所有数据为100uV",
+      "validity_gates": "至少满足训练fold样本数；rho应小于拒绝阈值对应坏道数，按实现处理非法网格；CV仅训练scope",
+      "source_ids": [
+        "S31",
+        "S30",
+        "S29"
+      ]
+    },
+    {
+      "id": "P21",
+      "operator": "EF",
+      "parameter": "EOG_regression_fit",
+      "source_anchors": [
+        "MNE允许连续/epoch/evoked拟合；可用blink/saccade evoked；Gratton原法另有刺激锁定变异处理"
+      ],
+      "exploration_space": {
+        "fit_view": [
+          "continuous_qualified",
+          "blink_evoked",
+          "saccade_evoked"
+        ],
+        "predictors": [
+          "measured_vertical_EOG",
+          "measured_horizontal_EOG",
+          "both"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "不默认有测量EOG；可检测共线性",
+      "validity_gates": "EEG/EOG同参考/同步与单位；回归系数维度、奇异性与fit scope检查；ridge探索需另标变体",
+      "source_ids": [
+        "S32",
+        "S33",
+        "S34"
+      ]
+    },
+    {
+      "id": "P22",
+      "operator": "BL",
+      "parameter": "baseline",
+      "source_anchors": [
+        "MNE支持None或区间均值；RELAX ERP示例含传统-400至-100ms与GLM baseline"
+      ],
+      "exploration_space": {
+        "mode": [
+          "none",
+          "mean",
+          "regression_GLM"
+        ],
+        "interval_seconds": [
+          [
+            -0.2,
+            0
+          ],
+          [
+            -0.4,
+            -0.1
+          ]
+        ],
+        "window_status": "区间为示例候选，必须由任务前刺激/前反应结构筛选"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "静息/连续无事件不能硬塞ERP基线；运动准备可能污染baseline",
+      "validity_gates": "区间存在且有效，不能含未来不可用样本；条件标签GLM权限；记录与高通组合",
+      "source_ids": [
+        "S35",
+        "S36",
+        "S25"
+      ]
+    },
+    {
+      "id": "P23",
+      "operator": "DT",
+      "parameter": "detrend",
+      "source_anchors": [
+        "MNE None/0/1；0=constant，1=linear，先DT后BL"
+      ],
+      "exploration_space": {
+        "order": [
+          null,
+          0,
+          1
+        ],
+        "domain": [
+          "continuous_segment",
+          "epoch"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "两种domain独立候选；不视作高通等价替代",
+      "validity_gates": "每窗口至少足够样本拟合；在线不借未来；baseline重复去均值需有目的",
+      "source_ids": [
+        "S35",
+        "S03"
+      ]
+    },
+    {
+      "id": "P24",
+      "operator": "MW",
+      "parameter": "MWF_recipe",
+      "source_anchors": [
+        "RELAX论文MWF后wICA；v2.0.1有MWF时LowPassFilterBeforeMWF=no"
+      ],
+      "exploration_space": {
+        "modes": [
+          "off",
+          "MWF_only",
+          "MWF_then_wICA"
+        ],
+        "lowpass_timing": [
+          "original_before_MWF",
+          "v2_delayed_after_MWF"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "版本整套配方比较；不能随意拼接论文和新版本字段",
+      "validity_gates": "噪声/干净mask、延迟增广维数、有效秩、时间支持与内存检查；采样率变化仍需AA",
+      "source_ids": [
+        "S24",
+        "S26",
+        "S27"
+      ]
+    },
+    {
+      "id": "P25",
+      "operator": "MW",
+      "parameter": "MWF_temporal_embedding",
+      "source_anchors": [
+        "固定v2.0.1 eye/muscle delay period均10；spacing eye=16、muscle=2；注释称部分选择来自informal testing"
+      ],
+      "exploration_space": {
+        "delay_period": [
+          4,
+          8,
+          10
+        ],
+        "eye_spacing": [
+          8,
+          16
+        ],
+        "muscle_spacing": [
+          1,
+          2
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "除固定配置值外均为工程探索；samples而非ms",
+      "validity_gates": "记录实际最大时间跨度与增广维数；注释例子混用span/sample-count，不以其文字算式代替代码定义；禁止满秩假设",
+      "source_ids": [
+        "S26",
+        "S27"
+      ]
+    },
+    {
+      "id": "P26",
+      "operator": "EA",
+      "parameter": "EA_reference_and_regularization",
+      "source_anchors": [
+        "原文Rbar=mean XiXiT，Q=Rbar^-1/2；离线可全目标无标签、在线仅已得数据"
+      ],
+      "exploration_space": {
+        "domain": [
+          "subject",
+          "session"
+        ],
+        "fit_scope": [
+          "train_only",
+          "target_calibration_unlabeled",
+          "target_all_unlabeled",
+          "past_only"
+        ],
+        "variant": [
+          "original_SPD",
+          "subspace",
+          "shrinkage"
+        ],
+        "shrinkage_alpha": [
+          0,
+          0.001,
+          0.01,
+          0.1
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "非零alpha和subspace是工程变体；不归于原文默认",
+      "validity_gates": "scope、rank、正定/条件数；trace/样本长度归一化定义明确；对齐至I的误差按variant解释",
+      "source_ids": [
+        "S38",
+        "S41"
+      ]
+    },
+    {
+      "id": "P27",
+      "operator": "CS",
+      "parameter": "CSP",
+      "source_anchors": [
+        "MNE n_components默认4且建议CV选择；reg=None/float/方法字符串；norm_trace默认False"
+      ],
+      "exploration_space": {
+        "n_components": [
+          2,
+          4,
+          6,
+          8
+        ],
+        "reg": [
+          null,
+          "ledoit_wolf",
+          0.01,
+          0.1,
+          0.3
+        ],
+        "cov_est": [
+          "concat",
+          "epoch"
+        ],
+        "norm_trace": [
+          false,
+          true
+        ],
+        "feature": [
+          "log_average_power",
+          "average_power"
+        ]
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "网格为工程选择；n_components按rank筛；trace归一化不是必选",
+      "validity_gates": "fit只用允许训练标签；嵌套CV选频带/时间/组件/正则；库版本核对支持字符串",
+      "source_ids": [
+        "S39",
+        "S40",
+        "S41"
+      ]
+    },
+    {
+      "id": "P28",
+      "operator": "SC",
+      "parameter": "normalization",
+      "source_anchors": [
+        "sklearn训练fit/测试transform；CSP log=False可按训练数据zscore特征"
+      ],
+      "exploration_space": {
+        "modes": [
+          "none",
+          "train_feature_zscore",
+          "train_sensor_zscore",
+          "per_trial_sensor_zscore"
+        ],
+        "constant_unit_conversion": "uV_to_V作为明确无学习步骤"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "per_trial标准化可用当前完整trial但不代表在线逐sample因果；会改变幅度信息",
+      "validity_gates": "零方差/epsilon显式，axis与scope显式；sensor缩放改变参考/ICA/ASR坐标；避免双重标准化",
+      "source_ids": [
+        "S41",
+        "S39"
+      ]
+    },
+    {
+      "id": "P29",
+      "operator": "BS",
+      "parameter": "bad_segment_rejection",
+      "source_anchors": [
+        "官方推荐ICA前排除极端坏段；AR学习阈值；RELAX论文含方法专有极端值检测"
+      ],
+      "exploration_space": {
+        "method": [
+          "annotation",
+          "robust_amplitude",
+          "AR_pre_mask"
+        ],
+        "threshold": "不提供跨数据固定uV万能范围；待单位/硬件/任务元数据或训练分布确定"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "原始时间轴与trial IDs持久化；饱和/断连和生理伪影分开",
+      "validity_gates": "保留拒绝原因/分母/按类覆盖；不以测试表现反调阈值",
+      "source_ids": [
+        "S04",
+        "S14",
+        "S29",
+        "S24"
+      ]
+    },
+    {
+      "id": "P30",
+      "operator": "SP",
+      "parameter": "evaluation_protocol",
+      "source_anchors": [
+        "sklearn防泄漏；EA论文offline与simulated-online明确区分"
+      ],
+      "exploration_space": {
+        "outer_split": [
+          "leave_subject_out",
+          "leave_session_out",
+          "blocked_time"
+        ],
+        "inner_split": "只在outer train内调参",
+        "scope_modes": [
+          "strict_inductive",
+          "transductive_unlabeled",
+          "online_causal"
+        ],
+        "guard": "由实际时间支持/record边界确定"
+      },
+      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
+      "conditions": "不同协议结果分别列；同一subject重叠epochs不得跨fold",
+      "validity_gates": "label与signal访问审计；所有state列出fit_ids、fit_time_end、transform_ids、version和seed",
+      "source_ids": [
+        "S41",
+        "S38",
+        "S03"
+      ]
+    }
+  ],
+  "pair_coverage": [
+    {
+      "a": "HP",
+      "b": "LP",
+      "rule_ids": [
+        "R02",
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "NT",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "LN",
+      "rule_ids": [
+        "R07"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "RS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "HP",
+      "b": "BS",
+      "rule_ids": [
+        "R05"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "BC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "HP",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "HP",
+      "b": "IP",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "RF",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "IF",
+      "rule_ids": [
+        "R18"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "IA",
+      "rule_ids": [
+        "R06",
+        "R19"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "AC",
+      "rule_ids": [
+        "R28"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "AS",
+      "rule_ids": [
+        "R28"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "EP",
+      "rule_ids": [
+        "R04"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "BL",
+      "rule_ids": [
+        "R57"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "DT",
+      "rule_ids": [
+        "R63"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "EF",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "EAO",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "HP",
+      "b": "EA",
+      "rule_ids": [
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "CS",
+      "rule_ids": [
+        "R61"
+      ],
+      "gap": null
+    },
+    {
+      "a": "HP",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "HP",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "NT",
+      "rule_ids": [
+        "R06",
+        "R08"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "LN",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "RS",
+      "rule_ids": [
+        "R01"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "BS",
+      "rule_ids": [
+        "R05"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "BC",
+      "rule_ids": [
+        "R26"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "IP",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "RF",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "IF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "IA",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "AC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "AS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "MW",
+      "rule_ids": [
+        "R26",
+        "R46"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "EP",
+      "rule_ids": [
+        "R04"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "BL",
+      "rule_ids": [
+        "R57"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "DT",
+      "rule_ids": [
+        "R63"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "EF",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "EAO",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "EA",
+      "rule_ids": [
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "CS",
+      "rule_ids": [
+        "R61"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LP",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LP",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "LN",
+      "rule_ids": [
+        "R64"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "RS",
+      "rule_ids": [
+        "R02",
+        "R09"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "BS",
+      "rule_ids": [
+        "R05"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "BC",
+      "rule_ids": [
+        "R26"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "IP",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "RF",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "IF",
+      "rule_ids": [
+        "R10"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "IA",
+      "rule_ids": [
+        "R06"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "AC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "AS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "MW",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "EP",
+      "rule_ids": [
+        "R04"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "BL",
+      "rule_ids": [
+        "R57"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "DT",
+      "rule_ids": [
+        "R63"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "EF",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "EAO",
+      "rule_ids": [
+        "R42"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "EA",
+      "rule_ids": [
+        "R10",
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "CS",
+      "rule_ids": [
+        "R10"
+      ],
+      "gap": null
+    },
+    {
+      "a": "NT",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "NT",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "RS",
+      "rule_ids": [
+        "R09"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "BS",
+      "rule_ids": [
+        "R05"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "BC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "IP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "RF",
+      "rule_ids": [
+        "R07"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "IF",
+      "rule_ids": [
+        "R10"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "IA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "AC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "AS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "MW",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "EP",
+      "rule_ids": [
+        "R04"
+      ],
+      "gap": null
+    },
+    {
+      "a": "LN",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "AR",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "LN",
+      "b": "EA",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "LN",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "LN",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "BS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "BC",
+      "rule_ids": [
+        "R65"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "IP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "RF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "IF",
+      "rule_ids": [
+        "R65"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "IA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "AC",
+      "rule_ids": [
+        "R34"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "AS",
+      "rule_ids": [
+        "R34"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "MW",
+      "rule_ids": [
+        "R46"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "EP",
+      "rule_ids": [
+        "R03"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "DT",
+      "rule_ids": [
+        "R63"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "EF",
+      "rule_ids": [
+        "R42",
+        "R65"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "AR",
+      "rule_ids": [
+        "R65"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RS",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RS",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "BC",
+      "rule_ids": [
+        "R27"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "DR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "IP",
+      "rule_ids": [
+        "R27"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "RF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "IF",
+      "rule_ids": [
+        "R13"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "IA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "AC",
+      "rule_ids": [
+        "R36"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "AS",
+      "rule_ids": [
+        "R36",
+        "R66"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "BL",
+      "rule_ids": [
+        "R25"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "EF",
+      "rule_ids": [
+        "R44"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "EA",
+      "rule_ids": [
+        "R59"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "CS",
+      "rule_ids": [
+        "R59"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BS",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BS",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "DR",
+      "rule_ids": [
+        "R11"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "IP",
+      "rule_ids": [
+        "R12"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "RF",
+      "rule_ids": [
+        "R11"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "IF",
+      "rule_ids": [
+        "R13"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "IA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "AC",
+      "rule_ids": [
+        "R29"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "AS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "BL",
+      "rule_ids": [
+        "R25"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "EF",
+      "rule_ids": [
+        "R40"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "AR",
+      "rule_ids": [
+        "R39"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BC",
+      "b": "SC",
+      "rule_ids": [
+        "R26",
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BC",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "IP",
+      "rule_ids": [
+        "R12"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "RF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "IF",
+      "rule_ids": [
+        "R13"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "IA",
+      "rule_ids": [
+        "R20"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "AC",
+      "rule_ids": [
+        "R29"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "AS",
+      "rule_ids": [
+        "R30"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "EF",
+      "rule_ids": [
+        "R40"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "EAO",
+      "rule_ids": [
+        "R41"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DR",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DR",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "RF",
+      "rule_ids": [
+        "R62"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "IF",
+      "rule_ids": [
+        "R14",
+        "R17"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "IA",
+      "rule_ids": [
+        "R14",
+        "R20"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "AC",
+      "rule_ids": [
+        "R29"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "AS",
+      "rule_ids": [
+        "R69"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "MW",
+      "rule_ids": [
+        "R47"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IP",
+      "b": "AR",
+      "rule_ids": [
+        "R39",
+        "R66"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "EA",
+      "rule_ids": [
+        "R17",
+        "R51"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "CS",
+      "rule_ids": [
+        "R17",
+        "R60"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "SC",
+      "rule_ids": [
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IP",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RF",
+      "b": "IF",
+      "rule_ids": [
+        "R15",
+        "R16",
+        "R17"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "IA",
+      "rule_ids": [
+        "R15",
+        "R16"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "AC",
+      "rule_ids": [
+        "R33",
+        "R69"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "AS",
+      "rule_ids": [
+        "R30",
+        "R33",
+        "R69"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "MW",
+      "rule_ids": [
+        "R47"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RF",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RF",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "RF",
+      "b": "EF",
+      "rule_ids": [
+        "R40"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "EAO",
+      "rule_ids": [
+        "R41"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "AR",
+      "rule_ids": [
+        "R39"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "EA",
+      "rule_ids": [
+        "R17",
+        "R51"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "CS",
+      "rule_ids": [
+        "R17",
+        "R60"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "SC",
+      "rule_ids": [
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "RF",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IF",
+      "b": "IA",
+      "rule_ids": [
+        "R19",
+        "R66",
+        "R68"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "AC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IF",
+      "b": "AS",
+      "rule_ids": [
+        "R31"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "EP",
+      "rule_ids": [
+        "R21"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "BL",
+      "rule_ids": [
+        "R22"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "DT",
+      "rule_ids": [
+        "R22"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "EF",
+      "rule_ids": [
+        "R43"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "IF",
+      "b": "EAO",
+      "rule_ids": [
+        "R43"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "IF",
+      "b": "AR",
+      "rule_ids": [
+        "R37"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IF",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IF",
+      "b": "SC",
+      "rule_ids": [
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IF",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "AC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IA",
+      "b": "AS",
+      "rule_ids": [
+        "R31",
+        "R32"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "IA",
+      "b": "MW",
+      "rule_ids": [
+        "R45"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "EP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IA",
+      "b": "BL",
+      "rule_ids": [
+        "R23"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "IA",
+      "b": "EF",
+      "rule_ids": [
+        "R43"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "IA",
+      "b": "EAO",
+      "rule_ids": [
+        "R43"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "IA",
+      "b": "AR",
+      "rule_ids": [
+        "R37"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "EA",
+      "rule_ids": [
+        "R17",
+        "R20",
+        "R51"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "CS",
+      "rule_ids": [
+        "R17"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "SC",
+      "rule_ids": [
+        "R20"
+      ],
+      "gap": null
+    },
+    {
+      "a": "IA",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "AS",
+      "rule_ids": [
+        "R30"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AC",
+      "b": "MW",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "EP",
+      "rule_ids": [
+        "R35"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AC",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AC",
+      "b": "SC",
+      "rule_ids": [
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AC",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AS",
+      "b": "MW",
+      "rule_ids": [
+        "R32"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "AS",
+      "b": "EP",
+      "rule_ids": [
+        "R35"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AS",
+      "b": "BL",
+      "rule_ids": [
+        "R23"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AS",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AS",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AS",
+      "b": "EAO",
+      "rule_ids": [
+        "R32"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "AS",
+      "b": "AR",
+      "rule_ids": [
+        "R32"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "AS",
+      "b": "EA",
+      "rule_ids": [
+        "R30"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AS",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AS",
+      "b": "SC",
+      "rule_ids": [
+        "R30"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AS",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "EP",
+      "rule_ids": [
+        "R47"
+      ],
+      "gap": null
+    },
+    {
+      "a": "MW",
+      "b": "BL",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "DT",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "AR",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "MW",
+      "b": "EA",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "MW",
+      "b": "CS",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "MW",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "MW",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "BL",
+      "rule_ids": [
+        "R24"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "DT",
+      "rule_ids": [
+        "R24"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "EF",
+      "rule_ids": [
+        "R44"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EP",
+      "b": "AR",
+      "rule_ids": [
+        "R38"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "EA",
+      "rule_ids": [
+        "R50",
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "CS",
+      "rule_ids": [
+        "R61"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EP",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EP",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "DT",
+      "rule_ids": [
+        "R24",
+        "R57"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "EF",
+      "rule_ids": [
+        "R44"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "EAO",
+      "rule_ids": [
+        "R23"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "AR",
+      "rule_ids": [
+        "R25"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "EA",
+      "rule_ids": [
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "BL",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BL",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "BL",
+      "b": "SP",
+      "rule_ids": [
+        "R55",
+        "R58"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DT",
+      "b": "EF",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DT",
+      "b": "EAO",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DT",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DT",
+      "b": "EA",
+      "rule_ids": [
+        "R52"
+      ],
+      "gap": null
+    },
+    {
+      "a": "DT",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DT",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "DT",
+      "b": "SP",
+      "rule_ids": [
+        "R55"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EF",
+      "b": "EAO",
+      "rule_ids": [
+        "R41",
+        "R68"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EF",
+      "b": "AR",
+      "rule_ids": [
+        "R56"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "EF",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EF",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EF",
+      "b": "SC",
+      "rule_ids": [
+        "R54"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EF",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EAO",
+      "b": "AR",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EAO",
+      "b": "EA",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EAO",
+      "b": "CS",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "EAO",
+      "b": "SC",
+      "rule_ids": [
+        "R41"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EAO",
+      "b": "SP",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AR",
+      "b": "EA",
+      "rule_ids": [
+        "R39",
+        "R56",
+        "R59"
+      ],
+      "gap": "G01：某些组合仍无直接比较证据"
+    },
+    {
+      "a": "AR",
+      "b": "CS",
+      "rule_ids": [
+        "R39",
+        "R59"
+      ],
+      "gap": null
+    },
+    {
+      "a": "AR",
+      "b": "SC",
+      "rule_ids": [],
+      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
+    },
+    {
+      "a": "AR",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EA",
+      "b": "CS",
+      "rule_ids": [
+        "R49",
+        "R53"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EA",
+      "b": "SC",
+      "rule_ids": [
+        "R51"
+      ],
+      "gap": null
+    },
+    {
+      "a": "EA",
+      "b": "SP",
+      "rule_ids": [
+        "R48",
+        "R50"
+      ],
+      "gap": null
+    },
+    {
+      "a": "CS",
+      "b": "SC",
+      "rule_ids": [
+        "R53",
+        "R60"
+      ],
+      "gap": null
+    },
+    {
+      "a": "CS",
+      "b": "SP",
+      "rule_ids": [
+        "R48",
+        "R49"
+      ],
+      "gap": null
+    },
+    {
+      "a": "SC",
+      "b": "SP",
+      "rule_ids": [
+        "R48"
+      ],
+      "gap": null
+    }
+  ]
+}

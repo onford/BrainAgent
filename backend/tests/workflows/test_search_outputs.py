@@ -16,6 +16,7 @@ pytest.importorskip("mne_bids")
 from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import digest, file_hash
 from app.search.catalog import BASELINE_ID
+from app.search.method_space import basic_space, seed_entries, edited_entry
 from app.workflows import outputs
 from tests.workflows.test_outputs_scaling import delivery_case  # noqa: F401
 from tests.workflows.test_outputs_scaling import freeze_evidence
@@ -26,6 +27,9 @@ from tests.workflows.test_outputs_scaling import numeric_metadata
 def selection_case(tmp_path, monkeypatch):
     root = tmp_path / "search/engine"
     root.mkdir(parents=True)
+    space = basic_space().model_dump(mode="json")
+    (root.parent / "protocol.json").write_text(json.dumps(dict(space=space, space_hash=digest(space))), encoding="utf-8")
+    (root.parent / "registry.json").write_text(json.dumps(seed_entries(space)), encoding="utf-8")
     method = {"id": BASELINE_ID}
     method_ref = {"id": digest(method), "sha256": digest(method)}
     plan = {
@@ -238,7 +242,12 @@ def test_selection_rejects_unverified_or_inconsistent_results(
 
 def adapted_case(case):
     selection = case.state["outputs"]["data_evaluation"]
-    selection["selected_candidate_id"] = "bp8-30-original-conditional-ea-3"
+    space = basic_space()
+    seeds = seed_entries(space)
+    entry = edited_entry(seeds[2], [{"action": "set_adaptation", "policy": {"adaptation": "conditional_alignment", "alignment_threshold": 3.0}}],
+                         space, title="Measured adaptation", order=len(seeds))
+    (case.store.root.parent / "registry.json").write_text(json.dumps([*seeds, entry]), encoding="utf-8")
+    selection["selected_candidate_id"] = entry["id"]
     selection["selected_receipt"]["candidate_id"] = selection["selected_candidate_id"]
     selection["candidate_summary"][0]["candidate_id"] = selection["selected_candidate_id"]
     freeze_evidence(case.store, selection)

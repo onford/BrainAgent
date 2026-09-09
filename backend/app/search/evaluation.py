@@ -94,25 +94,42 @@ def _check_plan(result, plan, panel):
         "reference": "EEG-REREFERENCE",
         "resample": "EEG-RESAMPLE",
         "epoch": "EEG-EPOCH",
+        "detrend": "EEG-DETREND",
+        "notch": "EEG-FILTER",
+        "detect_bad_channels": "EEG-AUTO-BAD-CHANNEL",
+        "mark_channels": "EEG-BAD-CHANNEL-MARK",
+        "interpolate_bad_channels": "EEG-AUTO-BAD-CHANNEL",
+        "asr_clean": "EEG-ASR-AUTO",
     }
     for config in plan.records:
         predecessor, resamples, epochs = "raw", 0, 0
+        diagnoses = {}
         rate = panel["records"][config.record_id]["sfreq"]
         for step in config.steps:
             _require(
                 allowed.get(step.op) == step.unit_id,
-                "only fixed filter/reference/resample/epoch supported",
+                "operation is outside the executable search contract",
             )
             _require(
                 step.fit_scope is None
-                and step.model_from is None
-                and step.decision_from is None,
-                "fitted/adaptive preprocessing is unsupported",
+                and step.model_from is None,
+                "external fitted-state branches are outside the search contract",
             )
             _require(
-                step.input == predecessor and not epochs,
-                "candidate must be a continuous chain ending with epoch",
+                step.input == predecessor and (not epochs or step.op == "reference"),
+                "candidate signal chain or post-epoch stage differs",
             )
+            if step.op == "mark_channels":
+                _require(diagnoses.get(step.decision_from) == predecessor,
+                         "channel marking must use diagnosis of the same signal input")
+            else:
+                _require(step.decision_from is None, "unexpected diagnostic dependency")
+            if step.op in {"detect_bad_channels", "asr_clean"}:
+                _require(step.params.get("adaptation_scope") == "record_unlabeled",
+                         "automatic fitting must use the record's unlabelled signals")
+            if step.op == "detect_bad_channels":
+                diagnoses[step.id] = predecessor
+                continue  # Diagnostic output branches from, rather than replaces, the signal.
             predecessor = step.id
             if step.op == "resample":
                 resamples += 1
@@ -137,8 +154,8 @@ def _check_plan(result, plan, panel):
                     "epoch labels differ",
                 )
         _require(
-            epochs == 1 and config.output == predecessor,
-            "candidate output must be the terminal epoch",
+            epochs == 1 and resamples == 1 and config.output == predecessor,
+            "candidate output must preserve the single frozen epoch/grid contract",
         )
 
 

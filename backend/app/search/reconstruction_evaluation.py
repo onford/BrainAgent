@@ -64,6 +64,7 @@ METRICS = (
 )
 SUPPORTED = {
     "filter": "EEG-FILTER",
+    "notch": "EEG-FILTER",
     "detrend": "EEG-DETREND",
     "reference": "EEG-REREFERENCE",
     "resample": "EEG-RESAMPLE",
@@ -228,7 +229,7 @@ def _lineage(config):
         if (
             SUPPORTED.get(step["op"]) != step["unit_id"]
             or step["input"] != previous
-            or ended
+            or (ended and step["op"] != "reference")
             or step["id"] in seen
             or any(step.get(k) is not None for k in ("model_from", "fit_scope"))
             or (step["op"] != "mark_channels" and step.get("decision_from") is not None)
@@ -253,7 +254,7 @@ def _lineage(config):
             pending = step
             continue  # Diagnostic output is not the next data node.
         pending, previous = None, step["id"]
-        ended = step["op"] == "epoch"
+        ended = ended or step["op"] == "epoch"
     if pending is not None:
         raise ProbeError(
             "UNSUPPORTED_RECIPE",
@@ -278,7 +279,7 @@ def _supported(config, contract, event_codes):
     _require(
         epoch_count == 1 and config["output"] == config["steps"][-1]["id"],
         "GRID_MISMATCH",
-        "one terminal epoch output required",
+            "one frozen epoch grid followed only by reference operations required",
     )
 
 
@@ -420,7 +421,17 @@ def _replay(raw, events, config):
                 "MARK_OUTPUT_CHANGED",
                 "mark must only apply the detector's bad-channel set",
             )
-        if step["op"] != "epoch":
+        if step["op"] != "epoch" and isinstance(x, mne.BaseEpochs):
+            _require(
+                isinstance(y, mne.BaseEpochs) and y.ch_names == x.ch_names
+                and y.info["sfreq"] == x.info["sfreq"]
+                and np.array_equal(y.events, x.events)
+                and np.array_equal(y.selection, x.selection)
+                and np.array_equal(y.times, x.times)
+                and y.get_data().shape == x.get_data().shape,
+                "GRID_MISMATCH", "post-epoch reference changed the frozen epoch grid",
+            )
+        elif step["op"] != "epoch":
             _require(
                 isinstance(y, mne.io.BaseRaw),
                 "CONTINUOUS_REQUIRED",

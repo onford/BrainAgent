@@ -14,13 +14,18 @@ from app.preprocessing.resources import budget as resource_budget
 from app.preprocessing.schemas import PreprocessInput
 from app.preprocessing.storage import digest, file_hash, within
 from app.preprocessing.units import engine_hash, environment
-from .catalog import BASELINE_ID, catalog, method, search_engine_hash, select
+from .catalog import BASELINE_ID, method, search_engine_hash, select
 from .contracts import ActionRecord, Candidate, SearchRequest, SearchState
 from .io import directory_bytes, read, write
 from .processes import ProcessTree
-from .reasoning import decide, read_evidence
+from .reasoning import decide, read_context_evidence
 from .evaluation_contracts import FrozenPanel, EvaluationReceipt
 from .hypotheses import validate_hypothesis, check_predictions
+from .method_space import seed_entries, edited_entry, verify_registry
+from .scientific_space import build_space, input_context, knowledge
+from .space_contracts import ExplorationSpace
+from .knowledge_contracts import ScientificKnowledge
+from .exploration_coverage import coverage
 
 
 def now():
@@ -71,6 +76,8 @@ class SearchService:
             )
         value = SearchState.model_validate(state).model_dump(mode="json")
         write(self.folder(state["id"]) / "search.json", value)
+        write(self.folder(state["id"]) / "registry.json", value["registry"])
+        write(self.folder(state["id"]) / "coverage.json", coverage(value))
 
     def describe(self, owner, identity, include_artifacts=True):
         state = self.get(owner, identity)
@@ -90,6 +97,13 @@ class SearchService:
             "input.json": "标准化输入及校验清单",
             "files.json": "全部搜索与数值执行产物索引",
             "limits.json": "冻结资源预算",
+            "space.json": "算子、参数域、方法起点及可检查的科学先验",
+            "registry.json": "候选完整配方、方法来源与算子编辑谱系",
+            "coverage.json": "方法家族、算子与编辑类型的探索覆盖情况",
+            "control-design.json": "有限对照邻域、参数与换序提案、排除原因和覆盖范围",
+            "probe-panel.json": "覆盖全部被试的固定重建探针与污染条件分配",
+            "scientific-knowledge.json": "顺序、参数及适用条件的来源与证据缺口",
+            "evaluation-evidence.json": "质量评价设计和论文基准的可比性依据",
         }
         for path in sorted(root.rglob("*")):
             if (
@@ -102,6 +116,10 @@ class SearchService:
             ):
                 continue
             name = path.relative_to(root).as_posix()
+            if "/operator-usage/" in name:
+                descriptions[name] = "逐记录算子应用、校准不足、失败与未执行的证据和计数"
+            elif "/core-receipts/" in name:
+                descriptions[name] = "该次评价输入的共同CSP与对数方差模型原始回执"
             documents.append(
                 {
                     "name": name,
@@ -114,6 +132,13 @@ class SearchService:
                             "result.json": "逐记录执行与产物校验结果",
                             "method.json": "该候选的固定操作及参数",
                             "execution.json": "数值任务定位与恢复状态",
+                            "assessment.json": "训练效用、信号质量和重建实验的统一摘要",
+                            "utility.json": "六种模型的逐被试成绩、固定三模型主指标与拟合证据",
+                            "data-quality.json": "全部记录在不同信号阶段的质量指标、单位和分母",
+                            "reconstruction_evaluation.json": "已知污染的去除效果与原信号保留，含失败及适用性",
+                            "artifact-manifest.json": "本次多维评价的完整文件、大小与校验清单",
+                            "core-receipt.json": "共同CSP和对数方差对照的原始数值回执",
+                            "model.joblib": "仅由该折训练数据拟合的可复算模型",
                         }.get(
                             path.name,
                             {
@@ -159,6 +184,9 @@ class SearchService:
         return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
     def create(self, owner, request: SearchRequest, *, start=True):
+        from .utility_evaluation import utility_protocol
+        from .utility_parallel import utility_execution
+
         source = self.workflows.get(owner, request.workflow_id)
         if "data_collection" not in source["outputs"]:
             raise ValueError("先完成数据接入与标准化，再开始预算搜索")
@@ -179,6 +207,15 @@ class SearchService:
         root.mkdir()
         started = time.time()
         limits = resource_budget(root, request.budget)
+        utility_memory = limits.memory_limit_bytes
+        utility_reserve = min(4 * 1024**3, utility_memory // 4)
+        utility_config = utility_execution({
+            "max_workers": min(4, os.cpu_count() or 1),
+            "memory_budget_bytes": utility_memory,
+            "reserve_bytes": utility_reserve,
+            "model_memory_bytes": min(8 * 1024**3, utility_memory - utility_reserve),
+            "timeout_seconds": float(request.budget.max_seconds),
+        })
         data_json = data.model_dump(mode="json")
         subjects = {
             r["id"]: r["subject"] for r in source["outputs"]["data_survey"]["records"]
@@ -199,27 +236,85 @@ class SearchService:
                 for doc in read(path).get("documents", []):
                     if doc["id"] not in {d["id"] for d in documents}:
                         documents.append(doc)
+        space_context = input_context(data)
+        space = build_space(space_context)
+        seeds = seed_entries(space, space_context)
+        controls = None
+        registry = seeds
+        if request.strategy != "adaptive":
+            from .control_design import control_entries
+
+            controls = control_entries(space, space_context, request.seed, max_entries=256)
+            registry = controls["registry"]
+        research = knowledge().model_dump(mode="json")
+        research_text = "\n\n".join(
+            f"{r['id']} · {r['claim']}\n条件：{r['condition']}\n解释：{r['implication']}\n来源："
+            + ", ".join(r["source_ids"])
+            for r in research["rules"]
+        )
+        research_text += "\n\n来源索引\n" + "\n".join(
+            f"{s['id']}: {s['title']} · {s['url']}" for s in research["sources"]
+        )
+        documents.append(
+            {
+                "id": "scientific-priors",
+                "title": "预处理顺序与参数的证据目录（核对后概述）",
+                "url": "brainagent:scientific-knowledge:1",
+                "text": research_text,
+                "sha256": digest(research_text),
+            }
+        )
+        evaluation_evidence = read(Path(__file__).parent / "resources/evaluation-evidence.json")
+        metric_text = evaluation_evidence["interpretation"] + "\n\n" + "\n\n".join(
+            f"{m['id']} · {m['name']}\n定义：{m['formula']}\n边界：{m['overCleaningAndLeakageRisk']}\n选择角色：{m['selectionRole']}"
+            for m in evaluation_evidence["quality"]["metrics"]
+        )
+        documents.append({"id": "evaluation-evidence", "title": "评价指标定义与解释边界（研究目录）",
+                          "url": "brainagent:evaluation-evidence:1", "text": metric_text, "sha256": digest(metric_text)})
         protocol = {
-            "version": "2",
+            "version": "3",
             "request": request.model_dump(mode="json"),
             "deadline": started + request.budget.max_seconds,
             "input_hash": digest(data_json),
             "source_workflow_id": request.workflow_id,
             "scope": "offline_development_panel",
-            "evaluator": "csp-shrinkage-lda-v2",
-            "secondary_evaluator": "logvariance-scaler-logistic",
+            "evaluator": "fixed-three-learner-subject-macro-utility-v1",
+            "anchor_evaluator": "csp-shrinkage-lda-v2",
+            "benchmark_evaluators": ["fgmdm", "ea_fbcsp", "logvar_lr"],
             "evaluation_mode": "subject_holdout"
             if request.train_subjects
             else "group_cross_validation",
             "split_rationale": "Explicit subject roles"
             if request.train_subjects
             else "Seeded subject folds, min(5, n_subjects); every subject has out-of-fold predictions. Engineering evaluation protocol, not a dataset optimum.",
-            "metric": "subject_macro_balanced_accuracy",
-            "selection": "highest_development_ba",
-            "tie_break": ["reference", "fewer_operators", "catalog_order"],
+            "metric": "mean_subject_macro_ba_across_csp_lda_fbcsp_ts_lr",
+            "selection": "highest_complete_three_learner_utility",
+            "tie_break": ["reference", "fewer_operators", "candidate_id"],
+            "assessment": {
+                "version": 1,
+                "primary_suite": ["csp_lda", "fbcsp", "ts_lr"],
+                "weighting": "equal_subjects_then_equal_learners",
+                "missing_primary": "no_selection_score",
+                "quality": "physical_signal_metrics_separate_axes",
+                "reconstruction_design": "balanced",
+                "reconstruction_scope": "one_fixed_record_per_subject_all_eligible_trials",
+                "reconstruction_interpretation": "semi_synthetic_cleanproxy_not_neural_ground_truth",
+            },
+            "utility_execution": utility_config,
+            "utility_protocol": utility_protocol(execution=utility_config),
             "baseline_id": BASELINE_ID,
-            "catalog": catalog(),
-            "catalog_hash": digest(catalog()),
+            "catalog": seeds,
+            "catalog_hash": digest(seeds),
+            "control_design_hash": digest(controls) if controls else None,
+            "control_comparison": (
+                "frozen finite single-edit seed neighbourhood; not exhaustive continuous or multigeneration adaptive search"
+                if controls else "adaptive multigeneration operator editing"
+            ),
+            "space": space.model_dump(mode="json"),
+            "space_hash": digest(space.model_dump(mode="json")),
+            "space_context": space_context,
+            "scientific_knowledge_hash": digest(research),
+            "evaluation_evidence_hash": digest(evaluation_evidence),
             "environment": environment(),
             "numeric_engine_hash": engine_hash(),
             "search_engine_hash": search_engine_hash(),
@@ -227,6 +322,7 @@ class SearchService:
             "panel_request_hash": digest(panel_request),
             "limits": limits.model_dump(),
             "numeric_threads": 1,
+            "record_workers": min(4, max(1, (os.cpu_count() or 1) // 2)),
             "adaptation": "shared_policy_with_label_free_subject_batch_fitting",
             "information_permissions": {
                 "target_signals": "whole_unlabelled_subject_batch",
@@ -235,9 +331,9 @@ class SearchService:
                 "independent_confirmation": False,
             },
             "parameter_provenance": {
-                "bands": "engineering comparison grid",
+                "domains": "operator-specific bounded domains with source or engineering provenance in space.json",
                 "alignment": "He & Wu, arXiv:1808.05464",
-                "conditional_thresholds": "engineering hypotheses (3 and 10), not validated physiological cutoffs",
+                "conditional_thresholds": "bounded engineering hypotheses, not validated physiological cutoffs",
             },
             "confirmation": "not_performed; these data are development data previously available to the workflow",
             "failure_denominator": "candidate must predict every predeclared eligible development trial",
@@ -254,11 +350,22 @@ class SearchService:
             updated_at=now(),
             deadline=started + request.budget.max_seconds,
             protocol=protocol,
+            registry=registry,
         ).model_dump(mode="json")
         write(root / "input.json", data_json)
         write(root / "panel-request.json", panel_request)
         write(root / "sources.json", documents)
         write(root / "protocol.json", protocol)
+        write(root / "space.json", protocol["space"])
+        if controls is not None:
+            write(root / "control-design.json", controls)
+        write(root / "scientific-knowledge.json", research)
+        write(root / "evaluation-evidence.json", evaluation_evidence)
+        write(root / "space.schema.json", ExplorationSpace.model_json_schema())
+        write(
+            root / "scientific-knowledge.schema.json",
+            ScientificKnowledge.model_json_schema(),
+        )
         write(root / "limits.json", limits.model_dump())
         schema = SearchState.model_json_schema()
         panel_schema = FrozenPanel.model_json_schema()
@@ -339,11 +446,14 @@ class SearchService:
 
     @staticmethod
     def verify_runtime(state):
+        from .utility_evaluation import utility_protocol
+
         protocol = state["protocol"]
         if (
             protocol["numeric_engine_hash"] != engine_hash()
             or protocol["search_engine_hash"] != search_engine_hash()
             or protocol["environment"] != environment()
+            or (protocol.get("assessment") and protocol.get("utility_protocol") != utility_protocol(execution=protocol.get("utility_execution")))
         ):
             raise IntegrityFailure("冻结的执行或评价代码/环境已改变，请创建新搜索")
 
@@ -482,7 +592,7 @@ class SearchService:
 
     async def candidate(self, state, identity):
         root = self.folder(state["id"])
-        entry = next(c for c in catalog() if c["id"] == identity)
+        entry = verify_registry(state["protocol"], state["registry"])[identity]
         existing = next((c for c in state["candidates"] if c["id"] == identity), None)
         if existing is None:
             if state["usage"]["candidates"] >= state["budget"]["max_candidates"]:
@@ -494,7 +604,12 @@ class SearchService:
             state["candidates"].append(existing)
             write(
                 root / "candidates" / identity / "method.json",
-                method(entry, state["panel"]).model_dump(mode="json"),
+                method(
+                    entry,
+                    state["panel"],
+                    state["protocol"]["space"],
+                    state["protocol"].get("space_context"),
+                ).model_dump(mode="json"),
             )
             write(root / "candidates" / identity / "policy.json", entry)
         receipt_path = root / "candidates" / identity / "receipt.json"
@@ -533,6 +648,10 @@ class SearchService:
                     mode="json"
                 )
                 if receipt["status"] == "evaluated":
+                    if state["protocol"].get("assessment") and (
+                        receipt.get("assessment") is None or not receipt.get("assessment_path") or not receipt.get("core_receipt_path")
+                    ):
+                        raise IntegrityFailure("当前协议要求完整多维评价回执，不能回退单模型评分")
                     versions = receipt.get("versions") or {}
                     expected = {
                         "search_engine_sha256": state["protocol"]["search_engine_hash"],
@@ -625,6 +744,26 @@ class SearchService:
             raise IntegrityFailure("冻结协议或输入快照已改变，不能混用历史结果")
         self.verify_runtime(state)
         documents = read(root / "sources.json")
+        if (
+            read(root / "space.json") != protocol["space"]
+            or digest(protocol["space"]) != protocol["space_hash"]
+            or digest(read(root / "scientific-knowledge.json")) != protocol["scientific_knowledge_hash"]
+            or digest(read(root / "evaluation-evidence.json")) != protocol["evaluation_evidence_hash"]
+        ):
+            raise IntegrityFailure("冻结算子空间或科学依据目录已改变")
+        verify_registry(protocol, state["registry"])
+        if protocol.get("control_design_hash"):
+            controls = read(root / "control-design.json")
+            if digest(controls) != protocol["control_design_hash"] or controls["registry"] != state["registry"]:
+                raise IntegrityFailure("frozen finite control design differs")
+        registry_path = root / "registry.json"
+        saved_registry = read(registry_path) if registry_path.exists() else []
+        if saved_registry != state["registry"]:
+            # search.json is the atomic authoritative ledger; a crash may
+            # precede publication of its derived worker-facing projection.
+            if saved_registry != state["registry"][:len(saved_registry)]:
+                raise IntegrityFailure("候选配方登记与搜索记录不一致")
+            write(registry_path, state["registry"])
         if protocol["sources_hash"] != digest(documents) or protocol[
             "panel_request_hash"
         ] != digest(read(root / "panel-request.json")):
@@ -667,7 +806,7 @@ class SearchService:
                         raise
                     state["usage"]["retries"] += 1
                     self.save(state)
-            valid = {c["id"] for c in catalog()}
+            valid = {c["id"] for c in state["registry"]}
             proposed = plan["candidate_ids"]
             # The compulsory reference is run once regardless of whether the
             # initial list includes it. Preserve every other proposed position.
@@ -717,8 +856,8 @@ class SearchService:
             self.guard(state)
             state["selected_candidate_id"] = select(state["candidates"])
             attempted = {c["id"] for c in state["candidates"]}
-            remaining = [c["id"] for c in catalog() if c["id"] not in attempted]
-            if not remaining:
+            remaining = [c["id"] for c in state["registry"] if c["id"] not in attempted]
+            if not remaining and strategy != "adaptive":
                 await self.stop(state, "completed", "catalog_exhausted")
                 return
             if state["usage"]["candidates"] >= state["budget"]["max_candidates"]:
@@ -734,7 +873,7 @@ class SearchService:
             self.save(state)
             if strategy in {"random", "exhaustive", "one_shot"}:
                 if state["schedule"] is None:
-                    ids = [c["id"] for c in catalog() if c["id"] != BASELINE_ID]
+                    ids = [c["id"] for c in state["registry"] if c["id"] != BASELINE_ID]
                     if strategy == "random":
                         random.Random(state["request"]["seed"]).shuffle(ids)
                     state["schedule"] = ids
@@ -754,34 +893,6 @@ class SearchService:
                     },
                 }
             else:
-                # If every option fits count, time and disk estimates, enumerate.
-                plan_path = root / "candidates" / BASELINE_ID / "plan.json"
-                estimated = (
-                    read(plan_path).get("estimated_disk_bytes", 0)
-                    if plan_path.exists()
-                    else 0
-                )
-                exhaustive_fits = (
-                    state["budget"]["max_candidates"] - state["usage"]["candidates"]
-                    >= len(remaining)
-                    and state["budget"]["max_proposals"] - state["usage"]["proposals"]
-                    >= len(remaining)
-                    and state["deadline"] - time.time()
-                    > max(60, baseline["cost_seconds"] * len(remaining) * 2)
-                    and estimated > 0
-                    and protocol["limits"]["disk_limit_bytes"]
-                    - state["usage"]["disk_bytes"]
-                    > estimated * len(remaining)
-                )
-                if exhaustive_fits:
-                    self.action(
-                        state,
-                        "enumerate_remaining",
-                        status="completed",
-                        reason="全部剩余选项在候选数、时间及磁盘保守估算内，可直接穷举",
-                    )
-                    strategy = "exhaustive"
-                    continue
                 try:
                     proposal = (await self.model_action(state, documents))["decision"]
                 except ValueError as exc:
@@ -802,6 +913,46 @@ class SearchService:
                     self.save(state)
                     continue
             if proposal["action"] == "finish":
+                missing_seeds = [
+                    s["id"] for s in protocol["catalog"] if s["id"] not in attempted
+                ]
+                if missing_seeds:
+                    state["usage"]["proposals"] += 1
+                    self.action(
+                        state,
+                        "finish",
+                        status="rejected",
+                        reason=proposal["reason"],
+                        request=proposal,
+                        error="仍有未探索的方法起点：" + ", ".join(missing_seeds),
+                    )
+                    continue
+                exploration = coverage(state)
+                explanations = proposal.get("unexplored_edit_reasons", {})
+                missing = [
+                    name
+                    for name in exploration["unexplored_edit_families"]
+                    if not explanations.get(name, "").strip()
+                ]
+                n_edits = sum(
+                    bool(e["edits"]) and e["id"] in attempted for e in state["registry"]
+                )
+                minimum_edits = min(
+                    8,
+                    max(
+                        0, state["budget"]["max_candidates"] - len(protocol["catalog"])
+                    ),
+                )
+                if missing or n_edits < minimum_edits:
+                    state["usage"]["proposals"] += 1
+                    self.action(
+                        state,
+                        "finish",
+                        status="rejected",
+                        request=proposal,
+                        error=f"提前结束需至少尝试 {minimum_edits} 个不同编辑方案（当前 {n_edits}），并逐项解释未覆盖编辑类型：{', '.join(missing)}",
+                    )
+                    continue
                 self.action(
                     state,
                     "finish",
@@ -836,17 +987,20 @@ class SearchService:
                 )
                 started = time.monotonic()
                 try:
+                    reading = read_context_evidence(proposal, state, documents)
                     if any(
                         a["index"] != action["index"]
                         and a.get("request", {}).get("source_id")
                         == proposal["source_id"]
                         and a.get("request", {}).get("query") == proposal["query"]
+                        and a.get("status") == "completed"
+                        and (a.get("result") or {}).get("source_sha256") == reading.get("source_sha256")
                         for a in state["actions"]
                         if a.get("request")
                     ):
                         raise ValueError("该来源和查询已读取，重复动作不产生新信息")
                     action.update(
-                        status="completed", result=read_evidence(proposal, documents)
+                        status="completed", result=reading
                     )
                 except ValueError as exc:
                     action.update(status="rejected", error=str(exc))
@@ -855,6 +1009,50 @@ class SearchService:
                 continue
             if strategy != "one_shot":
                 state["usage"]["proposals"] += 1
+            try:
+                parent_id = proposal["base_candidate_id"]
+                if parent_id not in {
+                    c["id"] for c in state["candidates"] if c["status"] == "evaluated"
+                }:
+                    raise ValueError("父候选没有有效评价")
+                if strategy == "adaptive":
+                    validate_hypothesis(proposal, state["candidates"])
+                if proposal.get("edits"):
+                    entries = verify_registry(protocol, state["registry"])
+                    entry = edited_entry(
+                        entries[parent_id],
+                        proposal["edits"],
+                        protocol["space"],
+                        title=proposal["title"],
+                        order=len(entries),
+                        context=protocol.get("space_context"),
+                        prior_challenges=proposal.get("prior_challenges"),
+                    )
+                    if entry["recipe_hash"] in {
+                        e["recipe_hash"] for e in entries.values()
+                    }:
+                        raise ValueError("该执行配方已经存在，请选择未试方法或不同编辑")
+                    # Compile before reservation so structural failures do not consume a numerical trial.
+                    method(
+                        entry,
+                        state["panel"],
+                        protocol["space"],
+                        protocol.get("space_context"),
+                    )
+                    proposal["candidate_id"] = entry["id"]
+                    state["registry"].append(entry)
+                    remaining.append(entry["id"])
+                elif proposal["candidate_id"] not in remaining:
+                    raise ValueError("方法起点重复或不存在")
+            except (ValueError, KeyError) as exc:
+                self.action(
+                    state,
+                    "invalid_proposal",
+                    status="rejected",
+                    request=proposal,
+                    error=str(exc),
+                )
+                continue
             action = self.action(
                 state,
                 "propose_candidate",
@@ -871,24 +1069,6 @@ class SearchService:
                     )
                 },
             )
-            if proposal["candidate_id"] not in remaining or proposal[
-                "base_candidate_id"
-            ] not in {
-                c["id"] for c in state["candidates"] if c["status"] == "evaluated"
-            }:
-                action.update(
-                    status="rejected",
-                    error="候选重复/不在固定目录，或父候选没有有效评价",
-                )
-                self.save(state)
-                continue
-            if strategy == "adaptive":
-                try:
-                    validate_hypothesis(proposal, state["candidates"])
-                except (ValueError, KeyError) as exc:
-                    action.update(status="rejected", error=str(exc))
-                    self.save(state)
-                    continue
             await self.candidate_action(state, action)
 
     async def candidate_action(self, state, action, *, recovering=False):

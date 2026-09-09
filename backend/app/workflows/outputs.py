@@ -13,7 +13,7 @@ from app.file_publish import replace_file
 from app.preprocessing.runner import verify_result
 from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import digest, file_hash, within
-from app.search.catalog import catalog, select
+from app.search.catalog import entries_at, select, selection_score
 from app.search.evaluation_contracts import EvaluationReceipt, EvaluationRepresentation
 from .contracts import EvaluationOutput
 from .records import write_readable as write_json
@@ -26,6 +26,7 @@ def choose(search_state, plan, store):
     if search_state["status"] not in {"completed", "stopped"}:
         raise ValueError("搜索尚未正常结束，不能交付候选")
     candidates = search_state["candidates"]
+    registered = entries_at(store.root.parent)
     if len({c["id"] for c in candidates}) != len(candidates):
         raise ValueError("搜索候选编号重复")
     # Validate every measured receipt before catalog.select compares its score.
@@ -34,7 +35,12 @@ def choose(search_state, plan, store):
             receipt = EvaluationReceipt.model_validate(candidate["receipt"])
             if receipt.status != "evaluated" or receipt.candidate_id != candidate["id"]:
                 raise ValueError("候选身份或评价状态与回执不同")
-    winner = select(candidates)
+            if search_state["protocol"].get("assessment") and receipt.assessment is None:
+                raise ValueError("三模型选择缺少 assessment")
+        entry = registered.get(candidate["id"])
+        if entry is None or (candidate.get("parameters") is not None and candidate["parameters"] != entry["parameters"]):
+            raise ValueError("候选参数与冻结动态配方不同")
+    winner = select([{**c, "parameters": registered[c["id"]]["parameters"]} for c in candidates])
     if winner is None or winner != search_state["selected_candidate_id"]:
         raise ValueError("选中候选与固定开发指标及平局规则不一致")
     selected = next(c for c in candidates if c["id"] == winner)
@@ -92,20 +98,20 @@ def choose(search_state, plan, store):
             "quality_evaluated": True,
             "search_id": search_state["id"],
             "selected_candidate_id": winner,
-            "score": receipt["macro_ba"],
+            "score": selection_score(receipt),
             "evaluation_scope": "development",
             "seed": search_state["request"]["seed"],
             "candidate_summary": [
                 {
                     "candidate_id": c["id"],
                     "status": c["status"],
-                    "score": (c.get("receipt") or {}).get("macro_ba"),
+                    "score": selection_score(c.get("receipt")),
                     "error": c.get("error"),
                 }
                 for c in candidates
             ],
             "selected_method_ref": method_ref,
-            "reason": "按冻结开发面板的被试平均平衡准确率及固定平局规则选择；不是独立确认结果。",
+            "reason": "按冻结协议中的完整训练效用和精确平局规则选择；分类、质量及重建各有独立含义，开发结果未经独立确认。",
             "evaluation_protocol": search_state["protocol"],
             "panel": search_state["panel"],
             "selected_receipt": receipt,
@@ -113,6 +119,8 @@ def choose(search_state, plan, store):
         }
     ).model_dump(mode="json")
     _representation_files(selection, store, result.records)
+    if search_state["protocol"].get("assessment") or receipt.get("assessment"):
+        _evaluation_evidence(selection, store)
     return selection
 
 
@@ -158,7 +166,7 @@ def _evaluation_evidence(selection, store):
         or file_hash(predictions) != receipt["predictions_sha256"]
     ):
         raise ValueError("选中预测记录完整性核验失败")
-    return [
+    files = [
         (panel_path, "evaluation/panel.json", summary["file_sha256"]),
         (
             predictions,
@@ -166,6 +174,83 @@ def _evaluation_evidence(selection, store):
             receipt["predictions_sha256"],
         ),
     ]
+    if selection["evaluation_protocol"].get("assessment") and receipt.get("assessment") is None:
+        raise ValueError("冻结协议要求完整 assessment，不能以 CSP 锚点评分替代")
+    if receipt.get("assessment") is not None:
+        from app.search.assessment import verify_assessment
+
+        assessment_root = within(root, receipt["assessment_path"])
+        assessed = verify_assessment(assessment_root, receipt["assessment"],
+                                     panel_hash=panel["panel_hash"], candidate_id=selection["selected_candidate_id"])
+        entry = entries_at(store.root.parent)[selection["selected_candidate_id"]]
+        plan = store.get("offline-search", Ref.model_validate(receipt["plan_ref"]), "plan")
+        result_path = root / "result.json"
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        actual = store.status("offline-search", receipt["job_id"]).model_dump(mode="json")
+        if result != actual or digest(plan) != receipt["plan_ref"]["sha256"]:
+            raise ValueError("assessment 执行结果或计划与交付不同")
+        if not receipt.get("core_receipt_path"):
+            raise ValueError("assessment 缺少选中 attempt 的核心回执路径")
+        core_path = within(root, receipt["core_receipt_path"])
+        core = json.loads(core_path.read_text(encoding="utf-8"))
+        expected = dict(candidate_hash=digest(entry), plan_hash=digest(plan), result_hash=digest(result),
+                        input_hash=panel["input_hash"], core_receipt_hash=digest(core))
+        if any(assessed["bindings"][key] != value for key, value in expected.items()):
+            raise ValueError("assessment 绑定与候选、计划或原始核心回执不同")
+        if (core.get("predictions_sha256") != receipt["predictions_sha256"]
+                or core.get("macro_ba") != assessed["core_csp_macro_ba"]):
+            raise ValueError("assessment CSP 锚点或预测与核心回执不同")
+        protocol_path = store.root.parent / "protocol.json"
+        if json.loads(protocol_path.read_text(encoding="utf-8")) != selection["evaluation_protocol"]:
+            raise ValueError("交付协议与冻结协议不同")
+        utility_path = within(assessment_root, assessed["utility"]["receipt_artifact"]["path"])
+        utility = json.loads(utility_path.read_text(encoding="utf-8"))
+        protocol_ref = Path(utility["protocol"]["path"])
+        protocol_ref = protocol_ref if protocol_ref.is_absolute() else within(assessment_root / "utility", str(protocol_ref))
+        if json.loads(protocol_ref.read_text(encoding="utf-8")) != selection["evaluation_protocol"].get("utility_protocol"):
+            raise ValueError("三模型实际协议与冻结协议不同")
+        files.extend((p, "evaluation/" + name, file_hash(p)) for p, name in (
+            (core_path, receipt["core_receipt_path"]), (result_path, "result.json"),
+            (protocol_path, "search-protocol.json"), (store.root.parent / "registry.json", "registry.json")))
+        if assessed["bindings"]["probe_panel_hash"] is not None:
+            probe_path = store.root.parent / "probe-panel.json"
+            if digest(json.loads(probe_path.read_text(encoding="utf-8"))) != assessed["bindings"]["probe_panel_hash"]:
+                raise ValueError("重建 probe 与 assessment 绑定不同")
+            files.append((probe_path, "evaluation/probe-panel.json", file_hash(probe_path)))
+        prefix = "evaluation/" + receipt["assessment_path"] + "/"
+        files += [
+            (within(assessment_root, a["path"]), prefix + a["path"], a["sha256"])
+            for a in assessed["artifacts"]
+        ]
+        files.append((assessment_root / "assessment.json", prefix + "assessment.json", file_hash(assessment_root / "assessment.json")))
+    if receipt.get("operator_usage") is not None:
+        from app.search.operator_usage import OperatorUsage, OperatorUsageReport
+
+        usage = OperatorUsage.model_validate(receipt["operator_usage"])
+        ref = usage.artifact
+        path = within(root, ref.path)
+        relative = path.relative_to(root).as_posix()
+        if relative != ref.path:
+            raise ValueError("算子适用性产物须使用规范的包内相对路径")
+        raw = path.read_bytes()
+        if len(raw) != ref.bytes or hashlib.sha256(raw).hexdigest() != ref.sha256:
+            raise ValueError("算子适用性产物 SHA/bytes 核验失败")
+        native = OperatorUsageReport.model_validate_json(raw)
+        plan = store.get("offline-search", Ref.model_validate(receipt["plan_ref"]), "plan")
+        result_path = root / "result.json"
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        actual = store.status("offline-search", receipt["job_id"]).model_dump(mode="json")
+        if (native.summary != usage.summary or native.plan_sha256 != digest(plan)
+                or native.result_sha256 != digest(result) or result != actual
+                or digest(plan) != receipt["plan_ref"]["sha256"]):
+            raise ValueError("算子适用性摘要或 plan/result 绑定与交付不同")
+        destination = "evaluation/" + relative
+        reserved = {"evaluation/" + name for name in (
+            "receipt.json", "protocol.json", "folds.json", "candidate.json", "plan.json", "assessment-index.json")}
+        if destination in reserved or destination in {name for _, name, _ in files}:
+            raise ValueError("算子适用性产物与其他交付证据路径冲突")
+        files.append((path, destination, ref.sha256))
+    return files
 
 
 def _publish_archive(archive, folder, members, manifest, validate):
@@ -296,9 +381,9 @@ def _subject_roles(groups, panel):
 
 def _representation_files(selection, store, records):
     """Resolve only checksummed files inside the selected candidate directory."""
-    entry = next(
-        (c for c in catalog() if c["id"] == selection["selected_candidate_id"]), None
-    )
+    search_root = store.root.parent
+    registered = entries_at(search_root).values()
+    entry = next((c for c in registered if c["id"] == selection["selected_candidate_id"]), None)
     if entry is None:
         raise ValueError("选中策略不在冻结目录中")
     adaptation = entry["parameters"].get("adaptation", "none")
@@ -387,6 +472,27 @@ def _representation_files(selection, store, records):
     return arrays, provenance, unit, semantics
 
 
+def _protect_delivery(folder, store, survey, selection, evidence):
+    """Validate destinations before any mkdir, copy or array allocation."""
+    folder = Path(folder).resolve()
+    protected = [Path(survey["source_root"]).resolve(), store.root.resolve(),
+                 within(store.root.parent, "candidates/" + selection["selected_candidate_id"])]
+    if selection["selected_receipt"].get("assessment"):
+        plan = store.get("offline-search", Ref.model_validate(selection["selected_receipt"]["plan_ref"]), "plan")
+        protected.append(Path(plan["input_snapshot"]["collection"]["root"]).resolve())
+    if any(folder.is_relative_to(p) or p.is_relative_to(folder) for p in protected):
+        raise ValueError("交付目录与受保护来源或候选目录重叠")
+    if any(Path(p).resolve().is_relative_to(folder) for p, _, _ in evidence):
+        raise ValueError("交付目录包含受保护证据")
+    for path in folder.rglob("*"):
+        if path.is_symlink() or getattr(path, "is_junction", lambda: False)():
+            raise ValueError("交付目录含链接，可能覆盖来源")
+    for record in selection["panel"]["records"]:
+        if Path(record).name != record or any(c in record for c in ("/", "\\", ":")) or record in {".", ".."}:
+            raise ValueError("交付记录编号不能包含路径")
+    return folder
+
+
 def deliver(state, folder, store):
     import numpy as np
 
@@ -396,6 +502,7 @@ def deliver(state, folder, store):
         state["outputs"]["data_evaluation"]
     ).model_dump(mode="json")
     evidence_files = _evaluation_evidence(selection, store)
+    folder = _protect_delivery(folder, store, survey, selection, evidence_files)
     if selection.get("representation") != selection["selected_receipt"].get(
         "representation"
     ):
@@ -411,7 +518,7 @@ def deliver(state, folder, store):
         receipt.get("status") != "evaluated"
         or receipt.get("candidate_id") != selection["selected_candidate_id"]
         or receipt.get("job_id") != state["outputs"]["data_preprocessing"]["job_id"]
-        or receipt.get("macro_ba") != selection["score"]
+        or selection_score(receipt) != selection["score"]
         or receipt.get("panel_hash") != selection["panel"].get("panel_hash")
     ):
         raise ValueError("交付选择与评价回执不同")
@@ -569,10 +676,33 @@ def deliver(state, folder, store):
         write_json(folder / "evaluation" / f"{name}.json", value)
     for source, relative, checksum in evidence_files:
         target = within(folder, relative)
+        target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         if file_hash(target) != checksum:
             raise ValueError("评价证据复制校验失败")
-    representation_files = []
+    representation_files = [within(folder, relative) for _, relative, _ in evidence_files
+                            if relative not in {"evaluation/panel.json", "evaluation/originalpredictions.tsv"}]
+    if receipt.get("assessment"):
+        entry = entries_at(store.root.parent)[selection["selected_candidate_id"]]
+        plan = store.get("offline-search", Ref.model_validate(receipt["plan_ref"]), "plan")
+        for name, value in (("candidate.json", entry), ("plan.json", plan)):
+            target = folder / "evaluation" / name
+            write_json(target, value)
+            representation_files.append(target)
+        assessment_index = folder / "evaluation/assessment-index.json"
+        prefix = "evaluation/" + receipt["assessment_path"] + "/"
+        write_json(assessment_index, {
+            "selection_score": receipt["assessment"]["selection_score"],
+            "primary_suite": receipt["assessment"]["utility"]["primary_suite"],
+            "summary": prefix + "assessment.json",
+            "core_receipt": "evaluation/" + receipt["core_receipt_path"],
+            "utility_receipt": prefix + receipt["assessment"]["utility"]["receipt_artifact"]["path"],
+            "operator_usage": "evaluation/" + receipt["operator_usage"]["artifact"]["path"]
+            if receipt.get("operator_usage") is not None else None,
+            "files": [{"path": relative, "sha256": checksum} for _, relative, checksum in evidence_files],
+            "path_base": "archive_root",
+        })
+        representation_files.append(assessment_index)
     transform_map = []
     for source, relative in transforms:
         target = within(folder, "representation/" + relative)
@@ -583,7 +713,7 @@ def deliver(state, folder, store):
         representation_files.append(target)
         transform_map.append(
             {
-                "source_path": str(source),
+                "source_ref": "selected_receipt.representation.subjects:transform_sha256",
                 "archive_path": target.relative_to(folder).as_posix(),
                 "sha256": file_hash(target),
             }
@@ -596,7 +726,7 @@ def deliver(state, folder, store):
         array_map.append(
             {
                 "record_id": record["record_id"],
-                "source_path": str(source),
+                "source_ref": "selected_receipt.representation.records:" + record["record_id"],
                 "source_sha256": file_hash(source),
                 "archive_path": "X.npy",
                 "row_start": offset,
@@ -636,11 +766,16 @@ trial-index.tsv: 每一行到原始事件、记录和样点的映射。
 同一被试只进入一个分组；标准化或模型拟合应仅使用 train。
 交付保留搜索协议：分组交叉验证的被试全部标为 train，折成员见 evaluation/folds.json；
 显式训练/开发划分映射为 train/validation。test 始终为空，不存在独立测试集。
-候选按开发面板的被试平均平衡准确率选择，selection.json 保存分数与候选摘要。
+候选仅按 assessment.selection_score 选择：CSP/LDA、FBCSP、TS/LR 各自的开发被试平均
+平衡准确率再等权平均。三个模型必须覆盖完整开发分母；缺失模型不产生选择分数。
+core CSP macro_ba 仅为锚点，质量和重建不加入总分。selection.json 保存分数与候选摘要。
 反复用于选择的开发分数不是独立泛化结论；交叉验证折之间不得共享拟合的 CSP/LDA。
 无标签整批适配仅使用协议允许的各被试信号，不能据此推断实时或前瞻有效。
 evaluation/ 保存冻结协议、含全部原始 trial 的完整面板、折、选中评价回执，
-以及 originalpredictions.tsv 逐试次预测；面板和预测按原文件字节及哈希收录。
+以及 originalpredictions.tsv 核心 CSP 逐试次预测；面板和预测按原文件字节及哈希收录。
+evaluation/assessment/aN/utility/ 保存三主模型及其他学习器的逐试次预测、每折拟合模型、
+参数和证据；完整分母与统计见 utility.json。evaluation/assessment-index.json 提供包内相对路径。
+assessment/ 同时保留质量与重建的完整指标、曲线或有原因的不可用状态，无任意加权总分。
 representation/ 保存适配变换。
 回执中的源路径保留原样用于溯源；evaluation/artifact-map.json 将源数组映射到
 X.npy 的连续行区间及 trial-index.tsv，并列出变换在压缩包中的路径。
@@ -649,7 +784,7 @@ X.npy 是被评价数组的 float32 转换版本；该转换逐块保存后读�
 来源与引用见 sources.json，操作与参数见 method.json，统计和限制见 report.html。
 provenance/ 保存每条记录的实际执行参数、版本、事件对应和前后统计。
 train_example.py: 安装 numpy、scikit-learn 后执行 python train_example.py，
-仅用 train 拟合标准化与逻辑回归并检查预测可用性；这不是搜索 CSP/LDA 评价器的复现。
+仅用 train 拟合标准化与逻辑回归并检查预测可用性；三模型评价的实际模型与预测另附。
 
 mmap 按需读取；基本切片为视图，布尔或整数数组索引会复制所选数据。
 下面只选取前 32 条中的训练样本；完整训练使用 train_example.py 分块提取特征。
@@ -681,6 +816,9 @@ finally:
     members = delivery_members(
         folder, [r["record_id"] for r in result_records], representation_files
     )
+    names = [p.relative_to(folder).as_posix() for p in members]
+    if len(names) != len(set(names)) or any(not p.resolve().is_relative_to(folder) for p in members):
+        raise ValueError("交付成员重复或路径越界")
     counts = Counter(map(str, y))
     manifest = {
         "workflow_id": state["id"],
