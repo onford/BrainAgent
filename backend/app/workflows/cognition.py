@@ -69,6 +69,10 @@ class WorkflowCognition:
         self.service.save(self.state)
 
     def load(self, relative, model):
+        if relative == "survey/local-inspection.json":
+            from .local_contracts import read_local
+
+            return read_local(self.folder / relative)
         return model.model_validate_json(
             (self.folder / relative).read_text(encoding="utf-8")
         )

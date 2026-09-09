@@ -35,7 +35,6 @@ from .cognition_contracts import (
 from .survey_contracts import (
     DatasetVerification,
     LiteratureReview,
-    LocalInspection,
     SurveyPlan,
 )
 
@@ -47,7 +46,9 @@ from .collection_contracts import (
     Standardization,
 )
 
-FORMAT_VERSION = "4"
+from .local_contracts import LocalObservation, LocalEvent
+
+FORMAT_VERSION = "5"
 ARRAY_FORMATS = {
     "X.npy": {"dtype": "float32", "axes": ["trial", "channel", "sample"], "unit": "V"},
     "y.npy": {
@@ -141,6 +142,7 @@ class TrialRow(Contract):
 
 
 TABLE_MODELS = {
+    "local-events.tsv": LocalEvent,
     "source-inventory.tsv": InventoryRow,
     "triggers.tsv": TriggerRow,
     "delta.tsv": DeltaRow,
@@ -213,7 +215,7 @@ class DeliveryManifest(Contract):
 
 JSON_MODELS = {
     "survey/research-plan.json": SurveyPlan,
-    "survey/local-inspection.json": LocalInspection,
+    "survey/local-inspection.json": LocalObservation,
     "survey/verification.json": DatasetVerification,
     "survey/literature.json": LiteratureReview,
     "survey/research.json": ResearchFindings,

@@ -15,12 +15,14 @@
 
 统计仅在已选择且成功读取的记录上汇总，目录扫描规模单独列出；未知值不替换成零。不推算人口统计、频谱或信噪比等未测量指标。任务和事件含义标注为适配器配置，是否获外部证实另见三方核对报告。来源原文确实存在不等同于模型结论已被充分支持。
 
-新运行在 `process/formats.json` 的 `survey_reports` 中冻结版本、六个文件名和 HTML 模板 SHA-256。原有 JSON/TSV 格式保持不变。历史运行缺少该新增目录项时仍可读取；补生成报告不重写原始调研记录、旧格式快照或已交付训练包。
+新运行在 `process/formats.json` 的 `survey_reports` 中冻结版本 2、六个文件名和 HTML 模板 SHA-256。产物格式 5 使用有类型的本地观测结构 2，并增加 `local-events.tsv`；报告按范围、文件组织、信号、事件、元数据、统计与待办六组展示。记录详情使用独立滚动窗口，Esc 或“关闭详情”返回；共用通道配置只展示一次。历史运行仍可读取，不能以新格式续跑旧快照。
 
-从后端目录可为已有运行重建报告（需具备五个来源 JSON）：
+从后端目录可为格式快照与当前代码一致的运行重建报告（需具备五个来源 JSON）：
 
 ```powershell
 .venv-eeg/Scripts/python.exe -X utf8 -m app.workflows.survey_reporting workspace/training-workflow/workflows/<workflow-id>/survey
 ```
 
 刷新运行页面后，产物接口会发现新增文件。若修改已有报告，应重启服务清除文件哈希缓存。各 HTML 自带样式，原文默认折叠；在线打开时支持报告互跳和结构化记录下载。
+
+历史完成运行的补充观测使用 `python -m app.workflows.local_refresh <运行目录>`，保存在 `survey/observation-v2/`。页面优先显示补充报告，明确区分新的本地检查日期和沿用的外部调研结论；原报告、原始记录、格式快照和训练包不变。具体边界见 [本地观测结构](local-observation-redesign.md)。

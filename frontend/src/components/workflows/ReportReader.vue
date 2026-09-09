@@ -33,7 +33,12 @@ function loaded() {
     doc.head.append(style)
     if (doc.scrollingElement && report.value) doc.scrollingElement.scrollTop = positions.get(report.value.name) ?? 0
     headings.value = Array.from(doc.querySelectorAll<HTMLElement>('h2')).map(element => ({ title: element.textContent ?? '', element }))
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') emit('exitFocus') }
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      const detail = doc.querySelector<HTMLDetailsElement>('.observation-record[open]')
+      if (detail) { detail.open = false; detail.querySelector<HTMLElement>('summary')?.focus(); event.preventDefault() }
+      else emit('exitFocus')
+    }
     doc.addEventListener('keydown', escape)
     detach = () => doc.removeEventListener('keydown', escape)
   } catch { loadError.value = true }

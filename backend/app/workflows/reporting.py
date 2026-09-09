@@ -74,6 +74,11 @@ STATUS_LABELS = {
 
 
 def local_comparison(data, row):
+    from .local_contracts import LocalObservation
+    from .local_reporting import comparison_value
+
+    if isinstance(data.local_inspection, LocalObservation):
+        return comparison_value(data.local_inspection, row.field)
     grouped = {}
     for fact in data.local_inspection.facts:
         if fact.id in row.local_fact_ids:

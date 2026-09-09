@@ -383,6 +383,10 @@ async def research(agent, survey):
         "request": agent.state["request"],
         "adapter_profile_to_verify": survey["profile"],
         "local_inspection": local.model_dump(),
+        "local_reference_catalog": {
+            field: [f.id for f in local.facts if f.field == field]
+            for field in {f.field for f in local.facts}
+        },
         "local_records": survey["records"],
         "verification_source_candidates": survey["evidence"],
     }
@@ -414,16 +418,18 @@ async def research(agent, survey):
         missing = await retrieve(
             agent, plan, inputs, sources, catalog, "dataset_verification", 12
         )
+        from .planning_contracts import verification_contract
+
         verification = await agent.ask(
             "逐项对比本地、官网仓库与官方论文",
-            DatasetVerification,
+            verification_contract(local),
             {
                 **inputs,
                 "sources": agent.source_context(sources),
                 "observations": [o.model_dump() for o in sources.observations],
                 "retrieval_gaps": missing,
             },
-            "Produce every fixed comparison row. Local values must reference actual local_inspection fact IDs, never rewrite measurements or treat adapter assumptions as observations. "
+            "Produce every fixed comparison row. Local observations are typed objects. local_fact_ids may be empty (code attaches all measured references), or use exact references from local_reference_catalog. Do not rewrite measurements, manufacture pointers, infer task identity from file names, or treat unperformed checks as absence. "
             "Each official-site/repository or official-paper statement requires cited exact quotes. Missing statements are null with no findings. "
             "Identify the official DATASET paper via official citation evidence. A related acquisition-system paper is role=acquisition_system and cannot fill the official dataset-paper column. "
             "When identity cannot be confirmed use not_identified; do not substitute a usage/method paper. "

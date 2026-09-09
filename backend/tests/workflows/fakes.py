@@ -176,7 +176,11 @@ class WorkflowLLM(LLMClient):
                     comparisons=[
                         {
                             "field": f,
-                            "local_fact_ids": [
+                            "local_fact_ids": data.get(
+                                "local_reference_catalog", {}
+                            ).get(f, [])
+                            if "local_reference_catalog" in data
+                            else [
                                 v["id"]
                                 for v in data["local_inspection"]["facts"]
                                 if v["field"] == f

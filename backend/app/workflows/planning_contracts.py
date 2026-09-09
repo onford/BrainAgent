@@ -15,6 +15,34 @@ from .cognition_contracts import (
 from .survey_contracts import SearchGoal, SurveyPlan, LITERATURE_TARGETS
 
 
+def verification_contract(local):
+    from .survey_contracts import Comparison, DatasetVerification, FIELDS
+
+    facts = local.facts
+    rows = []
+    for field in FIELDS:
+        refs = tuple(f.id for f in facts if f.field == field)
+        rows.append(
+            create_model(
+                "Compare_" + field,
+                __base__=Comparison,
+                field=(Literal[field], ...),
+                local_fact_ids=(
+                    list[Literal[refs]] if refs else list[str],
+                    Field() if refs else Field(max_length=0),
+                ),
+            )
+        )
+    return create_model(
+        "DatasetVerification",
+        __base__=DatasetVerification,
+        comparisons=(
+            list[Union[tuple(rows)]],
+            Field(min_length=len(FIELDS), max_length=len(FIELDS)),
+        ),
+    )
+
+
 def survey_plan_contract():
     def goal(target, medium):
         return create_model(

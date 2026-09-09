@@ -8,6 +8,7 @@ from app.preprocessing.schemas import Contract, Ref, Step
 from .schemas import WorkflowRequest
 from .cognition_contracts import ResearchFindings, ReportNarrative
 from .survey_contracts import DatasetVerification, LiteratureReview, LocalInspection
+from .local_contracts import LocalObservation
 from .collection_contracts import IntakeAudit, LiteratureExclusions, Standardization
 
 Count = Annotated[int, Field(ge=0)]
@@ -293,7 +294,7 @@ class ReportData(Contract):
     narrative: ReportNarrative | None = None
     verification: DatasetVerification | None = None
     literature: LiteratureReview | None = None
-    local_inspection: LocalInspection | None = None
+    local_inspection: LocalInspection | LocalObservation | None = None
     intake: IntakeAudit | None = None
     literature_exclusions: LiteratureExclusions | None = None
     standardization: Standardization | None = None

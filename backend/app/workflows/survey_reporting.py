@@ -46,7 +46,7 @@ STATISTICS = {
 
 def report_format():
     return {
-        "version": "1",
+        "version": "2",
         "format": "HTML",
         "template_sha256": file_hash(TEMPLATE),
         "files": ["survey/reports/" + name for name in REPORTS],
@@ -134,14 +134,23 @@ def basic(survey, verification, sources):
 
 
 def information(local, verification, sources):
+    from .local_contracts import LocalObservation
+    from .local_reporting import observation_html
+
+    structured = isinstance(local, LocalObservation)
     facts = {f.id: f for f in local.facts}
 
-    def local_values(ids):
+    def local_values(ids, field):
+        if structured:
+            from .local_reporting import comparison_value
+
+            return comparison_value(local, field)
         grouped = defaultdict(list)
         for identity in ids:
             fact = facts.get(identity)
             if fact:
-                grouped[fact.value].append(fact.scope)
+                value = fact.value
+                grouped[value].append(fact.scope)
         return (
             "\n\n".join(
                 f"{', '.join(scopes)}：{value}" for value, scopes in grouped.items()
@@ -156,13 +165,14 @@ def information(local, verification, sources):
             else "未说明 / 未取得"
         )
 
-    body = f'<p>{escape(verification.summary)}</p><p class="muted">本地观测范围：{escape(local.scope)}</p>'
+    body = observation_html(local) if structured else ""
+    body += f'<h2>外部资料核对</h2><p>{escape(verification.summary)}</p><p class="muted">本地观测范围：{escape(local.scope_text if structured else local.scope)}</p>'
     body += "<h2>本地文件 / 官网与仓库 / 官方论文</h2>" + table(
         ["项目", "本地实际观测", "官网 / 官方仓库", "官方论文", "核对结果", "结论"],
         [
             (
                 FIELD_LABELS[r.field],
-                local_values(r.local_fact_ids),
+                local_values(r.local_fact_ids, r.field),
                 statement(r.official_sources),
                 statement(r.official_paper),
                 STATUS_LABELS[r.status],
@@ -179,17 +189,18 @@ def information(local, verification, sources):
     body += "<h2>冲突与待补信息</h2>" + listing(
         verification.conflicts + verification.gaps
     )
-    body += (
-        "<details><summary>本地观测明细与定位</summary>"
-        + table(
-            ["编号", "项目", "范围", "观测", "定位"],
-            [
-                (f.id, FIELD_LABELS[f.field], f.scope, f.value, f.locator)
-                for f in local.facts
-            ],
+    if not structured:
+        body += (
+            "<details><summary>本地观测明细与定位</summary>"
+            + table(
+                ["编号", "项目", "范围", "观测", "定位"],
+                [
+                    (f.id, FIELD_LABELS[f.field], f.scope, f.value, f.locator)
+                    for f in local.facts
+                ],
+            )
+            + "</details>"
         )
-        + "</details>"
-    )
     return (
         body + "<h2>外部资料的结论与原文</h2>" + evidence(verification.facts, sources)
     )
@@ -271,10 +282,28 @@ def statistics(survey, local):
         )
         + "</details>"
     )
-    body += "<h2>已记录的数组检查</h2>" + table(
-        ["记录范围", "检查结果"],
-        [(f.scope, f.value) for f in local.facts if f.field == "signal_arrays"],
-    )
+    from .local_contracts import LocalObservation
+
+    if isinstance(local, LocalObservation):
+        body += "<h2>已记录的数组检查</h2>" + table(
+            ["记录", "通道 × 样点", "解码类型", "解码单位", "非有限值数量"],
+            [
+                (
+                    key,
+                    f"{r.decoded_signal.shape[0]} × {r.decoded_signal.shape[1]}",
+                    r.decoded_signal.dtype,
+                    r.decoded_signal.unit,
+                    r.decoded_signal.nonfinite_count,
+                )
+                for key, r in local.recordings.items()
+                if r.decoded_signal
+            ],
+        )
+    else:
+        body += "<h2>已记录的数组检查</h2>" + table(
+            ["记录范围", "检查结果"],
+            [(f.scope, f.value) for f in local.facts if f.field == "signal_arrays"],
+        )
     body += "<h2>无法读取的记录与检查事项</h2>" + table(
         ["记录", "原因"],
         [(r.id, r.reason) for r in survey.records if r.status == "excluded"],
@@ -365,6 +394,10 @@ def render_survey_reports(folder, value=None):
     folder = Path(folder)
 
     def load(name, model):
+        if name == "local-inspection.json":
+            from .local_contracts import read_local
+
+            return read_local(folder / name)
         return model.model_validate_json((folder / name).read_text(encoding="utf-8"))
 
     survey = (

@@ -174,6 +174,10 @@ def report_data(folder):
 
     def optional(relative, model):
         path = folder / relative
+        if relative == "survey/local-inspection.json" and path.exists():
+            from .local_contracts import read_local
+
+            return read_local(path)
         return (
             model.model_validate_json(path.read_text(encoding="utf-8"))
             if path.exists()

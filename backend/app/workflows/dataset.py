@@ -15,7 +15,7 @@ from app.preprocessing.storage import file_hash, within
 from .records import write_readable as write_json
 from .formats import write_table as write_tsv
 from .cognition_contracts import ResearchFindings, ResearchSources
-from .survey_contracts import LocalFact, LocalInspection
+from .local_observation import ObservationBuilder
 from .intake import Audit, table
 
 SOURCE = "https://physionet.org/content/eegmmidb/1.0.0/"
@@ -81,7 +81,6 @@ def allowed_source(request, allowed_roots, output_roots):
 
 def inspect(root, request, folder):
     import mne
-    import numpy as np
 
     all_edf = sorted(root.glob("S[0-9][0-9][0-9]/S*R*.edf"))
     subjects = sorted({p.parent.name for p in all_edf})
@@ -89,19 +88,6 @@ def inspect(root, request, folder):
     if not chosen:
         raise ValueError("没有找到 EEGMMIDB EDF 记录")
     records, checks, channel_sets = [], [], {}
-    local_facts = []
-
-    def observe(field, scope, value, locator):
-        local_facts.append(
-            LocalFact(
-                id=f"local-{len(local_facts) + 1}",
-                field=field,
-                scope=scope,
-                value=str(value),
-                locator=locator,
-            )
-        )
-
     all_files = sorted(p for p in root.rglob("*") if p.is_file() and not p.is_symlink())
     inventory = [
         {"path": p.relative_to(root).as_posix(), "bytes": p.stat().st_size}
@@ -122,17 +108,8 @@ def inspect(root, request, folder):
         + "\n",
         encoding="utf-8",
     )
-    observe(
-        "directory_structure",
-        "source directory",
-        f"{len(all_files)} files; extensions={dict(Counter(p.suffix for p in all_files))}",
-        "survey/directory-tree.txt; survey/source-inventory.tsv",
-    )
-    observe(
-        "subjects",
-        "source directory and selected subset",
-        f"available={len(subjects)}; selected={chosen}",
-        "survey/survey.json#/selected_subjects",
+    observations = ObservationBuilder(
+        root, chosen, request.runs, inventory, len(subjects), len(all_edf)
     )
     for subject in chosen:
         for run in request.runs:
@@ -175,18 +152,7 @@ def inspect(root, request, folder):
                         raise SourceChangedError(
                             f"源文件在读取期间发生变化，请新建运行：{relative}"
                         )
-                    measurements = {
-                        "file_format": "EDF decoded by MNE",
-                        "file_header": f"nchan={raw.info['nchan']}; sfreq={raw.info['sfreq']}; samples={raw.n_times}",
-                        "signal_arrays": f"shape={values.shape}; dtype={values.dtype}; unit=V (MNE); finite={bool(np.isfinite(values).all())}",
-                        "channels": f"count={len(raw.ch_names)}; channel_set={channel_set}; names={raw.ch_names}",
-                        "sampling_rate": f"{raw.info['sfreq']} Hz",
-                        "events": json.dumps(counts, ensure_ascii=False),
-                        "task_runs": f"path run={run}; decoded annotations={sorted(counts)}; task meaning needs external verification",
-                        "recording_duration": f"{raw.n_times / raw.info['sfreq']} s",
-                    }
-                    for field, measurement in measurements.items():
-                        observe(field, record["id"], measurement, relative)
+                    observations.add(record, raw, values)
             except (OSError, ValueError, RuntimeError) as exc:
                 record.update(status="excluded", reason=str(exc))
                 checks.append(
@@ -225,13 +191,7 @@ def inspect(root, request, folder):
         "scope": "selected subjects and imagery runs; unselected recordings are outside this workflow",
     }
     write_tsv(folder / "source-inventory.tsv", inventory, ["path", "bytes"])
-    write_json(
-        folder / "local-inspection.json",
-        LocalInspection(
-            scope="Directory inventory covers the source root; headers and arrays cover selected records only. Values are observations, not adapter assumptions.",
-            facts=local_facts,
-        ).model_dump(mode="json"),
-    )
+    observations.finish(result, folder)
     write_tsv(
         folder / "triggers.tsv",
         [{"trigger": k, "meaning": v} for k, v in PROFILE["trigger_map"].items()],
