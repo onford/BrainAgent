@@ -198,7 +198,9 @@ def validate_verification(agent, value, sources, local):
                     f"{row.field}: local IDs must refer to observed facts for that exact field"
                 )
             # The model cannot hide observed records by omitting their local IDs.
-            row.local_fact_ids = [f.id for f in local.facts if f.field == row.field]
+            row.local_fact_ids = [
+                f.id for f in local_facts.values() if f.field == row.field
+            ]
             for side, kinds in (
                 (row.official_sources, {"official", "documentation", "code"}),
                 (row.official_paper, {"paper"}),
@@ -381,18 +383,13 @@ async def research(agent, survey):
     local = agent.load("survey/local-inspection.json", LocalInspection)
     from .local_contracts import LocalObservation
 
-    local_facts = local.facts
     inputs = {
         "request": agent.state["request"],
         "adapter_profile_to_verify": survey["profile"],
         "local_inspection": local.research_context()
         if isinstance(local, LocalObservation)
         else local.model_dump(),
-        "local_reference_catalog": {
-            field: [f.id for f in local_facts if f.field == field]
-            for field in {f.field for f in local_facts}
-        },
-        "local_records": survey["records"],
+        "local_reference_policy": "Output local_fact_ids=[]; code attaches all measured references for each comparison field. Record groups enumerate all members and distinct measured values, not a sample.",
         "verification_source_candidates": survey["evidence"],
     }
     plan = (
@@ -434,7 +431,7 @@ async def research(agent, survey):
                 "observations": [o.model_dump() for o in sources.observations],
                 "retrieval_gaps": missing,
             },
-            "Produce every fixed comparison row. Local observations are typed objects. local_fact_ids may be empty (code attaches all measured references), or use exact references from local_reference_catalog. Do not rewrite measurements, manufacture pointers, infer task identity from file names, or treat unperformed checks as absence. "
+            "Produce every fixed comparison row. Local observations group identical measured values and retain every record ID. Return local_fact_ids=[]; code attaches all measured references. Compare all groups, including minority values. Do not rewrite measurements, manufacture pointers, infer task identity from file names, or treat unperformed checks as absence. "
             "Each official-site/repository or official-paper statement requires cited exact quotes. Missing statements are null with no findings. "
             "Identify the official DATASET paper via official citation evidence. A related acquisition-system paper is role=acquisition_system and cannot fill the official dataset-paper column. "
             "When identity cannot be confirmed use not_identified; do not substitute a usage/method paper. "
@@ -463,7 +460,9 @@ async def research(agent, survey):
             selection.model,
             {
                 "request": agent.state["request"],
-                "verification": verification.model_dump(),
+                "verification": verification.model_dump(
+                    exclude={"comparisons": {"__all__": {"local_fact_ids"}}}
+                ),
                 "criteria": SELECTION_CRITERIA,
                 "destinations": DESTINATIONS,
                 "source_passages": selection.context,

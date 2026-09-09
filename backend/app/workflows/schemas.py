@@ -27,8 +27,8 @@ class WorkflowRequest(Contract):
     adapter: Literal["eegmmidb"] = "eegmmidb"
     subjects: list[str] = Field(default_factory=list)
     seed: int = Field(default=42, ge=0, le=2**32 - 1)
-    tmin: float = Field(default=0, ge=0)
-    tmax: float = Field(default=2, gt=0, le=4)
+    tmin: float = 0
+    tmax: float = 2
 
     @model_validator(mode="after")
     def valid(self):

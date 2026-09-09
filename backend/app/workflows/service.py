@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import json
 from pathlib import Path
 import re
+from time import monotonic
 from uuid import uuid4
 
 from app.preprocessing.schemas import Ref
@@ -155,6 +156,7 @@ class WorkflowService:
 
     def retry(self, owner, identity):
         state = self.get(owner, identity)
+        check_format(self.folder(identity))
         if state["status"] not in {"failed", "interrupted"}:
             raise ValueError("只有失败或中断的流程可以重试")
         job = state.get("preprocessing_job")
@@ -411,20 +413,45 @@ class WorkflowService:
             self.save(state)
         else:
             result = self.preprocessing.store.status(owner, existing)
-        while result.status in {"queued", "running", "interrupted"}:
+        last_progress, last_reported = None, 0.0
+        snapshot = {
+            "status": result.status,
+            "completed": result.completed,
+            "total": result.total,
+        }
+        while snapshot["status"] in {"queued", "running", "interrupted"}:
+            progress = (snapshot["status"], snapshot["completed"], snapshot["total"])
+            if progress != last_progress and monotonic() - last_reported >= 5:
+                self.event(
+                    state,
+                    "data_preprocessing",
+                    "running",
+                    f"预处理计算：已完成 {snapshot['completed']}/{snapshot['total']} 个执行单元（{snapshot['status']}）",
+                )
+                self.save(state)
+                last_progress, last_reported = progress, monotonic()
             await asyncio.sleep(1)
-            result = await asyncio.to_thread(
-                self.preprocessing.store.status, owner, result.job_id
+            snapshot = await asyncio.to_thread(
+                self.preprocessing.store.progress, owner, result.job_id
             )
+        result = await asyncio.to_thread(
+            self.preprocessing.store.status, owner, result.job_id
+        )
         if result.status not in {"completed", "partial"}:
+            errors = list(
+                dict.fromkeys(
+                    str(r["error"])
+                    for r in result.records
+                    if r["status"] != "completed"
+                )
+            )
             raise ValueError(
-                "预处理未完成："
-                + str(
-                    [
-                        (r["record_id"], r["error"])
-                        for r in result.records
-                        if r["status"] != "completed"
-                    ]
+                f"预处理未完成（{result.completed}/{result.total}）："
+                + "; ".join(errors[:5])
+                + (
+                    f"；另有 {len(errors) - 5} 类错误，详见记录"
+                    if len(errors) > 5
+                    else ""
                 )
             )
         write_readable(

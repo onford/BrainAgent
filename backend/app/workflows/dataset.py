@@ -481,12 +481,9 @@ def collect(survey, folder, workflow_id, service, owner):
         if p.is_file()
     }
     for record in records:
-        subject = Path(record.bids_path).parts[0]
-        record.files = {
-            name: checksum
-            for name, checksum in inventory.items()
-            if len(Path(name).parts) == 1 or Path(name).parts[0] == subject
-        }
+        from app.preprocessing.inputs import working_files
+
+        record.files = working_files(record.model_copy(update={"files": inventory}))
     training_ids = [r["id"] for r in kept if r["run"] in TRAINING_RUNS]
     if not training_ids:
         raise ValueError("全部 Run 已接入，但没有可用于当前左右手运动想象训练的记录")

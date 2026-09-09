@@ -130,7 +130,12 @@ def main():
     parser.add_argument(
         "--resume", help="Resume a workflow ID under the same root and owner"
     )
-    parser.add_argument("--timeout", type=float, default=1800)
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=None,
+        help="Optional total runtime limit in seconds; default waits for completion",
+    )
     args = parser.parse_args()
     try:
         asyncio.run(run(args))

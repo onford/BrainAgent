@@ -1,5 +1,9 @@
 from abc import ABC, abstractmethod
+import asyncio
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import logging
+from math import isfinite
 from time import perf_counter
 from typing import Any, TypeVar
 from urllib.parse import urlsplit
@@ -13,6 +17,26 @@ from app.core.logging import current_log_context
 
 T = TypeVar("T", bound=BaseModel)
 logger = logging.getLogger("app.llm.calls")
+_MAX_RETRIES = 3  # In addition to the initial request.
+_MAX_RETRY_DELAY_SECONDS = 30.0
+
+
+def _retry_delay(retry_after: str | None, attempt: int) -> float:
+    delay = float(2 ** (attempt - 1))
+    if retry_after is not None:
+        try:
+            requested = float(retry_after)
+        except ValueError:
+            try:
+                date = parsedate_to_datetime(retry_after)
+                if date.tzinfo is None:
+                    date = date.replace(tzinfo=timezone.utc)
+                requested = (date - datetime.now(timezone.utc)).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                requested = 0.0
+        if isfinite(requested):
+            delay = max(delay, requested)
+    return min(delay, _MAX_RETRY_DELAY_SECONDS)
 
 
 class StructuredOutputError(ValueError):
@@ -75,16 +99,83 @@ class OpenAICompatibleClient(LLMClient):
             async with httpx.AsyncClient(
                 timeout=timeout, transport=self._transport
             ) as client:
-                response = await client.post(
-                    endpoint,
-                    headers=headers,
-                    json=payload,
+                # Serialize once: retries preserve the exact body and model options.
+                request = client.build_request(
+                    "POST", endpoint, headers=headers, json=payload
                 )
-                response.raise_for_status()
+                for attempt in range(1, _MAX_RETRIES + 2):
+                    try:
+                        response = await client.send(request)
+                        response.raise_for_status()
+                    except httpx.HTTPError as exc:
+                        failed = (
+                            exc.response
+                            if isinstance(exc, httpx.HTTPStatusError)
+                            else None
+                        )
+                        status = failed.status_code if failed is not None else "-"
+                        request_id = (
+                            failed.headers.get("x-request-id", "-")
+                            if failed is not None
+                            else "-"
+                        )
+                        retryable = isinstance(
+                            exc,
+                            (
+                                httpx.TimeoutException,
+                                httpx.NetworkError,
+                                httpx.RemoteProtocolError,
+                            ),
+                        ) or (
+                            failed is not None
+                            and (status in {408, 429} or 500 <= status < 600)
+                        )
+                        details = (
+                            f"model={self.config.model} provider={provider} "
+                            f"status_code={status} request_id={request_id} "
+                            f"attempt={attempt}/{_MAX_RETRIES + 1} "
+                            f"error={type(exc).__name__}"
+                        )
+                        if not retryable or attempt > _MAX_RETRIES:
+                            raise RuntimeError(
+                                f"LLM request failed: {details}"
+                            ) from exc
+                        delay = _retry_delay(
+                            failed.headers.get("Retry-After")
+                            if failed is not None
+                            else None,
+                            attempt,
+                        )
+                        logger.warning(
+                            "llm_request_retry %s delay_seconds=%.1f",
+                            details,
+                            delay,
+                            extra=log_extra,
+                        )
+                        await asyncio.sleep(delay)
+                    else:
+                        break
+            details = (
+                f"model={self.config.model} provider={provider} "
+                f"status_code={response.status_code} "
+                f"request_id={response.headers.get('x-request-id', '-')} "
+                f"attempt={attempt}/{_MAX_RETRIES + 1}"
+            )
+            try:
                 response_body = response.json()
-            content = str(response_body["choices"][0]["message"]["content"])
+                choice = response_body["choices"][0]
+                finish_reason = choice.get("finish_reason") or "-"
+                if finish_reason == "length":
+                    raise RuntimeError(
+                        "LLM output truncated (finish_reason=length); "
+                        f"output/capacity limit reached: {details}"
+                    )
+                content = choice["message"]["content"]
+                if not isinstance(content, str):
+                    raise TypeError("message content is not text")
+            except (ValueError, KeyError, IndexError, TypeError, AttributeError) as exc:
+                raise RuntimeError(f"LLM invalid response envelope: {details}") from exc
             usage = response_body.get("usage") or {}
-            finish_reason = response_body["choices"][0].get("finish_reason") or "-"
             logger.info(
                 "llm_request_completed model=%s status_code=%d request_id=%s "
                 "finish_reason=%s prompt_tokens=%s completion_tokens=%s "

@@ -195,8 +195,8 @@ class PlanRequest(Contract):
     parameters: dict[str, Any] = Field(default_factory=dict)
     max_candidates: int = Field(default=3, ge=1, le=32)
     selection: Literal["all", "diverse"] = "diverse"
-    max_memory_mb: int = Field(default=2048, ge=64, le=65536)
-    max_disk_mb: int = Field(default=8192, ge=64)
+    max_memory_mb: int | None = Field(default=None, ge=64)
+    max_disk_mb: int | None = Field(default=None, ge=64)
 
 
 class Screening(Contract):
@@ -212,6 +212,17 @@ class RecordPlan(Contract):
     steps: list[Step]
     output: str
     code_hashes: dict[str, str]
+    estimated_disk_bytes: int = Field(default=0, ge=0)
+    estimated_memory_bytes: int = Field(default=0, ge=0)
+
+
+class ResourceBudget(Contract):
+    disk_available_bytes: int = Field(ge=0)
+    memory_available_bytes: int = Field(ge=0)
+    disk_limit_bytes: int = Field(ge=0)
+    memory_limit_bytes: int = Field(ge=0)
+    disk_policy: Literal["explicit_cap", "available_disk_85_percent"]
+    memory_policy: Literal["explicit_cap", "available_memory_70_percent"]
 
 
 class ExecutionPlan(Contract):
@@ -223,6 +234,7 @@ class ExecutionPlan(Contract):
     environment: dict[str, str]
     engine_sha256: str
     estimated_disk_bytes: int = Field(default=0, ge=0)
+    resource_budget: ResourceBudget | None = None
     required_outputs: list[str] = ["data", "events", "provenance", "delta"]
 
 

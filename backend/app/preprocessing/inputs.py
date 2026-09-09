@@ -11,13 +11,39 @@ from .storage import file_hash, within
 
 
 def working_files(record):
-    """Root metadata and the selected subject's BIDS files satisfy reader inheritance."""
-    subject = Path(record.bids_path).parts[0]
-    return {
-        name: checksum
-        for name, checksum in record.files.items()
-        if len(Path(name).parts) == 1 or Path(name).parts[0] == subject
-    }
+    """Copy this recording and its inherited metadata, not other runs' signals."""
+    target = Path(record.bids_path)
+    prefix = record.bids_path.removesuffix("eeg.vhdr")
+    entities = dict(part.split("-", 1) for part in target.name.split("_")[:-1])
+
+    def needed(name):
+        path = Path(name)
+        if len(path.parts) == 1:
+            return True
+        if path.parts[0] != target.parts[0]:
+            return False
+        if name.startswith(prefix):
+            return True
+        if path.suffix not in {".json", ".tsv"}:
+            return False
+        if path.parent not in (target.parent, *target.parent.parents):
+            return False
+        candidate = dict(
+            part.split("-", 1) for part in path.name.split("_")[:-1] if "-" in part
+        )
+        return all(
+            entities.get(key) == value
+            for key, value in candidate.items()
+            if key != "space"
+        )
+
+    return {name: checksum for name, checksum in record.files.items() if needed(name)}
+
+
+def validate_record_files(root, record):
+    for relative, expected in working_files(record).items():
+        if file_hash(within(root, relative)) != expected:
+            raise ValueError(f"input inventory/checksum changed: {relative}")
 
 
 def validate_input(
@@ -31,11 +57,13 @@ def validate_input(
     inventory = {}
     for record in data.collection.records:
         for relative, expected in record.files.items():
-            path = within(root, relative)
             if not re.fullmatch(r"[a-f0-9]{64}", expected):
                 raise ValueError("invalid Collection checksum")
-            if relative in inventory and inventory[relative] != expected:
-                raise ValueError("conflicting Collection checksums")
+            if relative in inventory:
+                if inventory[relative] != expected:
+                    raise ValueError("conflicting Collection checksums")
+                continue
+            path = within(root, relative)
             inventory[relative] = expected
             if not path.is_file():
                 raise ValueError("Collection file is missing")

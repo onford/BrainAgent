@@ -181,6 +181,20 @@ class Storage:
             cancel_requested=bool(job["cancel"]),
         )
 
+    def progress(self, owner: str, job_id: str) -> dict:
+        """Read a consistent progress snapshot without decoding record artifacts."""
+        with self.db() as db:
+            row = db.execute(
+                "SELECT j.status, COUNT(r.key) AS total, "
+                "COALESCE(SUM(r.status='completed'),0) AS completed "
+                "FROM jobs j LEFT JOIN records r ON r.job_id=j.id "
+                "WHERE j.id=? AND j.owner=? GROUP BY j.id",
+                (job_id, owner),
+            ).fetchone()
+        if row is None:
+            raise KeyError("job not found")
+        return dict(row)
+
     def control(self, owner: str, job_id: str, action: str):
         self.status(owner, job_id)
         with self.db() as db:
@@ -253,6 +267,15 @@ class Storage:
             return db.execute(
                 "SELECT attempt FROM records WHERE job_id=? AND key=?", (job_id, key)
             ).fetchone()[0]
+
+    def cancel_requested(self, owner: str, job_id: str) -> bool:
+        with self.db() as db:
+            row = db.execute(
+                "SELECT cancel FROM jobs WHERE id=? AND owner=?", (job_id, owner)
+            ).fetchone()
+        if row is None:
+            raise KeyError("job not found")
+        return bool(row["cancel"])
 
     def record_finish(
         self, job_id: str, key: str, status: str, result=None, error=None

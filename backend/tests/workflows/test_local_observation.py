@@ -96,6 +96,13 @@ def test_default_discovers_all_subjects_without_a_count_limit(source, tmp_path):
         )
         == 1
     )
+    local = read_local(tmp_path / "survey/local-inspection.json")
+    context = local.research_context()
+    assert {
+        key for group in context["record_groups"] for key in group["record_ids"]
+    } == set(local.recordings)
+    assert len(context["record_groups"]) < len(local.recordings)
+    assert "recordings" not in context
 
 
 def test_runtime_schema_rejects_cross_field_and_invented_pointers(
@@ -107,7 +114,7 @@ def test_runtime_schema_rejects_cross_field_and_invented_pointers(
     model = verification_contract(local)
     value = products[3].model_dump()
     for row in value["comparisons"]:
-        row["local_fact_ids"] = [f.id for f in local.facts if f.field == row["field"]]
+        row["local_fact_ids"] = []
     model.model_validate(value)
     sampling = next(r for r in value["comparisons"] if r["field"] == "sampling_rate")
     for pointer in (
@@ -143,6 +150,11 @@ def test_fractional_event_samples_and_mixed_rates_are_preserved(source, tmp_path
         builder.add(record, raw, raw.get_data())
     local = builder.finish({"records": records}, tmp_path)
     assert local.statistics.sampling_rates == {"160.0": 1, "80.0": 1}
+    context = local.research_context()
+    assert {g["observed"]["sampling_rate_hz"] for g in context["record_groups"]} == {
+        160,
+        80,
+    }
     with (tmp_path / "local-events.tsv").open(encoding="utf-8", newline="") as file:
         events = list(csv.DictReader(file, delimiter="\t"))
     assert float(events[0]["sample_position"]) == pytest.approx(16.16)

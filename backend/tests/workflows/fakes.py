@@ -182,7 +182,7 @@ class WorkflowLLM(LLMClient):
                             if "local_reference_catalog" in data
                             else [
                                 v["id"]
-                                for v in data["local_inspection"]["facts"]
+                                for v in data["local_inspection"].get("facts", [])
                                 if v["field"] == f
                             ],
                             "official_sources": {"statement": None, "finding_ids": []},

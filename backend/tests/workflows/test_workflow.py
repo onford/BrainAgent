@@ -314,6 +314,7 @@ def test_source_changed_after_survey_is_rejected(source, tmp_path):
 
 def test_source_boundary_and_request_validation(source, tmp_path):
     request = WorkflowRequest(source_root=str(source))
+    assert WorkflowRequest(source_root=str(source), tmin=-0.2, tmax=6).tmin == -0.2
     with pytest.raises(ValueError, match="允许范围"):
         dataset.allowed_source(request, [tmp_path / "elsewhere"], [])
     with pytest.raises(ValueError, match="分离"):

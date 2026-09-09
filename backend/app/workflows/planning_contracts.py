@@ -18,18 +18,19 @@ from .survey_contracts import SearchGoal, SurveyPlan, LITERATURE_TARGETS
 def verification_contract(local):
     from .survey_contracts import Comparison, DatasetVerification, FIELDS
 
-    facts = local.facts
     rows = []
     for field in FIELDS:
-        refs = tuple(f.id for f in facts if f.field == field)
         rows.append(
             create_model(
                 "Compare_" + field,
                 __base__=Comparison,
                 field=(Literal[field], ...),
                 local_fact_ids=(
-                    list[Literal[refs]] if refs else list[str],
-                    Field() if refs else Field(max_length=0),
+                    list[str],
+                    Field(
+                        max_length=0,
+                        description="Return []; measured local references are attached deterministically after validation.",
+                    ),
                 ),
             )
         )
@@ -37,7 +38,7 @@ def verification_contract(local):
         "DatasetVerification",
         __base__=DatasetVerification,
         comparisons=(
-            list[Union[tuple(rows)]],
+            list[Annotated[Union[tuple(rows)], Field(discriminator="field")]],
             Field(min_length=len(FIELDS), max_length=len(FIELDS)),
         ),
     )

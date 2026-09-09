@@ -5,6 +5,7 @@ from pathlib import Path
 import csv
 
 from .inputs import validate_input, working_files
+from .resources import budget, require_capacity
 from .schemas import (
     ExecutionPlan,
     MethodSpec,
@@ -330,16 +331,13 @@ def create_plan(
                         * (len(steps) + 8)
                         * 3
                     )
-                    if estimate > request.max_memory_mb * 1024**2:
-                        raise ValueError(
-                            "conservative record memory estimate exceeds declared budget"
-                        )
                     configs.append(
                         RecordPlan(
                             method_ref=ref,
                             record_id=record.id,
                             steps=steps,
                             output=method.output,
+                            estimated_memory_bytes=estimate,
                             code_hashes={
                                 s.unit_id: specification(s.unit_id).source[
                                     "code_sha256"
@@ -413,14 +411,18 @@ def create_plan(
         )
         for r in data.collection.records
     }
-    estimated_disk = sum(
-        input_bytes[c.record_id]
-        + signal_bytes(record_index[c.record_id], c.steps, data.collection.root)
-        * (len(c.steps) + 6)
-        for c in records
+    for config in records:
+        config.estimated_disk_bytes = input_bytes[config.record_id] + signal_bytes(
+            record_index[config.record_id], config.steps, data.collection.root
+        ) * (len(config.steps) + 6)
+    estimated_disk = sum(c.estimated_disk_bytes for c in records)
+    resources = budget(store.root, request)
+    require_capacity("disk", estimated_disk, resources.disk_limit_bytes)
+    require_capacity(
+        "memory",
+        max((c.estimated_memory_bytes for c in records), default=0),
+        resources.memory_limit_bytes,
     )
-    if estimated_disk > request.max_disk_mb * 1024**2:
-        raise ValueError("work copies and artifacts exceed declared disk budget")
     plan = ExecutionPlan(
         request=request,
         input_snapshot=data,
@@ -429,5 +431,6 @@ def create_plan(
         environment=env,
         engine_sha256=engine_hash(),
         estimated_disk_bytes=estimated_disk,
+        resource_budget=resources,
     )
     return store.put(owner, "plan", plan.model_dump(mode="json")), plan

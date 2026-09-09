@@ -12,7 +12,7 @@
 .\.venv-eeg\Scripts\python.exe -m app.workflows --source-root E:/dataset/eeg/EEGMMIDB --subjects S001 S002 S003
 ```
 
-命令与 Web 入口使用相同的 LLM 和文献工具配置，需要有效模型配置、应用数据库及至少一个可用论文检索集成。命令会启动独立计算进程，并在完成后停止该进程。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、阶段和当前模型/工具动作；退出码 0 表示全部完成。支持 `--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。同一存储目录同时运行一个 Worker。
+命令与 Web 入口使用相同的 LLM 和文献工具配置，需要有效模型配置、应用数据库及至少一个可用论文检索集成。命令会启动独立计算进程，并在完成后停止该进程。默认输出在 `backend/workspace/training-cli/`。终端打印流程 ID、阶段和当前模型/工具动作；退出码 0 表示全部完成。支持 `--seed 42`、`--tmin 0`、`--tmax 2`、`--root PATH`、`--timeout 1800`；续跑时传入相同的 `--root`、`--source-root` 和 `--resume WORKFLOW_ID`。命令行默认等待流程完成，只有显式传入 `--timeout` 才限制总时长。同一存储目录同时运行一个 Worker。
 
 Python 环境需安装 `backend/pyproject.toml` 中的 `eeg` 依赖；验收环境为 Python 3.12、MNE 1.10.2、NumPy 1.26.4。新环境可在 backend 中用 `uv sync --python 3.12 --extra eeg --extra dev` 安装，然后通过 `uv run python -m app.workflows ...` 运行。
 
@@ -86,7 +86,7 @@ Run 不作为请求参数：按每名被试的本地 EDF 文件发现全部 Run�
 | `report.html`、`README.md`、`manifest.json` | 数据报告、读取说明、交付清单与哈希 |
 | `train_example.py` | 仅用 train 拟合通道对数方差特征、StandardScaler 与逻辑回归的运行示例 |
 
-被试用固定随机种子打乱；3 人及以上时最后一人分配到 test、倒数第二人分配到 validation，其余分配到 train。2 人时没有 validation，1 人时仅有 train；空分组写入清单限制。标准化和模型拟合仅使用 train。当前划分是小规模验收默认值，未设计通用的训练划分策略。
+被试用固定随机种子打乱，按 70/15/15 最大余数法分配 train / validation / test，至少三名被试时各组非空。109 名被试分配为 76/17/16。2 人时没有 validation，1 人时仅有 train；空分组写入清单限制。标准化和模型拟合仅使用 train。数组按记录分块写入并回读验证，资源预算及续跑规则见 [运行规模](runtime-scaling.md)。
 
 在解压目录中运行 `python train_example.py` 可检查训练与预测是否跑通；需 NumPy 和 scikit-learn。输出训练样本数、特征数和预测数，不给出准确率或候选排名。
 

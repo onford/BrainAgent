@@ -7,6 +7,7 @@ import re
 from pydantic import Field, ValidationError, create_model
 
 from app.preprocessing.methods import extraction_contracts
+from app.preprocessing.resources import ResourceError
 from app.preprocessing.schemas import Evidence, MethodSpec, PlanRequest, Ref, Step
 from app.runtime.context import AgentContext
 from .cognition_contracts import (
@@ -22,6 +23,7 @@ from .cognition_contracts import (
 )
 from .records import write_readable
 from .source_reader import SourceReader, abstract_only
+from .context import grouped_records, results_context
 from .planning_contracts import (
     collection_review_contract,
     design_contract,
@@ -107,7 +109,17 @@ class WorkflowCognition:
                 return value
             except (ValidationError, ValueError) as exc:
                 status = "rejected"
-                error = str(exc)[:4000]
+                validation = exc if isinstance(exc, ValidationError) else exc.__cause__
+                error = (
+                    "; ".join(
+                        f"{'.'.join(map(str, item['loc']))}: {item['type']} ({item['msg'][:160]})"
+                        for item in validation.errors(
+                            include_url=False, include_input=False
+                        )[:20]
+                    )
+                    if isinstance(validation, ValidationError)
+                    else str(exc)[:4000]
+                )
                 rejected_content = getattr(exc, "content", None)
                 if rejected_content is not None:
                     try:
@@ -161,7 +173,7 @@ class WorkflowCognition:
         if (self.folder / "survey/verification.json").exists():
             context["dataset_verification"] = self.load(
                 "survey/verification.json", DatasetVerification
-            ).model_dump()
+            ).model_dump(exclude={"comparisons": {"__all__": {"local_fact_ids"}}})
         if (self.folder / "survey/literature.json").exists():
             review = self.load("survey/literature.json", LiteratureReview)
             context["literature_for_this_stage"] = [
@@ -180,6 +192,16 @@ class WorkflowCognition:
         from .survey_research import research
 
         return await research(self, survey)
+
+    def local_context(self):
+        from .survey_contracts import LocalInspection
+
+        local = self.load("survey/local-inspection.json", LocalInspection)
+        return (
+            local.research_context()
+            if hasattr(local, "research_context")
+            else local.model_dump()
+        )
 
     @staticmethod
     def source_context(sources):
@@ -432,7 +454,7 @@ class WorkflowCognition:
                 {
                     "adapter_profile": survey["profile"],
                     "request": self.state["request"],
-                    "local_records": survey["records"],
+                    "local_observation": self.local_context(),
                     "training_runs": training_runs,
                     **self.survey_context({"dataset_discussion"}),
                     "research": findings.model_dump(),
@@ -546,6 +568,16 @@ class WorkflowCognition:
             ],
         }
         feedback = []
+        characteristics["record_groups"] = grouped_records(
+            characteristics.pop("records")
+        )
+        saved_design = (
+            self.load("preprocessing/design.json", MethodDesign)
+            if (self.folder / "preprocessing/design.json").exists()
+            else None
+        )
+        if saved_design and saved_design.supplement_requests:
+            saved_design = None
         catalog = await self.tools.catalog(self.context) if self.tools else []
         available = {
             t["name"]
@@ -556,32 +588,40 @@ class WorkflowCognition:
             design_schema = design_contract(
                 [f.id for f in findings.facts], self.state["request"]
             )
-            design = await self.ask(
-                "拆解候选预处理方案",
-                design_schema,
-                {
-                    "request": self.state["request"],
-                    "research": findings.model_dump(),
-                    "collection": collection,
-                    "data_characteristics": characteristics,
-                    **self.survey_context(
-                        {"usage_analysis", "usage_algorithm", "preprocessing_methods"}
-                    ),
-                    "enabled_operations": [
-                        {k: v for k, v in operation.items() if k != "parameters"}
-                        for operation in extraction_contracts()
-                    ],
-                    "compiler_feedback": feedback,
-                    "search_tools": sorted(available),
-                    "remaining_design_rounds": 3 - iteration,
-                },
-                "Design two or three numerically distinct candidate pipelines for this dataset and model training. "
-                "Choose steps/order/parameters based on the research and actual enabled operation semantics. Unsupported ICA/ASR etc must be described as limitations, never replaced by a different operation claiming equivalence. "
-                "Every step must state basis=source or engineering, rationale and relevant finding_ids. Missing scientific parameters may be explicit engineering decisions, not attributed to papers. "
-                "When evidence is insufficient, include search/read supplement_requests and provisional candidates. Tools will run and you will revise using the new evidence before execution. Otherwise return an empty supplement_requests list. "
-                "Use whole-value $eeg_channels/$event_id/$events bindings, never wrap them in lists. Raw input is 'raw'; use step IDs for dependencies/output. "
-                "All candidates must output EEG epochs with the exact requested tmin/tmax and $event_id. Do not invent EOG channels or training/calibration intervals. Keep output channels identical for fair downstream use. "
-                "Each candidate must yield a common channel order, sampling rate and time grid across ALL selected records. If sampling rates differ, use resample with one explicit common sfreq before epoch; record its engineering/source rationale and anti-aliasing semantics.",
+            design = (
+                saved_design
+                if iteration == 0 and saved_design
+                else await self.ask(
+                    "拆解候选预处理方案",
+                    design_schema,
+                    {
+                        "request": self.state["request"],
+                        "research": findings.model_dump(),
+                        "collection": collection,
+                        "data_characteristics": characteristics,
+                        **self.survey_context(
+                            {
+                                "usage_analysis",
+                                "usage_algorithm",
+                                "preprocessing_methods",
+                            }
+                        ),
+                        "enabled_operations": [
+                            {k: v for k, v in operation.items() if k != "parameters"}
+                            for operation in extraction_contracts()
+                        ],
+                        "compiler_feedback": feedback,
+                        "search_tools": sorted(available),
+                        "remaining_design_rounds": 3 - iteration,
+                    },
+                    "Design two or three numerically distinct candidate pipelines for this dataset and model training. "
+                    "Choose steps/order/parameters based on the research and actual enabled operation semantics. Unsupported ICA/ASR etc must be described as limitations, never replaced by a different operation claiming equivalence. "
+                    "Every step must state basis=source or engineering, rationale and relevant finding_ids. Missing scientific parameters may be explicit engineering decisions, not attributed to papers. "
+                    "When evidence is insufficient, include search/read supplement_requests and provisional candidates. Tools will run and you will revise using the new evidence before execution. Otherwise return an empty supplement_requests list. "
+                    "Use whole-value $eeg_channels/$event_id/$events bindings, never wrap them in lists. Raw input is 'raw'; use step IDs for dependencies/output. "
+                    "All candidates must output EEG epochs with the exact requested tmin/tmax and $event_id. Do not invent EOG channels or training/calibration intervals. Keep output channels identical for fair downstream use. "
+                    "Each candidate must yield a common channel order, sampling rate and time grid across ALL selected records. If sampling rates differ, use resample with one explicit common sfreq before epoch; record its engineering/source rationale and anti-aliasing semantics.",
+                )
             )
             self.save("preprocessing/design.json", design)
             if design.supplement_requests:
@@ -667,6 +707,8 @@ class WorkflowCognition:
                     f"方案校验通过：{len(refs)} 个候选，{len(plan.records)} 个执行单元"
                 )
                 return ref, plan
+            except ResourceError:
+                raise
             except (ValueError, KeyError) as exc:
                 feedback.append(
                     {
@@ -793,7 +835,7 @@ class WorkflowCognition:
                 "design": self.load(
                     "preprocessing/design.json", MethodDesign
                 ).model_dump(),
-                "actual_results": self.state["outputs"],
+                "actual_results": results_context(self.state["outputs"]),
                 **self.survey_context(),
             },
             "Write only concise interpretation to fill fixed report sections. Actual numeric tables are rendered by code. "

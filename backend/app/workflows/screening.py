@@ -1,5 +1,7 @@
 """Model selects source passages; code supplies quotations and observed metrics."""
 
+from itertools import islice
+import re
 from typing import Annotated, Literal, Union
 
 from pydantic import Field, create_model
@@ -55,6 +57,61 @@ def observed_quality(doc, sources):
     return QualitySignals(**values, observation_ids=sorted(used))
 
 
+def passage_catalog(doc, sources):
+    """Bind preview and verified query excerpts to the same source snapshot.
+
+    read.query stores strings, so recover offsets using its literal query and
+    1500/2500-character window, accepting only exact matches to saved excerpts.
+    A repeated string alone must not resolve to an unrelated earlier occurrence.
+    Offsets index decoded doc.text; source_sha256 identifies the source bytes.
+    """
+    ranges = [(0, min(24000, len(doc.text)))]
+    for observation in sources.observations:
+        output = observation.output or {}
+        query = observation.action.query
+        excerpts = output.get("excerpts")
+        if (
+            not observation.success
+            or observation.action.action != "read"
+            or not query
+            or output.get("source_id") != doc.id
+            or output.get("url", doc.url) != doc.url
+            or not isinstance(excerpts, list)
+        ):
+            continue
+        matches = islice(re.finditer(re.escape(query), doc.text, re.IGNORECASE), 4)
+        for match, excerpt in zip(matches, excerpts):
+            start = max(0, match.start() - 1500)
+            end = min(len(doc.text), match.start() + 2500)
+            if end > 24000 and doc.text[start:end] == excerpt:
+                ranges.append((start, end))
+
+    # Merge overlapping supplements without adding unread gaps or changing the
+    # existing preview passage IDs at the 24000-character boundary.
+    supplements = []
+    for start, end in sorted(ranges[1:]):
+        if supplements and start <= supplements[-1][1]:
+            supplements[-1] = (supplements[-1][0], max(end, supplements[-1][1]))
+        else:
+            supplements.append((start, end))
+    catalog = {}
+    for lower, upper in [ranges[0], *supplements]:
+        for start in range(lower, upper, 850):
+            end = min(start + 1000, upper)
+            if end - start < 12:
+                continue
+            identity = f"{doc.id}:{doc.sha256[:12]}:{start}:{end}"
+            catalog[identity] = {
+                "id": identity,
+                "source_id": doc.id,
+                "source_sha256": doc.sha256,
+                "start": start,
+                "end": end,
+                "text": doc.text[start:end],
+            }
+    return catalog
+
+
 class ScreeningSelection:
     """Runtime-only selection contract; published LiteratureReview stays fixed."""
 
@@ -62,20 +119,16 @@ class ScreeningSelection:
         self.sources = sources
         self.documents = {d.id: d for d in sources.documents}
         self.passages, self.context, variants = {}, [], []
+        self.passage_catalog = {}
         for index, doc in enumerate(sources.documents):
             if doc.kind not in {"paper", "code"}:
                 continue
-            text = doc.text[:24000]
-            passages = {}
-            for start in range(0, len(text), 850):
-                end = min(start + 1000, len(text))
-                if end - start < 12:
-                    continue
-                identity = f"{doc.id}:{doc.sha256[:12]}:{start}:{end}"
-                passages[identity] = text[start:end]
+            catalog = passage_catalog(doc, sources)
+            passages = {key: passage["text"] for key, passage in catalog.items()}
             if not passages:
                 continue
             self.passages[doc.id] = passages
+            self.passage_catalog[doc.id] = catalog
             finding = create_model(
                 f"Source{index}FindingSelection",
                 __base__=Contract,
@@ -146,9 +199,7 @@ class ScreeningSelection:
                     "reading_scopes": scopes,
                     "related_urls": links,
                     "observed_quality": observed_quality(doc, sources).model_dump(),
-                    "passages": [
-                        {"id": key, "text": text} for key, text in passages.items()
-                    ],
+                    "passages": list(catalog.values()),
                 }
             )
         entry = (
@@ -173,6 +224,15 @@ class ScreeningSelection:
             entry["quality"] = observed_quality(doc, self.sources).model_dump()
             for finding in entry["findings"]:
                 identity = finding.pop("passage_id")
+                passage = self.passage_catalog[doc.id][identity]
+                if (
+                    passage["source_id"] != doc.id
+                    or passage["source_sha256"] != doc.sha256
+                    or doc.text[passage["start"] : passage["end"]] != passage["text"]
+                ):
+                    raise ValueError(
+                        "selected passage no longer matches its source snapshot"
+                    )
                 finding["source_id"] = doc.id
-                finding["quote"] = self.passages[doc.id][identity]
+                finding["quote"] = passage["text"]
         return LiteratureScreening.model_validate(result)

@@ -257,13 +257,34 @@ class LocalObservation(Contract):
         return f"目录扫描：{s.discovered_files} 个文件、{s.discovered_subjects} 名被试；选择 {len(s.selected_subjects)} 名被试、{len(self.recordings)} 条记录，成功读取 {self.statistics.readable_records} 条。未选择记录未进行信号检查。"
 
     def research_context(self):
-        """Keep every record measurable without repeating full per-signal headers."""
-        value = self.model_dump(
-            mode="json", exclude={"recordings": {"__all__": {"storage"}}}
-        )
+        """Group identical measurements; retain every member and every exception."""
+        value = self.model_dump(mode="json", exclude={"recordings", "subjects"})
+        value["subjects"] = {
+            "count": len(self.subjects),
+            "metadata": {
+                k: v.model_dump(exclude_none=True)
+                for k, v in self.subjects.items()
+                if any(v.model_dump().values())
+            },
+        }
+        for check in value["coverage"].values():
+            check.pop("refs", None)
+        groups = {}
         for key, record in self.recordings.items():
             header = record.storage
-            value["recordings"][key]["storage"] = (
+            observed = record.model_dump(
+                mode="json",
+                exclude={
+                    "subject_id",
+                    "session_id",
+                    "source_file",
+                    "sha256",
+                    "storage",
+                },
+            )
+            if observed["events"]:
+                observed["events"].pop("record_key", None)
+            observed["storage"] = (
                 None
                 if header is None
                 else {
@@ -275,9 +296,17 @@ class LocalObservation(Contract):
                     ),
                     "data_records": header.data_records,
                     "record_duration_s": header.record_duration_s,
-                    "full_header_ref": "#/recordings/" + key + "/storage",
                 }
             )
+            fingerprint = json.dumps(observed, sort_keys=True, ensure_ascii=False)
+            group = groups.setdefault(
+                fingerprint, {"record_ids": [], "observed": observed}
+            )
+            group["record_ids"].append(key)
+        value["record_groups"] = list(groups.values())
+        value["record_locator"] = (
+            "survey/local-inspection.json#/recordings/{record_id}; raw storage headers and exact events remain in local-inspection.json and local-events.tsv"
+        )
         return value
 
     @property

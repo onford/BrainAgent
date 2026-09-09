@@ -6,11 +6,11 @@ import argparse
 import logging
 from pathlib import Path
 import time
-import shutil
 
 import portalocker
 
-from .inputs import validate_input
+from .inputs import validate_input, validate_record_files
+from .resources import ResourceError, budget, require_capacity
 from .runner import Cancelled, run_record, verify_result
 from .schemas import ExecutionPlan, Ref
 from .storage import Storage, digest
@@ -41,6 +41,8 @@ class Worker:
         if not job:
             return None
         owner, job_id = job["owner"], job["id"]
+        verified_completed = set()
+        retain_verified_on_resource_error = False
         try:
             plan = ExecutionPlan.model_validate(
                 self.store.get(
@@ -54,23 +56,43 @@ class Worker:
             root = validate_input(
                 plan.input_snapshot, self.allowed_roots, self.store.root
             )
-            if shutil.disk_usage(self.store.root).free < plan.estimated_disk_bytes:
-                raise ValueError(
-                    "free disk space is below the conservative run estimate"
-                )
-            for index, config in enumerate(plan.records):
-                status = self.store.status(owner, job_id)
-                key = digest([config.method_ref.id, config.record_id])
-                previous = next(r for r in status.records if r["key"] == key)
-                if previous["status"] == "completed" and verify_result(
-                    self.store.root, previous["result"]
-                ):
+            for record in self.store.status(owner, job_id).records:
+                if record["status"] != "completed":
                     continue
-                if status.cancel_requested:
+                if verify_result(self.store.root, record["result"]):
+                    verified_completed.add(record["key"])
+                else:
+                    # Revoke the stale success before any resource check can fail.
+                    self.store.record_finish(
+                        job_id,
+                        record["key"],
+                        "failed",
+                        error="saved artifacts failed verification; recomputation required",
+                    )
+            retain_verified_on_resource_error = True
+            remaining = sum(
+                c.estimated_disk_bytes
+                for c in plan.records
+                if digest([c.method_ref.id, c.record_id]) not in verified_completed
+            )
+            source_records = {r.id: r for r in plan.input_snapshot.collection.records}
+            for index, config in enumerate(plan.records):
+                key = digest([config.method_ref.id, config.record_id])
+                if key in verified_completed:
+                    continue
+                if self.store.cancel_requested(owner, job_id):
                     self.store.record_finish(
                         job_id, key, "cancelled", error="cancelled before record"
                     )
+                    remaining -= config.estimated_disk_bytes
                     continue
+                resources = budget(self.store.root, plan.request)
+                require_capacity("disk", remaining, resources.disk_limit_bytes)
+                require_capacity(
+                    "memory",
+                    config.estimated_memory_bytes,
+                    resources.memory_limit_bytes,
+                )
                 attempt = self.store.record_start(job_id, key)
                 output = (
                     self.store.root / "runs" / job_id / f"r{index:04}" / f"a{attempt}"
@@ -83,12 +105,14 @@ class Worker:
                         root,
                         output,
                         self.store.root,
-                        lambda: self.store.status(owner, job_id).cancel_requested,
+                        lambda: self.store.cancel_requested(owner, job_id),
                     )
-                    validate_input(
-                        plan.input_snapshot, self.allowed_roots, self.store.root
-                    )
+                    validate_record_files(root, source_records[config.record_id])
                     self.store.record_finish(job_id, key, "completed", result=result)
+                    # run_record verifies its artifacts before returning.
+                    verified_completed.add(key)
+                except ResourceError:
+                    raise
                 except Cancelled as exc:
                     self.store.record_finish(job_id, key, "cancelled", error=str(exc))
                 except Exception as exc:
@@ -98,17 +122,32 @@ class Worker:
                     self.store.record_finish(
                         job_id, key, "failed", error=f"{type(exc).__name__}: {exc}"
                     )
+                finally:
+                    # Failed attempts are not rerun in this pass. Their files
+                    # already reduce the next live free-space measurement.
+                    remaining -= config.estimated_disk_bytes
+            retain_verified_on_resource_error = False
+            validate_input(plan.input_snapshot, self.allowed_roots, self.store.root)
             return self.store.finish_job(owner, job_id)
         except Exception as exc:
             logger.exception("preprocessing_job_failed job=%s", job_id)
+            cancelled = self.store.cancel_requested(owner, job_id)
             for record in self.store.status(owner, job_id).records:
-                if record["status"] != "completed":
-                    self.store.record_finish(
-                        job_id,
-                        record["key"],
-                        "failed",
-                        error=f"{type(exc).__name__}: {exc}",
-                    )
+                if record["status"] == "cancelled" or (
+                    isinstance(exc, ResourceError)
+                    and retain_verified_on_resource_error
+                    and record["status"] == "completed"
+                    and record["key"] in verified_completed
+                ):
+                    continue
+                self.store.record_finish(
+                    job_id,
+                    record["key"],
+                    "cancelled"
+                    if cancelled and record["status"] != "completed"
+                    else "failed",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
             return self.store.finish_job(owner, job_id)
 
 
@@ -123,7 +162,13 @@ def main():
     settings = get_settings()
     worker = Worker(
         Storage(args.root or settings.preprocessing_root),
-        [Path(p) for p in (args.input_root or [*settings.preprocessing_input_roots, settings.workflow_root])],
+        [
+            Path(p)
+            for p in (
+                args.input_root
+                or [*settings.preprocessing_input_roots, settings.workflow_root]
+            )
+        ],
     )
     try:
         worker.run_once() if args.once else worker.run_forever()

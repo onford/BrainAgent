@@ -276,17 +276,19 @@ def test_resource_estimate_accounts_for_large_epoch_expansion(service, dataset):
     method = baseline_methods()[0]
     method.recipe[2].params.update(tmin=-1000, tmax=1000)
     ref = service.register_method(OWNER, method)
-    _, plan = service.plan(
-        OWNER,
-        PlanRequest(
-            input_ref=service.register_input(OWNER, dataset),
-            methods=[ref],
-            mode="validation",
-            parameters=PARAMETERS,
-            max_memory_mb=64,
-        ),
-    )
-    assert not plan.records and "memory estimate" in plan.screening[0].reasons[0]
+    from app.preprocessing.resources import ResourceError
+
+    with pytest.raises(ResourceError, match="内存资源不足"):
+        service.plan(
+            OWNER,
+            PlanRequest(
+                input_ref=service.register_input(OWNER, dataset),
+                methods=[ref],
+                mode="validation",
+                parameters=PARAMETERS,
+                max_memory_mb=64,
+            ),
+        )
 
 
 def test_running_cancel_stops_at_a_step_boundary(service, dataset, monkeypatch):
