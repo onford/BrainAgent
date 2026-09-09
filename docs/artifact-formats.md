@@ -15,6 +15,7 @@
 | `split.npy` | NumPy `<U10`，一维 | train / validation / test；单被试时也保持相同 dtype |
 | 交付清单 | 固定字段、两类标签计数和三组分组计数 | 没有样本的类别/分组写 0 |
 | HTML 报告 | 固定 HTML 模板与结构数据映射 | 仅填充本次数据；模板指纹记录在格式清单中 |
+| 六份数据调研报告 | `survey/reports/` 下的固定 HTML 文件名与版本 1 模板 | 从既有调研 JSON 投影；新运行冻结 `survey_reports` 模板指纹，详细说明见 [数据调研报告](survey-reports.md) |
 | 训练 ZIP | `DELIVERY_FILES` 与逐记录 `PROVENANCE_FILES` 清单 | 记录数量可变；模块回执及上次遗留文件不会混入包内 |
 | BIDS / BrainVision 副本 | 由固定版本 mne-bids 输出标准格式 | 被试、任务、Run 等实体决定文件名；本项目还未运行完整官方 BIDS Validator |
 | Worker 的 FIF、NumPy 和诊断 JSON | 数值执行器及具体操作的输出约定，执行计划固定实现版本 | 各操作的参数、模型和中间数组不同；底层诊断 payload 尚未全部转换为统一的严格 Pydantic 模型 |

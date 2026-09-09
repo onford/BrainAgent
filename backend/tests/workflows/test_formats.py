@@ -53,6 +53,12 @@ def test_format_snapshot_detects_changes_instead_of_replacing_the_original(tmp_p
     catalog_path = tmp_path / "process/formats.json"
     catalog_bytes = catalog_path.read_bytes()
     catalog = json.loads(catalog_bytes)
+    assert len(catalog["survey_reports"]["files"]) == 6
+    catalog["survey_reports"]["template_sha256"] = "changed"
+    catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
+    with pytest.raises(ValueError, match="格式或报告模板已变化"):
+        check_format(tmp_path)
+    catalog = json.loads(catalog_bytes)
     catalog["tsv"]["source-inventory.tsv"]["columns"].reverse()
     catalog_path.write_text(json.dumps(catalog), encoding="utf-8")
     with pytest.raises(ValueError, match="格式或报告模板已变化"):

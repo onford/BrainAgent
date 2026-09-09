@@ -16,6 +16,16 @@ let disposed = false
 const active = computed(() => current.value && ['queued','running','interrupted'].includes(current.value.status))
 const delivered = computed(() => current.value?.outputs.data_delivery)
 const sourceSummary = computed(() => current.value?.outputs.data_survey)
+const surveyReports = computed(() => {
+  const titles: Record<string, string> = {
+    'dataset-basic.html': '数据集基本信息', 'data-information.html': '数据信息与三方核对',
+    'statistics.html': '数据集统计信息', 'literature-usage.html': '使用该数据集的文献与仓库',
+    'literature-discussion.html': '讨论数据集本身的文献与仓库', 'literature-preprocessing.html': '同类数据预处理的文献与仓库',
+  }
+  const available = new Set(current.value?.artifacts.map(a => a.name))
+  return Object.entries(titles).map(([name, title]) => ({ name: `survey/reports/${name}`, title }))
+    .filter(report => available.has(report.name))
+})
 const completedCount = computed(() => current.value?.stages.filter(s => s.status==='completed').length ?? 0)
 const artifactGroups = computed(() => {
   const names: Record<string, string> = {
@@ -110,6 +120,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer)})
             <p v-if="active && current.events.length" class="current-action" role="status">{{current.events[current.events.length - 1]?.message}}</p>
           </section>
           <section v-if="delivered" class="panel delivery-panel"><div class="section-heading"><h2>训练数据已就绪</h2><span class="badge">随机选择候选</span></div><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>EEG 通道</span></div><div><strong>{{delivered.shape[2]}}</strong><span>每段时间点</span></div></div><p>训练 / 验证 / 测试按被试分组。候选方法随机选择，本轮未进行质量排名。</p><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">下载训练数据包</a><a :href="fileUrl('report/report.html',false)" target="_blank" rel="noopener">打开报告</a><a :href="fileUrl('delivery/manifest.json')">下载数据清单</a></div><p class="hint">数据包包含 X、y、分组、通道信息、原始事件映射与复现记录。</p></section>
+          <section v-if="surveyReports.length" class="panel survey-reports" aria-label="数据调研报告"><h2>数据调研报告</h2><p class="hint">基本信息、数据信息、统计信息，以及三种下游用途的文献调研。调研完成后即可独立查看。</p><ul><li v-for="report in surveyReports" :key="report.name"><a :href="fileUrl(report.name,false)" target="_blank" rel="noopener">{{report.title}}</a><span class="file-description">{{artifactDescription(report.name)}}</span></li></ul></section>
           <section v-if="current.status==='completed'" class="panel"><h2>报告预览</h2><iframe :src="fileUrl('report/report.html',false)" title="EEG 训练数据报告" sandbox="allow-same-origin" /></section>
           <section class="panel files-panel" aria-label="全部产出文件">
             <div class="section-heading"><h2>全部产出文件</h2><span class="badge">{{current.artifacts.length}} 个文件</span></div>

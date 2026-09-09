@@ -65,6 +65,21 @@ describe('WorkflowsView', () => {
     wrapper.unmount()
   })
 
+  it('opens available survey reports before the entire workflow finishes', async () => {
+    const state = { ...workflow('failed'), artifacts: [
+      'survey/reports/dataset-basic.html', 'survey/reports/literature-usage.html',
+    ].map(name => ({ name, bytes: 500, sha256: 'abc' })) }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    await flushPromises()
+    const links = wrapper.findAll('.survey-reports a')
+    expect(links).toHaveLength(2)
+    expect(links[0]!.text()).toBe('数据集基本信息')
+    expect(links.every(link => link.attributes('href')?.endsWith('?download=false'))).toBe(true)
+    expect(wrapper.find('iframe').exists()).toBe(false)
+    wrapper.unmount()
+  })
+
   it('keeps long stage errors collapsed outside the stage grid', async () => {
     const state = workflow('failed')
     const message = 'quote must occur verbatim in its retrieved source; '.repeat(30)

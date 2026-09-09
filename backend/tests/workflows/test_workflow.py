@@ -98,6 +98,9 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
         a["name"] for a in service.describe(OWNER, state["id"])["artifacts"]
     }
     assert "survey/survey.json" in failed_files
+    from app.workflows.survey_reporting import REPORTS
+
+    assert {"survey/reports/" + name for name in REPORTS} <= failed_files
     assert any(n.startswith("collection/bids/") for n in failed_files)
     assert any(
         n.startswith("preprocessing/runs/") and n.endswith("provenance.json")

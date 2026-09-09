@@ -349,6 +349,9 @@ class WorkflowService:
                 }
                 for d in sources.documents
             ]
+            from .survey_reporting import render_survey_reports
+
+            await asyncio.to_thread(render_survey_reports, folder / "survey", value)
         elif name == "data_collection":
             review = await cognition.collection_review(state["outputs"]["data_survey"])
             value = await asyncio.to_thread(

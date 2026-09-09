@@ -67,6 +67,8 @@ def format_schema():
 
 
 def check_format(folder):
+    from .survey_reporting import report_format
+
     manifest = folder / "process/formats.json"
     if not manifest.exists():
         return  # Historical runs predate the supporting-file format contract.
@@ -81,6 +83,10 @@ def check_format(folder):
         or definition["arrays"] != ARRAY_FORMATS
         or definition["json"] != json_formats()
         or definition["tsv"] != table_formats()
+        or (
+            "survey_reports" in definition
+            and definition["survey_reports"] != report_format()
+        )
     ):
         raise ValueError("产物格式或报告模板已变化，请新建运行；已有产物保留原格式")
 
@@ -112,6 +118,8 @@ def table_formats():
 
 
 def write_index(folder, state):
+    from .survey_reporting import report_format
+
     schema_path = folder / "process/schema.json"
     formats_path = folder / "process/formats.json"
     if not schema_path.exists():
@@ -127,6 +135,7 @@ def write_index(folder, state):
                 "tsv": table_formats(),
                 "arrays": ARRAY_FORMATS,
                 "report": {"format": "HTML", "template_sha256": file_hash(template)},
+                "survey_reports": report_format(),
                 "external_formats": {
                     "collection/bids/": "BIDS-EEG / BrainVision, mne-bids 0.17.0",
                     "preprocessing/runs/": "MNE FIF / NumPy / executor JSON; step payloads follow the frozen execution plan",
