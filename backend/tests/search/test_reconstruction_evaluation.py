@@ -415,6 +415,54 @@ def test_noise_is_frozen_shared_by_amplitudes_and_leaves_auxiliary_untouched(com
     np.testing.assert_array_equal(raw.get_data(), original)
 
 
+@pytest.mark.parametrize("kind", ["eog", "emg"])
+@pytest.mark.parametrize("tail", [0, 1, 160])
+@pytest.mark.parametrize("count_type", [np.int32, np.int64])
+def test_block_noise_numpy_sample_count_has_json_manifest(
+    tmp_path, monkeypatch, kind, tail, count_type
+):
+    # BrainVision on Windows supplies np.int32 n_times. A partial final block
+    # used to retain that scalar in stop, making an otherwise scored case fail.
+    original_count = mne.io.BaseRaw.n_times.fget
+    monkeypatch.setattr(
+        mne.io.BaseRaw, "n_times", property(lambda raw: int(original_count(raw)))
+    )
+    data = np.random.default_rng(19).normal(0, 1e-5, (3, 640 + tail))
+    raw = mne.io.RawArray(
+        data.copy(),
+        mne.create_info(["C3", "C4", "EOG"], 160, ["eeg", "eeg", "eog"]),
+        verbose="ERROR",
+    )
+    case = {"kind": kind, "seed": 123, "rms_ratio": 0.5}
+    probe = {
+        "injection": {
+            "eog_emg_block_seconds": 2.0,
+            "line_frequency": 50.0,
+            "strength_scope": "whole_source_EEG_record_RMS_ratio",
+        }
+    }
+    expected, native_manifest = reval._noise(raw, case, "S003", "S003R04", probe)
+    monkeypatch.setattr(
+        mne.io.BaseRaw, "n_times", property(lambda raw: count_type(original_count(raw)))
+    )
+    actual, manifest = reval._noise(raw, case, "S003", "S003R04", probe)
+    path = tmp_path / "injection.json"
+    write_json(path, manifest)
+    assert json.loads(path.read_text(encoding="utf-8")) == native_manifest
+    assert manifest["blocks"][-1]["stop"] == data.shape[-1]
+    assert all(
+        type(block[k]) is int for block in manifest["blocks"] for k in ("start", "stop")
+    )
+    if tail == 1:
+        assert manifest["blocks"][-1]["start"] == data.shape[-1] - 2
+    np.testing.assert_array_equal(actual.get_data(), expected.get_data())
+    np.testing.assert_array_equal(raw.get_data(), data)
+    np.testing.assert_array_equal(actual.get_data(picks=["EOG"]), data[2:])
+    assert np.linalg.norm(actual.get_data()[:2] - data[:2]) / np.linalg.norm(
+        data[:2]
+    ) == pytest.approx(0.5)
+
+
 def test_resample_uses_returned_events_instead_of_guessing_grid(completed, monkeypatch):
     plan = completed[0]
     raw, events, _ = inputs.read_record(

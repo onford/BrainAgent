@@ -706,9 +706,11 @@ def _noise(raw, case, subject, record_id, probe):
     block_manifests = []
     if case["kind"] in ("eog", "emg"):
         block = max(2, round(probe["injection"]["eog_emg_block_seconds"] * sfreq))
+        # Some readers expose a NumPy scalar; block boundaries enter strict JSON.
+        n_times = int(raw.n_times)
         template = np.empty_like(x)
-        for start in range(0, raw.n_times, block):
-            stop = min(start + block, raw.n_times)
+        for start in range(0, n_times, block):
+            stop = min(start + block, n_times)
             # Include one preceding sample for a one-sample tail, without dropping it.
             origin = start if stop - start >= 2 else start - 1
             _, a, manifest = generate_contamination(

@@ -3,7 +3,7 @@
 The reconstruction worker owns filtering, resampling and source/precue reads.
 This module measures supplied views, records their provenance, and refuses to
 recover missing bandwidth or physical voltage from transformed coordinates.
-See .local/research/quality.{md,json} for formula/evidence/selection boundaries.
+See docs/preprocessing-evaluation.md for measurement and selection boundaries.
 Numerical rank here deliberately differs from evaluation_numeric's gate rank.
 """
 

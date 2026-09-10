@@ -1,7 +1,7 @@
 """Paired, semi-synthetic EEG reconstruction probes (NumPy/SciPy only).
 
 The reference is a real-EEG cleanproxy, never neural ground truth. Read the
-integration protocol in .local/research/reconstruction.md. No scalar ranking,
+integration protocol in docs/preprocessing-evaluation.md. No scalar ranking,
 processor execution, filesystem access, or parameter fitting occurs here.
 """
 
