@@ -40,6 +40,7 @@ from .catalog import (
     method as catalog_method,
     search_engine_hash,
 )
+from .evaluation import EVALUATOR_VERSION
 from .evaluation_contracts import EvaluationReceipt
 from .io import directory_bytes
 from .panel import DataUnevaluable, freeze_panel, validate_panel
@@ -185,12 +186,20 @@ def prepare(root: Path) -> dict:
         if request.get("train_subjects") == request.get("development_subjects") == []:
             request = {**request, "train_subjects": None, "development_subjects": None}
         panel = freeze_panel(data, **request)
-        write_json(root / "panel.json", panel)
         protocol_path = root / "protocol.json"
-        if protocol_path.exists() and read_json(protocol_path).get("assessment"):
+        protocol = read_json(protocol_path) if protocol_path.exists() else {}
+        assessment = protocol.get("assessment") or {}
+        if protocol.get("utility_version") == 2 or assessment.get("version") == 2:
+            if any(len(fold["train_subjects"]) < 2 for fold in panel["folds"]):
+                raise DataUnevaluable(
+                    "EEGNet 每个外折至少需要两名训练被试，用于独立的拟合与早停验证；"
+                    "请增加被试或调整训练/开发划分。"
+                )
+        write_json(root / "panel.json", panel)
+        if assessment:
             from .reconstruction_evaluation import freeze_probe_panel
 
-            design = read_json(protocol_path)["assessment"]["reconstruction_design"]
+            design = assessment["reconstruction_design"]
             write_json(root / "probe-panel.json", freeze_probe_panel(panel, design=design))
         (root / "prepare-error.json").unlink(missing_ok=True)
         return panel
@@ -327,7 +336,7 @@ def _verify_candidate(root, store, entry, data, panel):
         raise RuntimeError(f"{identity}: cached receipt is not an evaluated candidate")
     if (
         receipt["panel_hash"] != panel["panel_hash"]
-        or receipt["evaluator_version"] != panel["evaluator_version"]
+        or receipt["evaluator_version"] != EVALUATOR_VERSION
     ):
         raise RuntimeError(
             f"{identity}: receipt belongs to a different panel/evaluator"

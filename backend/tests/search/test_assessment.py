@@ -12,7 +12,10 @@ from app.preprocessing.storage import digest, file_hash, write_json
 from app.search import assessment as a
 from app.search.assessment_contracts import AssessmentSummary, METRIC_NAMES
 from app.search.panel import freeze_panel
-from app.search.utility_contracts import LEARNER_SUITE, PRIMARY_SUITE, UtilityReceipt
+from app.search.utility_contracts import (
+    EEGNET_SEEDS, LEARNER_SUITE, PRIMARY_SUITE,
+    LEGACY_LEARNER_SUITE, LEGACY_PRIMARY_SUITE, UtilityReceipt,
+)
 from tests.search.test_panel import make_input
 
 
@@ -47,35 +50,135 @@ def artifact(path, payload):
     return dict(path=str(path), sha256=file_hash(path))
 
 
-def utility(plan, result, root, panel, entry, core, out, missing=None):
+def utility(plan, result, root, panel, entry, core, out, missing=None, *, legacy=False):
+    if not legacy:
+        return seeded_utility(plan, result, root, panel, entry, core, out, missing)
     ref = artifact(out / "protocol.json", {"fixture": True})
     counts = a._utility_denominator(panel)
     learners, scores = {}, {}
+    suite = LEGACY_LEARNER_SUITE if legacy else LEARNER_SUITE
+    primary = LEGACY_PRIMARY_SUITE if legacy else PRIMARY_SUITE
+
     def distribution(v):
         return dict(mean=v, lower_quartile=v, subject_sd=0.0, n_subjects=len(counts))
-    for i, name in enumerate(LEARNER_SUITE):
-        role = "primary" if name in PRIMARY_SUITE else "diagnostic"
-        if name not in PRIMARY_SUITE or name == missing:
-            learners[name] = dict(role=role, status="failed", input_representation="candidate_representation", error="fixture unavailable")
-            scores[name] = None
-            continue
-        score = 0.6 + 0.1*i
+
+    def prediction(score):
         values = dict(ba=score, accuracy=score, f1=score, kappa=0.2, auc=None, brier=None, logloss=None)
-        learners[name] = dict(role=role, status="evaluated", input_representation="candidate_representation",
-            predictions=ref, metadata=ref,
+        return dict(status="evaluated", predictions=ref, metadata=ref,
             folds=[dict(fold_id=f["id"], train_subjects=f["train_subjects"], development_subjects=f["development_subjects"],
                         model=ref, metadata=ref, predictions=ref) for f in panel["folds"]],
             subjects={s: dict(n_trials=n, **values, probability_status="not_available_in_core_predictions") for s, n in counts.items()},
             summary={m: distribution(v) if v is not None else None for m, v in values.items()})
+
+    for i, name in enumerate(suite):
+        role = "primary" if name in primary else "diagnostic" if legacy else "benchmark"
+        if name == missing or (legacy and name not in primary):
+            learners[name] = dict(role=role, status="failed", input_representation="candidate_representation", error="fixture unavailable")
+            scores[name] = None
+            continue
+        score = 0.6 + 0.1*i if legacy else 0.7 if name == "eegnet" else 0.95
+        learner = dict(role=role, input_representation="candidate_representation", **prediction(score))
+        if name == "eegnet":
+            learner["folds"] = []
+            learner["seeds"] = {str(seed): dict(seed=seed, **prediction(value))
+                                for seed, value in zip(EEGNET_SEEDS, [0.6, 0.7, 0.8])}
+            learner["seed_summary"] = dict(seeds=list(EEGNET_SEEDS), mean_ba=0.7,
+                                           seed_sd=(0.02/3)**0.5, minimum_ba=0.6, maximum_ba=0.8)
+        learners[name] = learner
         scores[name] = score
-    score = sum(scores[n] for n in PRIMARY_SUITE)/3 if missing is None else None
-    receipt = UtilityReceipt(candidate_id=entry["id"], candidate_hash=digest(entry), panel_hash=panel["panel_hash"],
+    complete = all(scores[n] is not None for n in primary)
+    score = sum(scores[n] for n in primary)/len(primary) if complete else None
+    receipt = UtilityReceipt(utility_version=1 if legacy else 2,
+        candidate_id=entry["id"], candidate_hash=digest(entry), panel_hash=panel["panel_hash"],
         core_receipt_hash=digest(core), evaluation_mode=panel["evaluation_mode"], protocol=ref, inputs=ref,
-        status="evaluated" if missing is None else "incomplete", selection_score=score,
-        primary_suite=list(PRIMARY_SUITE), learner_scores=scores, learners=learners,
+        status="evaluated" if complete else "incomplete", selection_score=score,
+        primary_suite=list(primary), learner_scores=scores, learners=learners,
+        seed_summary=learners.get("eegnet", {}).get("seed_summary"),
         subjects={s: dict(eligible_trials=n, mean_ba=score, learner_ba=scores) for s, n in counts.items()},
         summary=distribution(score) if score is not None else None,
-        failure_reasons=["fixture missing primary"] if missing else [])
+        failure_reasons=[] if complete else ["fixture missing primary"])
+    payload = receipt.model_dump(mode="json")
+    write_json(out / "utility.json", payload)
+    return payload
+
+
+def seeded_utility(plan, result, root, panel, entry, core, out, missing=None):
+    """Real prediction JSON and derived metrics, without training a model."""
+    import numpy as np
+    from app.search.utility_evaluation import _metrics, _distribution
+
+    ref = artifact(out / "protocol.json", {"fixture": True})
+    trials = [t for t in panel["trials"] if t["eligible"]]
+    indices = {t["event_id"]: i for i, t in enumerate(trials)}
+    counts = a._utility_denominator(panel)
+    left, right = panel["class_labels"]["left"], panel["class_labels"]["right"]
+
+    def run(name, seed, mistakes, destination):
+        rows, outputs = [], []
+        for fold in panel["folds"]:
+            fold_rows = []
+            for subject in fold["development_subjects"]:
+                for i, t in enumerate(t for t in trials if t["subject"] == subject):
+                    prediction = ({left: right, right: left}[t["label"]] if i < mistakes else t["label"])
+                    p = 0.8 if prediction == right else 0.2
+                    row = dict(event_id=t["event_id"], record_id=t["record_id"], subject=subject,
+                               label=t["label"], epoch_index=i, array_index=indices[t["event_id"]],
+                               fold_id=fold["id"], prediction=prediction,
+                               proba_left=1-p if seed is not None else None,
+                               proba_right=p if seed is not None else None,
+                               decision_score=p if seed is not None else None)
+                    if seed is not None:
+                        row["seed"] = seed
+                    fold_rows.append(row)
+            folder = destination / fold["id"]
+            metadata = dict(learner=name, seed=seed, fold_id=fold["id"],
+                            train_subjects=fold["train_subjects"], development_subjects=fold["development_subjects"],
+                            train_event_ids=[t["event_id"] for t in trials if t["subject"] in fold["train_subjects"]],
+                            development_event_ids=[r["event_id"] for r in fold_rows])
+            outputs.append(dict(fold_id=fold["id"], train_subjects=fold["train_subjects"],
+                                development_subjects=fold["development_subjects"],
+                                model=ref, metadata=artifact(folder / "metadata.json", metadata),
+                                predictions=artifact(folder / "predictions.json", fold_rows)))
+            rows.extend(fold_rows)
+        subjects = {s: _metrics([r for r in rows if r["subject"] == s], right) for s in counts}
+        return dict(status="evaluated", predictions=artifact(destination / "predictions.json", rows),
+                    metadata=artifact(destination / "metadata.json", dict(learner=name, seed=seed, folds=outputs)),
+                    folds=outputs, subjects=subjects,
+                    summary={m: _distribution([s[m] for s in subjects.values()]) for m in METRIC_NAMES})
+
+    learners = {}
+    for name in LEARNER_SUITE:
+        common = dict(role="primary" if name == "eegnet" else "benchmark", input_representation="candidate_representation")
+        if name == missing:
+            learners[name] = dict(**common, status="failed", error="fixture unavailable")
+        elif name == "csp_lda":
+            learners[name] = dict(**common, **run(name, None, 0, out / name))
+        else:
+            runs = {str(k): dict(seed=k, **run(name, k, mistakes, out / name / f"s{k}"))
+                    for k, mistakes in zip(EEGNET_SEEDS, [2, 1, 0])}
+            subjects = {s: dict(n_trials=counts[s], probability_status="available",
+                                **{m: float(np.mean([r["subjects"][s][m] for r in runs.values()])) for m in METRIC_NAMES})
+                        for s in counts}
+            scores = [r["summary"]["ba"]["mean"] for r in runs.values()]
+            seed_summary = dict(seeds=list(EEGNET_SEEDS), mean_ba=float(np.mean(scores)),
+                                seed_sd=float(np.std(scores)), minimum_ba=min(scores), maximum_ba=max(scores))
+            combined = [row for r in runs.values() for row in json.loads(Path(r["predictions"]["path"]).read_text())]
+            learners[name] = dict(**common, status="evaluated", seeds=runs, seed_summary=seed_summary,
+                                 subjects=subjects, summary={m: _distribution([s[m] for s in subjects.values()]) for m in METRIC_NAMES},
+                                 predictions=artifact(out / name / "predictions.json", combined),
+                                 metadata=artifact(out / name / "metadata.json", {"learner": name, "seed_summary": seed_summary}))
+    scores = {n: r["summary"]["ba"]["mean"] if r["status"] == "evaluated" else None for n, r in learners.items()}
+    score = scores["eegnet"]
+    receipt = UtilityReceipt(utility_version=2, candidate_id=entry["id"], candidate_hash=digest(entry),
+        panel_hash=panel["panel_hash"], core_receipt_hash=digest(core), evaluation_mode=panel["evaluation_mode"],
+        protocol=ref, inputs=ref, status="evaluated" if score is not None else "incomplete", selection_score=score,
+        primary_suite=list(PRIMARY_SUITE), learner_scores=scores, learners=learners,
+        seed_summary=learners["eegnet"].get("seed_summary"),
+        subjects={s: dict(eligible_trials=n, mean_ba=learners["eegnet"].get("subjects", {}).get(s, {}).get("ba"),
+                         learner_ba={name: r.get("subjects", {}).get(s, {}).get("ba") for name, r in learners.items()})
+                  for s, n in counts.items()},
+        summary=learners["eegnet"].get("summary", {}).get("ba"),
+        failure_reasons=[] if score is not None else ["fixture missing primary"])
     payload = receipt.model_dump(mode="json")
     write_json(out / "utility.json", payload)
     return payload
@@ -126,7 +229,15 @@ def test_real_candidate_sibling_attempt_and_development_denominator(tmp_path, ad
         out = tmp_path / "candidate" / "assessment" / attempt
         summary = a.assess_candidate(*args, out, probe)
         assert summary["status"] == "complete", summary
-        assert summary["selection_score"] == pytest.approx(0.7)
+        assert summary["schema_version"] == "assessment-v2"
+        assert summary["utility"]["primary_models_expected"] == 1
+        assert summary["utility"]["primary_models_available"] == 1
+        assert summary["utility"]["primary_suite"] == ["eegnet"]
+        assert summary["utility"]["seed_summary"]["seeds"] == list(EEGNET_SEEDS)
+        expected = 3 * sum(a._utility_denominator(args[3]).values())
+        assert summary["utility"]["primary_trial_predictions_expected"] == expected
+        assert summary["utility"]["primary_trial_predictions_available"] == expected
+        assert summary["selection_score"] == pytest.approx(5 / 6)
         assert summary["core_csp_macro_ba"] == 0.91
         assert summary["bindings"]["core_receipt_hash"] == digest(json.loads((tmp_path / "candidate/core-receipt.json").read_text()))
         assert summary["coverage"]["subjects_expected"] == 2
@@ -146,14 +257,165 @@ def test_real_candidate_sibling_attempt_and_development_denominator(tmp_path, ad
 
 
 def test_missing_primary_no_partial_averaging(tmp_path, adapters, monkeypatch):
-    monkeypatch.setattr(a, "evaluate_dataset_utility", lambda *args: utility(*args, missing="fbcsp"))
+    monkeypatch.setattr(a, "evaluate_dataset_utility", lambda *args: utility(*args, missing="eegnet"))
     args, probe = case(tmp_path)
     out = tmp_path / "assessment"
     s = a.assess_candidate(*args, out, probe)
     assert s["utility"]["status"] == "incomplete", s
-    assert s["utility"]["primary_models_available"] == 2
+    assert s["utility"]["primary_models_available"] == 0
+    assert s["utility"]["primary_models_expected"] == 1
+    assert s["utility"]["primary_trial_predictions_available"] == 0
+    assert s["utility"]["seed_summary"] is None
     assert s["selection_score"] is None and not s["selection_ready"]
     assert a.verify_assessment(out, s) == s
+
+
+def test_benchmark_failure_does_not_change_eegnet_selection(tmp_path, adapters, monkeypatch):
+    monkeypatch.setattr(a, "evaluate_dataset_utility", lambda *args: utility(*args, missing="csp_lda"))
+    args, probe = case(tmp_path)
+    out = tmp_path / "assessment"
+    summary = a.assess_candidate(*args, out, probe)
+    assert summary["selection_ready"]
+    assert summary["selection_score"] == pytest.approx(5 / 6)
+    assert summary["utility"]["learner_scores"]["csp_lda"] is None
+    assert summary["utility"]["primary_models_available"] == 1
+    assert a.verify_assessment(out, summary) == summary
+
+
+@pytest.mark.parametrize("mutation", ["missing_seed", "seed_trial_count", "seed_mean", "legacy"])
+def test_native_utility_requires_all_three_complete_seeds(tmp_path, adapters, monkeypatch, mutation):
+    def invalid(*args):
+        payload = utility(*args, legacy=mutation == "legacy")
+        if mutation == "missing_seed":
+            payload["learners"]["eegnet"]["seeds"].pop(str(EEGNET_SEEDS[0]))
+        elif mutation == "seed_trial_count":
+            run = payload["learners"]["eegnet"]["seeds"][str(EEGNET_SEEDS[0])]
+            next(iter(run["subjects"].values()))["n_trials"] += 1
+        elif mutation == "seed_mean":
+            payload["seed_summary"]["mean_ba"] = 0.65
+        write_json(args[-1] / "utility.json", payload)
+        return payload
+
+    monkeypatch.setattr(a, "evaluate_dataset_utility", invalid)
+    args, probe = case(tmp_path)
+    out = tmp_path / "assessment"
+    summary = a.assess_candidate(*args, out, probe)
+    assert summary["utility"]["status"] == "failed"
+    assert summary["selection_score"] is None
+    assert summary["utility"]["seed_summary"] is None
+    assert a.verify_assessment(out, summary) == summary
+
+
+@pytest.mark.parametrize("mutation", ["models", "predictions", "expected", "seed_summary", "policy", "version", "score"])
+def test_v2_summary_rejects_old_denominators_and_inconsistent_seeds(tmp_path, adapters, mutation):
+    args, probe = case(tmp_path)
+    summary = a.assess_candidate(*args, tmp_path / "assessment", probe)
+    if mutation == "models":
+        summary["utility"]["primary_models_expected"] = 3
+    elif mutation == "predictions":
+        summary["utility"]["primary_trial_predictions_available"] //= 3
+    elif mutation == "expected":
+        summary["utility"]["primary_trial_predictions_expected"] //= 3
+    elif mutation == "seed_summary":
+        summary["utility"]["seed_summary"] = None
+    elif mutation == "policy":
+        summary["selection_policy"] = "utility_only_all_three_primary_models_all_frozen_subjects"
+    elif mutation == "version":
+        summary["schema_version"] = "assessment-v1"
+    else:
+        summary["selection_score"] = 0.95  # CSP benchmark cannot become selection utility.
+    with pytest.raises(ValueError):
+        AssessmentSummary.model_validate(summary)
+
+
+def test_historical_v1_assessment_verifies_without_rewriting_or_rescoring(tmp_path, adapters):
+    from app.search.assessment_contracts import LegacyUtilitySummary
+
+    args, probe = case(tmp_path)
+    out = tmp_path / "assessment"
+    summary = a.assess_candidate(*args, out, probe)
+    # Build a synthetic v1 artifact tree in test temp space, never inspect history.
+    native = utility(*args, out / "utility", legacy=True)
+    native.pop("seed_summary")
+    for learner in native["learners"].values():
+        learner.pop("seeds")
+        learner.pop("seed_summary")
+    write_json(out / "utility/utility.json", native)
+    expected = a._utility_denominator(args[3])
+    coverage = {name: dict(subjects_expected=len(expected),
+                          subjects_available=len(learner["subjects"]),
+                          eligible_trials_expected=sum(expected.values()),
+                          trials_available=sum(s["n_trials"] for s in learner["subjects"].values()))
+                for name, learner in native["learners"].items()}
+    legacy = LegacyUtilitySummary(
+        status="evaluated", evaluation_mode=native["evaluation_mode"], reason=None,
+        primary_suite=list(LEGACY_PRIMARY_SUITE), learner_scores=native["learner_scores"],
+        learner_statuses={n: r["status"] for n, r in native["learners"].items()},
+        learner_statistics={n: {m: r["summary"].get(m) for m in METRIC_NAMES}
+                            for n, r in native["learners"].items()},
+        learner_coverage=coverage, summary=native["summary"], primary_models_available=3,
+        primary_trial_predictions_expected=3*sum(expected.values()),
+        primary_trial_predictions_available=3*sum(expected.values()),
+        receipt_artifact=a._ref(out / "utility/utility.json", out), failure_artifact=None,
+        failure_reasons=[], warnings=native["warnings"],
+    )
+    summary.update(schema_version="assessment-v1", utility=legacy.model_dump(mode="json"),
+                   selection_score=native["selection_score"],
+                   selection_policy="utility_only_all_three_primary_models_all_frozen_subjects")
+    content = {k: v for k, v in summary.items() if k not in {"artifacts", "artifact_manifest"}}
+    write_json(out / "_assessment/summary.json", a.AssessmentSnapshot(content=content).model_dump(mode="json"))
+    (out / "artifact-manifest.json").unlink()
+    artifacts = a._inventory(out)
+    manifest = a.AssessmentManifest(bindings=summary["bindings"], artifacts=artifacts)
+    write_json(out / "artifact-manifest.json", manifest.model_dump(mode="json"))
+    ref = a._ref(out / "artifact-manifest.json", out)
+    artifacts.append(a.ArtifactEntry(**ref.model_dump(), component="assessment"))
+    summary.update(artifact_manifest=ref.model_dump(mode="json"),
+                   artifacts=[r.model_dump(mode="json") for r in artifacts])
+    write_json(out / "assessment.json", summary)
+    before = {p: p.read_bytes() for p in out.rglob("*") if p.is_file()}
+    assert a.verify_assessment(out, summary) == summary
+    assert summary["selection_score"] == pytest.approx(0.7)
+    assert summary["utility"]["learner_scores"]["csp_lda"] == 0.6
+    assert "seed_summary" not in summary["utility"]
+    assert {p: p.read_bytes() for p in out.rglob("*") if p.is_file()} == before
+
+
+def test_real_three_seed_utility_integrates_with_core_v3_and_assessment_v2(tmp_path, monkeypatch):
+    from app.search import evaluation
+    from tests.search.test_evaluation_v2 import cv_case
+
+    result, plan, root, panel = cv_case(tmp_path, tmax=0.4)
+    core = evaluation.evaluate(result, plan, root, panel, tmp_path / "core")
+    assert core["status"] == "evaluated", core
+
+    def auxiliary_unavailable(*args):
+        raise ValueError("auxiliary fixture unavailable")
+
+    monkeypatch.setattr(a, "evaluate_dataset_quality", auxiliary_unavailable)
+    out = tmp_path / "assessment"
+    summary = a.assess_candidate(
+        plan, result, root, panel, {"id": "synthetic-eegnet"}, core, out, None,
+        utility_execution={"max_workers": 1, "eegnet_training": {"max_epochs": 1, "patience": 1}},
+    )
+    assert summary["selection_ready"], summary["utility"]["reason"]
+    assert summary["schema_version"] == "assessment-v2"
+    assert summary["utility"]["primary_models_available"] == 1
+    native = json.loads((out / "utility/utility.json").read_text(encoding="utf-8"))
+    assert summary["utility"]["seed_summary"] == native["seed_summary"]
+    assert summary["selection_score"] == native["learner_scores"]["eegnet"]
+    assert native["learners"]["csp_lda"]["status"] == "evaluated"
+    expected = {t["event_id"] for t in panel["trials"] if t["eligible"] and t["role"] == "development"}
+    predicted = []
+    for seed in EEGNET_SEEDS:
+        run = native["learners"]["eegnet"]["seeds"][str(seed)]
+        rows = json.loads(Path(run["predictions"]["path"]).read_text(encoding="utf-8"))
+        assert len(rows) == len(expected)
+        assert {r["event_id"] for r in rows} == expected
+        predicted.extend(rows)
+    assert len(predicted) == summary["utility"]["primary_trial_predictions_available"] == 3*len(expected)
+    assert summary["utility"]["primary_trial_predictions_expected"] == 3*len(expected)
+    assert a.verify_assessment(out, summary) == summary
 
 
 @pytest.mark.parametrize("component", ["quality", "utility", "reconstruction"])

@@ -1,4 +1,4 @@
-"""Version 2 panel/evaluator contracts with optional worker metadata.
+"""Version 2 panel and versioned core evaluator contracts with optional worker metadata.
 
 Early worker failures and invalid panels have coverage=None (unknown, not zero).
 """
@@ -355,7 +355,7 @@ class GateMetricMetadata(EvaluationContract):
     zero_covariance_value: Literal[1.0] = 1.0
 
 
-class LearnerMetadata(EvaluationContract):
+class CoreLearnerMetadata(EvaluationContract):
     covariance_temporal_centering: Literal[True] = True
     covariance_ddof: Literal[0] = 0
     covariance_pooling: Literal[
@@ -401,6 +401,14 @@ class LearnerMetadata(EvaluationContract):
     lda_ridge_scale: Literal["max_mean_covariance_diagonal_or_one"] = (
         "max_mean_covariance_diagonal_or_one"
     )
+    supervised_fit_scope: Literal["fold_train_subjects_only"] = (
+        "fold_train_subjects_only"
+    )
+
+
+class LearnerMetadata(CoreLearnerMetadata):
+    """Historical v2 learner settings; never used to fit new core receipts."""
+
     secondary_feature: Literal["log_channel_population_variance"] = (
         "log_channel_population_variance"
     )
@@ -414,9 +422,6 @@ class LearnerMetadata(EvaluationContract):
     logistic_fit_intercept: Literal[True] = True
     logistic_class_weight: Literal["none"] = "none"
     logistic_random_state: int = Field(ge=0, lt=2**32)
-    supervised_fit_scope: Literal["fold_train_subjects_only"] = (
-        "fold_train_subjects_only"
-    )
 
 
 class EvaluationRepresentation(EvaluationContract):
@@ -547,21 +552,21 @@ class EvaluationVersions(EvaluationContract):
 
 class EvaluationReceipt(EvaluationContract):
     operator_usage: OperatorUsage | None = None
-    evaluator_version: Literal[2] = 2
+    evaluator_version: Literal[2, 3] = 2
     assessment: AssessmentSummary | None = None
     assessment_path: str | None = Field(default=None, pattern=r"^assessment/a[0-9]+$")
     core_receipt_path: str | None = Field(default=None, pattern=r"^core-receipts/a[0-9]+\.json$")
     evaluation_mode: EvaluationMode | None = None
     folds: list[EvaluationFold] = Field(default_factory=list)
     primary_learner: Literal["csp4_reg0.1_shrinkage_lda"] = "csp4_reg0.1_shrinkage_lda"
-    secondary_learner: Literal["logvariance_standardizer_logistic_regression"] = (
+    secondary_learner: Literal["logvariance_standardizer_logistic_regression"] | None = (
         "logvariance_standardizer_logistic_regression"
     )
     secondary_macro_ba: Score | None = None
     secondary_subjects: dict[str, Score] = Field(default_factory=dict)
     paired_subject_ci: PairedSubjectCI | None = None
     representation: EvaluationRepresentation | None = None
-    learner_metadata: LearnerMetadata | None = None
+    learner_metadata: LearnerMetadata | CoreLearnerMetadata | None = None
     status: Literal[
         "evaluated",
         "candidate_invalid",
@@ -601,11 +606,26 @@ class EvaluationReceipt(EvaluationContract):
             and value.get("status") == "data_unevaluable"
             and "stop_search" not in value
         ):
-            return {**value, "stop_search": True}
+            value = {**value, "stop_search": True}
+        if isinstance(value, dict) and value.get("evaluator_version") == 3:
+            return {"secondary_learner": None, **value}
         return value
 
     @model_validator(mode="after")
     def outcome(self):
+        if self.evaluator_version == 3:
+            if (
+                self.secondary_learner is not None
+                or self.secondary_macro_ba is not None
+                or self.secondary_subjects
+                or isinstance(self.learner_metadata, LearnerMetadata)
+            ):
+                raise ValueError("v3 core secondary learner and metrics must be N/A")
+        elif self.secondary_learner is None or (
+            self.learner_metadata is not None
+            and not isinstance(self.learner_metadata, LearnerMetadata)
+        ):
+            raise ValueError("v2 receipts require historical secondary learner metadata")
         if self.status == "data_unevaluable" and not self.stop_search:
             raise ValueError("data_unevaluable must stop the search")
         if self.status == "evaluated":
@@ -622,7 +642,7 @@ class EvaluationReceipt(EvaluationContract):
                 or self.representation is None
                 or self.learner_metadata is None
                 or self.diagnostics.summary is None
-                or self.secondary_macro_ba is None
+                or (self.evaluator_version == 2 and self.secondary_macro_ba is None)
             ):
                 raise ValueError(
                     "evaluated receipt requires complete development metrics"
@@ -631,10 +651,12 @@ class EvaluationReceipt(EvaluationContract):
                 4, len(self.representation.channels)
             ):
                 raise ValueError("CSP component metadata must match common channel cap")
-            if set(self.secondary_subjects) != set(self.subjects) or not math.isclose(
-                self.secondary_macro_ba,
-                sum(self.secondary_subjects.values()) / len(self.subjects),
-                abs_tol=1e-12,
+            if self.evaluator_version == 2 and (
+                set(self.secondary_subjects) != set(self.subjects) or not math.isclose(
+                    self.secondary_macro_ba,
+                    sum(self.secondary_subjects.values()) / len(self.subjects),
+                    abs_tol=1e-12,
+                )
             ):
                 raise ValueError(
                     "secondary metrics require the same subject denominator"

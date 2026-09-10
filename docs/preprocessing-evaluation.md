@@ -1,14 +1,28 @@
 # 如何阅读预处理评价
 
-候选由三个固定模型的训练效用选择；其他指标用于解释收益、发现副作用和规划下一次探索。先看被试与试次覆盖，再看分数，最后结合信号和重建证据判断机制。开发分数被反复用于探索，不是独立测试成绩。
+新协议（utility_version=2、assessment-v2）的候选由 EEGNet 三种子的训练效用选择；其他指标用于解释收益、发现副作用和规划下一次探索。先看被试与试次覆盖，再看分数，最后结合信号和重建证据判断机制。开发分数被反复用于探索，不是独立测试成绩。
 
 ## 训练效用与模型对照
 
 每个外折按被试划分。同一被试的所有记录留在同一折，分类器、特征选择和内层调参只使用训练被试。每个模型先计算每位被试的 BA，再对被试等权平均。
 
-`selection_score = (CSP-LDA 的被试平均 BA + FBCSP 的被试平均 BA + TS-LR 的被试平均 BA) / 3`。
+新协议要求每个外折至少有两名训练被试，以便分开拟合与早停验证。两名被试的交叉验证、或仅一名训练被试的显式划分，会在准备阶段报“数据不可评测”；需增加被试或调整划分，不会改用开发被试做早停。
 
-三种主模型必须全部完成冻结范围的预测，否则没有选择分数。FgMDM、逐频带 EA-FBCSP、对数方差逻辑回归是另外三种固定对照，不临时替换主模型。每种模型另报被试分布的均值、标准差和低四分位数；低四分位数有助于发现平均成绩掩盖的低表现人群，不能据此删除被试。
+`selection_score = mean_ba = (EEGNet seed 17 的被试宏平均 BA + seed 42 的被试宏平均 BA + seed 2026 的被试宏平均 BA) / 3`。
+
+EEGNet 是唯一主模型（`primary_suite=['eegnet']`），三个种子必须全部完成冻结范围的预测，否则没有选择分数。CSP-LDA 仅为基准对照，不参与选择，也不替代失败的 EEGNet。`learner_scores` 仅含 `eegnet`、`csp_lda`。
+
+EEGNet 默认在 CPU 上训练（PyTorch 2.8 CPU、单数值线程），每个 seed/外折最多 100 epochs，早停 patience=15。从外折训练被试中按固定、与标签无关的排序划出约 20% 被试作内层验证（人数向上取整并保留训练被试）；同一被试的全部试次留在一侧，三个种子共享该划分。以内层验证平均 trial log loss 的最低值选 checkpoint，首次最低值优先，不额外 refit；外折开发被试不参与训练或早停。默认 batch size=64、learning rate=0.001。这是项目固定训练策略，不宣称复现论文训练设置。
+
+服务把默认训练配置冻结到 `protocol.utility_execution.eegnet_training`，完整训练和 CPU 运行配置见 `protocol.utility_protocol.eegnet`；实际训练轮次、早停和被试划分见逐 seed/fold 的 metadata。并发上限为 2 个模型进程，资源不足可降低并发，不能删减种子或评价分母。
+
+同时查看种子 BA 均值、种子 SD、最低与最高 BA，以及逐种子数值。种子 SD 描述训练随机性；被试 Q25 和被试 SD 描述被试差异，两者不能混用。EEGNet 顶层每位被试的每个指标为该被试三个种子指标的平均，`n_trials` 仍为 N；顶层 `summary` 是这些被试均值的分布。Q25 可用时展示，缺失不补算。
+
+概要保留 `seed_summary={seeds:[17,42,2026],mean_ba,seed_sd,minimum_ba,maximum_ba}`，位于 `utility.seed_summary`、`eegnet.seed_summary` 和 `assessment.utility.seed_summary`。运行页按需读取完整 `utility.json`；`eegnet.seeds` 的字符串键 `17`、`42`、`2026` 分别保存完整 status、seed、folds、predictions、metadata、subjects、summary。每折模型为 `model.pt`。EEGNet 顶层 `folds=[]`，合并预测包含三个种子的所有行，每行含整数 `seed`；不能因顶层 folds 为空而认定缺失。
+
+主模型分母为 1，预测分母为 3×N，三个种子全部完成后可用预测数才为 3×N。CSP-LDA 沿用 folds、预测及 joblib 模型产物，没有种子结果（`seeds={}`、`seed_summary=null`）。
+
+历史 `utility_version=1` / `assessment-v1` 按原协议阅读：CSP-LDA、FBCSP、TS-LR 的被试宏平均 BA 等权组成选择分数，其余三模型为对照。旧成绩不能标为 EEGNet，也不根据新公式重算。
 
 | 指标 | 含义 | 阅读方法 |
 | --- | --- | --- |

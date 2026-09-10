@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections import Counter
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 
 from app.preprocessing.schemas import ExecutionPlan, RunResult
@@ -21,7 +22,7 @@ from .assessment_contracts import (
     AssessmentSnapshot, AssessmentSummary, AuxiliarySummary, Bindings, METRIC_NAMES, UtilitySummary,
 )
 from .panel import validate_panel
-from .utility_contracts import LEARNER_SUITE, PRIMARY_SUITE, UtilityReceipt
+from .utility_contracts import EEGNET_SEEDS, LEARNER_SUITE, PRIMARY_SUITE, UtilityReceipt
 from .utility_parallel import UtilityExecutionError
 
 
@@ -141,13 +142,160 @@ def _utility_failed(panel, reason, artifact):
                           learner_scores=dict.fromkeys(LEARNER_SUITE), learner_statuses=dict.fromkeys(LEARNER_SUITE, "failed"),
                           learner_statistics={name: dict.fromkeys(sorted(METRIC_NAMES)) for name in LEARNER_SUITE},
                           learner_coverage=coverage, summary=None, primary_models_available=0,
-                          primary_trial_predictions_expected=3*sum(_utility_denominator(panel).values()),
+                          primary_trial_predictions_expected=len(EEGNET_SEEDS)*sum(_utility_denominator(panel).values()),
                           primary_trial_predictions_available=0, receipt_artifact=None, failure_artifact=artifact,
                           failure_reasons=[reason], warnings=[])
 
 
+def verify_utility_predictions(receipt, panel, directory):
+    """Read-only v2 row/OOF/metric audit; never deserialize or run a model.
+
+    Hashes establish file identity, not correctness of claimed metrics. Bind
+    every completed seed and benchmark to the frozen panel, reconcile all
+    prediction layers, and independently recompute their aggregate statistics.
+    Incomplete seeds remain forensic artifacts and cannot supply a score.
+    """
+    import numpy as np
+    from sklearn.metrics import (
+        accuracy_score, balanced_accuracy_score, cohen_kappa_score, f1_score,
+        log_loss, roc_auc_score,
+    )
+
+    receipt = UtilityReceipt.model_validate(receipt)
+    _require(receipt.utility_version == 2, "prediction audit requires utility v2")
+    validate_panel(panel)
+    _require(receipt.panel_hash == panel["panel_hash"]
+             and receipt.evaluation_mode == panel["evaluation_mode"], "prediction panel binding differs")
+    directory = Path(directory).resolve()
+    frozen = {t["event_id"]: t for t in panel["trials"] if t["eligible"] and t["role"] == "development"}
+    folds = {f["id"]: f for f in panel["folds"]}
+    left, right = panel["class_labels"]["left"], panel["class_labels"]["right"]
+
+    def read(ref):
+        _require(ref is not None, "prediction audit requires artifact")
+        raw = ref.model_dump(mode="json")
+        _verify_refs(raw, directory)
+        path = Path(ref.path)
+        return _json_file(path if path.is_absolute() else within(directory, ref.path))
+
+    def same(actual, expected, context):
+        if isinstance(expected, dict):
+            _require(isinstance(actual, dict) and actual.keys() == expected.keys(), context)
+            for key in expected:
+                same(actual[key], expected[key], context + "/" + key)
+        elif isinstance(expected, float):
+            _require(type(actual) in (int, float) and math.isfinite(actual)
+                     and math.isclose(actual, expected, rel_tol=0, abs_tol=1e-12), context)
+        else:
+            _require(actual == expected, context)
+
+    def distribution(values):
+        if any(v is None for v in values):
+            return None
+        return dict(mean=float(np.mean(values)), lower_quartile=float(np.quantile(values, 0.25)),
+                    subject_sd=float(np.std(values, ddof=0)), n_subjects=len(values))
+
+    def summaries(subjects):
+        return {m: distribution([s[m] for s in subjects.values()]) for m in METRIC_NAMES}
+
+    def row_map(rows, seed, expected):
+        _require(isinstance(rows, list) and all(isinstance(r, dict) for r in rows), "predictions must be rows")
+        _require(Counter(r.get("event_id") for r in rows) == Counter({e: 1 for e in expected}),
+                 "prediction rows differ from frozen trial inventory")
+        for row in rows:
+            trial = frozen[row["event_id"]]
+            _require(all(row.get(k) == trial[k] for k in ("record_id", "subject", "label")),
+                     "prediction row identity/label differs from panel")
+            fold = folds.get(row.get("fold_id"))
+            _require(fold is not None and row["subject"] in fold["development_subjects"]
+                     and row["subject"] not in fold["train_subjects"], "prediction row is not in its frozen held-out fold")
+            _require(all(type(row.get(k)) is int and row[k] >= 0 for k in ("epoch_index", "array_index")),
+                     "prediction row indices must be nonnegative integers")
+            _require(row.get("prediction") in (left, right), "unknown predicted class")
+            if seed is not None:
+                _require(type(row.get("seed")) is int and row["seed"] == seed, "prediction row seed differs")
+                p, q = row.get("proba_left"), row.get("proba_right")
+                _require(all(type(v) in (int, float) and math.isfinite(v) and 0 <= v <= 1 for v in (p, q))
+                         and math.isclose(p + q, 1, rel_tol=0, abs_tol=1e-10), "invalid prediction probabilities")
+                _require(type(row.get("decision_score")) in (int, float)
+                         and math.isclose(row["decision_score"], q, rel_tol=0, abs_tol=1e-12),
+                         "EEGNet decision score must equal right probability")
+                _require(row["prediction"] == (right if q > p else left), "prediction differs from probability argmax")
+            else:
+                _require(all(row.get(k) is None for k in ("seed", "proba_left", "proba_right", "decision_score")),
+                         "CSP benchmark supplies hard labels only")
+        return {r["event_id"]: r for r in rows}
+
+    def metrics(rows, probabilistic):
+        y = np.asarray([r["label"] == right for r in rows], dtype=int)
+        pred = np.asarray([r["prediction"] == right for r in rows], dtype=int)
+        _require(len(np.unique(y)) == 2, "subject predictions require both frozen classes")
+        result = dict(n_trials=len(rows), ba=float(balanced_accuracy_score(y, pred)),
+                      accuracy=float(accuracy_score(y, pred)), f1=float(f1_score(y, pred, zero_division=0)),
+                      kappa=float(cohen_kappa_score(y, pred)), auc=None, brier=None, logloss=None,
+                      probability_status="available" if probabilistic else "not_available_in_core_predictions")
+        if probabilistic:
+            p = np.asarray([r["proba_right"] for r in rows], dtype=np.float64)
+            result.update(auc=float(roc_auc_score(y, p)), brier=float(np.mean((p-y)**2)),
+                          logloss=float(log_loss(y, np.column_stack([1-p, p]), labels=[0, 1])))
+        return result
+
+    for name, learner in receipt.learners.items():
+        runs = [(int(seed), run) for seed, run in learner.seeds.items()] if name == "eegnet" else [(None, learner)]
+        completed, combined = {}, []
+        for seed, run in runs:
+            if run.status != "evaluated":
+                continue
+            rows = read(run.predictions)
+            indexed = row_map(rows, seed, frozen)
+            _require(Counter(f.fold_id for f in run.folds) == Counter({f: 1 for f in folds}),
+                     "seed fold inventory differs from frozen panel")
+            meta = read(run.metadata)
+            _require(meta.get("learner") == name and (seed is None or meta.get("seed") == seed),
+                     "seed metadata differs from prediction run")
+            for fold_output in run.folds:
+                fold = folds[fold_output.fold_id]
+                _require(fold_output.train_subjects == fold["train_subjects"]
+                         and fold_output.development_subjects == fold["development_subjects"], "native fold differs from panel")
+                ids = {e for e, t in frozen.items() if t["subject"] in fold["development_subjects"]}
+                fold_rows = row_map(read(fold_output.predictions), seed, ids)
+                _require(fold_rows == {e: indexed[e] for e in ids}, "fold and seed prediction rows differ")
+                meta = read(fold_output.metadata)
+                _require(all(meta.get(k) == fold[k] for k in ("train_subjects", "development_subjects"))
+                         and meta.get("fold_id") == fold["id"]
+                         and (seed is None or meta.get("seed") == seed), "fold metadata differs from seed/panel")
+                for key, subjects in (("train_event_ids", fold["train_subjects"]),
+                                      ("development_event_ids", fold["development_subjects"])):
+                    expected = {t["event_id"] for t in panel["trials"] if t["eligible"] and t["subject"] in subjects}
+                    _require(isinstance(meta.get(key), list) and Counter(meta[key]) == Counter({e: 1 for e in expected}),
+                             "fold metadata event inventory differs from panel")
+            subjects = {s: metrics([r for r in rows if r["subject"] == s], seed is not None)
+                        for s in panel["development_subjects"]}
+            same({s: v.model_dump() for s, v in run.subjects.items()}, subjects, "seed metrics differ from predictions")
+            same({k: _dump(v) for k, v in run.summary.items()}, summaries(subjects), "seed distributions differ from predictions")
+            completed[seed] = subjects
+            combined.extend(rows)
+        if name == "eegnet" and learner.status == "evaluated":
+            _require(set(completed) == set(EEGNET_SEEDS), "all three seed predictions required")
+            rows = read(learner.predictions)
+            _require(isinstance(rows, list) and Counter(digest(r) for r in rows) == Counter(digest(r) for r in combined),
+                     "combined predictions differ from the three seed files")
+            subjects = {s: dict(n_trials=completed[EEGNET_SEEDS[0]][s]["n_trials"], probability_status="available",
+                                **{m: float(np.mean([completed[k][s][m] for k in EEGNET_SEEDS])) for m in METRIC_NAMES})
+                        for s in panel["development_subjects"]}
+            same({s: v.model_dump() for s, v in learner.subjects.items()}, subjects, "EEGNet subject means differ from predictions")
+            same({k: _dump(v) for k, v in learner.summary.items()}, summaries(subjects), "EEGNet distributions differ from predictions")
+            scores = [float(np.mean([v["ba"] for v in completed[k].values()])) for k in EEGNET_SEEDS]
+            seed_summary = dict(seeds=list(EEGNET_SEEDS), mean_ba=float(np.mean(scores)), seed_sd=float(np.std(scores)),
+                                minimum_ba=min(scores), maximum_ba=max(scores))
+            same(_dump(receipt.seed_summary), seed_summary, "seed summary differs from predictions")
+            same(_dump(receipt.summary), distribution([s["ba"] for s in subjects.values()]), "utility distribution differs from predictions")
+            same(receipt.selection_score, seed_summary["mean_ba"], "selection score differs from predictions")
+
+
 def _utility_summary(payload, panel, candidate, core, directory, output):
     receipt = UtilityReceipt.model_validate(payload)
+    _require(receipt.utility_version == 2, "new assessments require utility version 2")
     _require(receipt.candidate_id == candidate["id"] and receipt.candidate_hash == digest(candidate), "utility candidate binding mismatch")
     _require(receipt.panel_hash == panel["panel_hash"] and receipt.core_receipt_hash == digest(core), "utility panel/core binding mismatch")
     expected = _utility_denominator(panel)
@@ -160,16 +308,17 @@ def _utility_summary(payload, panel, candidate, core, directory, output):
     if receipt.status == "evaluated":
         _require(set(receipt.subjects) == set(expected), "complete utility needs all panel subjects")
     artifact = _native_file(payload, directory, "utility.json", output)
+    verify_utility_predictions(receipt, panel, directory)
     coverage = _learner_coverage(panel, receipt)
     return UtilitySummary(status=receipt.status, evaluation_mode=receipt.evaluation_mode,
                           reason=None if receipt.status == "evaluated" else "; ".join(receipt.failure_reasons),
                           primary_suite=receipt.primary_suite, learner_scores=receipt.learner_scores,
                           learner_statuses={n: receipt.learners[n].status for n in LEARNER_SUITE},
                           learner_statistics={n: {k: receipt.learners[n].summary.get(k) for k in sorted(METRIC_NAMES)} for n in LEARNER_SUITE},
-                          learner_coverage=coverage, summary=receipt.summary,
+                          learner_coverage=coverage, summary=receipt.summary, seed_summary=receipt.seed_summary,
                           primary_models_available=sum(receipt.learners[n].status == "evaluated" for n in PRIMARY_SUITE),
-                          primary_trial_predictions_expected=3*sum(expected.values()),
-                          primary_trial_predictions_available=sum(coverage[n]["trials_available"] for n in PRIMARY_SUITE),
+                          primary_trial_predictions_expected=len(EEGNET_SEEDS)*sum(expected.values()),
+                          primary_trial_predictions_available=len(EEGNET_SEEDS)*sum(coverage[n]["trials_available"] for n in PRIMARY_SUITE),
                           receipt_artifact=artifact, failure_artifact=None,
                           failure_reasons=receipt.failure_reasons, warnings=receipt.warnings), receipt.selection_score
 
@@ -249,7 +398,7 @@ def assess_candidate(plan, result, store_root, panel, candidate_entry, core_rece
     """Return AssessmentSummary JSON directly for receipt.assessment.
 
     Selection path is assessment.selection_score ONLY; core_csp_macro_ba is an
-    anchor. All three primary models and all frozen development subjects/trials
+    anchor. All three EEGNet seeds and all frozen development subjects/trials
     are required (all subjects in group CV; held-out subjects in holdout mode).
     Full UtilityReceipt is utility/utility.json; no subject-by-learner table is
     duplicated here. Quality/reconstruction missingness never changes utility.
@@ -293,6 +442,8 @@ def assess_candidate(plan, result, store_root, panel, candidate_entry, core_rece
              "assessment output contains a protected core file")
     _require(not output.exists(), "assessment requires a fresh output directory")
     output.mkdir(parents=True)
+    # Persist the exact frozen panel for read-only row auditing during reuse.
+    write_json(output / "_assessment" / "panel.json", panel)
 
     def common():
         return (plan.model_copy(deep=True), result.model_copy(deep=True), store,
@@ -335,10 +486,10 @@ def assess_candidate(plan, result, store_root, panel, candidate_entry, core_rece
 
     states = (utility.status, quality.status, reconstruction.status)
     state = "complete" if all(s == "evaluated" for s in states) else "failed" if all(s in {"failed", "not_applicable"} for s in states) else "partial"
-    content = dict(schema_version="assessment-v1", candidate_id=candidate["id"], bindings=bindings.model_dump(mode="json"),
+    content = dict(schema_version="assessment-v2", candidate_id=candidate["id"], bindings=bindings.model_dump(mode="json"),
                    coverage=coverage.model_dump(mode="json"), status=state, selection_score=selection_score,
                    selection_ready=utility.status == "evaluated",
-                   selection_policy="utility_only_all_three_primary_models_all_frozen_subjects",
+                   selection_policy="utility_only_eegnet_three_seeds_all_frozen_subjects",
                    core_csp_macro_ba=anchor, core_status=str(core.get("status", "unknown")),
                    utility=utility.model_dump(mode="json"), quality=quality.model_dump(mode="json"),
                    reconstruction=reconstruction.model_dump(mode="json"))
@@ -394,6 +545,18 @@ def verify_assessment(output_dir, summary, *, panel_hash=None, candidate_id=None
                  "utility receipt bindings differ from assessment")
         _require(receipt.selection_score == model.selection_score and receipt.status == model.utility.status,
                  "selection_score differs from native full utility receipt")
+        _require(receipt.utility_version == (2 if model.schema_version == "assessment-v2" else 1),
+                 "utility receipt version differs from assessment")
+        _require(receipt.primary_suite == model.utility.primary_suite
+                 and receipt.learner_scores == model.utility.learner_scores
+                 and {n: r.status for n, r in receipt.learners.items()} == model.utility.learner_statuses,
+                 "utility learner summary differs from native receipt")
+        if model.schema_version == "assessment-v2":
+            _require(receipt.seed_summary == model.utility.seed_summary,
+                     "utility seed summary differs from native receipt")
+            panel = _json_file(output / "_assessment" / "panel.json")
+            _require(panel["panel_hash"] == model.bindings.panel_hash, "saved prediction panel differs from assessment")
+            verify_utility_predictions(receipt, panel, output / "utility")
         _verify_refs(raw, output / "utility")
     if model.quality.receipt_artifact is not None:
         raw = _json_file(output / model.quality.receipt_artifact.path)

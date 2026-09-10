@@ -1,5 +1,6 @@
-# Audited optional learner implementation; preserve existing EEG math pins.
+# Fixed CPU EEGNet and CSP-LDA runtime; preserve EEG numerical pins.
+--extra-index-url https://download.pytorch.org/whl/cpu
 numpy==1.26.4
 scipy==1.15.3
 scikit-learn==1.6.1
-pyriemann==0.7
+torch==2.8.0+cpu

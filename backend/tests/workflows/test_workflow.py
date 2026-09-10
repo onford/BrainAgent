@@ -72,6 +72,14 @@ async def finish(service, identity):
 async def test_six_agents_retry_delivery_alignment_training_and_api(
     source, tmp_path, monkeypatch
 ):
+    from app.search import utility_parallel
+
+    # Freeze a short, real training protocol before the synthetic search is
+    # created. Workers still train and verify every seed; no scores are mocked.
+    normalize_execution = utility_parallel.utility_execution
+    monkeypatch.setattr(utility_parallel, "utility_execution", lambda value=None:
+        normalize_execution({**(value or {}), "eegnet_training": {
+            "max_epochs": 2, "patience": 1, "batch_size": 8}}))
     prep = PreprocessingService(tmp_path / "preprocessing")
     service = WorkflowService(tmp_path / "workflows", [source], prep)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
@@ -209,14 +217,17 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
         # the receipt's precomputed model scores and utility summary.
         assessment_index = json.loads(archive.read("evaluation/assessment-index.json"))
         utility = json.loads(archive.read(assessment_index["utility_receipt"]))
-        primary_suite = ["csp_lda", "fbcsp", "ts_lr"]
+        primary_suite = ["eegnet"]
+        assert utility["utility_version"] == 2
+        assert set(utility["learners"]) == {"eegnet", "csp_lda"}
         assert utility["primary_suite"] == primary_suite
         panel = json.loads(panel_bytes)
         frozen = {t["event_id"]: t for t in panel["trials"] if t["eligible"] and t["role"] == "development"}
         candidate_root = store.root.parent / "candidates" / selection["selected_candidate_id"]
         model_scores = []
-        for name in primary_suite:
-            learner = utility["learners"][name]
+        assert set(utility["learners"]["eegnet"]["seeds"]) == {"17", "42", "2026"}
+        for seed in [17, 42, 2026]:
+            learner = utility["learners"]["eegnet"]["seeds"][str(seed)]
             assert learner["status"] == "evaluated"
             prediction_ref = learner["predictions"]
             member = "evaluation/" + Path(prediction_ref["path"]).relative_to(candidate_root).as_posix()
@@ -224,6 +235,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
             assert hashlib.sha256(payload).hexdigest() == prediction_ref["sha256"]
             model_rows = json.loads(payload)
             assert len(model_rows) == len(frozen)
+            assert {row["seed"] for row in model_rows} == {seed}
             assert {row["event_id"] for row in model_rows} == set(frozen)
             for row in model_rows:
                 trial = frozen[row["event_id"]]
@@ -238,12 +250,14 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
                     recalls.append(sum(row["prediction"] == label for row in class_rows) / len(class_rows))
                 model_subject_scores.append(sum(recalls) / len(recalls))
             model_scores.append(sum(model_subject_scores) / len(model_subject_scores))
-        independently_scored = sum(model_scores) / len(primary_suite)
+        independently_scored = sum(model_scores) / 3
+        assert assessment_index["seed_summary"]["seeds"] == [17, 42, 2026]
+        assert assessment_index["seed_summary"]["mean_ba"] == pytest.approx(independently_scored)
+        assert assessment_index["seed_summary"]["seed_sd"] == pytest.approx(float(np.std(model_scores)))
         assert independently_scored == pytest.approx(selection["score"])
         assert independently_scored == pytest.approx(assessment_index["selection_score"])
-        # This fixture separates the two scores, so a CSP-only projection fails.
-        assert independently_scored != pytest.approx(selection["selected_receipt"]["macro_ba"])
-        assert f"三模型训练效用 selection_score：{selection['score']:.4f}" in rendered
+        assert "EEGNet" in rendered and f"{selection['score']:.4f}" in rendered
+        assert "FBCSP=" not in rendered and "TS/LR=" not in rendered
         assert f"核心 CSP 锚点 macro_ba={selection['selected_receipt']['macro_ba']:.4f}" in rendered
         for entry in manifest["files"]:
             assert (

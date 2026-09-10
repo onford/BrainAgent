@@ -36,7 +36,7 @@ def choose(search_state, plan, store):
             if receipt.status != "evaluated" or receipt.candidate_id != candidate["id"]:
                 raise ValueError("候选身份或评价状态与回执不同")
             if search_state["protocol"].get("assessment") and receipt.assessment is None:
-                raise ValueError("三模型选择缺少 assessment")
+                raise ValueError("开发效用选择缺少 assessment")
         entry = registered.get(candidate["id"])
         if entry is None or (candidate.get("parameters") is not None and candidate["parameters"] != entry["parameters"]):
             raise ValueError("候选参数与冻结动态配方不同")
@@ -133,6 +133,48 @@ def report(state, folder, store):
 _ARRAY_BLOCK_BYTES = 8 * 1024 * 1024
 
 
+def _utility_export_index(assessment_root, utility, prefix, artifacts):
+    """Project native schema-bound references into portable archive paths.
+
+    Never discover checkpoints with a glob: every seed/fold file must be in
+    the trusted assessment inventory with the same digest as its native ref.
+    """
+    from app.search.utility_contracts import UtilityReceipt
+
+    native = UtilityReceipt.model_validate(utility).model_dump(mode="json")
+    root = Path(assessment_root).resolve()
+    inventory = {a["path"]: a["sha256"] for a in artifacts}
+
+    def project(value):
+        if isinstance(value, dict):
+            if set(value) == {"path", "sha256"}:
+                path = Path(value["path"])
+                path = path.resolve() if path.is_absolute() else within(root / "utility", value["path"])
+                if not path.is_relative_to(root):
+                    raise ValueError("效用产物引用越出 assessment 目录")
+                relative = path.relative_to(root).as_posix()
+                if inventory.get(relative) != value["sha256"] or file_hash(path) != value["sha256"]:
+                    raise ValueError("效用产物引用与 assessment 文件清单不同")
+                return {"path": prefix + relative, "sha256": value["sha256"]}
+            return {k: project(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [project(v) for v in value]
+        return value
+
+    # Include all provenance refs, even those not directly displayed in the index.
+    portable = project(native)
+    return {
+        "utility_version": portable["utility_version"],
+        "seed_summary": portable.get("seed_summary"),
+        "learners": {
+            name: {key: learner[key] for key in
+                   ("status", "predictions", "metadata", "folds", "seeds", "seed_summary")
+                   if key in learner}
+            for name, learner in portable["learners"].items()
+        },
+    }
+
+
 def _evaluation_evidence(selection, store):
     """Resolve the original, hash-bound panel and selected trial predictions."""
     summary = selection["panel"]
@@ -208,7 +250,7 @@ def _evaluation_evidence(selection, store):
         protocol_ref = Path(utility["protocol"]["path"])
         protocol_ref = protocol_ref if protocol_ref.is_absolute() else within(assessment_root / "utility", str(protocol_ref))
         if json.loads(protocol_ref.read_text(encoding="utf-8")) != selection["evaluation_protocol"].get("utility_protocol"):
-            raise ValueError("三模型实际协议与冻结协议不同")
+            raise ValueError("实际训练效用协议与冻结协议不同")
         files.extend((p, "evaluation/" + name, file_hash(p)) for p, name in (
             (core_path, receipt["core_receipt_path"]), (result_path, "result.json"),
             (protocol_path, "search-protocol.json"), (store.root.parent / "registry.json", "registry.json")))
@@ -218,6 +260,7 @@ def _evaluation_evidence(selection, store):
                 raise ValueError("重建 probe 与 assessment 绑定不同")
             files.append((probe_path, "evaluation/probe-panel.json", file_hash(probe_path)))
         prefix = "evaluation/" + receipt["assessment_path"] + "/"
+        _utility_export_index(assessment_root, utility, prefix, assessed["artifacts"])
         files += [
             (within(assessment_root, a["path"]), prefix + a["path"], a["sha256"])
             for a in assessed["artifacts"]
@@ -691,7 +734,10 @@ def deliver(state, folder, store):
             representation_files.append(target)
         assessment_index = folder / "evaluation/assessment-index.json"
         prefix = "evaluation/" + receipt["assessment_path"] + "/"
+        assessment_root = within(store.root.parent, "candidates/" + selection["selected_candidate_id"] + "/" + receipt["assessment_path"])
+        native_utility = json.loads(within(assessment_root, receipt["assessment"]["utility"]["receipt_artifact"]["path"]).read_text(encoding="utf-8"))
         write_json(assessment_index, {
+            **_utility_export_index(assessment_root, native_utility, prefix, receipt["assessment"]["artifacts"]),
             "selection_score": receipt["assessment"]["selection_score"],
             "primary_suite": receipt["assessment"]["utility"]["primary_suite"],
             "summary": prefix + "assessment.json",
@@ -766,15 +812,20 @@ trial-index.tsv: 每一行到原始事件、记录和样点的映射。
 同一被试只进入一个分组；标准化或模型拟合应仅使用 train。
 交付保留搜索协议：分组交叉验证的被试全部标为 train，折成员见 evaluation/folds.json；
 显式训练/开发划分映射为 train/validation。test 始终为空，不存在独立测试集。
-候选仅按 assessment.selection_score 选择：CSP/LDA、FBCSP、TS/LR 各自的开发被试平均
-平衡准确率再等权平均。三个模型必须覆盖完整开发分母；缺失模型不产生选择分数。
+assessment-v2 候选仅按 EEGNet 三种子（17、42、2026）的开发被试宏平均 BA 均值选择。
+三个种子必须覆盖完整开发分母；缺失种子不产生选择分数。该分数不是平均概率的集成分数。
+被试指标是各种子该被试指标的均值，n_trials 仍为原始试次数 N；预测证据共 3×N 行。
+历史 assessment-v1 的选择含义以其冻结协议为准。
 core CSP macro_ba 仅为锚点，质量和重建不加入总分。selection.json 保存分数与候选摘要。
 反复用于选择的开发分数不是独立泛化结论；交叉验证折之间不得共享拟合的 CSP/LDA。
 无标签整批适配仅使用协议允许的各被试信号，不能据此推断实时或前瞻有效。
 evaluation/ 保存冻结协议、含全部原始 trial 的完整面板、折、选中评价回执，
 以及 originalpredictions.tsv 核心 CSP 逐试次预测；面板和预测按原文件字节及哈希收录。
-evaluation/assessment/aN/utility/ 保存三主模型及其他学习器的逐试次预测、每折拟合模型、
-参数和证据；完整分母与统计见 utility.json。evaluation/assessment-index.json 提供包内相对路径。
+evaluation/assessment/aN/utility/ 保存 EEGNet 三种子的逐试次概率、每折 model.pt、
+元数据和拟合/验证被试，以及 CSP/LDA 基准的模型与预测。完整分母与统计见 utility.json。
+evaluation/assessment-index.json 提供逐模型、逐种子、逐折文件的包内相对路径和 SHA256。
+EEGNet checkpoint 可使用 app.search.eegnet.predict_checkpoint(path, X) 安全加载并回放 [N,2] 概率；
+回放使用 utility inputs.json 中的原始评价数组及预测行的 array_index。
 assessment/ 同时保留质量与重建的完整指标、曲线或有原因的不可用状态，无任意加权总分。
 representation/ 保存适配变换。
 回执中的源路径保留原样用于溯源；evaluation/artifact-map.json 将源数组映射到
@@ -784,7 +835,7 @@ X.npy 是被评价数组的 float32 转换版本；该转换逐块保存后读�
 来源与引用见 sources.json，操作与参数见 method.json，统计和限制见 report.html。
 provenance/ 保存每条记录的实际执行参数、版本、事件对应和前后统计。
 train_example.py: 安装 numpy、scikit-learn 后执行 python train_example.py，
-仅用 train 拟合标准化与逻辑回归并检查预测可用性；三模型评价的实际模型与预测另附。
+仅用 train 拟合标准化与逻辑回归并检查预测可用性；实际评价模型与预测另附。
 
 mmap 按需读取；基本切片为视图，布尔或整数数组索引会复制所选数据。
 下面只选取前 32 条中的训练样本；完整训练使用 train_example.py 分块提取特征。

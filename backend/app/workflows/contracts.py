@@ -224,6 +224,17 @@ class EvaluationOutput(Contract):
 
     @model_validator(mode="after")
     def preserves_selected_receipt(self):
+        assessment = self.selected_receipt.get("assessment")
+        if assessment is not None:
+            from app.search.assessment_contracts import AssessmentSummary
+
+            # Validate the native version before trusting a score copied into a
+            # workflow stage; a partial seed run must never look selectable.
+            native = AssessmentSummary.model_validate(assessment)
+            if not native.selection_ready or native.selection_score is None:
+                raise ValueError("selection requires a complete native utility assessment")
+        elif self.evaluation_protocol.get("assessment"):
+            raise ValueError("selection requires the assessment in the frozen protocol")
         if (
             self.selected_receipt.get("status") != "evaluated"
             or self.selected_receipt.get("candidate_id") != self.selected_candidate_id

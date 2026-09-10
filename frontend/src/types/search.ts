@@ -285,3 +285,32 @@ export interface SearchOperatorSpace {
   priors: { id: string; strength: 'hard' | 'soft'; condition: string; rationale: string; evidence_ids: string[] }[]
   evidence: Record<string, { source_url: string; locator: string; text: string }>
 }
+
+export interface SearchSeedSummary {
+  seeds: number[]
+  mean_ba: number | null
+  seed_sd: number | null
+  minimum_ba: number | null
+  maximum_ba: number | null
+}
+export interface SearchUtilityArtifact { path: string; sha256?: string }
+export interface SearchMetricDistribution {
+  mean: number; lower_quartile: number; subject_sd: number; n_subjects: number
+}
+export interface SearchSeedOutput {
+  status: string
+  seed: number
+  folds: { fold_id: string; train_subjects: string[]; development_subjects: string[]; model: SearchUtilityArtifact; metadata: SearchUtilityArtifact; predictions: SearchUtilityArtifact }[]
+  predictions: SearchUtilityArtifact | null
+  metadata: SearchUtilityArtifact | null
+  subjects: Record<string, SearchSubjectMetrics & { n_trials: number }>
+  summary: Record<string, SearchMetricDistribution | null>
+  error?: string | null
+}
+export interface SearchUtilityReceipt {
+  utility_version: 1 | 2
+  primary_suite: string[]
+  learner_scores: Record<string, number | null>
+  seed_summary?: SearchSeedSummary | null
+  learners: Record<string, Omit<SearchSeedOutput, 'seed'> & { seeds?: Record<string, SearchSeedOutput>; seed_summary?: SearchSeedSummary | null }>
+}

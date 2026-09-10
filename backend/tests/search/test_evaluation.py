@@ -23,14 +23,14 @@ from app.search.panel import freeze_panel
 from tests.search.test_panel import make_input
 
 
-def make_case(tmp_path):
+def make_case(tmp_path, *, tmin=-0.1, tmax=0.1):
     data = make_input(tmp_path / "bids")
     panel = freeze_panel(
         data,
         {r.id: r.id for r in data.collection.records},
         seed=42,
-        tmin=-0.1,
-        tmax=0.1,
+        tmin=tmin,
+        tmax=tmax,
         sfreq=160,
         train_subjects=["sub-01"],
         development_subjects=["sub-02", "sub-03"],
@@ -57,8 +57,8 @@ def make_case(tmp_path):
                         unit_id="EEG-EPOCH",
                         op="epoch",
                         params={
-                            "tmin": -0.1,
-                            "tmax": 0.1,
+                            "tmin": tmin,
+                            "tmax": tmax,
                             "picks": ["C4", "C3"],
                             "event_id": data.survey.event_id,
                         },
@@ -84,7 +84,7 @@ def make_case(tmp_path):
         directory.mkdir(parents=True)
         trials = [t for t in panel["trials"] if t["record_id"] == config.record_id]
         rows, signal = [], []
-        wave = np.sin(np.arange(33) * 2 * np.pi / 8)
+        wave = np.sin(np.arange(panel["output_contract"]["n_times"]) * 2 * np.pi / 8)
         for trial in trials:
             code = panel["event_codes"][trial["label"]]
             index = len(signal) if trial["eligible"] else None
@@ -116,7 +116,7 @@ def make_case(tmp_path):
             mne.create_info(["C4", "C3"], 160, "eeg"),
             events=np.array([[r["output_sample"], 0, r["code"]] for r in retained]),
             event_id=data.survey.event_id,
-            tmin=-0.1,
+            tmin=tmin,
             baseline=None,
             verbose="ERROR",
         )
@@ -241,24 +241,16 @@ def test_macro_is_subject_mean_not_pooled_and_baseline_is_paired(tmp_path):
     assert all(s["delta"] == 0 for s in paired["subjects"].values())
 
 
-def test_scaler_and_classifier_never_fit_development_data(tmp_path, monkeypatch):
+def test_csp_lda_never_fits_development_data(tmp_path, monkeypatch):
     result, plan, root, panel = make_case(tmp_path)
-    scaler_fits, classifier_fits = [], []
-    original_scaler, original_lr = (
-        evaluation.StandardScaler.fit,
-        evaluation.LogisticRegression.fit,
-    )
-
-    def scaler_fit(self, X, *args, **kwargs):
-        scaler_fits.append(np.array(X, copy=True))
-        return original_scaler(self, X, *args, **kwargs)
+    classifier_fits = []
+    original = evaluation.LinearDiscriminantAnalysis.fit
 
     def classifier_fit(self, X, y, *args, **kwargs):
         classifier_fits.append((np.array(X, copy=True), np.array(y, copy=True)))
-        return original_lr(self, X, y, *args, **kwargs)
+        return original(self, X, y, *args, **kwargs)
 
-    monkeypatch.setattr(evaluation.StandardScaler, "fit", scaler_fit)
-    monkeypatch.setattr(evaluation.LogisticRegression, "fit", classifier_fit)
+    monkeypatch.setattr(evaluation.LinearDiscriminantAnalysis, "fit", classifier_fit)
     first = evaluation.evaluate(result, plan, root, panel, tmp_path / "first")
     assert first["status"] == "evaluated", first
     # Change only development signals by orders of magnitude, keeping valid
@@ -270,9 +262,8 @@ def test_scaler_and_classifier_never_fit_development_data(tmp_path, monkeypatch)
         rehash(result, root, rid, "signal_V.npy")
     second = evaluation.evaluate(result, plan, root, panel, tmp_path / "second")
     assert second["status"] == "evaluated", second
-    assert len(scaler_fits) == len(classifier_fits) == 2
-    assert scaler_fits[0].shape == (4, 2)
-    np.testing.assert_array_equal(scaler_fits[0], scaler_fits[1])
+    assert len(classifier_fits) == 2
+    assert classifier_fits[0][0].shape == (4, 2)
     np.testing.assert_array_equal(classifier_fits[0][0], classifier_fits[1][0])
     np.testing.assert_array_equal(classifier_fits[0][1], classifier_fits[1][1])
 
@@ -330,7 +321,7 @@ def test_candidate_cannot_change_frozen_denominator_or_contract(
         write_json(path, rows)
         rehash(result, root, "sub-02", "events.json")
     monkeypatch.setattr(
-        evaluation.StandardScaler,
+        evaluation.LinearDiscriminantAnalysis,
         "fit",
         lambda *a, **k: pytest.fail("invalid candidate fitted model"),
     )
@@ -379,7 +370,7 @@ def test_training_failure_and_resource_failure_have_distinct_owners(
     def fail(*args, **kwargs):
         raise ValueError("estimator failed")
 
-    monkeypatch.setattr(evaluation.LogisticRegression, "fit", fail)
+    monkeypatch.setattr(evaluation.LinearDiscriminantAnalysis, "fit", fail)
     receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "failure")
     assert receipt["status"] == "execution_failure", receipt
     assert receipt["error"] == "estimator failed"
@@ -387,7 +378,7 @@ def test_training_failure_and_resource_failure_have_distinct_owners(
     def resource(*args, **kwargs):
         raise MemoryError("worker owns memory budget")
 
-    monkeypatch.setattr(evaluation.LogisticRegression, "fit", resource)
+    monkeypatch.setattr(evaluation.LinearDiscriminantAnalysis, "fit", resource)
     with pytest.raises(MemoryError):
         evaluation.evaluate(result, plan, root, panel, tmp_path / "resource")
 
@@ -419,7 +410,7 @@ def test_group_coverage_on_training_failure_uses_available_not_predictions(
     def fail(*args, **kwargs):
         raise RuntimeError("deliberate training failure")
 
-    monkeypatch.setattr(evaluation.LogisticRegression, "fit", fail)
+    monkeypatch.setattr(evaluation.LinearDiscriminantAnalysis, "fit", fail)
     receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "evaluation")
     assert receipt["status"] == "execution_failure"
     assert receipt["error"] == "deliberate training failure"

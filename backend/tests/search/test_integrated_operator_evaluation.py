@@ -41,7 +41,7 @@ def _synthetic_bids(root):
     onsets = np.arange(10.0, 114.0, 4.0)
     labels = ["left_hand" if i % 2 == 0 else "right_hand" for i in range(len(onsets))]
     records = []
-    for subject in (1, 2):
+    for subject in (1, 2, 3):
         rng = np.random.default_rng(9120 + subject)
         # Shared ordinary activity prevents all-channel low-correlation flags.
         # Independent noise keeps the ORIGINAL reference strictly full-rank for ASR.
@@ -75,7 +75,7 @@ def _synthetic_bids(root):
     for record in records:
         record.files = inventory.copy()
     evidence = Evidence(source_url="fixture://integrated-operator-bids", locator="deterministic generator",
-        text="120 seconds, 4 full-rank correlated EEG channels, two subjects, balanced MI events; no participant data.", source_version="1")
+        text="120 seconds, 4 full-rank correlated EEG channels, three subjects, balanced MI events; no participant data.", source_version="1")
     return PreprocessInput(purpose="development_fixture",
         survey=SurveySnapshot(dataset_id="synthetic-operator", dataset_version="1", survey_run_id="fixture",
             task="left_right_motor_imagery", event_id={"left_hand": 1, "right_hand": 2}, processing_history=[], facts=[evidence]),
@@ -91,8 +91,8 @@ def corpus(tmp_path_factory):
     context = input_context(data)
     assert all(context.values()), context  # This integration requires the actual pinned ASR dependency.
     panel = freeze_panel(data, {r.id: r.id for r in data.collection.records}, seed=47, tmin=0., tmax=2., sfreq=160.)
-    assert len(panel["folds"]) == 2 and len(panel["development_subjects"]) == 2
-    assert sum(t["eligible"] for t in panel["trials"]) == 52
+    assert len(panel["folds"]) == 3 and len(panel["development_subjects"]) == 3
+    assert sum(t["eligible"] for t in panel["trials"]) == 78
     space = build_space(context)
     seeds = seed_entries(space, context)
     cleaning = [s for s in seeds if any(n["operator"] in {"asr", "detect_bad_channels", "interpolate_bad_channels"}
@@ -127,7 +127,7 @@ def _execute(corpus, entry):
             records=results, completed=len(results), total=len(results), cancel_requested=False)
         core = evaluate(result, plan, store, panel, destination / "core", policy=entry["recipe"]["adaptation"])
     assert core["status"] == "evaluated", (entry["id"], core)
-    assert core["coverage"]["eligible"] == core["coverage"]["predicted"] == 52
+    assert core["coverage"]["eligible"] == core["coverage"]["predicted"] == 78
     write_json(destination / "core-receipt.json", core)
     for record in data.collection.records:
         for relative, expected in record.files.items():
@@ -145,7 +145,7 @@ def test_every_current_cleaning_seed_compiles_runs_and_core_evaluates(cleaning_r
     assert len(cleaning_runs) >= 3
     for plan, result, store, panel, entry, core, _ in cleaning_runs.values():
         assert result.status == "completed" and core["status"] == "evaluated"
-        assert len(core["subjects"]) == len(panel["development_subjects"]) == 2
+        assert len(core["subjects"]) == len(panel["development_subjects"]) == 3
         for config in plan.records:
             if "asr" in entry["parameters"]["operators"]:
                 asr = next(s for s in config.steps if s.op == "asr_clean")
@@ -163,16 +163,27 @@ def _assess(run):
     plan, result, store, panel, entry, core, destination = run
     output = destination / "assessment" / "a1"
     summary = assess_candidate(plan, result, store, panel, entry, core, output, freeze_probe_panel(panel),
-        utility_execution={"max_workers": 2, "memory_budget_bytes": 24 * 1024**3,
+        utility_execution={"eegnet_training": {"max_epochs": 2, "patience": 1, "batch_size": 8}, "max_workers": 2, "memory_budget_bytes": 24 * 1024**3,
                            "reserve_bytes": 4 * 1024**3, "model_memory_bytes": 8 * 1024**3, "timeout_seconds": 180.0})
     assert summary["utility"]["status"] == "evaluated", summary
     assert summary["quality"]["status"] == "evaluated", summary
     assert summary["reconstruction"]["status"] == "evaluated", summary
     assert summary["selection_score"] is not None and summary["selection_ready"], summary
+    assert summary["schema_version"] == "assessment-v2"
+    assert summary["utility"]["seed_summary"]["seeds"] == [17, 42, 2026]
+    assert summary["selection_score"] == summary["utility"]["seed_summary"]["mean_ba"]
     assert verify_assessment(output, summary) == summary
     utility = json.loads((output / "utility" / "utility.json").read_text(encoding="utf-8"))
     assert all(utility["learners"][name]["status"] == "evaluated" for name in PRIMARY_SUITE), utility
     assert all(row["eligible_trials"] == 26 for row in utility["subjects"].values())
+    for seed in utility["learners"]["eegnet"]["seeds"].values():
+        assert seed["status"] == "evaluated"
+        for fold in seed["folds"]:
+            metadata = json.loads(Path(fold["metadata"]["path"]).read_text(encoding="utf-8"))
+            fit, val = set(metadata["fit_subjects"]), set(metadata["validation_subjects"])
+            assert fit and val and not fit & val
+            assert fit | val == set(fold["train_subjects"])
+            assert not (fit | val) & set(fold["development_subjects"])
     return summary
 
 

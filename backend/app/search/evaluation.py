@@ -15,12 +15,10 @@ import warnings
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
 
 from app.preprocessing.schemas import ExecutionPlan, RunResult
 from app.preprocessing.storage import digest, file_hash, within, write_json
-from .evaluation_contracts import AlignmentPolicy, EvaluationReceipt, LearnerMetadata
+from .evaluation_contracts import AlignmentPolicy, CoreLearnerMetadata, EvaluationReceipt
 from .evaluation_numeric import (
     StableShrinkageCovariance,
     VARIANCE_FLOOR,
@@ -30,7 +28,11 @@ from .evaluation_numeric import (
     paired_ci,
     prepare_representation,
 )
-from .panel import DataUnevaluable, EVALUATOR_VERSION, validate_panel
+from .panel import DataUnevaluable, validate_panel
+
+
+# Core learner receipts evolve independently of the frozen panel contract.
+EVALUATOR_VERSION = 3
 
 
 class CandidateInvalid(ValueError):
@@ -435,6 +437,7 @@ def evaluate(
         if isinstance(panel.get("panel_hash"), str)
         else None,
         "evaluator_version": EVALUATOR_VERSION,
+        "secondary_learner": None,
         "diagnostics": {"floor_fraction": None, "converged": None, "warnings": []},
         "timings": {"feature": 0.0, "train": 0.0, "predict": 0.0},
         "attribution": "Development-condition preprocessing utility; no test-set or causal generalization claim.",
@@ -512,12 +515,10 @@ def evaluate(
         }
         identities = [r["event_id"] for _, rows, _, _ in sources for r in rows]
         n_channels = len(panel["output_contract"]["channels"])
-        receipt["learner_metadata"] = LearnerMetadata(
+        receipt["learner_metadata"] = CoreLearnerMetadata(
             csp_components=min(4, n_channels),
-            logistic_random_state=panel["seed"] % (2**32),
         ).model_dump(mode="json")
         covariance_path = output / "epoch-covariances.npy"
-        X = np.empty((len(identities), n_channels), dtype=np.float64)
         covariance_store = np.lib.format.open_memmap(
             covariance_path,
             mode="w+",
@@ -532,7 +533,6 @@ def evaluate(
                         cov = covariance(values[row["epoch_index"]])
                         covariance_store[index] = cov
                         variance = np.diag(cov)
-                        X[index] = np.log(np.maximum(variance, VARIANCE_FLOOR))
                         floored += int(np.count_nonzero(variance <= VARIANCE_FLOOR))
                         total += len(variance)
                         index += 1
@@ -544,7 +544,7 @@ def evaluate(
         frozen = {t["event_id"]: t for t in panel["trials"]}
         labels = np.asarray([frozen[e]["label"] for e in identities])
         subjects = np.asarray([frozen[e]["subject"] for e in identities])
-        by_id, secondary_by_id, fold_by_id = {}, {}, {}
+        by_id, fold_by_id = {}, {}
         warning_names, converged = [], True
         with _mapped(covariance_path) as covariances:
             for fold in panel["folds"]:
@@ -566,19 +566,6 @@ def evaluate(
                         ),
                     )
                     primary.fit(primary_X[train_indices], labels[train_indices])
-                    scaler = StandardScaler()
-                    train_X = scaler.fit_transform(X[train_indices])
-                    classifier = LogisticRegression(
-                        max_iter=1000,
-                        random_state=panel["seed"] % (2**32),
-                        solver="lbfgs",
-                        penalty="l2",
-                        C=1.0,
-                        tol=1e-4,
-                        fit_intercept=True,
-                        class_weight=None,
-                    )
-                    classifier.fit(train_X, labels[train_indices])
                 converged &= not any(
                     issubclass(w.category, ConvergenceWarning) for w in caught
                 )
@@ -586,14 +573,10 @@ def evaluate(
                 receipt["timings"][stage] += perf_counter() - started
                 stage, started = "predict", perf_counter()
                 predictions = primary.predict(primary_X[dev_indices])
-                secondary = classifier.predict(scaler.transform(X[dev_indices]))
-                for i, prediction, diagnostic_prediction in zip(
-                    dev_indices, predictions, secondary
-                ):
+                for i, prediction in zip(dev_indices, predictions):
                     event_id = identities[i]
                     _require(event_id not in by_id, "duplicate out-of-fold prediction")
                     by_id[event_id] = str(prediction)
-                    secondary_by_id[event_id] = str(diagnostic_prediction)
                     fold_by_id[event_id] = fold["id"]
                 receipt["timings"][stage] += perf_counter() - started
         # Scratch covariances are never a delivered representation.
@@ -604,7 +587,7 @@ def evaluate(
             if t["eligible"] and t["role"] == "development"
         }
         _require(
-            set(by_id) == set(secondary_by_id) == expected_ids,
+            set(by_id) == expected_ids,
             "incomplete out-of-fold coverage",
         )
         predicted_ids.update(by_id)
@@ -622,20 +605,6 @@ def evaluate(
                     by_id[t["event_id"]] == label for t in members
                 ) / len(members)
             ba = (recalls["left"] + recalls["right"]) / 2
-            receipt["secondary_subjects"][subject] = float(
-                np.mean(
-                    [
-                        np.mean(
-                            [
-                                secondary_by_id[t["event_id"]] == label
-                                for t in eligible
-                                if t["label"] == label
-                            ]
-                        )
-                        for label in panel["class_labels"].values()
-                    ]
-                )
-            )
             receipt["subjects"][subject] = {
                 "recalls": recalls,
                 "recall_left": recalls["left"],
@@ -652,9 +621,6 @@ def evaluate(
             }
         receipt["macro_ba"] = float(
             np.mean([s["ba"] for s in receipt["subjects"].values()])
-        )
-        receipt["secondary_macro_ba"] = float(
-            np.mean(list(receipt["secondary_subjects"].values()))
         )
         if baseline_scores is not None:
             receipt["paired_subject_ci"] = paired_ci(
@@ -689,9 +655,7 @@ def evaluate(
                         **{k: trial[k] for k in fields if k in trial},
                         "fold_id": fold_by_id.get(trial["event_id"], ""),
                         "primary_prediction": by_id.get(trial["event_id"], ""),
-                        "secondary_prediction": secondary_by_id.get(
-                            trial["event_id"], ""
-                        ),
+                        "secondary_prediction": "",
                         "prediction": by_id.get(trial["event_id"], ""),
                     }
                 )

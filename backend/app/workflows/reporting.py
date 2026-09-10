@@ -26,14 +26,32 @@ def evaluation_summary(selection):
         return f"CSP/LDA 开发被试平均平衡准确率：{selection.score:.4f}；该面板参与候选选择，无独立确认。"
     utility = assessment["utility"]
     scores = utility["learner_scores"]
-    coverage = utility["learner_coverage"]["csp_lda"]
     anchor = assessment["core_csp_macro_ba"]
+    if assessment["schema_version"] == "assessment-v2":
+        seed = utility["seed_summary"]
+        coverage = utility["learner_coverage"]["eegnet"]
+        description = (
+            f"EEGNet 三种子训练效用 selection_score：{selection.score:.4f}；"
+            "分别计算种子 17、42、2026 的开发被试平均平衡准确率，再对三个种子等权平均。"
+            "不是平均概率的集成分数；任一种子缺失都不产生选择分数。"
+            f"种子 BA 标准差={seed['seed_sd']:.4f}，范围 [{seed['minimum_ba']:.4f}, {seed['maximum_ba']:.4f}]。"
+            "被试指标按三个种子平均，试次分母保留 N，完整预测证据为 3×N 行。"
+            f"开发覆盖：{coverage['subjects_available']}/{coverage['subjects_expected']} 被试、"
+            f"{coverage['trials_available']}/{coverage['eligible_trials_expected']} eligible trial。"
+        )
+        csp = scores["csp_lda"]
+        description += f"CSP/LDA 基准={csp:.4f}，不参与选择分数。" if csp is not None else "CSP/LDA 基准未取得，不参与选择分数。"
+    else:
+        coverage = utility["learner_coverage"]["csp_lda"]
+        description = (
+            f"历史三模型训练效用 selection_score：{selection.score:.4f}；"
+            f"CSP/LDA={scores['csp_lda']:.4f}、FBCSP={scores['fbcsp']:.4f}、TS/LR={scores['ts_lr']:.4f}。"
+            "按历史冻结协议，先计算各模型的开发被试平均平衡准确率，再对三个模型等权平均。"
+            f"每模型开发分母：{coverage['subjects_available']}/{coverage['subjects_expected']} 被试、"
+            f"{coverage['trials_available']}/{coverage['eligible_trials_expected']} eligible trial。"
+        )
     return (
-        f"三模型训练效用 selection_score：{selection.score:.4f}；"
-        f"CSP/LDA={scores['csp_lda']:.4f}、FBCSP={scores['fbcsp']:.4f}、TS/LR={scores['ts_lr']:.4f}。"
-        "先计算各模型的开发被试平均平衡准确率，再对三个模型等权平均；缺失模型不产生选择分数。"
-        f"每模型开发分母：{coverage['subjects_available']}/{coverage['subjects_expected']} 被试、"
-        f"{coverage['trials_available']}/{coverage['eligible_trials_expected']} eligible trial。"
+        description
         + (f"核心 CSP 锚点 macro_ba={anchor:.4f}。" if anchor is not None else "核心 CSP 锚点未取得。")
         + f"质量状态：{assessment['quality']['status']}；重建状态：{assessment['reconstruction']['status']}；二者不加入选择总分。"
         + f"搜索 {selection.search_id}；该面板参与候选选择，无独立确认。"

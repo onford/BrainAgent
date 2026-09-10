@@ -197,15 +197,26 @@ def test_parallel_record_execution_preserves_numerical_predictions(search):
         )
 
 
-def test_worker_runs_complete_multi_axis_assessment_in_fresh_attempt(search):
+def test_worker_runs_complete_multi_axis_assessment_in_fresh_attempt(search, monkeypatch):
     from app.search.utility_evaluation import utility_protocol
     from app.search.assessment import verify_assessment
 
+    # The core-only fixture intentionally selects two of three sources. EEGNet
+    # needs all three for an outer training fold with a subject validation split.
+    data = worker.read_json(search / "input.json")
+    data["collection"]["selected_record_ids"] = [r["id"] for r in data["collection"]["records"]]
+    worker.write_json(search / "input.json", data)
+    execution = {"eegnet_training": {"max_epochs": 2, "patience": 1, "batch_size": 8}}
     protocol = worker.read_json(search / "protocol.json")
-    protocol.update(assessment={"reconstruction_design": "balanced"}, utility_protocol=utility_protocol())
+    protocol.update(assessment={"version": 2, "reconstruction_design": "balanced"}, utility_execution=execution,
+                    utility_protocol=utility_protocol(execution=execution))
     worker.write_json(search / "protocol.json", protocol)
     panel = worker.prepare(search)
     assert "panel_hash" in panel
+    assert len(panel["development_subjects"]) == 3
+    assert all(len(f["train_subjects"]) == 2 for f in panel["folds"])
+    entry = next(e for e in catalog() if e["id"] == BASELINE_ID)
+    worker.write_json(search / "candidates" / BASELINE_ID / "method.json", method(entry, panel).model_dump(mode="json"))
     orphan = search / "candidates" / BASELINE_ID / "core-receipts" / "a1.json"
     worker.write_json(orphan, {"interrupted_before_assessment": True})
     orphan_bytes = orphan.read_bytes()
@@ -217,9 +228,31 @@ def test_worker_runs_complete_multi_axis_assessment_in_fresh_attempt(search):
     assert summary is not None
     assert summary["utility"]["status"] == "evaluated", summary["utility"]
     assert summary["selection_score"] is not None
+    assert summary["schema_version"] == "assessment-v2"
+    assert summary["utility"]["primary_suite"] == ["eegnet"]
+    assert summary["utility"]["seed_summary"]["seeds"] == [17, 42, 2026]
+    assert summary["selection_score"] == summary["utility"]["seed_summary"]["mean_ba"]
     assert summary["quality"]["status"] != "failed", summary["quality"]
     assert summary["reconstruction"]["status"] != "failed", summary["reconstruction"]
     assert verify_assessment(search / "candidates" / BASELINE_ID / receipt["assessment_path"], summary) == summary
+    worker.write_json(search / "search.json", {
+        "panel": {**{k: v for k, v in panel.items() if k != "trials"},
+                  "trial_count": len(panel["trials"]),
+                  "eligible_count": sum(t["eligible"] for t in panel["trials"]),
+                  "file_sha256": file_hash(search / "panel.json")},
+        "candidates": [{"id": BASELINE_ID, "status": "evaluated", "receipt": receipt,
+                        "job_id": receipt["job_id"], "plan_ref": receipt["plan_ref"]}],
+    })
+    from app.search import eegnet
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("verification must preserve measured three-seed results without training")
+
+    monkeypatch.setattr(eegnet, "train_fold", forbidden)
+    monkeypatch.setattr(worker.Worker, "run_once", forbidden)
+    monkeypatch.setattr(evaluation, "evaluate", forbidden)
+    assert worker.verify(search) == {"status": "verified", "error": None, "verified_candidate_ids": [BASELINE_ID]}
+    assert read(search) == receipt and orphan.read_bytes() == orphan_bytes
 
 
 def test_completed_job_not_executed_again_and_baseline_forwarded(search, monkeypatch):
@@ -428,6 +461,47 @@ def test_prepare_failure_receipt_and_nonzero(search, case):
     assert receipt["status"] == expected and receipt["error"]
 
 
+@pytest.mark.parametrize("split", ["two_subject_cv", "one_training_subject"])
+def test_eegnet_prepare_rejects_insufficient_outer_training_subjects(search, monkeypatch, split):
+    protocol = worker.read_json(search / "protocol.json")
+    protocol["assessment"] = {"version": 2, "reconstruction_design": "balanced"}
+    worker.write_json(search / "protocol.json", protocol)
+    if split == "one_training_subject":
+        data = worker.read_json(search / "input.json")
+        data["collection"]["selected_record_ids"] = [r["id"] for r in data["collection"]["records"]]
+        worker.write_json(search / "input.json", data)
+        request = worker.read_json(search / "panel-request.json")
+        request.update(train_subjects=["sub-01"], development_subjects=["sub-02", "sub-03"])
+        worker.write_json(search / "panel-request.json", request)
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("insufficient subject split must fail before preprocessing")
+
+    monkeypatch.setattr(numerical_worker, "run_record", forbidden)
+    assert worker.main(["--root", str(search), "--stage", "prepare"]) == 1
+    receipt = worker.read_json(search / "prepare-error.json")
+    assert receipt["status"] == "data_unevaluable", receipt
+    assert "EEGNet" in receipt["error"] and "被试" in receipt["error"]
+    assert not (search / "engine").exists()
+
+
+def test_eegnet_prepare_accepts_two_training_subjects_and_one_development(search):
+    data = worker.read_json(search / "input.json")
+    data["collection"]["selected_record_ids"] = [r["id"] for r in data["collection"]["records"]]
+    worker.write_json(search / "input.json", data)
+    request = worker.read_json(search / "panel-request.json")
+    request.update(train_subjects=["sub-01", "sub-02"], development_subjects=["sub-03"])
+    worker.write_json(search / "panel-request.json", request)
+    protocol = worker.read_json(search / "protocol.json")
+    protocol["assessment"] = {"version": 2, "reconstruction_design": "balanced"}
+    worker.write_json(search / "protocol.json", protocol)
+    panel = worker.prepare(search)
+    assert "panel_hash" in panel, panel
+    assert panel["folds"][0]["train_subjects"] == ["sub-01", "sub-02"]
+    assert panel["folds"][0]["development_subjects"] == ["sub-03"]
+    assert not (search / "engine").exists()
+
+
 @pytest.mark.parametrize(
     "exc", [ResourceError("cap"), MemoryError("array"), OSError(errno.ENOSPC, "full")]
 )
@@ -558,7 +632,11 @@ def test_verify_cached_evaluations_is_read_only_and_never_refits(
     monkeypatch.setattr(worker.Worker, "run_once", forbidden)
     monkeypatch.setattr(numerical_worker, "run_record", forbidden)
     monkeypatch.setattr(evaluation, "evaluate", forbidden)
-    monkeypatch.setattr(evaluation.LogisticRegression, "fit", forbidden)
+    from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+    from app.search import eegnet
+
+    monkeypatch.setattr(LinearDiscriminantAnalysis, "fit", forbidden)
+    monkeypatch.setattr(eegnet, "train_fold", forbidden)
     monkeypatch.setattr(worker, "PreprocessingService", forbidden)
     monkeypatch.setattr(Storage, "__init__", forbidden)
     assert worker.main(["--root", str(root), "--stage", "verify"]) == 0

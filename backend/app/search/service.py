@@ -119,7 +119,7 @@ class SearchService:
             if "/operator-usage/" in name:
                 descriptions[name] = "逐记录算子应用、校准不足、失败与未执行的证据和计数"
             elif "/core-receipts/" in name:
-                descriptions[name] = "该次评价输入的共同CSP与对数方差模型原始回执"
+                descriptions[name] = "该次评价输入的核心模型原始回执"
             documents.append(
                 {
                     "name": name,
@@ -133,12 +133,13 @@ class SearchService:
                             "method.json": "该候选的固定操作及参数",
                             "execution.json": "数值任务定位与恢复状态",
                             "assessment.json": "训练效用、信号质量和重建实验的统一摘要",
-                            "utility.json": "六种模型的逐被试成绩、固定三模型主指标与拟合证据",
+                            "utility.json": "保存协议的逐被试成绩、逐种子明细（如有）与拟合证据",
                             "data-quality.json": "全部记录在不同信号阶段的质量指标、单位和分母",
                             "reconstruction_evaluation.json": "已知污染的去除效果与原信号保留，含失败及适用性",
                             "artifact-manifest.json": "本次多维评价的完整文件、大小与校验清单",
-                            "core-receipt.json": "共同CSP和对数方差对照的原始数值回执",
+                            "core-receipt.json": "保存协议的核心模型原始数值回执",
                             "model.joblib": "仅由该折训练数据拟合的可复算模型",
+                            "model.pt": "EEGNet 对应种子与折的训练模型",
                         }.get(
                             path.name,
                             {
@@ -209,8 +210,10 @@ class SearchService:
         limits = resource_budget(root, request.budget)
         utility_memory = limits.memory_limit_bytes
         utility_reserve = min(4 * 1024**3, utility_memory // 4)
+        # Freeze the approved CPU EEGNet defaults; the utility protocol records device/runtime.
         utility_config = utility_execution({
-            "max_workers": min(4, os.cpu_count() or 1),
+            "eegnet_training": {"max_epochs": 100, "patience": 15, "validation_fraction": 0.2},
+            "max_workers": min(2, os.cpu_count() or 1),
             "memory_budget_bytes": utility_memory,
             "reserve_bytes": utility_reserve,
             "model_memory_bytes": min(8 * 1024**3, utility_memory - utility_reserve),
@@ -278,22 +281,25 @@ class SearchService:
             "input_hash": digest(data_json),
             "source_workflow_id": request.workflow_id,
             "scope": "offline_development_panel",
-            "evaluator": "fixed-three-learner-subject-macro-utility-v1",
+            "evaluator": "fixed-eegnet-three-seed-subject-macro-utility-v2",
             "anchor_evaluator": "csp-shrinkage-lda-v2",
-            "benchmark_evaluators": ["fgmdm", "ea_fbcsp", "logvar_lr"],
+            "benchmark_evaluators": ["csp_lda"],
+            "utility_version": 2,
             "evaluation_mode": "subject_holdout"
             if request.train_subjects
             else "group_cross_validation",
             "split_rationale": "Explicit subject roles"
             if request.train_subjects
             else "Seeded subject folds, min(5, n_subjects); every subject has out-of-fold predictions. Engineering evaluation protocol, not a dataset optimum.",
-            "metric": "mean_subject_macro_ba_across_csp_lda_fbcsp_ts_lr",
-            "selection": "highest_complete_three_learner_utility",
+            "metric": "mean_subject_macro_ba_across_eegnet_seeds_17_42_2026",
+            "selection": "highest_complete_eegnet_three_seed_utility",
             "tie_break": ["reference", "fewer_operators", "candidate_id"],
             "assessment": {
-                "version": 1,
-                "primary_suite": ["csp_lda", "fbcsp", "ts_lr"],
-                "weighting": "equal_subjects_then_equal_learners",
+                "version": 2,
+                "schema_version": "assessment-v2",
+                "primary_suite": ["eegnet"],
+                "seeds": [17, 42, 2026],
+                "weighting": "equal_subjects_then_equal_seeds",
                 "missing_primary": "no_selection_score",
                 "quality": "physical_signal_metrics_separate_axes",
                 "reconstruction_design": "balanced",

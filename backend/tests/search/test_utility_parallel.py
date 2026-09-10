@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from app.preprocessing.storage import digest, file_hash
 from app.search import utility_evaluation as utility, utility_parallel as parallel
-from tests.search.test_utility_evaluation import case  # noqa: F401 - shared artifact fixture
+from tests.search.test_utility_evaluation import EXECUTION, case  # noqa: F401 - shared artifact fixture
 
 
 def read(artifact):
@@ -23,9 +23,9 @@ def read(artifact):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_real_spawn_serial_parallel_exact_six_model_predictions(case, tmp_path, monkeypatch):  # noqa: F811
+def test_real_spawn_serial_parallel_exact_two_model_three_seed_predictions(case, tmp_path, monkeypatch):  # noqa: F811
     monkeypatch.setattr(utility, "run_utility_tasks", parallel.run_utility_tasks)
-    common = {"memory_budget_bytes": 40 * parallel.GIB, "reserve_bytes": 4 * parallel.GIB}
+    common = {**EXECUTION, "memory_budget_bytes": 40 * parallel.GIB, "reserve_bytes": 4 * parallel.GIB}
     serial = utility.evaluate_dataset_utility(*case, tmp_path / "serial", execution={**common, "max_workers": 1})
     config = {**common, "max_workers": 4}
     multi = utility.evaluate_dataset_utility(*case, tmp_path / "parallel", execution=config)
@@ -38,15 +38,23 @@ def test_real_spawn_serial_parallel_exact_six_model_predictions(case, tmp_path, 
         assert a["status"] == b["status"] == "evaluated", (name, a["error"], b["error"])
         assert read(a["predictions"]) == read(b["predictions"])  # Probabilities and decision scores included.
         assert a["subjects"] == b["subjects"] and a["summary"] == b["summary"]
-        for af, bf in zip(a["folds"], b["folds"], strict=True):
-            assert read(af["metadata"]) == read(bf["metadata"])  # Includes inner CV selection and roles.
+        assert set(a["seeds"]) == set(b["seeds"])
+        runs = [(a, b)] if name == "csp_lda" else [(a["seeds"][str(seed)], b["seeds"][str(seed)]) for seed in [17, 42, 2026]]
+        for arun, brun in runs:
+            assert read(arun["predictions"]) == read(brun["predictions"])
+            for af, bf in zip(arun["folds"], brun["folds"], strict=True):
+                ameta, bmeta = read(af["metadata"]), read(bf["metadata"])
+                if name == "eegnet" and "checkpoint_path" in ameta:
+                    assert Path(ameta.pop("checkpoint_path")) == Path(af["model"]["path"])
+                    assert Path(bmeta.pop("checkpoint_path")) == Path(bf["model"]["path"])
+                assert ameta == bmeta
         process_audit = read(read(b["metadata"])["execution"])
         assert process_audit["pid"] != os.getpid()
         assert process_audit["thread_pools"] and all(pool["num_threads"] == 1 for pool in process_audit["thread_pools"])
     serial_audit, parallel_audit = read(serial["execution"]), read(multi["execution"])
     assert serial_audit["max_active_workers"] == 1
     assert 1 < parallel_audit["max_active_workers"] <= 4
-    assert len({v["pid"] for v in parallel_audit["workers"].values()}) == 6
+    assert len({v["pid"] for v in parallel_audit["workers"].values()}) == 2
     assert all(v["exitcode"] == 0 for v in parallel_audit["workers"].values())
     for receipt in (serial, multi):
         for artifact in read(receipt["inputs"])["arrays"].values():
@@ -58,7 +66,7 @@ def test_real_spawn_serial_parallel_exact_six_model_predictions(case, tmp_path, 
 
 def test_frozen_config_capacity_and_no_live_host_in_protocol():
     config = parallel.utility_execution({"max_workers": 4, "memory_budget_bytes": 40 * parallel.GIB})
-    assert parallel.worker_capacity(config, 63 * parallel.GIB) == 4
+    assert parallel.worker_capacity(config, 63 * parallel.GIB) == 2
     assert parallel.worker_capacity(config, 13 * parallel.GIB) == 1
     assert parallel.worker_capacity(config, 11 * parallel.GIB) == 0
     frozen = utility.utility_protocol(execution=config)
@@ -66,7 +74,7 @@ def test_frozen_config_capacity_and_no_live_host_in_protocol():
     config["max_workers"] = 2
     assert frozen["resources"]["execution"]["max_workers"] == 4
     assert digest(frozen) != digest(utility.utility_protocol(execution=config))
-    for invalid in ({"max_workers": 5}, {"blas_threads": 2}, {"extra": 1}, {"model_memory_bytes": 20 * parallel.GIB},
+    for invalid in ({"max_workers": 5}, {"blas_threads": 2}, {"extra": 1}, {"model_memory_bytes": 49 * parallel.GIB},
                     {"timeout_seconds": float("nan")}, {"max_workers": True}):
         with pytest.raises(ValidationError):
             parallel.utility_execution(invalid)
@@ -196,9 +204,8 @@ def test_process_warning_isolation_and_readonly_arrays(tmp_path, monkeypatch, me
 
 
 def _memory_fit_worker(name, payload, config):
-    from app.search.learners import LearnerMemoryLimit
     def fail(*args, **kwargs):
-        raise LearnerMemoryLimit("intentional working-array budget excess")
+        raise MemoryError("intentional working-array budget excess")
     utility._run_learner = fail
     parallel._worker(name, payload, config)  # Real envelope handling in this spawned process.
 

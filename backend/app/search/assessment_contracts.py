@@ -8,7 +8,10 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
-from .utility_contracts import Distribution, LEARNER_SUITE, PRIMARY_SUITE
+from .utility_contracts import (
+    Distribution, EEGNET_SEEDS, LEARNER_SUITE, PRIMARY_SUITE,
+    LEGACY_LEARNER_SUITE, LEGACY_PRIMARY_SUITE, SeedSummary,
+)
 
 
 Hash = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
@@ -90,7 +93,7 @@ class LearnerCoverage(StrictAssessment):
         return self
 
 
-class UtilitySummary(StrictAssessment):
+class LegacyUtilitySummary(StrictAssessment):
     denominator_scope: Literal["frozen_development_subjects_and_eligible_development_trials"] = "frozen_development_subjects_and_eligible_development_trials"
     evaluation_mode: Literal["group_cross_validation", "subject_holdout"]
     status: Literal["evaluated", "incomplete", "failed"]
@@ -112,13 +115,16 @@ class UtilitySummary(StrictAssessment):
 
     @model_validator(mode="after")
     def full_suite(self):
-        if self.primary_suite != list(PRIMARY_SUITE):
-            raise ValueError("three primary models are fixed")
+        primary = PRIMARY_SUITE if self.primary_models_expected == 1 else LEGACY_PRIMARY_SUITE
+        suite = LEARNER_SUITE if self.primary_models_expected == 1 else LEGACY_LEARNER_SUITE
+        repeats = len(EEGNET_SEEDS) if self.primary_models_expected == 1 else 1
+        if self.primary_suite != list(primary):
+            raise ValueError("primary model suite is fixed")
         for mapping in (self.learner_scores, self.learner_statuses, self.learner_statistics, self.learner_coverage):
-            if set(mapping) != set(LEARNER_SUITE):
-                raise ValueError("complete six-model summary inventory required")
+            if set(mapping) != set(suite):
+                raise ValueError("complete versioned model summary inventory required")
         complete = 0
-        for name in LEARNER_SUITE:
+        for name in suite:
             score, state = self.learner_scores[name], self.learner_statuses[name]
             statistics = self.learner_statistics[name]
             if set(statistics) != METRIC_NAMES:
@@ -131,24 +137,43 @@ class UtilitySummary(StrictAssessment):
                     raise ValueError("evaluated model requires the entire frozen denominator")
                 if statistics["ba"] is None or statistics["ba"].mean != score:
                     raise ValueError("BA score/statistics differ")
-                complete += name in PRIMARY_SUITE
+                complete += name in primary
             elif any(v is not None for v in statistics.values()):
                 raise ValueError("failed models cannot retain partial summary statistics")
         if self.primary_models_available != complete:
             raise ValueError("primary model denominator differs")
-        if (self.status == "evaluated") != (complete == 3):
-            raise ValueError("utility status must require all three complete primary models")
-        if self.primary_trial_predictions_expected != sum(self.learner_coverage[n].eligible_trials_expected for n in PRIMARY_SUITE):
+        if (self.status == "evaluated") != (complete == len(primary)):
+            raise ValueError("utility status must require all complete primary models")
+        if self.primary_trial_predictions_expected != repeats * sum(self.learner_coverage[n].eligible_trials_expected for n in primary):
             raise ValueError("primary prediction denominator differs")
-        if self.primary_trial_predictions_available != sum(self.learner_coverage[n].trials_available for n in PRIMARY_SUITE):
+        if self.primary_trial_predictions_available != repeats * sum(self.learner_coverage[n].trials_available for n in primary):
             raise ValueError("primary prediction coverage differs")
         if self.status == "evaluated":
-            if complete != 3 or self.summary is None or self.receipt_artifact is None or self.reason or self.failure_reasons:
-                raise ValueError("complete utility requires all three primaries and verified receipt")
+            if complete != len(primary) or self.summary is None or self.receipt_artifact is None or self.reason or self.failure_reasons:
+                raise ValueError("complete utility requires all primaries and verified receipt")
         elif self.summary is not None or not self.reason or not self.failure_reasons:
             raise ValueError("incomplete utility has no aggregate utility statistic")
         if self.status == "failed" and self.failure_artifact is None:
             raise ValueError("failed utility requires a failure artifact")
+        return self
+
+
+class UtilitySummary(LegacyUtilitySummary):
+    """V2 counts one primary model and three independent prediction runs."""
+
+    primary_models_expected: Literal[1] = 1
+    seed_summary: SeedSummary | None = None
+
+    @model_validator(mode="after")
+    def seeded_primary(self):
+        if self.status == "evaluated":
+            if self.seed_summary is None or not math.isclose(
+                self.seed_summary.mean_ba, self.learner_scores["eegnet"],
+                rel_tol=0, abs_tol=1e-12,
+            ):
+                raise ValueError("complete EEGNet utility requires matching three-seed statistics")
+        elif self.seed_summary is not None:
+            raise ValueError("incomplete EEGNet utility cannot retain seed statistics")
         return self
 
 
@@ -188,17 +213,20 @@ class AssessmentSnapshot(StrictAssessment):
 
 
 class AssessmentSummary(StrictAssessment):
-    schema_version: Literal["assessment-v1"] = "assessment-v1"
+    schema_version: Literal["assessment-v1", "assessment-v2"] = "assessment-v1"
     candidate_id: str = Field(min_length=1)
     bindings: Bindings
     coverage: AssessmentCoverage
     status: Literal["complete", "partial", "failed"]
     selection_score: Score | None
     selection_ready: bool
-    selection_policy: Literal["utility_only_all_three_primary_models_all_frozen_subjects"] = "utility_only_all_three_primary_models_all_frozen_subjects"
+    selection_policy: Literal[
+        "utility_only_all_three_primary_models_all_frozen_subjects",
+        "utility_only_eegnet_three_seeds_all_frozen_subjects",
+    ] = "utility_only_all_three_primary_models_all_frozen_subjects"
     core_csp_macro_ba: Score | None
     core_status: str
-    utility: UtilitySummary
+    utility: UtilitySummary | LegacyUtilitySummary
     quality: AuxiliarySummary
     reconstruction: AuxiliarySummary
     artifact_manifest: ArtifactRef
@@ -206,15 +234,21 @@ class AssessmentSummary(StrictAssessment):
 
     @model_validator(mode="after")
     def score_and_manifest(self):
+        current = self.schema_version == "assessment-v2"
+        primary = PRIMARY_SUITE if current else LEGACY_PRIMARY_SUITE
+        policy = ("utility_only_eegnet_three_seeds_all_frozen_subjects" if current
+                  else "utility_only_all_three_primary_models_all_frozen_subjects")
+        if self.selection_policy != policy or self.utility.primary_models_expected != len(primary):
+            raise ValueError("assessment version, selection policy and utility suite differ")
         ready = self.utility.status == "evaluated"
         if self.selection_ready != ready or (self.selection_score is not None) != ready:
             raise ValueError("selection requires full utility, independent of auxiliary results")
         if ready:
-            expected = sum(self.utility.learner_scores[k] for k in PRIMARY_SUITE)/3
+            expected = sum(self.utility.learner_scores[k] for k in primary)/len(primary)
             if not math.isclose(self.selection_score, expected, rel_tol=0, abs_tol=1e-12) or not math.isclose(
                 self.selection_score, self.utility.summary.mean, rel_tol=0, abs_tol=1e-12
             ):
-                raise ValueError("selection_score must equal validated three-model utility")
+                raise ValueError("selection_score must equal validated versioned utility")
         states = (self.utility.status, self.quality.status, self.reconstruction.status)
         expected_status = "complete" if all(s == "evaluated" for s in states) else "failed" if all(s in {"failed", "not_applicable"} for s in states) else "partial"
         if self.status != expected_status:

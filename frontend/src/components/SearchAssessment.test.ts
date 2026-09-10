@@ -43,3 +43,77 @@ describe('multi-axis assessment', () => {
     expect(wrapper.find('a').attributes('href')).toContain('assessment/a2/reconstruction/')
   })
 })
+
+function v2Props() {
+  const result: any = props()
+  result.assessment.schema_version = 'assessment-v2'
+  result.assessment.selection_score = .7
+  result.assessment.utility = {
+    utility_version: 2, primary_suite: ['eegnet'], primary_models_available: 1, primary_models_expected: 1,
+    primary_trial_predictions_available: 14754, primary_trial_predictions_expected: 14754,
+    seed_summary: { seeds: [17, 42, 2026], mean_ba: .7, seed_sd: .08165, minimum_ba: .6, maximum_ba: .8 },
+    learner_statuses: { eegnet: 'evaluated', csp_lda: 'evaluated' }, learner_statistics: { eegnet: { ba: { mean: .7, lower_quartile: .65, subject_sd: .1 } } },
+    learner_coverage: {}, receipt_artifact: { path: 'utility/utility.json' },
+  }
+  return result
+}
+const nativeSeeds = { utility_version: 2, learners: { eegnet: { folds: [], seeds: Object.fromEntries([17, 42, 2026].map((seed, i) => [String(seed), {
+  seed, status: 'evaluated', summary: { ba: { mean: .6 + i / 10, lower_quartile: .55, subject_sd: .1 } },
+  subjects: { S1: { ba: .6, n_trials: 12 } }, folds: [{ model: { path: `seed-${seed}/model.pt` } }],
+  metadata: { path: `seed-${seed}/metadata.json` }, predictions: { path: `seed-${seed}/predictions.json` },
+}])) } } }
+
+describe('EEGNet v2 presentation', () => {
+  it('keeps historical v1 labels and never calls them EEGNet', () => {
+    const wrapper = mount(SearchAssessment, { props: props() })
+    expect(wrapper.text()).toContain('历史 v1')
+    expect(wrapper.text()).not.toContain('EEGNet')
+    expect(wrapper.findAll('tbody tr')).toHaveLength(6)
+  })
+  it('shows one model, three seeds and subject Q25; lazily reads seed metrics and provenance', async () => {
+    vi.mocked(apiRequest).mockReset().mockResolvedValue(nativeSeeds)
+    const wrapper = mount(SearchAssessment, { props: v2Props() })
+    expect(apiRequest).not.toHaveBeenCalled()
+    expect(wrapper.findAll('tbody tr')).toHaveLength(2)
+    expect(wrapper.text()).toContain('1 / 1')
+    expect(wrapper.text()).toContain('14754 / 14754')
+    expect(wrapper.text()).toContain('0.65')
+    expect(wrapper.text()).toContain('种子 SD 0.08165')
+    expect(wrapper.text()).not.toContain('FBCSP')
+    await wrapper.findAll('button').find(b => b.text().includes('读取逐种子'))!.trigger('click')
+    await flushPromises()
+    expect(apiRequest).toHaveBeenCalledWith('/api/searches/search/artifacts/candidates/method/assessment/a2/utility/utility.json?download=false')
+    for (const seed of [17, 42, 2026]) expect(wrapper.text()).toContain(`seed-${seed}/model.pt`)
+    expect(wrapper.text()).toContain('被试 Q25 0.55')
+    expect(wrapper.text()).toContain('被试均值 0.8')
+  })
+  it('does not replace an incomplete score with a benchmark or partial seed mean', () => {
+    const input = v2Props()
+    input.assessment.selection_score = null
+    input.assessment.utility.primary_models_available = 0
+    input.assessment.utility.primary_trial_predictions_available = 0
+    input.assessment.utility.seed_summary = null
+    const wrapper = mount(SearchAssessment, { props: input })
+    expect(wrapper.find('.summary strong').text()).toBe('—')
+    expect(wrapper.text()).toContain('0 / 14754')
+    expect(wrapper.text()).toContain('种子 BA 均值 —')
+  })
+  it('discards stale seed responses and allows retry after a failed read', async () => {
+    let resolve!: (value: any) => void
+    vi.mocked(apiRequest).mockReset().mockImplementationOnce(() => new Promise(done => { resolve = done }))
+    const wrapper = mount(SearchAssessment, { props: v2Props() })
+    const load = () => wrapper.findAll('button').find(b => b.text().includes('读取逐种子'))!.trigger('click')
+    await load()
+    await wrapper.setProps({ candidateId: 'other' })
+    resolve(nativeSeeds)
+    await flushPromises()
+    expect(wrapper.text()).not.toContain('seed-17/model.pt')
+    vi.mocked(apiRequest).mockRejectedValueOnce(new Error('read failed'))
+    await load(); await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toContain('read failed')
+    vi.mocked(apiRequest).mockResolvedValueOnce(nativeSeeds)
+    await load(); await flushPromises()
+    expect(wrapper.text()).toContain('seed-17/model.pt')
+    expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+  })
+})

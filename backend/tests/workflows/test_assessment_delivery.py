@@ -1,4 +1,4 @@
-"""Real compiled BIDS processing, three-model utility, assessment and ZIP export."""
+"""Real compiled BIDS processing, three-seed EEGNet utility, assessment and ZIP export."""
 
 from copy import deepcopy
 import hashlib
@@ -77,9 +77,10 @@ def real_delivery(tmp_path_factory):
     seeds = seed_entries(space)
     entry = edited_entry(seeds[2], [dict(action="set_parameter", node_id="bandpass", parameter="l_freq", value=9.0)],
                          space, title="Dynamic nine Hz recipe", order=len(seeds))
+    execution = {"eegnet_training": {"max_epochs": 2, "patience": 1, "batch_size": 8}}
     protocol = dict(version=3, space=space.model_dump(mode="json"), space_hash=digest(space.model_dump(mode="json")),
-                    assessment=dict(primary_suite=["csp_lda", "fbcsp", "ts_lr"], reconstruction_design="balanced"),
-                    utility_protocol=utility_protocol())
+                    assessment=dict(primary_suite=["eegnet"], reconstruction_design="balanced"),
+                    utility_execution=execution, utility_protocol=utility_protocol(execution=execution))
     write_json(store.root.parent / "protocol.json", protocol)
     write_json(store.root.parent / "registry.json", [*seeds, entry])
     write_json(store.root.parent / "panel.json", panel)
@@ -106,7 +107,8 @@ def real_delivery(tmp_path_factory):
     assert core["status"] == "evaluated", core
     write_json(candidate_root / "core-receipts/a1.json", core)
     write_json(candidate_root / "result.json", result.model_dump(mode="json"))
-    assessment = assess_candidate(plan, result, store.root, panel, entry, core, candidate_root / "assessment/a1", probe)
+    assessment = assess_candidate(plan, result, store.root, panel, entry, core, candidate_root / "assessment/a1", probe,
+                                  utility_execution=execution)
     assert assessment["utility"]["status"] == "evaluated", assessment["utility"]
     assert assessment["quality"]["status"] in {"evaluated", "partial"}, assessment["quality"]
     assert assessment["reconstruction"]["status"] in {"evaluated", "partial"}, assessment["reconstruction"]
@@ -137,7 +139,6 @@ def test_real_dynamic_recipe_selected_and_all_models_downloadable(real_delivery)
     c = real_delivery
     assert c.entry["id"].startswith("candidate-")
     assert c.selection["score"] == c.assessment["selection_score"]
-    assert c.selection["score"] != c.selection["selected_receipt"]["macro_ba"]
     with zipfile.ZipFile(c.folder.parent / "training-data.zip") as archive:
         manifest = json.loads(archive.read("manifest.json"))
         expected = {f["name"]: f for f in manifest["files"]}
@@ -160,36 +161,82 @@ def test_real_dynamic_recipe_selected_and_all_models_downloadable(real_delivery)
             name = "evaluation/assessment/a1/" + relative
             assert expected[name]["sha256"] == ref["sha256"]
             return name
-        for name in utility["primary_suite"]:
-            learner = utility["learners"][name]
-            assert learner["status"] == "evaluated"
+        assert utility["utility_version"] == 2
+        assert utility["primary_suite"] == ["eegnet"]
+        assert set(utility["learners"]) == {"eegnet", "csp_lda"}
+        eegnet = utility["learners"]["eegnet"]
+        assert eegnet["folds"] == []
+        assert set(eegnet["seeds"]) == {"17", "42", "2026"}
+        all_rows = json.loads(archive.read(member(eegnet["predictions"])))
+        assert len(all_rows) == 3 * 24
+        seed_scores = []
+        for seed in [17, 42, 2026]:
+            learner = eegnet["seeds"][str(seed)]
+            assert learner["status"] == "evaluated" and learner["seed"] == seed
             predictions = json.loads(archive.read(member(learner["predictions"])))
             assert len(predictions) == 24
+            assert [r for r in all_rows if r["seed"] == seed] == predictions
+            assert index["learners"]["eegnet"]["seeds"][str(seed)]["predictions"]["path"] == member(learner["predictions"])
+            replay_rows = []
             for fold in learner["folds"]:
                 model_member = member(fold["model"])
-                member(fold["metadata"])
+                assert model_member.endswith("/model.pt")
+                metadata = json.loads(archive.read(member(fold["metadata"])))
+                assert metadata["train_subjects"] == fold["train_subjects"]
+                assert metadata["development_subjects"] == fold["development_subjects"]
+                fit_subjects = set(metadata["fit_subjects"])
+                validation_subjects = set(metadata["validation_subjects"])
+                assert fit_subjects and validation_subjects
+                assert not fit_subjects & validation_subjects
+                assert fit_subjects | validation_subjects == set(fold["train_subjects"])
+                assert not (fit_subjects | validation_subjects) & set(fold["development_subjects"])
+                assert set(metadata["normalization_fit_subjects"]) == fit_subjects
                 rows = json.loads(archive.read(member(fold["predictions"])))
-                # Replay our freshly generated exported model with its actual
-                # evaluation array, not a substitute or mocked predictor.
-                model = joblib.load(c.folder / model_member)
+                from app.search.eegnet import predict_checkpoint
+
                 inputs = json.loads(archive.read(member(utility["inputs"])))
                 with outputs._mapped_npy(c.folder / member(inputs["arrays"]["representation"])) as array:
                     x = array[[r["array_index"] for r in rows]]
-                    if name == "csp_lda":
-                        replay = model["classifier"].predict(csp_features(np.array([covariance(v) for v in x]), model["filters"]))
-                    else:
-                        replay = model.predict(x)
-                assert list(replay) == [r["prediction"] for r in rows]
+                    probability = predict_checkpoint(c.folder / model_member, x)
+                assert probability.shape == (len(rows), 2)
+                np.testing.assert_allclose(probability, [[r["proba_left"], r["proba_right"]] for r in rows], rtol=1e-5, atol=1e-7)
+                predicted = np.asarray(["left_hand", "right_hand"])[probability.argmax(axis=1)]
+                assert list(predicted) == [r["prediction"] for r in rows]
+                replay_rows.extend(dict(r, prediction=str(p)) for r, p in zip(rows, predicted))
+            subject_ba = []
+            for subject in sorted({r["subject"] for r in replay_rows}):
+                recalls = []
+                for label in ("left_hand", "right_hand"):
+                    subset = [r for r in replay_rows if r["subject"] == subject and r["label"] == label]
+                    assert subset
+                    recalls.append(sum(r["prediction"] == label for r in subset) / len(subset))
+                subject_ba.append(sum(recalls) / 2)
+            seed_scores.append(sum(subject_ba) / len(subject_ba))
+        assert c.selection["score"] == pytest.approx(float(np.mean(seed_scores)))
+        assert index["seed_summary"]["mean_ba"] == pytest.approx(float(np.mean(seed_scores)))
+        assert index["seed_summary"]["seed_sd"] == pytest.approx(float(np.std(seed_scores)))
+        # CSP remains a separately replayable hard-prediction anchor.
+        csp = utility["learners"]["csp_lda"]
+        assert csp["seeds"] == {} and csp["seed_summary"] is None
+        for fold in csp["folds"]:
+            rows = json.loads(archive.read(member(fold["predictions"])))
+            model = joblib.load(c.folder / member(fold["model"]))
+            inputs = json.loads(archive.read(member(utility["inputs"])))
+            with outputs._mapped_npy(c.folder / member(inputs["arrays"]["representation"])) as array:
+                x = array[[r["array_index"] for r in rows]]
+                replay = model["classifier"].predict(csp_features(np.array([covariance(v) for v in x]), model["filters"]))
+            assert list(replay) == [r["prediction"] for r in rows]
         for name in ("core-receipts/a1.json", "candidate.json", "plan.json", "result.json", "registry.json", "search-protocol.json", "probe-panel.json"):
             assert "evaluation/" + name in expected
     assert c.source_hashes == {name: file_hash(c.base / "bids" / name) for name in c.source_hashes}
 
 
-def test_report_and_context_use_three_model_score(real_delivery):
+def test_report_and_context_use_three_seed_score(real_delivery):
     c = real_delivery
     message = reporting.evaluation_summary(EvaluationOutput.model_validate(c.selection))
     assert f"selection_score：{c.selection['score']:.4f}" in message
-    assert "FBCSP=" in message and "TS/LR=" in message and "核心 CSP 锚点" in message
+    assert "EEGNet" in message and "核心 CSP 锚点" in message
+    assert "FBCSP=" not in message and "TS/LR=" not in message
     assert "主评价器" not in message
     compact = evaluation_context(c.selection)
     assert compact["assessment"]["utility"]["learner_coverage"] == c.assessment["utility"]["learner_coverage"]
@@ -241,7 +288,7 @@ def test_rendered_html_labels_actual_utility_and_core_anchor(real_delivery, tmp_
     monkeypatch.setattr(reporting, "report_data", lambda _: data)
     reporting.render_report(tmp_path / "report")
     document = (tmp_path / "report/report.html").read_text(encoding="utf-8")
-    assert "三模型训练效用 selection_score" in document
+    assert "EEGNet" in document and "selection_score" in document
     assert f"{c.selection['score']:.4f}" in document
     assert "核心 CSP 锚点" in document and "主评价器" not in document
 
@@ -258,6 +305,49 @@ def test_actual_native_tampering_prevents_reexport(real_delivery, relative):
         assert file_hash(c.folder.parent / "training-data.zip") == archive_hash
     finally:
         path.write_bytes(before)
+
+
+@pytest.mark.parametrize("seed", ["17", "42", "2026"])
+@pytest.mark.parametrize("kind", ["model", "metadata", "predictions"])
+def test_each_seed_fold_artifact_is_required_for_reexport(real_delivery, seed, kind):
+    c = real_delivery
+    utility = json.loads((c.candidate_root / "assessment/a1/utility/utility.json").read_text(encoding="utf-8"))
+    ref = utility["learners"]["eegnet"]["seeds"][seed]["folds"][0][kind]
+    path = Path(ref["path"])
+    if not path.is_absolute():
+        path = c.candidate_root / "assessment/a1/utility" / path
+    before = path.read_bytes()
+    archive_hash = file_hash(c.folder.parent / "training-data.zip")
+    try:
+        path.write_bytes(b"corrupted seed artifact")
+        with pytest.raises((ValueError, OSError)):
+            outputs.deliver(c.state, c.folder, c.store)
+        assert file_hash(c.folder.parent / "training-data.zip") == archive_hash
+    finally:
+        path.write_bytes(before)
+
+
+@pytest.mark.parametrize("change", ["missing_seed", "wrong_seed", "ensemble_score", "missing_inventory", "wrong_hash", "escape"])
+def test_seed_export_index_rejects_unbound_or_partial_evidence(real_delivery, change):
+    c = real_delivery
+    root = c.candidate_root / "assessment/a1"
+    utility = json.loads((root / "utility/utility.json").read_text(encoding="utf-8"))
+    inventory = deepcopy(c.assessment["artifacts"])
+    eegnet = utility["learners"]["eegnet"]
+    if change == "missing_seed":
+        del eegnet["seeds"]["2026"]
+    elif change == "wrong_seed":
+        eegnet["seeds"]["17"]["seed"] = 42
+    elif change == "ensemble_score":
+        utility["selection_score"] = (utility["selection_score"] + .25) % 1
+    elif change == "missing_inventory":
+        inventory = []
+    elif change == "wrong_hash":
+        eegnet["seeds"]["17"]["folds"][0]["model"]["sha256"] = "0" * 64
+    else:
+        eegnet["seeds"]["17"]["folds"][0]["model"]["path"] = str(root.parent / "outside.pt")
+    with pytest.raises((ValueError, OSError)):
+        outputs._utility_export_index(root, utility, "evaluation/assessment/a1/", inventory)
 
 
 @pytest.mark.parametrize("target", ["bids", "search/engine", "search/candidates"])

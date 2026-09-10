@@ -9,13 +9,15 @@ import mne
 import numpy as np
 import pytest
 from pydantic import ValidationError
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 from app.preprocessing.storage import digest, file_hash, write_json
 from app.search import evaluation
 from app.search.evaluation_contracts import (
     EvaluationReceipt,
     GateMetricMetadata,
-    LearnerMetadata,
+    CoreLearnerMetadata,
 )
 from app.search.evaluation_numeric import (
     alignment,
@@ -30,14 +32,14 @@ from app.search.panel import freeze_panel
 from tests.search.test_evaluation import make_case, rehash
 
 
-def cv_case(tmp_path):
-    result, plan, root, _ = make_case(tmp_path)
+def cv_case(tmp_path, *, tmax=0.1):
+    result, plan, root, _ = make_case(tmp_path, tmax=tmax)
     panel = freeze_panel(
         plan.input_snapshot,
         {r.id: r.id for r in plan.input_snapshot.collection.records},
         seed=42,
         tmin=-0.1,
-        tmax=0.1,
+        tmax=tmax,
         sfreq=160,
     )
     rng = np.random.default_rng(872)
@@ -55,11 +57,17 @@ def cv_case(tmp_path):
     return result, plan, root, panel
 
 
-def test_real_csp_lda_oof_and_secondary_have_identical_complete_coverage(
+def test_real_csp_lda_oof_has_complete_coverage_without_secondary_fit(
     tmp_path, monkeypatch
 ):
     result, plan, root, panel = cv_case(tmp_path)
-    fits, lda_fits, scaler_fits, lr_fits = [], [], [], []
+    fits, lda_fits = [], []
+
+    def forbidden(*args, **kwargs):
+        pytest.fail("core must never fit a secondary learner or standardizer")
+
+    monkeypatch.setattr(LogisticRegression, "fit", forbidden)
+    monkeypatch.setattr(StandardScaler, "fit", forbidden)
     original_csp = evaluation.fit_csp
 
     def csp(covs, indices, train_labels):
@@ -70,8 +78,6 @@ def test_real_csp_lda_oof_and_secondary_have_identical_complete_coverage(
     monkeypatch.setattr(evaluation, "fit_csp", csp)
     for cls, records in [
         (evaluation.LinearDiscriminantAnalysis, lda_fits),
-        (evaluation.StandardScaler, scaler_fits),
-        (evaluation.LogisticRegression, lr_fits),
     ]:
         original = cls.fit
 
@@ -83,7 +89,11 @@ def test_real_csp_lda_oof_and_secondary_have_identical_complete_coverage(
     receipt = evaluation.evaluate(result, plan, root, panel, tmp_path / "evaluation")
     assert receipt["status"] == "evaluated", receipt
     assert receipt["macro_ba"] >= 0.95
-    assert receipt["secondary_macro_ba"] >= 0.95
+    assert panel["evaluator_version"] == 2
+    assert receipt["evaluator_version"] == 3
+    assert receipt["secondary_learner"] is receipt["secondary_macro_ba"] is None
+    assert receipt["secondary_subjects"] == {}
+    assert len(fits) == len(lda_fits) == len(panel["folds"])
     assert receipt["coverage"]["eligible"] == receipt["coverage"]["predicted"] == 24
     assert receipt["coverage"]["train"]["original"] == 0
     trials = [t for t in panel["trials"] if t["eligible"]]
@@ -91,8 +101,7 @@ def test_real_csp_lda_oof_and_secondary_have_identical_complete_coverage(
         assert {trials[i]["subject"] for i in indices} == set(fold["train_subjects"])
         assert labels.tolist() == [trials[i]["label"] for i in indices]
         assert lda_fits[k][0].shape == (len(indices), 2)  # CSP4 capped to two channels.
-        assert scaler_fits[k][0].shape == lr_fits[k][0].shape == (len(indices), 2)
-        assert lda_fits[k][1].tolist() == lr_fits[k][1].tolist() == labels.tolist()
+        assert lda_fits[k][1].tolist() == labels.tolist()
     with Path(receipt["predictions_path"]).open() as stream:
         rows = list(csv.DictReader(stream, delimiter="\t"))
     predicted = [r for r in rows if r["prediction"]]
@@ -101,7 +110,7 @@ def test_real_csp_lda_oof_and_secondary_have_identical_complete_coverage(
         fold = next(f for f in panel["folds"] if f["id"] == row["fold_id"])
         assert row["subject"] in fold["development_subjects"]
         assert row["primary_prediction"] == row["prediction"]
-        assert row["secondary_prediction"]
+        assert row["secondary_prediction"] == ""
     assert not (tmp_path / "evaluation" / "epoch-covariances.npy").exists()
 
 
@@ -444,7 +453,7 @@ def test_numeric_summary_and_learner_metadata_are_persisted_subject_means(tmp_pa
     learner = receipt["learner_metadata"]
     assert (
         learner
-        == LearnerMetadata(csp_components=2, logistic_random_state=42).model_dump()
+        == CoreLearnerMetadata(csp_components=2).model_dump()
     )
     assert learner["lda_covariance_estimator"] == "LedoitWolf_within_training_class"
     assert learner["lda_ridge"] == 1e-12

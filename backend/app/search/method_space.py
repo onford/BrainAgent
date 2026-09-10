@@ -66,8 +66,6 @@ def basic_space():
                 ),
             },
             "defaults": {"l_freq": 8.0, "h_freq": 30.0},
-            "separations": [{"upper_parameter": "h_freq", "lower_parameter": "l_freq", "minimum": 8.0,
-                             "rationale": "共同FBCSP评价至少需要两个完整4 Hz子带；这是评价器兼容条件。"}],
             "bindings": {"method": "iir", "phase": "zero", "picks": "$eeg_channels"},
         },
         op(

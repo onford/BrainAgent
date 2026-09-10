@@ -8,10 +8,17 @@ from urllib.parse import quote
 from .io import write
 from .catalog import BASELINE_ID, selection_score
 from app.preprocessing.storage import digest, file_hash, within
-from .utility_contracts import LEARNER_SUITE, PRIMARY_SUITE
 
 
-LEARNER_LABELS = dict(zip(LEARNER_SUITE, ("CSP/LDA", "FBCSP", "TS/LR", "FgMDM", "逐频带 EA-FBCSP", "对数方差 LR")))
+# Presentation labels must not depend on the current execution contract's order.
+LEGACY_SUITE = ("csp_lda", "fbcsp", "ts_lr", "fgmdm", "ea_fbcsp", "logvar_lr")
+LEARNER_LABELS = dict(zip(LEGACY_SUITE, ("CSP/LDA", "FBCSP", "TS/LR", "FgMDM", "逐频带 EA-FBCSP", "对数方差 LR")))
+LEARNER_LABELS["eegnet"] = "EEGNet"
+
+
+def _eegnet_v2(assessment):
+    return assessment.get("schema_version") == "assessment-v2" or assessment.get("utility", {}).get("utility_version") == 2
+
 UTILITY_METRICS = ("ba", "accuracy", "f1", "kappa", "auc", "brier", "logloss")
 RECON_UNITS = dict.fromkeys((
     "input_nrmse", "paired_nrmse", "paired_error_cleanproxy_ratio", "reconstruction_nrmse",
@@ -96,11 +103,32 @@ def _operator_usage_sections(root, state):
 def _utility_section(assessment, native=None):
     utility = assessment["utility"]
     value = assessment["selection_score"]
-    result = '<h3>训练效用：三主模型等权均值</h3>'
+    v2 = _eegnet_v2(assessment)
+    suite = ("eegnet", "csp_lda") if v2 else LEGACY_SUITE
+    primary = utility.get("primary_suite", ["eegnet"] if v2 else list(LEGACY_SUITE[:3]))
+    result = '<h3>训练效用：EEGNet 三种子被试宏平均 BA</h3>' if v2 else '<h3>训练效用：三主模型等权均值（历史 v1）</h3>'
     result += f'<p><strong>assessment.selection_score：{escape(_value(value))}（{score(value)}）</strong>；状态：{escape(utility["status"])}。</p>'
-    result += ("<p>先计算每个模型的开发被试平均平衡准确率，再对 CSP/LDA、FBCSP、TS/LR 等权平均。"
-               "三个模型须完整覆盖同一开发分母；缺失模型不产生选择分数。其余三个模型为独立对照。"
-               "核心 CSP macro_ba 仅保留为锚点；质量和重建不加入选择总分。</p>")
+    if v2:
+        result += ("<p>EEGNet 在种子 17、42、2026 下分别计算被试等权 BA，再对三个种子等权平均。"
+                   "全部三个种子完整覆盖冻结开发分母才产生选择分数；CSP/LDA 仅为基准对照。"
+                   "被试指标先对三个种子平均，n_trials 仍为 N；预测覆盖为 3×N。质量和重建不加入选择总分。</p>")
+        seeds = utility.get("seed_summary") or {}
+        result += _table(["种子", "BA 均值", "种子 SD", "最低 BA", "最高 BA"], [[
+            seeds.get("seeds"), seeds.get("mean_ba"), seeds.get("seed_sd"),
+            seeds.get("minimum_ba"), seeds.get("maximum_ba")]])
+        if native:
+            result += '<h4>逐种子指标与来源</h4>'
+            for seed, output in native.get("learners", {}).get("eegnet", {}).get("seeds", {}).items():
+                result += _table(["种子", "状态", "指标", "被试均值", "被试 Q25", "被试 SD"], [
+                    [seed, output.get("status"), metric, (dist or {}).get("mean"),
+                     (dist or {}).get("lower_quartile"), (dist or {}).get("subject_sd")]
+                    for metric, dist in output.get("summary", {}).items()])
+                result += '<details><summary>种子 ' + escape(seed) + ' · folds / metadata / predictions</summary><pre>'
+                result += escape(json.dumps({k: output.get(k) for k in ("seed", "status", "folds", "metadata", "predictions", "subjects")}, ensure_ascii=False, indent=2)) + '</pre></details>'
+    else:
+        result += ("<p>历史 v1：先计算每个模型的开发被试平均平衡准确率，再对 CSP/LDA、FBCSP、TS/LR 等权平均。"
+                   "三个模型须完整覆盖同一开发分母；缺失模型不产生选择分数。其余三个模型为独立对照。"
+                   "核心 CSP macro_ba 仅保留为锚点；质量和重建不加入选择总分。</p>")
     result += _table(["主模型完整数", "主模型预测覆盖", "分母范围", "效用均值", "被试效用 Q25", "被试效用 SD"], [[
         f"{utility['primary_models_available']}/{utility['primary_models_expected']}",
         f"{utility['primary_trial_predictions_available']}/{utility['primary_trial_predictions_expected']}",
@@ -110,20 +138,22 @@ def _utility_section(assessment, native=None):
     if native:
         result += _table(["模型", "实际输入表示", "状态", "原因"], [
             [LEARNER_LABELS[name], native["learners"][name]["input_representation"], native["learners"][name]["status"],
-             native["learners"][name].get("error")] for name in LEARNER_SUITE])
-        result += "<p>candidate_representation 指候选实际评分表示；pre_adaptation_phys_V 指适配前物理电压。逐频带 EA-FBCSP 为独立物理输入对照，不代表候选上游 EA 的效果。</p>"
+             native["learners"][name].get("error")] for name in suite])
+        result += "<p>candidate_representation 指候选实际评分表示；pre_adaptation_phys_V 指适配前物理电压。</p>"
+        if not v2:
+            result += "<p>逐频带 EA-FBCSP 为独立物理输入对照，不代表候选上游 EA 的效果。</p>"
     rows = []
-    for name in LEARNER_SUITE:
+    for name in suite:
         coverage = utility["learner_coverage"][name]
         for metric in UTILITY_METRICS:
             distribution = utility["learner_statistics"][name].get(metric)
             observed = distribution or {}
-            rows.append([LEARNER_LABELS[name], "主模型" if name in PRIMARY_SUITE else "独立对照", metric,
+            rows.append([LEARNER_LABELS[name], "主模型" if name in primary else "独立对照", metric,
                 observed.get("mean"), observed.get("lower_quartile"), observed.get("subject_sd"),
                 f"{observed.get('n_subjects', 0)}/{coverage['subjects_expected']}",
                 f"{coverage['trials_available']}/{coverage['eligible_trials_expected']}",
                 utility["learner_statuses"][name] if distribution else "N/A：未提供该指标；模型状态=" + utility["learner_statuses"][name]])
-    result += '<h4>六模型各指标分布</h4><p>数值均为无量纲原值。BA、accuracy、F1、AUC、Brier 为 0–1；κ 可为负值；logloss 无上界。Q25 是被试指标的第 25 百分位，SD 为被试总体标准差，不是置信区间。概率指标缺失时保持 N/A，不由硬预测补算。指标被试数与模型 trial 覆盖分开显示。</p>'
+    result += ('<h4>EEGNet 与 CSP/LDA 各指标分布</h4>' if v2 else '<h4>六模型各指标分布（历史 v1）</h4>') + '<p>数值均为无量纲原值。BA、accuracy、F1、AUC、Brier 为 0–1；κ 可为负值；logloss 无上界。Q25 是被试指标的第 25 百分位，SD 为被试总体标准差，不是置信区间。概率指标缺失时保持 N/A，不由硬预测补算。指标被试数与模型 trial 覆盖分开显示。</p>'
     result += _table(["模型", "用途", "指标", "均值", "Q25", "SD", "指标被试覆盖", "模型 trial 覆盖", "状态"], rows)
     return result + _notes([utility.get("reason"), *utility["failure_reasons"], *utility["warnings"]])
 
@@ -181,7 +211,7 @@ def _assessment_sections(root, state):
         assessment = receipt.get("assessment")
         if assessment is None:
             if state["protocol"].get("assessment"):
-                sections.append(f'<details><summary>{escape(candidate["title"])}：assessment 未完成</summary><p>{escape(candidate.get("error") or receipt.get("error") or "未取得完整多维回执；不显示三模型选择分数。")}</p></details>')
+                sections.append(f'<details><summary>{escape(candidate["title"])}：assessment 未完成</summary><p>{escape(candidate.get("error") or receipt.get("error") or "未取得完整多维回执；不显示选择分数。")}</p></details>')
             continue
         if candidate["status"] != "evaluated":
             sections.append(f'<details><summary>{escape(candidate["title"])}：{escape(candidate["status"])}</summary><p>当前候选不作为可选择结果；原始文件保留于运行索引。</p></details>')
@@ -226,6 +256,11 @@ def delta(value):
 def render(root: Path, state):
     root = Path(root).resolve()
     modern = bool(state["protocol"].get("assessment"))
+    protocol_assessment = state["protocol"].get("assessment")
+    v2 = (protocol_assessment == "assessment-v2"
+          or (isinstance(protocol_assessment, dict) and protocol_assessment.get("version") == 2)
+          or state["protocol"].get("utility_version") == 2
+          or any(_eegnet_v2((c.get("receipt") or {}).get("assessment") or {}) for c in state["candidates"]))
 
     def measured_score(receipt):
         if modern and (receipt or {}).get("assessment") is None:
@@ -288,7 +323,7 @@ def render(root: Path, state):
         "assessment": (selected.get("receipt") or {}).get("assessment") if selected else None,
         "assessment_path": (selected.get("receipt") or {}).get("assessment_path") if selected else None,
         "evaluation_mode": (state.get("panel") or {}).get("evaluation_mode"),
-        "primary_learner": "equal CSP-LDA / FBCSP / TS-LR" if state["protocol"].get("assessment") else "CSP + shrinkage LDA",
+        "primary_learner": "EEGNet: mean subject-macro BA across seeds 17, 42, 2026" if v2 else "equal CSP-LDA / FBCSP / TS-LR" if modern else "CSP + shrinkage LDA",
         "representation": (selected.get("receipt") or {}).get("representation")
         if selected
         else None,
@@ -409,8 +444,13 @@ def render(root: Path, state):
         if panel.get("evaluation_mode") == "group_cross_validation"
         else "指定训练与开发被试"
     )
-    metric_note = ('训练、特征选择和内层参数选择仅使用每折训练组。当前协议的训练效用由 CSP-LDA、FBCSP、TS-LR 三个被试宏平均 BA 等权组成，缺少任一主模型则没有选择分数；FgMDM、逐频带 EA-FBCSP 和对数方差逻辑回归作为独立对照。CSP 明细保留为固定锚点。' if state["protocol"].get("assessment") else "保存协议的主指标为 CSP-LDA 的被试宏平均 BA，对数方差逻辑回归为次要对照。")
-    comparison_metric = "三模型训练效用主指标" if modern else "CSP-LDA 主指标 BA"
+    if v2:
+        metric_note = "EEGNet 为唯一主模型：种子 17、42、2026 的被试宏平均 BA 等权平均；三个种子全部完成才有选择分数。CSP-LDA 仅为基准对照。训练与早停仅使用外折训练被试。质量 25 项、重建 14 项独立展示。"
+    elif modern:
+        metric_note = "历史 v1：训练、特征选择和内层参数选择仅使用每折训练组。训练效用由 CSP-LDA、FBCSP、TS-LR 三个被试宏平均 BA 等权组成，缺少任一主模型则没有选择分数；FgMDM、逐频带 EA-FBCSP 和对数方差逻辑回归作为独立对照。CSP 明细保留为固定锚点。"
+    else:
+        metric_note = "保存协议的主指标为 CSP-LDA 的被试宏平均 BA，对数方差逻辑回归为次要对照。"
+    comparison_metric = "EEGNet 三种子训练效用主指标" if v2 else "三模型训练效用主指标" if modern else "CSP-LDA 主指标 BA"
     comparison_anchor = "CSP 锚点 BA" if modern else "对数方差 LR 次要 BA"
     subject_heading = "核心 CSP 锚点的开发被试明细" if modern else "暂选候选的 CSP-LDA 开发被试明细"
     multidimensional = ('<h2>多维评价与原生产物</h2>' + assessment_html if modern or assessment_html else

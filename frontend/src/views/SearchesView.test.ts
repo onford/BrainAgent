@@ -75,6 +75,8 @@ describe('SearchesView', () => {
     expect((wrapper.get('input[value="adaptive"]').element as HTMLInputElement).checked).toBe(true)
     expect(wrapper.get('fieldset').text()).toContain('一次性提案对照')
     expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('最多 5 折')
+    expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('EEGNet 固定种子 17、42、2026')
+    expect(wrapper.get('[aria-label="默认评估方式"]').text()).not.toContain('FBCSP')
     expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('全部被试各作为开发被试一次')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
@@ -966,4 +968,14 @@ describe('search entry and artifact links', () => {
     expect(searchArtifactUrl('id/1', { name: '子目录/文件.json' })).toContain(`/api/searches/id%2F1/artifacts/${encodeURIComponent('子目录')}/${encodeURIComponent('文件.json')}?download=true`)
     expect(searchArtifactUrl('id/1', { name: 'bad.html', url: 'javascript:alert(1)' })).toBe('')
   })
+  it.each([
+    [{ version: '3', assessment: { version: 2 } }, 'EEGNet 三种子训练效用', '历史 v1'],
+    [{ version: '3', assessment: { version: 1 } }, '历史 v1 三模型训练效用', 'EEGNet'],
+  ])('labels saved utility protocols before candidate assessments arrive', async (protocol, expected, excluded) => {
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ protocol: protocol as any, candidates: [] }))
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.text()).toContain(expected)
+    expect(wrapper.text()).not.toContain(excluded)
+  })
+
 })

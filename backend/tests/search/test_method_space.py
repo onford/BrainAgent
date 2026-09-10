@@ -142,13 +142,22 @@ def test_selection_uses_complete_fixed_utility_not_the_best_single_model():
     assert select(candidates[-1:]) is None
 
 
-def test_filter_domain_rejects_band_too_narrow_for_frozen_utility_suite():
+def test_filter_domain_accepts_valid_band_narrower_than_old_fbcsp_limit():
     space = basic_space()
-    with pytest.raises(ValueError, match="FBCSP"):
+    entry = edited_entry(seed_entries(space)[0], [
+        {"action": "set_parameter", "node_id": "bandpass", "parameter": "l_freq", "value": 15.0},
+        {"action": "set_parameter", "node_id": "bandpass", "parameter": "h_freq", "value": 20.0},
+    ], space, title="valid narrow band", order=3)
+    band = next(n for n in entry["recipe"]["nodes"] if n["operator"] == "bandpass")
+    assert band["parameters"] == {"l_freq": 15.0, "h_freq": 20.0}
+
+
+def test_filter_domain_still_rejects_invalid_band():
+    space = basic_space()
+    with pytest.raises(ValueError):
         edited_entry(seed_entries(space)[0], [
-            {"action": "set_parameter", "node_id": "bandpass", "parameter": "l_freq", "value": 15.0},
-            {"action": "set_parameter", "node_id": "bandpass", "parameter": "h_freq", "value": 20.0},
-        ], space, title="too narrow", order=3)
+            {"action": "set_parameter", "node_id": "bandpass", "parameter": "h_freq", "value": 10.0},
+        ], space, title="invalid band", order=3)
 
 
 def test_selection_tie_counts_adaptation_as_an_operator():

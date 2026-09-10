@@ -21,12 +21,13 @@ from app.preprocessing.resources import available_memory
 from app.preprocessing.storage import file_hash, write_json
 
 GIB = 1024**3
-MODEL_ORDER = ("ea_fbcsp", "ts_lr", "fbcsp", "fgmdm", "csp_lda", "logvar_lr")
+MODEL_ORDER = ("eegnet", "csp_lda")
 
 
 class UtilityExecution(BaseModel):
     """Explicit, machine-independent values frozen at service creation."""
     model_config = ConfigDict(extra="forbid", strict=True, allow_inf_nan=False)
+    eegnet_training: dict = Field(default_factory=dict)
     strategy: Literal["model_processes"] = "model_processes"
     start_method: Literal["spawn"] = "spawn"
     max_workers: int = Field(default=1, ge=1, le=4)
@@ -40,6 +41,8 @@ class UtilityExecution(BaseModel):
 
     @model_validator(mode="after")
     def enough_for_one(self):
+        from .eegnet import protocol
+        self.eegnet_training = protocol(self.eegnet_training)["training"]
         if self.memory_budget_bytes < self.reserve_bytes + self.model_memory_bytes:
             raise ValueError("frozen memory budget must cover reserve plus one model")
         return self
@@ -61,7 +64,7 @@ class UtilityExecutionError(RuntimeError):
 def worker_capacity(execution, available_bytes):
     config = utility_execution(execution)
     usable = min(config["memory_budget_bytes"], available_bytes) - config["reserve_bytes"]
-    return max(0, min(config["max_workers"], usable // config["model_memory_bytes"]))
+    return max(0, min(len(MODEL_ORDER), config["max_workers"], usable // config["model_memory_bytes"]))
 
 
 def check_assembly_resources(execution):
@@ -101,10 +104,13 @@ def _worker(name, payload, execution):
             from threadpoolctl import threadpool_info, threadpool_limits
             from .utility_evaluation import _run_learner
             mne.set_log_level("WARNING")
+            if name == "eegnet":
+                import torch
+                torch.set_num_threads(1)
             with threadpool_limits(limits=1):
                 outcome = _run_learner(name, payload["trials"], {k: Path(v) for k, v in payload["paths"].items()},
-                    payload["panel"], payload["core"], payload["core_rows"], tuple(payload["band"]),
-                    Path(payload["output"]), model_memory_bytes=execution["model_memory_bytes"])
+                    payload["panel"], payload["core"], payload["core_rows"], payload["band"],
+                    Path(payload["output"]), model_memory_bytes=execution["model_memory_bytes"], training_config=execution["eegnet_training"])
                 thread_pools = [{key: pool.get(key) for key in ("internal_api", "num_threads", "prefix", "version")}
                                 for pool in threadpool_info()]
             execution_record = {"pid": os.getpid(), "parent_pid": os.getppid(), "start_method": "spawn", "blas_threads": 1,
