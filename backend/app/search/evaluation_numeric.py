@@ -12,7 +12,7 @@ import numpy as np
 from scipy.linalg import eigh
 from sklearn.covariance import LedoitWolf
 
-from app.preprocessing.storage import digest, file_hash
+from app.preprocessing.storage import file_hash
 
 REGULARIZATION = 0.1
 VARIANCE_FLOOR = 1e-20
@@ -99,7 +99,11 @@ def prepare_representation(sources, panel, output, policy, mapped):
         records={},
     )
     diagnostics, derived = {}, {}
-    for subject in sorted({r["subject"] for r in panel["records"].values()}):
+    # Full IDs remain in the receipt; sorted panel-local ordinals avoid both
+    # hash-prefix collisions and oversized Windows paths under candidate dirs.
+    record_indices = {rid: i for i, rid in enumerate(sorted(panel["records"]))}
+    subjects = sorted({r["subject"] for r in panel["records"].values()})
+    for subject_index, subject in enumerate(subjects):
         selected = [s for s in sources if panel["records"][s[3]]["subject"] == subject]
         channels = len(rep["channels"])
         pooled, flat, count = np.zeros((channels, channels)), np.zeros(channels), 0
@@ -147,7 +151,7 @@ def prepare_representation(sources, panel, output, policy, mapped):
             transform_sha256=None,
         )
         if policy["adaptation"] != "none":
-            transform_path = directory / f"subject-{digest(subject)}-transform.npy"
+            transform_path = directory / f"s{subject_index}.npy"
             np.save(transform_path, transform, allow_pickle=False)
             info.update(
                 transform_path=str(transform_path.resolve()),
@@ -158,7 +162,7 @@ def prepare_representation(sources, panel, output, policy, mapped):
             target = path
             # Conditional declines retain spatial structure with scalar normalization.
             if policy["adaptation"] != "none":
-                target = directory / f"record-{digest(rid)}-signal.npy"
+                target = directory / f"r{record_indices[rid]}.npy"
                 destination = np.lib.format.open_memmap(
                     target, mode="w+", dtype="float64", shape=tuple(shape)
                 )

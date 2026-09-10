@@ -295,7 +295,10 @@ def test_real_compiler_cleaning_expansion_and_filter_history():
     space = build_space(context)
     panel = {"output_contract": dict(sfreq=160.0, tmin=0.0, tmax=2.0)}
     entries = [e for e in seed_entries(space, context) if "repair" in e["id"]]
-    assert len(entries) == 2
+    assert {e["id"] for e in entries} == {
+        "literature-channel-repair", "literature-asr-repair",
+        "literature-conditional-asr-repair",
+    }
     for entry in entries:
         method = compile_recipe(entry, space, panel, context)
         config = RecordPlan(method_ref=Ref(id="a"*64, sha256="a"*64), record_id="fixture",
@@ -305,6 +308,14 @@ def test_real_compiler_cleaning_expansion_and_filter_history():
         chain = _data_chain(config)
         assert "detect_bad_channels" not in {s.op for s in chain}
         assert "mark_channels" in {s.op for s in chain}
+        asr = [s for s in chain if s.op == "asr_clean"]
+        if "asr" in entry["id"]:
+            assert len(asr) == 1
+            assert asr[0].params["on_insufficient_calibration"] == (
+                "identity" if "conditional" in entry["id"] else "error"
+            )
+        else:
+            assert not asr
         history = _history(SimpleNamespace(info=dict(highpass=0.0, lowpass=80.0)),
                            dict(SoftwareFilters={}, HardwareFilters={}), config, entry)
         assert len(history["operations"]) == len(config.steps)
