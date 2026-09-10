@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import stat
 from uuid import uuid4
 
 from app.file_publish import replace_file
@@ -26,4 +27,30 @@ def write(path, value):
 
 
 def directory_bytes(root):
-    return sum(p.stat().st_size for p in Path(root).rglob("*") if p.is_file())
+    """Sample a live tree without treating atomic publication as a failure.
+
+    Entries may disappear after enumeration. Other I/O errors still propagate;
+    inaccessible storage must not be reported as unused capacity. Do not follow
+    directory links outside the owned tree. This is a resource sample, not an
+    artifact integrity check.
+    """
+    root = Path(root)
+    pending = [root]
+    total = 0
+    while pending:
+        directory = pending.pop()
+        try:
+            with os.scandir(directory) as entries:
+                for entry in entries:
+                    try:
+                        info = entry.stat(follow_symlinks=False)
+                    except FileNotFoundError:
+                        continue
+                    if stat.S_ISDIR(info.st_mode):
+                        pending.append(Path(entry.path))
+                    elif stat.S_ISREG(info.st_mode):
+                        total += info.st_size
+        except FileNotFoundError:
+            if directory == root:
+                raise
+    return total

@@ -41,6 +41,7 @@ from .catalog import (
     search_engine_hash,
 )
 from .evaluation_contracts import EvaluationReceipt
+from .io import directory_bytes
 from .panel import DataUnevaluable, freeze_panel, validate_panel
 
 OWNER = "offline-search"
@@ -208,7 +209,7 @@ def _limits(root: Path, limits: dict) -> tuple[int, int]:
     memory, disk = limits["memory_limit_bytes"], limits["disk_limit_bytes"]
     if any(type(v) is not int or v < 0 for v in (memory, disk)):
         raise ValueError("frozen resource limits must be nonnegative integer bytes")
-    used = sum(p.stat().st_size for p in root.rglob("*") if p.is_file())
+    used = directory_bytes(root)
     remaining = disk - used
     require_capacity("disk", 64 * MIB, remaining)
     require_capacity("memory", 64 * MIB, memory)
