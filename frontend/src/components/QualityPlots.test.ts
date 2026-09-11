@@ -6,6 +6,16 @@ import { apiRequest } from '../api/client'
 vi.mock('../api/client', () => ({ apiRequest: vi.fn(), apiUrl: (s: string) => s }))
 const props = { searchId: 'run', candidateId: 'one', basePath: 'assessment/a1', receiptPath: 'quality/data-quality.json' }
 describe('quality drilldown', () => {
+  it('keeps the chart stage synchronized with the assessment table', async () => {
+    vi.mocked(apiRequest).mockReset().mockResolvedValue({ stages: {} })
+    const wrapper = mount(QualityPlots, { props: { ...props, stage: 'source_task' } })
+    await flushPromises()
+    expect((wrapper.find('select').element as HTMLSelectElement).value).toBe('source_task')
+    await wrapper.find('select').setValue('processed_task')
+    expect(wrapper.emitted('update:stage')?.[0]).toEqual(['processed_task'])
+    await wrapper.setProps({ stage: 'source_raw' })
+    expect((wrapper.find('select').element as HTMLSelectElement).value).toBe('source_raw')
+  })
   it('ignores a late response from a previous candidate', async () => {
     let first!: (v: any) => void
     vi.mocked(apiRequest).mockReset().mockImplementationOnce(() => new Promise(resolve => { first = resolve })).mockResolvedValueOnce({ stages: { processed_task: { psd: { metricID: 'psd', value: [100], axes: { frequencies_hz: [10] }, unit: 'µV²/Hz', status: 'ok' } } } })

@@ -1,0 +1,91 @@
+/* Shared reading and chart surfaces within the search workspace. */
+.search-page {
+  --reading-ink: #253e43;
+  --reading-muted: #586f75;
+  --reading-accent: #176e65;
+  --reading-line: #dce5e7;
+  --reading-surface: #f5f8f9;
+}
+
+.search-page :is(button, a, summary, input, select):focus-visible {
+  outline: 2px solid #268f85;
+  outline-offset: 3px;
+}
+
+.search-page .section-heading label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--reading-muted);
+  font-size: 12px;
+}
+.search-page .section-heading select {
+  max-width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #cbd9dd;
+  border-radius: 7px;
+  background: #fff;
+  color: var(--reading-ink);
+  font: inherit;
+}
+
+.search-page .eeg-figure {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid var(--reading-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--reading-ink);
+}
+
+.search-page .eeg-figure .heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.search-page .eeg-figure .heading strong { font-size: 15px; font-weight: 600; }
+.search-page .eeg-figure .heading > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.search-page .eeg-figure button {
+  padding: 6px 10px;
+  border: 1px solid var(--reading-line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--reading-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.search-page .eeg-figure button:hover:not(:disabled) {
+  background: #edf5f4;
+  border-color: #a2c4bf;
+  color: var(--reading-accent);
+}
+.search-page .eeg-figure button:disabled { opacity: .45; cursor: default; }
+.search-page .eeg-figure figcaption {
+  padding-top: 12px;
+  margin-top: 14px;
+  border-top: 1px solid #edf1f2;
+  color: var(--reading-muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.search-page .eeg-figure svg { stroke: none; }
+.search-page .eeg-figure summary {
+  margin-top: 12px;
+  color: var(--reading-accent);
+  cursor: pointer;
+  font-size: 12px;
+}
+.search-page .eeg-figure .table-scroll { max-height: 260px; overflow: auto; }
+.search-page .eeg-figure table { min-width: 440px; width: 100%; font-size: 12px; border-collapse: collapse; }
+.search-page .eeg-figure :is(td, th) { text-align: left; padding: 9px 12px; border-bottom: 1px solid #edf1f2; }
+
+@media (max-width: 640px) {
+  .search-page .eeg-figure { padding: 12px; }
+}

@@ -22,7 +22,7 @@ it('uses the saved guide for frozen runs and labels current guidance on history'
 it('shows recorded seeds and domain provenance without inventing missing values', () => {
   const wrapper = mount(SearchParameters, { props: { protocol: { utility_protocol: { seeds: [17,42,2026] }, space: { operators: [{ id: 'filter', domains: { cutoff: { kind: 'number', minimum: 1, maximum: 40, unit: 'Hz', origin: 'engineering', rationale: 'bounded test domain' } } }] } }, recipe: { nodes: [{ id: 'node', operator: 'filter', parameters: { cutoff: 8 } }] } } })
   expect(wrapper.text()).toContain('[17,42,2026]')
-  expect(wrapper.text()).toContain('engineering · bounded test domain')
+  expect(wrapper.text()).toContain('工程约定 · bounded test domain')
   expect(wrapper.text()).toContain('未记录')
 })
 

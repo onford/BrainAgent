@@ -29,11 +29,11 @@ function color(v: unknown) {
 const fmt = (v: unknown) => finite(v) ? Number(v.toPrecision(4)).toString() : '缺失'
 </script>
 <template>
-  <figure v-if="numbers.length" class="heatmap">
-    <div class="heading"><strong>{{ title }}</strong><button @click="exportSvg(svg, title + '-page-' + (currentPage+1) + '-columns-' + (currentColumnPage+1))">导出当前页 SVG</button><button @click="downloadData(title + '.json', { rows, columns, values, unit, caption, provenance })">全部图数据 JSON</button></div>
+  <figure v-if="numbers.length" class="heatmap eeg-figure">
+    <div class="heading"><strong>{{ title }}</strong><button @click="exportSvg(svg, title + '-page-' + (currentPage+1) + '-columns-' + (currentColumnPage+1))">下载本页 SVG</button><button @click="downloadData(title + '.json', { rows, columns, values, unit, caption, provenance })">下载全部数据 JSON</button></div>
     <p v-if="pages > 1"><button :disabled="currentPage === 0" @click="page = currentPage-1">上一页</button> {{ currentPage+1 }} / {{ pages }} · 全部 {{ rows.length }} 行 <button :disabled="currentPage+1 === pages" @click="page = currentPage+1">下一页</button></p>
     <p v-if="columnPages > 1"><button :disabled="currentColumnPage === 0" @click="columnPage = currentColumnPage-1">上一组列</button> {{ currentColumnPage+1 }} / {{ columnPages }} · 全部 {{ columns.length }} 列 <button :disabled="currentColumnPage+1 === columnPages" @click="columnPage = currentColumnPage+1">下一组列</button></p>
-    <div class="scroll"><svg ref="svg" :viewBox="`0 0 ${width} ${height}`" :width="width" :height="height" role="img" :aria-label="title" style="font:11px system-ui,sans-serif;background:white">
+    <div class="scroll"><svg ref="svg" :viewBox="`0 0 ${width} ${height}`" :width="width" :height="height" role="img" :aria-label="title" style="font:11px system-ui,sans-serif;background:white;stroke:none">
       <title>{{ title }}</title><desc>{{ caption }}</desc>
       <text x="12" y="20" fill="#344c40">{{ unit }} · 全部页共同色限 {{ fmt(limits[0]) }} ～ {{ fmt(limits[1]) }} · 灰色 = 缺失</text>
       <g v-for="(row, r) in visible" :key="row.i"><text x="116" :y="51+r*23" text-anchor="end" fill="#344c40">{{ row.label.length > 19 ? row.label.slice(0,18)+'…' : row.label }}<title>{{ row.label }}</title></text><rect v-for="(col, c) in visibleColumns" :key="c" :x="125+c*cell" :y="36+r*23" :width="cell-1" height="22" :fill="color(values[row.i]?.[col.i])"><title>{{ row.label }} · {{ col.label }} · {{ fmt(values[row.i]?.[col.i]) }} {{ unit }}</title></rect></g>
@@ -44,5 +44,6 @@ const fmt = (v: unknown) => finite(v) ? Number(v.toPrecision(4)).toString() : '�
   <p v-else class="empty">{{ title }}：没有可绘制的有限值。</p>
 </template>
 <style scoped>
-.heatmap{margin:18px 0;padding:16px;background:#fff;border:1px solid #dce7e0;border-radius:12px}.heading{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.heading strong{margin-right:auto;font-size:14px}button{font:inherit;font-size:12px;border:1px solid #d5e3da;background:#f6faf7;color:#365d46;border-radius:6px;padding:5px 8px;cursor:pointer}.scroll{overflow:auto;margin-top:12px}figcaption,.empty,p{font-size:12px;color:#64756b;line-height:1.8}
+.scroll { overflow: auto; margin-top: 12px; }
+.empty, p { color: #586f75; font-size: 12px; line-height: 1.8; }
 </style>

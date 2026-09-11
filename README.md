@@ -1,5 +1,7 @@
 # Brain Agent
 
+[文档导航](docs/README.md) · [评价与验收](docs/offline-search-acceptance.md) · [图表阅读指南](docs/visualization-and-interpretation.md)
+
 EEGMMIDB 工作流将本地调研、资料核对、标准化接入、诊断驱动的预处理策略搜索、报告与训练交付连接起来。LLM 根据实测诊断提出共享策略及实验预测；数值工具按被试隔离计算开发效用，选择规则确定胜者。页面入口为 `/workflows`，见[运行说明](docs/training-workflow.md)。
 
 [预处理策略搜索](docs/offline-preprocessing-search.md)支持公共处理、逐被试统一尺度、无标签 EA 与条件 EA；默认全部任务被试参加分组交叉验证。主评价器为 EEGNet（种子 17、42、2026 的被试宏平均 BA 等权均值），CSP＋收缩 LDA 仅为经典对照，适配数组及变换记录随选中策略交付。搜索页支持自适应、一次性提案、随机顺序与枚举对照。

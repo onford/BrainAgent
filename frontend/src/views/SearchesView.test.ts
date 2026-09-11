@@ -306,7 +306,7 @@ describe('SearchesView', () => {
     expect(wrapper.text()).not.toContain('过期记录')
     await router.push('/searches?workflow=source-2'); await flushPromises()
     expect((wrapper.get('input[aria-label="来源流程 ID"]').element as HTMLInputElement).value).toBe('source-2')
-    expect(wrapper.find('section[aria-label="进度与预算"]').exists()).toBe(false)
+    expect(wrapper.find('[aria-label="进度与预算"]').exists()).toBe(false)
   })
 
   it('does not let an in-flight poll undo cancellation', async () => {
@@ -901,7 +901,7 @@ describe('SearchesView', () => {
       usage: { elapsed_seconds: 12.5 }, actions: [{ index: 0, action: 'initial_schedule', status: planning ? 'running' : 'completed' }],
     }))
     const { wrapper } = await open('/searches?id=search-1')
-    const phase = () => wrapper.get('section[aria-label="进度与预算"] [role="status"]').text()
+    const phase = () => wrapper.get('[aria-label="进度与预算"] [role="status"]').text()
     expect(phase()).toContain('制定初始计划')
     expect(phase()).not.toContain('冻结开发面板')
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()

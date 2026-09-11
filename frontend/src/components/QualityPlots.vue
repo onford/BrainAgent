@@ -8,7 +8,9 @@ import AssessmentHeatmap from './AssessmentHeatmap.vue'
 
 const props = defineProps<{ searchId: string; candidateId: string; basePath: string; receiptPath: string }>()
 const receipt = ref<any>(null), detail = ref<any>(null), error = ref(''), loading = ref(false)
-const stage = ref('processed_task'), metric = ref('psd'), recordId = ref(''), channel = ref(0)
+const stage = defineModel<string>('stage', { default: 'processed_task' })
+const metric = ref('psd'), recordId = ref(''), channel = ref(0)
+const statuses: Record<string, string> = { ok: '已计算', partial: '部分可用', not_applicable: '不适用', not_computable: '无法计算', failed: '计算失败' }
 const stages: Record<string, string> = { processed_task: '处理后任务', source_task: '源任务', source_raw: '源连续记录', processed_continuous: '处理后连续记录', source_precue: '源基线', processed_precue: '同处理基线' }
 const names: Record<string, string> = { psd: '功率谱 PSD', psd_window_quantiles: '窗级 PSD Q10/Q50/Q90', oha: 'OHA 超幅曲线', thv: 'THV 跨通道波动', chv: 'CHV 通道时间波动', peak_to_peak: '峰峰值', robust_dispersion: '稳健离散度', channel_correlation: '通道相关性', low_correlation_fraction: '低相关比例', flat_fraction: '平坦比例', numerical_rank: '数值秩', participation_rank: '参与率秩', covariance_condition: '协方差条件数', covariance_trace: '总方差', mu_mean_psd: 'μ 频带 PSD', beta_mean_psd: 'β 频带 PSD', emg_hf_proxy: '高频代理', line_ratio_50hz: '50 Hz 比值', line_ratio_60hz: '60 Hz 比值', drift_slope: '漂移斜率', drift_power_ratio: '低频比', electrical_distance: '电气距离', reference_nrmse: '相对参考改变', erds_mu: 'μ ERDS', erds_beta: 'β ERDS' }
 let serial = 0
@@ -45,7 +47,7 @@ const overview = computed(() => {
   return o && p.channels[channel.value] ? [curve('窗口最小值', o.start_seconds, o.minimum_uv[channel.value]), curve('窗口最大值', o.start_seconds, o.maximum_uv[channel.value])] : []
 })
 const provenance = computed(() => ({ search_id: props.searchId, candidate_id: props.candidateId, assessment_path: props.basePath, record_id: recordId.value || null, stage: stage.value, metric: metric.value, artifact: recordId.value ? receipt.value?.detail_artifacts?.find((a: any) => a.record_id === recordId.value) : props.receiptPath }))
-const caption = computed(() => `${stages[stage.value]} · ${recordId.value ? '记录 '+recordId.value : '先记录均值，再被试等权'} · 原生视图；未经共同参考/带宽校验，不直接比较阶段差值。`)
+const caption = computed(() => `${stages[stage.value]} · ${recordId.value ? '记录 '+recordId.value : '先记录均值，再被试等权'}。阶段间比较需具有相同参考和有效通带。`)
 const heatmap = computed(() => {
   const m = row.value, r = report.value
   if (!recordId.value || !m || !r) return null
@@ -80,8 +82,7 @@ const detailLink = computed(() => {
     <div class="controls"><label>图表阶段 <select v-model="stage"><option v-for="(name, key) in stages" :key="key" :value="key">{{ name }}</option></select></label><label>图表指标 <select v-model="metric"><option v-for="(name, key) in names" :key="key" :value="key">{{ name }}</option></select></label><label>范围 <select v-model="recordId"><option value="">被试等权汇总</option><option v-for="a in receipt?.detail_artifacts ?? []" :key="a.record_id" :value="a.record_id">{{ a.subject }} / {{ a.record_id }}</option></select></label><a v-if="detailLink" :href="detailLink" target="_blank" rel="noopener">本记录数值与来源</a></div>
     <p v-if="loading" role="status">读取图表数据…</p><p v-if="error" role="alert">{{ error }} <button @click="load">重试图表读取</button></p>
     <template v-if="!loading && !error">
-      <p class="note">{{ caption }}</p>
-      <p v-if="row" class="note">状态：{{ row.status }} · {{ row.reason || '无缺失原因' }} · 单位 {{ row.unit }}。{{ metric === 'psd_window_quantiles' ? '这些是窗口分位曲线；汇总时为记录分位曲线均值，不是置信区间或合并窗分位数。' : '' }}</p>
+      <p v-if="row" class="note">{{ statuses[row.status] || row.status }} · {{ row.unit }}<span v-if="row.reason"> · {{ row.reason }}</span>{{ metric === 'psd_window_quantiles' ? '这些是窗口分位曲线；汇总时为记录分位曲线均值，不是置信区间或合并窗分位数。' : '' }}</p>
       <p v-else>此阶段没有该指标记录，不能用其他阶段填补。</p>
       <AssessmentPlot v-if="chart.series.length" :title="names[metric] || metric" v-bind="chart" :caption="caption" :provenance="provenance" />
       <AssessmentPlot v-else-if="!recordId && row && (finite(row.value) || row.value === null)" :title="(names[metric] || metric) + ' · 逐被试'" :series="subjectSeries" x-label="被试编号（按 ID 排序，完整 ID 见点标签）" :y-label="row.unit" :caption="caption + '每点为该被试内记录等权均值；不连接不同被试。'" :provenance="provenance" />
@@ -90,16 +91,25 @@ const detailLink = computed(() => {
       <details v-if="row"><summary>本图实际公式、参数和分母</summary><pre>{{ JSON.stringify({ formula: row.formula, axes: row.axes, denominator: row.denominator, details: row.details }, null, 2) }}</pre></details>
       <details v-if="recordId"><summary>波形预览与电极布局</summary>
         <template v-if="preview?.status === 'ok'">
-          <p class="note">确定性预览：首个有限片段 E{{ preview.epoch_index }} · {{ preview.trial_id || '连续记录或未保存 trial ID' }}。显示 C3/Cz/C4 中已有通道，否则取前三通道。仅用于定位，不代表全部试次。位置来自文件，可能是标准模板。</p>
+          <p class="note">预览片段：首个数据完整片段 E{{ preview.epoch_index }} · {{ preview.trial_id || '连续记录或未保存 trial ID' }}。显示 C3/Cz/C4 中已有通道，否则取前三通道。仅用于定位，不代表全部试次。位置来自文件，可能是标准模板。</p>
           <label>预览通道 <select v-model="channel"><option v-for="(c, i) in preview.channels" :key="c" :value="i">{{ c }}</option></select></label>
           <AssessmentPlot title="片段前 4 秒波形（不足时显示实际长度）" :series="waveform" x-label="相对输入片段起点 (s)" y-label="µV" caption="原采样点，无显示滤波和平滑。不是事件锁定平均。" :provenance="provenance" />
-          <AssessmentPlot title="片段全长最小／最大包络" :series="overview" x-label="窗口起点，相对输入片段 (s)" y-label="µV" caption="最多 256 个连续桶保留极值；连线仅连接桶的极值，不能解释为原波形或频谱。" :provenance="provenance" />
+          <AssessmentPlot title="片段全长最小／最大包络" :series="overview" x-label="窗口起点，相对输入片段 (s)" y-label="µV" caption="将片段分为最多 256 个时间区间，保留各区间的最大与最小值，用于定位瞬态；连线不是原始波形。" :provenance="provenance" />
           <AssessmentPlot v-if="sensorSeries.length" title="电极布局点图（无插值）" :equal-aspect="true" :series="sensorSeries" x-label="头坐标 x (m)" y-label="头坐标 y (m)" caption="保存的电极位置投影，横纵轴等比例。此图不估计头皮场或脑源；不能用位置图替代任务侧化证据。" :provenance="provenance" />
-        </template><p v-else>此记录未保存波形／位置预览。旧运行保持只读，不从汇总指标重建信号。</p>
+        </template><p v-else>此记录未保存波形或电极位置预览。</p>
       </details>
     </template>
   </div>
 </template>
 <style scoped>
-.quality-plots{margin-top:18px;padding-top:16px;border-top:1px solid #d9e4dd}.controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}label{font-size:12px}select,button{font:inherit;padding:6px 9px;background:white;border:1px solid #cfded4;border-radius:6px;color:#345541}a,summary{color:#287557;font-size:12px}summary{cursor:pointer;margin:14px 0}.note{font-size:12px;color:#62786a;line-height:1.8}pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto;font-size:11px}
+.quality-plots { margin-top: 18px; padding-top: 18px; border-top: 1px solid #dce5e7; }
+.controls { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.4fr) minmax(150px, 1.4fr); gap: 12px; padding: 16px; background: #f5f8f9; border-radius: 8px; }
+label { display: flex; flex-direction: column; gap: 6px; color: #586f75; font-size: 12px; min-width: 0; }
+select, button { font: inherit; padding: 9px 10px; background: #fff; border: 1px solid #cbd9dd; border-radius: 6px; color: #253e43; min-width: 0; }
+a, summary { color: #176e65; font-size: 12px; }
+.controls a { grid-column: 1 / -1; }
+summary { cursor: pointer; margin: 14px 0; }
+.note { font-size: 12px; color: #586f75; line-height: 1.8; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 280px; overflow: auto; font-size: 11px; padding: 14px; background: #f5f8f9; border-radius: 6px; }
+@media(max-width: 560px) { .controls { grid-template-columns: 1fr; padding: 12px; } }
 </style>

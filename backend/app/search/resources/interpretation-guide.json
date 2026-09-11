@@ -1,5 +1,5 @@
 {
-  "schema_version": "interpretation-1",
+  "schema_version": "interpretation-2",
   "reviewed_at": "2026-09-11",
   "scope": "EEGMMIDB 离线运动想象开发评价。文献支持解释条件，工程参数不等于经验证的质量阈值。知识卡不改变固定选择规则。",
   "sources": [
@@ -24,7 +24,7 @@
       "title": "MNE 1.10.2 · ERDS maps",
       "url": "https://mne.tools/1.10/auto_examples/time_frequency/time_frequency_erds.html",
       "locator": "Time/frequency decomposition and baseline correction",
-      "evidence": "官方示例正文；示范 multitaper 与基线归一化，不是本项目已实现的 Welch 频带 ERDS。",
+      "evidence": "官方示例正文；示范 multitaper 与基线归一化，不是当前指标采用的 Welch 频带 ERDS。",
       "accessed_at": "2026-09-11"
     },
     {
@@ -40,7 +40,7 @@
       "title": "Donoghue et al. 2020 · Periodic and aperiodic spectra",
       "url": "https://pubmed.ncbi.nlm.nih.gov/33230329/",
       "locator": "Abstract",
-      "evidence": "原始研究摘要；频带功率含周期和非周期成分。本轮不把摘要作为所有拟合细节的依据。",
+      "evidence": "原始研究摘要；频带功率含周期和非周期成分。摘要不提供完整拟合细节。",
       "accessed_at": "2026-09-11"
     },
     {
@@ -56,7 +56,7 @@
       "title": "用户 skill · 运动想象指标与可视化合同",
       "url": "https://github.com/liujiany22/eeg-preprocessing-reporter",
       "locator": "references/quality-assessment/motor-imagery/{visualization-methods,quality-metric-contract}.md; main read 2026-09-11",
-      "evidence": "用户工程规范，非独立实证证据。经审阅后部分采用，冲突和未实现部分见研究缺口。Git 克隆失败，本轮读取在线原始 Markdown 与本地安装副本。",
+      "evidence": "用户工程规范，非独立实证证据。经审阅后部分采用，冲突和未实现部分见研究缺口。来源为在线 Markdown 及本地安装副本。",
       "accessed_at": "2026-09-11"
     },
     {
@@ -196,11 +196,11 @@
         "联合幅度、频谱和电极位置",
         "需要引用 PREP 时核对其 1 s 低通窗口与当前 4 s 原生窗口的差别"
       ],
-      "forbidden_inference": "不能把相关越高解释为质量越好；本项目的 0.4 不自动触发 PREP 坏道决定。",
+      "forbidden_inference": "不能把相关越高解释为质量越好；本指标的 0.4 仅用于描述，不作为 PREP 坏道判定。",
       "parameters": {
         "相关": "每通道对其他通道绝对 Pearson 相关的第 98 百分位",
         "低相关": "q98 < 0.4 的有限通道窗口比例；仅描述",
-        "PREP 差异": "原论文默认 1 s、低通 50 Hz、坏窗比例判据；本项目未复制整套检测器"
+        "PREP 差异": "原论文默认 1 s、低通 50 Hz、坏窗比例判据；本指标与 PREP 完整检测器的条件不同"
       },
       "source_ids": [
         "prep",
@@ -484,7 +484,7 @@
     },
     {
       "topic": "统计推断",
-      "decision": "本次点图、分位曲线和热图是描述性结果。未实现完整被试配对重采样时不绘制置信带；不将 Run 自动解释为 Session。"
+      "decision": "点图、分位曲线和热图是描述性结果。未实现完整被试配对重采样时不绘制置信带；不将 Run 自动解释为 Session。"
     },
     {
       "topic": "调研更新机制",

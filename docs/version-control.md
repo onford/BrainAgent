@@ -25,3 +25,7 @@ git --git-dir=.local/artifact-history/<运行ID>.git diff <旧提交> <新提交
 ```
 
 `.gitignore` 排除依赖、数据、运行状态、缓存和编辑器/合并残留，不笼统忽略 JSON、TSV、HTML 或图片等可能属于源码、测试或模板的文件。`.gitattributes` 统一文本换行，并标记常见数据二进制格式。检查忽略规则使用 `git check-ignore -v <路径>`；已跟踪文件不会被新增的 ignore 规则自动移出 Git。
+
+`frontend/scripts/` 中可复用的导出与验证脚本纳入源码；`exports/README.md` 纳入使用文档。`exports/` 下生成的 HTML、manifest 和 verification 文件仅保存在本地，原地保留已有快照，不将其混入源码提交。
+
+发布前检查暂存差异和文档入口，移除面向用户的调试说明及开发过程叙述，保留数值含义、适用条件和历史协议标识。版本内不新增 `_old`、`_backup` 等实现副本；回退通过 Git 完成。清理不应覆盖用户草稿或改写已发布的运行产物。

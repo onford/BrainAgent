@@ -17,17 +17,78 @@ async function load() {
 }
 const cards = computed(() => (guide.value?.cards ?? []).filter((c: any) => JSON.stringify(c).toLowerCase().includes(query.value.toLowerCase())))
 const sources = (ids: string[]) => (guide.value?.sources ?? []).filter((s: any) => ids.includes(s.id))
+const evidenceLabels: Record<string, string> = {
+  method_documentation_and_primary_abstract: '方法文档与研究摘要',
+  engineering_descriptive: '描述性工程参数',
+  conditional_primary_method: '有适用条件的原始方法',
+  mathematical_definition_and_engineering: '数学定义与工程约定',
+  engineering_proxy: '间接诊断指标',
+  method_documentation_and_engineering: '方法文档与工程约定',
+  project_paired_counterfactual_design: '本项目重建实验设计',
+  frozen_project_protocol: '本运行评价协议',
+}
 </script>
 <template>
-  <details class="guide" @toggle="expanded = ($event.target as HTMLDetailsElement).open; expanded && load()"><summary>如何读图和指标 · 参数依据与文献知识库</summary>
-    <p class="note">{{ frozen ? '本次运行冻结的知识版本。' : '当前审阅知识供阅读参考；此历史运行未冻结该知识，不能声称运行时 agent 已使用。' }} 观察 → 条件核对 → 竞争解释 → 下一项核查；不从图形直接生成质量等级。</p>
-    <p v-if="loading">读取知识卡…</p><p v-if="error" role="alert">{{ error }} <button @click="load">重试知识库读取</button></p>
-    <template v-if="guide"><label>检索指标、图形或参数 <input v-model="query" placeholder="例如 PSD、ASR、基线、0.4" /></label><p class="note">{{ guide.schema_version }} · 审阅 {{ guide.reviewed_at }} · {{ cards.length }} 张卡</p>
-      <article v-for="card in cards" :key="card.id"><h4>{{ card.title }}</h4><p>{{ card.reading }}</p><p class="note">适用条件：{{ card.conditions.join('；') }}</p><p><strong>竞争解释：</strong>{{ card.alternatives.join('；') }}</p><p><strong>下一项核查：</strong>{{ card.checks.join('；') }}</p><p class="limit">{{ card.forbidden_inference }}</p><dl><template v-for="(value, key) in card.parameters" :key="key"><dt>{{ key }}</dt><dd>{{ value }}</dd></template></dl><p class="note">依据类型：{{ card.evidence_level }} · 以下是解释依据，实际采用值以本运行记录为准。</p><ul><li v-for="source in sources(card.source_ids)" :key="source.id"><a :href="source.url" target="_blank" rel="noopener">{{ source.title }}</a><small>{{ source.locator }} · {{ source.evidence }}</small></li></ul></article>
-      <details><summary>未实现内容与审阅差异</summary><p v-for="gap in guide.research_gaps" :key="gap.topic"><strong>{{ gap.topic }}：</strong>{{ gap.decision }}</p></details>
+  <details class="guide" @toggle="expanded = ($event.target as HTMLDetailsElement).open; expanded && load()">
+    <summary>阅读指南 <span>指标含义 · 参数依据 · 参考文献</span></summary>
+    <p class="note">{{ frozen ? '以下知识版本随本运行保存。' : '此历史运行未冻结解读知识；以下为当前阅读参考。' }}</p>
+    <p v-if="loading" role="status">正在加载阅读指南…</p>
+    <p v-if="error" role="alert">指南暂时无法加载。<button @click="load">重新加载</button></p>
+    <template v-if="guide">
+      <div class="guide-toolbar">
+        <label>查找主题 <input v-model="query" type="search" placeholder="例如：功率谱、基线、相关性" /></label>
+        <small>{{ cards.length }} 个主题 · 审阅于 {{ guide.reviewed_at }}</small>
+      </div>
+      <p class="reading-path">先核对测量条件，再比较可能解释，最后选择下一项核查。</p>
+      <p v-if="!cards.length" class="note" role="status">没有匹配的主题，请尝试指标名称或参数关键词。</p>
+      <div class="guide-cards">
+        <details v-for="card in cards" :key="card.id" class="knowledge-card">
+          <summary><strong>{{ card.title }}</strong><p>{{ card.reading }}</p></summary>
+          <div class="card-body">
+            <p class="conditions"><strong>适用条件</strong>{{ card.conditions.join('；') }}</p>
+            <div class="reading-columns">
+              <section><h4>还可能是什么原因</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>
+              <section><h4>接下来核查什么</h4><ul><li v-for="item in card.checks" :key="item">{{ item }}</li></ul></section>
+            </div>
+            <p class="limit"><strong>解释边界</strong>{{ card.forbidden_inference }}</p>
+            <dl><template v-for="(value, key) in card.parameters" :key="key"><dt>{{ key }}</dt><dd>{{ value }}</dd></template></dl>
+            <p class="note">{{ evidenceLabels[card.evidence_level] || '参考依据' }} · 实际采用值见运行参数与测量记录。</p>
+            <details class="references"><summary>参考文献与定位 · {{ card.source_ids.length }}</summary>
+              <ul><li v-for="source in sources(card.source_ids)" :key="source.id"><a :href="source.url" target="_blank" rel="noopener">{{ source.title }} ↗</a><small>{{ source.locator }} · {{ source.evidence }}</small></li></ul>
+            </details>
+          </div>
+        </details>
+      </div>
+      <details class="scope"><summary>适用范围与限制</summary><p v-for="gap in guide.research_gaps" :key="gap.topic"><strong>{{ gap.topic }}：</strong>{{ gap.decision }}</p><small>知识版本 {{ guide.schema_version }}</small></details>
     </template>
   </details>
 </template>
 <style scoped>
-.guide{margin:20px 0;padding:15px 18px;background:#f7faf7;border:1px solid #dce7dd;border-radius:10px;font-size:13px;line-height:1.8}summary{cursor:pointer;color:#315f45;font-weight:600}.note,small{font-size:12px;color:#687b6c}small{display:block}input{padding:7px 10px;border:1px solid #d0ded3;border-radius:6px;margin-left:10px}article{background:white;border:1px solid #e0e8e1;border-radius:8px;padding:14px 18px;margin:14px 0}h4{margin:0}p{margin:8px 0}.limit{padding:9px;background:#faf5ea;color:#79623a}dl{display:grid;grid-template-columns:minmax(80px,140px) 1fr;gap:8px}dt{color:#375f44}dd{margin:0}a{color:#267258;overflow-wrap:anywhere}ul{padding-left:18px}
+.guide { margin: 16px 0; padding: 18px 20px; border: 1px solid #dce5e7; border-radius: 12px; background: #fff; color: #253e43; font-size: 13px; line-height: 1.8; }
+summary { cursor: pointer; color: #253e43; }
+.guide > summary { font-size: 15px; font-weight: 600; }
+.guide > summary span { display: inline-block; font-size: 12px; font-weight: 400; color: #586f75; margin-left: 12px; }
+.note, small { color: #586f75; font-size: 12px; }
+small { display: block; }
+.guide-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 0; }
+input { display: block; width: min(320px, 100%); margin-top: 5px; padding: 9px 12px; border: 1px solid #cbd9dd; border-radius: 7px; background: #fff; color: #253e43; font: inherit; }
+.reading-path { padding: 12px 14px; border-left: 3px solid #3d8b82; background: #f2f7f6; color: #3c625f; }
+.guide-cards { display: grid; gap: 10px; }
+.knowledge-card { border: 1px solid #e0e7e9; border-radius: 8px; }
+.knowledge-card > summary { padding: 14px 16px; }
+.knowledge-card > summary:hover { background: #f5f8f9; }
+.knowledge-card > summary p { margin: 5px 0 0 18px; color: #586f75; font-size: 13px; font-weight: 400; }
+.card-body { padding: 0 18px 18px; border-top: 1px solid #edf1f2; }
+.conditions strong, .limit strong { display: block; font-size: 12px; margin-bottom: 4px; }
+.reading-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+h4 { font-size: 13px; margin: 8px 0; }
+ul { margin: 8px 0; padding-left: 20px; }
+li { margin: 6px 0; }
+.limit { padding: 12px 14px; border-radius: 6px; background: #faf6ec; color: #745c2c; }
+dl { display: grid; grid-template-columns: minmax(90px, 140px) minmax(0, 1fr); gap: 10px; padding: 14px; background: #f5f8f9; border-radius: 6px; }
+dt { color: #586f75; } dd { margin: 0; overflow-wrap: anywhere; }
+a { color: #176e65; text-decoration: underline; text-underline-offset: 3px; }
+.references summary, .scope summary { color: #176e65; font-size: 12px; }
+.scope { margin-top: 20px; padding-top: 14px; border-top: 1px solid #e0e7e9; }
+@media(max-width: 640px) { .guide { padding: 14px; } .reading-columns { grid-template-columns: 1fr; gap: 0; } }
 </style>

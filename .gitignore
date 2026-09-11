@@ -42,3 +42,8 @@ Thumbs.db
 *.bak
 *.orig
 *.rej
+
+# Generated offline snapshots; scripts and usage guides remain source files.
+/exports/*.html
+/exports/*.manifest.json
+/exports/*.verification.json
