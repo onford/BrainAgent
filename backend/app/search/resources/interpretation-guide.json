@@ -1,0 +1,494 @@
+{
+  "schema_version": "interpretation-1",
+  "reviewed_at": "2026-09-11",
+  "scope": "EEGMMIDB 离线运动想象开发评价。文献支持解释条件，工程参数不等于经验证的质量阈值。知识卡不改变固定选择规则。",
+  "sources": [
+    {
+      "id": "welch",
+      "title": "MNE 1.10.2 · Welch PSD",
+      "url": "https://mne.tools/1.10/generated/mne.time_frequency.psd_array_welch.html",
+      "locator": "Parameters: n_per_seg, n_fft, average, remove_dc; Returns",
+      "evidence": "官方 API 正文；median 带偏差校正，返回功率谱密度。项目实际使用 SciPy 等价算法。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "prep",
+      "title": "Bigdely-Shamlo et al. 2015 · PREP",
+      "url": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+      "locator": "Noisy Channel Detection; Figures 5–7",
+      "evidence": "原始方法全文；参考、坏道和相关性相互影响，相关阈值有特定窗口和预处理条件。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "erds",
+      "title": "MNE 1.10.2 · ERDS maps",
+      "url": "https://mne.tools/1.10/auto_examples/time_frequency/time_frequency_erds.html",
+      "locator": "Time/frequency decomposition and baseline correction",
+      "evidence": "官方示例正文；示范 multitaper 与基线归一化，不是本项目已实现的 Welch 频带 ERDS。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "topomap",
+      "title": "MNE 1.10.2 · plot_topomap",
+      "url": "https://mne.tools/1.10/generated/mne.viz.plot_topomap.html",
+      "locator": "pos, image_interp, extrapolate, border",
+      "evidence": "官方 API 正文；插值与外推依赖实际传感器位置。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "spectral",
+      "title": "Donoghue et al. 2020 · Periodic and aperiodic spectra",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/33230329/",
+      "locator": "Abstract",
+      "evidence": "原始研究摘要；频带功率含周期和非周期成分。本轮不把摘要作为所有拟合细节的依据。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "physionet",
+      "title": "EEG Motor Movement/Imagery Dataset 1.0.0",
+      "url": "https://physionet.org/content/eegmmidb/1.0.0/",
+      "locator": "Methods; Data Description; Usage Notes",
+      "evidence": "官方数据说明；事件含义依赖 Run，64 通道及名义 160 Hz，实际文件头仍须核对。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "skill",
+      "title": "用户 skill · 运动想象指标与可视化合同",
+      "url": "https://github.com/liujiany22/eeg-preprocessing-reporter",
+      "locator": "references/quality-assessment/motor-imagery/{visualization-methods,quality-metric-contract}.md; main read 2026-09-11",
+      "evidence": "用户工程规范，非独立实证证据。经审阅后部分采用，冲突和未实现部分见研究缺口。Git 克隆失败，本轮读取在线原始 Markdown 与本地安装副本。",
+      "accessed_at": "2026-09-11"
+    },
+    {
+      "id": "whitham",
+      "title": "Whitham et al. 2007 · Scalp EEG and EMG during neuromuscular blockade",
+      "url": "https://pubmed.ncbi.nlm.nih.gov/17574912/",
+      "locator": "Abstract; Methods",
+      "evidence": "原始研究摘要；两名被试的神经肌肉阻断对照支持高频肌电污染的可能性，不验证本项目的频带比阈值，也不能外推所有高频都是肌电。",
+      "accessed_at": "2026-09-11"
+    }
+  ],
+  "cards": [
+    {
+      "id": "spectrum",
+      "title": "功率谱：峰、背景与瞬态",
+      "metrics": [
+        "psd",
+        "psd_window_quantiles",
+        "mu_mean_psd",
+        "beta_mean_psd"
+      ],
+      "evidence_level": "method_documentation_and_primary_abstract",
+      "conditions": [
+        "核对真实采样率、参考、有效通带和 PSD 单位",
+        "先在线性功率域聚合，再转 dB；零功率无有限 dB"
+      ],
+      "reading": "观察窄带峰、宽带抬升及窗间变化。μ/β 频带均值包含背景功率，不等同于振荡峰强度。",
+      "alternatives": [
+        "宽带变化可能来自非周期背景或处理增益",
+        "中位数 Welch 可隐藏短暂高幅污染",
+        "滤波可机械削弱某一频带"
+      ],
+      "checks": [
+        "联合查看逐窗频谱、Q10/Q50/Q90 和波形",
+        "核对频率分辨率与实际滤波参数",
+        "对比同被试同记录，避免混合不同原生参考"
+      ],
+      "forbidden_inference": "不能仅凭峰更突出或曲线更低认定神经信号更纯净。窗分位数不是置信区间；组级平均分位曲线不是合并窗分位数。",
+      "parameters": {
+        "Welch": "Hamming；50% 重叠；去均值；median 偏差校正；n_fft=nperseg",
+        "窗口": "目标 4 s；任务片段不足 4 s 时使用实际片段，至少 2 s；不跨试次拼接",
+        "频带": "μ 8–12 Hz，β 13–30 Hz，工程固定定义；频点平均 PSD，不是积分频带功率",
+        "显示": "10log10(µV²/Hz)；不截断为 0，不外推缺失频率"
+      },
+      "source_ids": [
+        "welch",
+        "spectral",
+        "skill"
+      ]
+    },
+    {
+      "id": "amplitude",
+      "title": "幅度与阈值响应",
+      "metrics": [
+        "oha",
+        "thv",
+        "chv",
+        "peak_to_peak",
+        "robust_dispersion"
+      ],
+      "evidence_level": "engineering_descriptive",
+      "conditions": [
+        "物理电压阶段，单位 µV",
+        "跨阶段差值需要共同参考、带宽、通道和时间"
+      ],
+      "reading": "查看阈值升高时超限比例如何变化，并定位高幅窗口和通道。THV 是跨通道标准差超限的时间比例。",
+      "alternatives": [
+        "参考改变或低通会降低幅度",
+        "大幅波形也可能含任务活动",
+        "少数瞬态与持续高幅可能具有相同均值"
+      ],
+      "checks": [
+        "查看窗口×通道热图和有限样本分母",
+        "结合 PSD、实际清理应用数和原信号保留",
+        "比较整条曲线，避免只选择最有利阈值"
+      ],
+      "forbidden_inference": "不以 OHA/THV/CHV 单点判定合格、剔除被试或改变主分数。THV 不称为试次高方差。",
+      "parameters": {
+        "OHA": "30、50、100、150 µV；abs(x)>阈值",
+        "THV/CHV": "15、30、50 µV；严格大于，标准差 ddof=0",
+        "窗口": "不重叠 4 s；2–4 s 尾窗保留并按实际长度加权；不足 2 s 尾窗排除",
+        "MAD": "1.4826 × median(abs(x−median(x)))；高斯一致性尺度而非生理阈值"
+      },
+      "source_ids": [
+        "skill",
+        "prep"
+      ]
+    },
+    {
+      "id": "flat",
+      "title": "平坦与采样率",
+      "metrics": [
+        "flat_fraction"
+      ],
+      "evidence_level": "engineering_descriptive",
+      "conditions": [
+        "至少 5 s 连续物理信号",
+        "明确差分阈值与采样率"
+      ],
+      "reading": "平坦比例定位持续低变化片段；需要回看实际波形。",
+      "alternatives": [
+        "相邻差分随采样率变化",
+        "低通、低幅慢波也会满足差分阈值"
+      ],
+      "checks": [
+        "检查整段幅度跨度、量化分辨率和采集掉线记录",
+        "任务窗不足 5 s 时转看连续阶段"
+      ],
+      "forbidden_inference": "不能将 2 s 试次拼成长段计算平坦，也不能将差分小直接等同电极断路。",
+      "parameters": {
+        "定义": "abs(diff) ≤ 0.1 µV 持续至少 5 s",
+        "阈值性质": "继承的描述性工程参数；不宣称跨采样率有效的检测阈值"
+      },
+      "source_ids": [
+        "skill"
+      ]
+    },
+    {
+      "id": "correlation",
+      "title": "通道相关：过低与过高都需解释",
+      "metrics": [
+        "channel_correlation",
+        "low_correlation_fraction"
+      ],
+      "evidence_level": "conditional_primary_method",
+      "conditions": [
+        "通道集合、参考、窗口和通带已知",
+        "常数或无效通道的相关性保持缺失"
+      ],
+      "reading": "同时看低相关通道及整体高度相关区域，定位空间和时间结构。",
+      "alternatives": [
+        "高相关可能来自共同噪声、参考或插值",
+        "低相关也可能来自局部信号与布局差异"
+      ],
+      "checks": [
+        "核对重参考和插值执行记录",
+        "联合幅度、频谱和电极位置",
+        "需要引用 PREP 时核对其 1 s 低通窗口与当前 4 s 原生窗口的差别"
+      ],
+      "forbidden_inference": "不能把相关越高解释为质量越好；本项目的 0.4 不自动触发 PREP 坏道决定。",
+      "parameters": {
+        "相关": "每通道对其他通道绝对 Pearson 相关的第 98 百分位",
+        "低相关": "q98 < 0.4 的有限通道窗口比例；仅描述",
+        "PREP 差异": "原论文默认 1 s、低通 50 Hz、坏窗比例判据；本项目未复制整套检测器"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    },
+    {
+      "id": "rank",
+      "title": "秩与协方差结构",
+      "metrics": [
+        "numerical_rank",
+        "participation_rank",
+        "covariance_condition",
+        "covariance_trace"
+      ],
+      "evidence_level": "mathematical_definition_and_engineering",
+      "conditions": [
+        "明确通道数、参考和数值精度",
+        "奇异协方差条件数不填零"
+      ],
+      "reading": "数值秩描述可分辨线性维度，参与率秩描述方差分布，条件数描述病态程度。",
+      "alternatives": [
+        "平均参考理论上降低一个维度",
+        "插值不能恢复独立信息",
+        "EA 或缩放会改变条件数与总方差"
+      ],
+      "checks": [
+        "核对算子顺序及维度约束",
+        "对照处理前后的单位、参考和通道数"
+      ],
+      "forbidden_inference": "不能以秩越大或条件数越小断言效用越高；EA 后的总方差不能与 µV² 混比。",
+      "parameters": {
+        "数值秩": "SVD 阈值 smax × max(C,T) × eps(float64)",
+        "参与率秩": "sum(λ)² / sum(λ²)",
+        "条件数": "λmax/λmin；奇异时缺失",
+        "协方差": "去时间均值，ddof=1"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    },
+    {
+      "id": "mains",
+      "title": "工频与高频代理",
+      "metrics": [
+        "line_ratio_50hz",
+        "line_ratio_60hz",
+        "emg_hf_proxy"
+      ],
+      "evidence_level": "engineering_proxy",
+      "conditions": [
+        "目标频带和两侧邻带完整可用",
+        "既往陷波和低通历史已核对"
+      ],
+      "reading": "窄带突起提示定向核查工频；高频比仅描述指定频带的相对功率。",
+      "alternatives": [
+        "窄峰可能不是电源干扰",
+        "高频变化可能来自肌电、神经活动或滤波",
+        "比值变化可能来自分母而非分子"
+      ],
+      "checks": [
+        "查看 PSD 中峰宽、邻带和谐波",
+        "优先核对工频元数据，缺失时保留未知",
+        "同时检查分子分母频带及波形"
+      ],
+      "forbidden_inference": "不能因为只覆盖 50 Hz 就判定实际工频为 50 Hz；不能把 30–45 Hz 比值称为肌电真值。",
+      "parameters": {
+        "工频": "目标 ±1 Hz，左右各 2 Hz 邻带；不重叠半开频率区间，10log10 比值",
+        "高频代理": "meanPSD(30–45)/meanPSD(1–30)，dB；完整 45 Hz 支持，不缩窄冒充同指标"
+      },
+      "source_ids": [
+        "welch",
+        "skill",
+        "whitham"
+      ]
+    },
+    {
+      "id": "drift",
+      "title": "慢漂移",
+      "metrics": [
+        "drift_slope",
+        "drift_power_ratio"
+      ],
+      "evidence_level": "engineering_proxy",
+      "conditions": [
+        "至少 30 s 连续信号",
+        "低频比要求完整 0.1–0.5 Hz 与 1–30 Hz 支持"
+      ],
+      "reading": "斜率捕捉线性趋势，低频比补充缓慢波动；两者含义不同。",
+      "alternatives": [
+        "高通已经消除了需要测量的频率",
+        "正负漂移相互抵消使平均斜率接近零",
+        "非线性漂移不一定体现为斜率"
+      ],
+      "checks": [
+        "查看连续波形、各通道斜率与实际高通",
+        "不足 30 s 保留不适用原因"
+      ],
+      "forbidden_inference": "不能把高通后低频缺失写成漂移为零。",
+      "parameters": {
+        "斜率": "时间秒与 µV 的 OLS，单位 µV/s",
+        "频率比": "积分 PSD[0.1,0.5] / 积分 PSD[1,30]，dB；30 s Welch"
+      },
+      "source_ids": [
+        "welch",
+        "skill"
+      ]
+    },
+    {
+      "id": "spatial",
+      "title": "电极布局与电气距离",
+      "metrics": [
+        "electrical_distance",
+        "sensor_layout"
+      ],
+      "evidence_level": "method_documentation_and_engineering",
+      "conditions": [
+        "真实通道名称、位置及坐标系已知",
+        "布局点图无空间插值"
+      ],
+      "reading": "电气距离是通道差分方差；结合几何距离查看异常接近的通道对。",
+      "alternatives": [
+        "共同信号、桥接、插值或低幅都可产生很小差分",
+        "稀疏布局插值可能制造平滑区域"
+      ],
+      "checks": [
+        "联合相关、幅度与坏道处理记录",
+        "核对位置是否是标准模板而非个体实测"
+      ],
+      "forbidden_inference": "不单凭电气距离诊断桥接；电极图不是脑源定位。",
+      "parameters": {
+        "电气距离": "Var_t(x_i−x_j)，ddof=0，µV²",
+        "布局": "只显示保存的头坐标 x/y，米；不外推、不把坐标生成当实测"
+      },
+      "source_ids": [
+        "topomap",
+        "prep"
+      ]
+    },
+    {
+      "id": "task",
+      "title": "ERD/ERS 与真实基线",
+      "metrics": [
+        "erds_mu",
+        "erds_beta"
+      ],
+      "evidence_level": "method_documentation_and_engineering",
+      "conditions": [
+        "真实任务前基线与任务段具有相同处理、通道和试次身份",
+        "检查事件重叠、零相位时间混合和非正基线"
+      ],
+      "reading": "负值表示相对基线功率降低，正值表示增加。当前值按 Welch 频带功率计算。",
+      "alternatives": [
+        "基线污染可放大百分比",
+        "功率降低可能是滤波或全局衰减",
+        "不同参考和带宽会改变原生阶段结果"
+      ],
+      "checks": [
+        "查看基线审计与每个通道、试次的可用状态",
+        "左右手侧化需按真实条件与感觉运动位置判断，不能从总体均值推断",
+        "完整 TFR 需要额外时间边缘和可核验基线"
+      ],
+      "forbidden_inference": "不能把频带 ERDS 展示为已计算的 TFR 或显著性图；更负不自动代表更好。",
+      "parameters": {
+        "公式": "100 × (Ptask−Pbaseline) / Pbaseline，单位 %",
+        "基线": "实际冻结的 precue 区间；从明细读取，不以图默认值代替",
+        "频谱": "任务与基线使用相同 Welch 窗长和频率网格",
+        "MNE percent": "其比例输出转百分数需要 ×100；当前项目公式已含 ×100"
+      },
+      "source_ids": [
+        "erds",
+        "physionet",
+        "skill"
+      ]
+    },
+    {
+      "id": "retention",
+      "title": "污染残余与信号保留联合阅读",
+      "metrics": [
+        "reference_nrmse",
+        "paired_nrmse",
+        "paired_error_cleanproxy_ratio",
+        "artifact_residual_rms_ratio",
+        "artifact_residual_coefficient",
+        "reconstruction_nrmse",
+        "input_nrmse",
+        "paired_ser_improvement_db",
+        "reconstruction_ser_improvement_db",
+        "paired_correlation",
+        "reconstruction_correlation",
+        "clean_retention_nrmse",
+        "clean_retention_rms_ratio",
+        "clean_retention_correlation",
+        "clean_retention_gain"
+      ],
+      "evidence_level": "project_paired_counterfactual_design",
+      "conditions": [
+        "同一污染注入、试次、测量带宽和物理参考",
+        "x 是实际 EEG 代理，非纯净神经真值"
+      ],
+      "reading": "联合查看污染残余 P(x+a)−P(x) 和无污染注入时的处理改变 P(x)−x。",
+      "alternatives": [
+        "零输出可以消除所有污染也消除全部信号",
+        "整体收缩可改善某种误差但没有选择性去噪",
+        "较高波形相关不保证正确增益"
+      ],
+      "checks": [
+        "核对恒等、零输出、收缩对照及输入污染强度",
+        "查看每个污染条件的有效与分配分母",
+        "配合固定 EEGNet 效用，保留机制预测失败"
+      ],
+      "forbidden_inference": "不能将不同污染条件的点当同一人配对轨迹或把小残余单独当清理成功。",
+      "parameters": {
+        "指标": "公式、单位和分母以保存的重建回执为准",
+        "设计": "默认每人一个冻结污染条件，类别均值不等于同人比较",
+        "选择角色": "解释与诊断，不事后改变主指标"
+      },
+      "source_ids": [
+        "skill"
+      ]
+    },
+    {
+      "id": "utility",
+      "title": "模型、种子与个体差异",
+      "metrics": [
+        "ba",
+        "accuracy",
+        "f1",
+        "kappa",
+        "auc",
+        "brier",
+        "logloss",
+        "seed_sd"
+      ],
+      "evidence_level": "frozen_project_protocol",
+      "conditions": [
+        "按保存的 utility 版本解释",
+        "每个候选共享完整被试、试次、外折、训练预算和种子"
+      ],
+      "reading": "新协议按每个种子先求被试宏平均 BA，再对三个种子等权平均；同时看逐被试分布。",
+      "alternatives": [
+        "种子差异是训练随机性",
+        "被试差异是个体异质性",
+        "反复搜索开发面板可导致选择乐观性"
+      ],
+      "checks": [
+        "核对三种子完整预测和主分数",
+        "对照 CSP-LDA 但不替代 EEGNet",
+        "检查未见数据的独立确认是否存在"
+      ],
+      "forbidden_inference": "不把种子 SD 当置信区间，不把每折当独立被试，不补缺失 Q25，不将旧协议改名。",
+      "parameters": {
+        "新主模型": "EEGNet：17、42、2026；CPU 单线程；100 epochs、patience 15、batch 64、lr 0.001",
+        "早停": "外折训练被试约 20%，SHA256 排序，最小验证 log loss，首次最低",
+        "CSP-LDA": "仅对照；不参与新协议选择",
+        "显示": "BA/accuracy/F1/AUC 使用原始比例；0.5 仅是二分类 BA 的机会参考而非显著性阈值"
+      },
+      "source_ids": [
+        "skill",
+        "physionet"
+      ]
+    }
+  ],
+  "research_gaps": [
+    {
+      "topic": "共同测量视图",
+      "decision": "不强行恢复已滤除频带；当前六阶段为原生视图，未经共同带宽/参考配对审计不提供质量差值或宣称可比。"
+    },
+    {
+      "topic": "自动工频判定",
+      "decision": "拒绝 skill 中只覆盖一个频率就指定实际工频的规则；未知保持未知，50/60 Hz 分开作描述性诊断。"
+    },
+    {
+      "topic": "TFR 与侧化",
+      "decision": "当前支持已计算的 Welch ERDS 通道/试次图；完整 multitaper TFR、侧化和时间解码需新计算合同，不从现有频带均值伪造。"
+    },
+    {
+      "topic": "ICA、EOG、ECG",
+      "decision": "没有实际成分、辅助通道和拟合产物时不生成此类诊断；方法库存在算子不等于当前搜索已应用。"
+    },
+    {
+      "topic": "统计推断",
+      "decision": "本次点图、分位曲线和热图是描述性结果。未实现完整被试配对重采样时不绘制置信带；不将 Run 自动解释为 Session。"
+    },
+    {
+      "topic": "调研更新机制",
+      "decision": "新搜索冻结知识卡及哈希，现有 request_evidence 预算内定向阅读。新增文献需定位原文、记录条件和反例并经代码审阅后进入新版本；不自动将网络文字转成执行阈值。"
+    }
+  ]
+}

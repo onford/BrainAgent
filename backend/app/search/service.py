@@ -185,6 +185,7 @@ class SearchService:
         return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
     def create(self, owner, request: SearchRequest, *, start=True):
+        from .interpretation import interpretation_guide, evidence_document
         from .utility_evaluation import utility_protocol
         from .utility_parallel import utility_execution
 
@@ -268,6 +269,8 @@ class SearchService:
             }
         )
         evaluation_evidence = read(Path(__file__).parent / "resources/evaluation-evidence.json")
+        guide = interpretation_guide()
+        documents.append(evidence_document(guide))
         metric_text = evaluation_evidence["interpretation"] + "\n\n" + "\n\n".join(
             f"{m['id']} · {m['name']}\n定义：{m['formula']}\n边界：{m['overCleaningAndLeakageRisk']}\n选择角色：{m['selectionRole']}"
             for m in evaluation_evidence["quality"]["metrics"]
@@ -321,6 +324,7 @@ class SearchService:
             "space_context": space_context,
             "scientific_knowledge_hash": digest(research),
             "evaluation_evidence_hash": digest(evaluation_evidence),
+            "interpretation_guide_hash": digest(guide),
             "environment": environment(),
             "numeric_engine_hash": engine_hash(),
             "search_engine_hash": search_engine_hash(),
@@ -367,6 +371,7 @@ class SearchService:
             write(root / "control-design.json", controls)
         write(root / "scientific-knowledge.json", research)
         write(root / "evaluation-evidence.json", evaluation_evidence)
+        write(root / "interpretation-guide.json", guide)
         write(root / "space.schema.json", ExplorationSpace.model_json_schema())
         write(
             root / "scientific-knowledge.schema.json",
@@ -758,6 +763,8 @@ class SearchService:
         ):
             raise IntegrityFailure("冻结算子空间或科学依据目录已改变")
         verify_registry(protocol, state["registry"])
+        if protocol.get("interpretation_guide_hash") and digest(read(root / "interpretation-guide.json")) != protocol["interpretation_guide_hash"]:
+            raise IntegrityFailure("冻结图表解读知识库已改变")
         if protocol.get("control_design_hash"):
             controls = read(root / "control-design.json")
             if digest(controls) != protocol["control_design_hash"] or controls["registry"] != state["registry"]:

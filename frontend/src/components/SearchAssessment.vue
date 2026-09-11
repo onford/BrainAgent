@@ -3,8 +3,13 @@ import { computed, ref, watch } from 'vue'
 import { searchArtifactUrl } from '../api/searches'
 import type { SearchUtilityReceipt } from '../types/search'
 import { apiRequest } from '../api/client'
+import AssessmentPlot from './AssessmentPlot.vue'
+import QualityPlots from './QualityPlots.vue'
+import SearchInterpretation from './SearchInterpretation.vue'
+import { numeric, type Series } from '../utils/assessmentPlots'
 
-const props = defineProps<{ searchId: string; candidateId: string; basePath?: string | null; assessment?: Record<string, any> | null }>()
+const props = defineProps<{ searchId: string; candidateId: string; basePath?: string | null; assessment?: Record<string, any> | null; guideFrozen?: boolean }>()
+const showQualityPlots = ref(false)
 const axis = ref('utility'), metric = ref('ba'), stage = ref('processed_task'), query = ref('')
 const data = computed(() => props.assessment)
 const utility = computed(() => data.value?.utility)
@@ -30,7 +35,7 @@ async function loadUtility() {
 const quality = computed(() => data.value?.quality?.summary)
 const fullQuality = ref<Record<string, any> | null>(null), qualityError = ref(''), qualityLoading = ref(false)
 let requestNumber = 0
-watch(() => [props.candidateId, props.basePath], () => { requestNumber++; fullQuality.value = null; qualityError.value = ''; qualityLoading.value = false; stage.value = 'processed_task' })
+watch(() => [props.searchId, props.candidateId, props.basePath, props.assessment], () => { requestNumber++; fullQuality.value = null; qualityError.value = ''; qualityLoading.value = false; stage.value = 'processed_task'; showQualityPlots.value = false })
 watch(stage, async selected => {
   if (selected === 'processed_task' || fullQuality.value) return
   const path = data.value?.quality?.receipt_artifact?.path
@@ -49,7 +54,7 @@ const legacyModels: Record<string, string> = { csp_lda: 'CSP + LDA', fbcsp: 'FBC
 const models = computed(() => isV2.value ? { eegnet: 'EEGNet', csp_lda: 'CSP + LDA' } : legacyModels)
 const statistics: Record<string, string> = { ba: '平衡准确率 BA', accuracy: '准确率', f1: 'F1（右手为正类）', kappa: 'Cohen κ', auc: 'ROC-AUC', brier: 'Brier 误差', logloss: '对数损失' }
 const stages: Record<string, string> = { processed_task: '处理后任务片段', source_task: '源任务片段', source_raw: '源连续记录', processed_continuous: '处理后连续记录', source_precue: '源任务前基线', processed_precue: '同处理任务前基线' }
-const labels: Record<string, string> = { peak_to_peak: '峰峰值', robust_dispersion: '稳健离散程度', channel_correlation: '通道相关性', low_correlation_fraction: '低相关窗口比例', covariance_condition: '协方差条件数', covariance_trace: '总方差', participation_rank: '参与率有效秩', mu_mean_psd: 'μ 频带平均功率', beta_mean_psd: 'β 频带平均功率', emg_hf_proxy: '肌电高频代理', line_ratio_50hz: '50 Hz 工频残余', line_ratio_60hz: '60 Hz 工频残余', drift_slope: '慢漂移斜率', drift_power_ratio: '漂移功率比', electrical_distance: '电气距离', reference_nrmse: '相对参考归一化误差', erds_mu: 'μ 频带 ERD/ERS', erds_beta: 'β 频带 ERD/ERS', psd: '功率谱', psd_window_quantiles: '窗口功率谱分位数', oha: '超幅比例', thv: '试次高方差', chv: '通道高方差', effective_rank: '有效秩', numerical_rank: '数值秩', flat_fraction: '平坦比例', line_noise_ratio: '工频残余比例', drift_ratio: '慢漂移比例', high_frequency_ratio: '高频功率比例', paired_nrmse: '残余污染归一化误差', reconstruction_nrmse: '相对原信号的重建误差', clean_retention_nrmse: '清理对原信号的改变', clean_retention_rms_ratio: '原信号幅度保留比', clean_retention_correlation: '原信号保留相关性', paired_ser_improvement_db: '污染抑制改善（dB）', reconstruction_ser_improvement_db: '重建误差改善（dB）' }
+const labels: Record<string, string> = { peak_to_peak: '峰峰值', robust_dispersion: '稳健离散程度', channel_correlation: '通道相关性', low_correlation_fraction: '低相关窗口比例', covariance_condition: '协方差条件数', covariance_trace: '总方差', participation_rank: '参与率有效秩', mu_mean_psd: 'μ 频带平均功率', beta_mean_psd: 'β 频带平均功率', emg_hf_proxy: '肌电高频代理', line_ratio_50hz: '50 Hz 工频残余', line_ratio_60hz: '60 Hz 工频残余', drift_slope: '慢漂移斜率', drift_power_ratio: '漂移功率比', electrical_distance: '电气距离', reference_nrmse: '相对参考归一化误差', erds_mu: 'μ 频带 ERD/ERS', erds_beta: 'β 频带 ERD/ERS', psd: '功率谱', psd_window_quantiles: '窗口功率谱分位数', oha: '超幅比例', thv: '跨通道波动超阈比例', chv: '通道时间波动超阈比例', effective_rank: '有效秩', numerical_rank: '数值秩', flat_fraction: '平坦比例', line_noise_ratio: '工频残余比例', drift_ratio: '慢漂移比例', high_frequency_ratio: '高频功率比例', paired_nrmse: '残余污染归一化误差', reconstruction_nrmse: '相对原信号的重建误差', clean_retention_nrmse: '清理对原信号的改变', clean_retention_rms_ratio: '原信号幅度保留比', clean_retention_correlation: '原信号保留相关性', paired_ser_improvement_db: '污染抑制改善（dB）', reconstruction_ser_improvement_db: '重建误差改善（dB）' }
 const qualityRows = computed(() => Object.entries(fullQuality.value?.stages?.[stage.value] ?? (stage.value === 'processed_task' ? quality.value?.metrics : undefined) ?? {}).filter(([key]) => `${key} ${labels[key] ?? ''}`.toLowerCase().includes(query.value.toLowerCase())))
 const caseRows = computed(() => Object.entries(reconstruction.value?.by_case ?? {}) as [string, any][])
 const reconstructionMetric = ref('paired_nrmse')
@@ -59,6 +64,14 @@ function percent(v: unknown) { return typeof v === 'number' ? `${(v * 100).toFix
 function status(v: string) { return ({ evaluated: '已评价', complete: '完整', partial: '部分可用', incomplete: '未完整', failed: '失败', not_applicable: '不适用', not_assigned: '未分配', ok: '已计算' } as Record<string, string>)[v] ?? v }
 function link(ref: any) { return ref?.path && props.basePath ? searchArtifactUrl(props.searchId, { name: `candidates/${props.candidateId}/${props.basePath}/${ref.path}` }) : undefined }
 function record(v: unknown): any { return v && typeof v === 'object' ? v : {} }
+const seedSeries = computed<Series[]>(() => [{ name: 'EEGNet 种子', connect: false, points: Object.entries(fullUtility.value?.learners?.eegnet?.seeds ?? {}).map(([seed, run], i) => ({ x: i+1, y: numeric(run.summary?.[metric.value]?.mean), label: `seed ${seed} · ${run.status}` })) }])
+const learnerSeries = computed<Series[]>(() => {
+  const learners = Object.entries(fullUtility.value?.learners ?? {})
+  const ids = [...new Set(learners.flatMap(([, output]) => Object.keys(output.subjects ?? {})))].sort()
+  return learners.map(([name, output]) => ({ name: models.value[name as keyof typeof models.value] || name, connect: false, points: ids.map((id, i) => ({ x: i+1, y: numeric(output.subjects?.[id]?.[metric.value]), label: id })) }))
+})
+const reconstructionSeries = computed<Series[]>(() => [{ name: '污染条件', connect: false, points: caseRows.value.map(([id, row]) => ({ x: numeric(row.metrics?.clean_retention_nrmse?.value) ?? NaN, y: numeric(row.metrics?.paired_nrmse?.value), label: `${id} · 残余 ${row.metrics?.paired_nrmse?.n_valid ?? 0}/${row.metrics?.paired_nrmse?.n_total ?? 0} · 保留 ${row.metrics?.clean_retention_nrmse?.n_valid ?? 0}/${row.metrics?.clean_retention_nrmse?.n_total ?? 0}` })) }])
+const reconstructionProvenance = computed(() => ({ search_id: props.searchId, candidate_id: props.candidateId, path: props.basePath, cases: reconstruction.value?.by_case }))
 </script>
 
 <template>
@@ -79,6 +92,9 @@ function record(v: unknown): any { return v && typeof v === 'object' ? v : {} }
         </div>
       </div>
       <div class="scroll"><table><thead><tr><th>模型</th><th>用途 / 状态</th><th>被试均值</th><th>下四分位</th><th>被试标准差</th><th>覆盖被试</th></tr></thead><tbody><tr v-for="(name, key) in models" :key="key"><td>{{ name }}</td><td>{{ utility?.primary_suite?.includes(key) ? '主模型' : '对照' }} · {{ status(utility?.learner_statuses?.[key]) }}</td><td>{{ value(utility?.learner_statistics?.[key]?.[metric]?.mean) }}</td><td>{{ value(utility?.learner_statistics?.[key]?.[metric]?.lower_quartile) }}</td><td>{{ value(utility?.learner_statistics?.[key]?.[metric]?.subject_sd) }}</td><td>{{ utility?.learner_coverage?.[key]?.subjects_available }} / {{ utility?.learner_coverage?.[key]?.subjects_expected }}</td></tr></tbody></table></div>
+      <button v-if="!isV2 && !fullUtility && utility?.receipt_artifact" :disabled="utilityLoading" @click="loadUtility">读取模型与被试图表</button>
+      <AssessmentPlot v-if="isV2 && fullUtility" title="逐种子表现" :series="seedSeries" x-label="种子序号（17、42、2026，非连续自变量）" :y-label="statistics[metric] || metric" caption="每点为一个种子的被试宏平均；种子离散度不是被试差异或置信区间。缺失种子不产生完整主分数。" :y-domain="['ba','accuracy','f1','auc','brier'].includes(metric) ? [0,1] : undefined" :reference="metric === 'ba' ? .5 : undefined" />
+      <AssessmentPlot v-if="fullUtility" title="逐被试模型表现" :provenance="{ searchId, candidateId, basePath, artifact: utility?.receipt_artifact, metric }" :series="learnerSeries" x-label="被试序号（完整 ID 见点标签）" :y-label="statistics[metric] || metric" caption="EEGNet 每点为该被试三个种子的均值；其他模型按保存的协议显示。0.5 BA 参考线不是显著性界限；未计算置信区间。" :y-domain="['ba','accuracy','f1','auc','brier'].includes(metric) ? [0,1] : undefined" :reference="metric === 'ba' ? .5 : undefined" />
       <p v-for="reason in utility?.failure_reasons" :key="reason" class="reason">{{ reason }}</p>
     </section>
     <section v-else-if="axis === 'quality'">
@@ -86,14 +102,18 @@ function record(v: unknown): any { return v && typeof v === 'object' ? v : {} }
       <p class="note">保留阶段、单位、频带和缺失原因。降低幅度或高频功率不自动代表质量提高；EA 无量纲表示不冒充物理电压。各阶段的原生指标不保证可直接相减。</p>
       <p v-if="!quality" class="reason">{{ data.quality?.reason }}</p>
       <p v-if="qualityLoading" class="note">正在读取该阶段的完整记录…</p><p v-if="qualityError" class="reason">{{ qualityError }}</p>
+      <button v-if="basePath && data.quality?.receipt_artifact?.path" :aria-pressed="showQualityPlots" @click="showQualityPlots = !showQualityPlots">{{ showQualityPlots ? '收起信号图表' : '打开信号图表与实际参数' }}</button>
+      <QualityPlots v-if="showQualityPlots && basePath" :search-id="searchId" :candidate-id="candidateId" :base-path="basePath" :receipt-path="data.quality.receipt_artifact.path" />
       <div v-if="quality" class="scroll"><table><thead><tr><th>指标</th><th>观测值</th><th>单位</th><th>状态 / 明细</th></tr></thead><tbody><tr v-for="[key, row] in qualityRows" :key="key"><td>{{ labels[key] ?? key }}<small v-if="labels[key]">{{ key }}</small></td><td>{{ value(record(row).value) }}</td><td>{{ record(row).unit }}</td><td>{{ status(record(row).status) }}<details><summary>分母与解释</summary><pre>{{ JSON.stringify(row, null, 2) }}</pre></details></td></tr></tbody></table></div>
     </section>
     <section v-else>
       <div class="tools"><label>查看指标 <select v-model="reconstructionMetric"><option v-for="key in reconstructionMetrics" :key="key" :value="key">{{ labels[key] ?? key }}</option></select></label><a v-if="link(data.reconstruction?.receipt_artifact)" :href="link(data.reconstruction.receipt_artifact)" target="_blank" rel="noopener">污染配置、对照与逐被试结果 ↗</a></div>
       <p class="note">实际 EEG 作为参考代理，加入已知污染后重跑同一处理。同时看污染残余与原信号保留，防止把零输出或过度衰减评为成功。默认均衡分配十种条件，每名被试参加一种；分类评价仍使用全部记录。</p>
       <p v-if="!reconstruction" class="reason">{{ data.reconstruction?.reason }}</p>
-      <template v-else><p class="note">设计：{{ reconstruction.design === 'balanced' ? '全部被试均衡分配' : '全部条件交叉' }} · {{ reconstruction.subjects_expected }} 名被试 · {{ reconstruction.cases_expected }} 个预定个案</p><div class="scroll"><table><thead><tr><th>污染条件</th><th>观测值</th><th>有效 / 分配被试</th><th>状态</th></tr></thead><tbody><tr v-for="[key, row] in caseRows" :key="key"><td>{{ key }}</td><td>{{ value(row.metrics?.[reconstructionMetric]?.value) }}</td><td>{{ row.metrics?.[reconstructionMetric]?.n_valid }} / {{ row.metrics?.[reconstructionMetric]?.n_total }}</td><td>{{ status(row.metrics?.[reconstructionMetric]?.status) }}</td></tr></tbody></table></div></template>
+      <AssessmentPlot v-if="reconstruction" title="污染残余与原信号改变" :series="reconstructionSeries" x-label="clean retention NRMSE（改变程度）" y-label="paired NRMSE（污染残余）" caption="每点为一个冻结污染条件的组级均值，两轴缺失均不补零。两个指标可能具有不同有效子集，见点标签与原回执；此图不是逐被试配对关系，也不构成新的综合排名。" :provenance="reconstructionProvenance" />
+      <template v-if="reconstruction"><p class="note">设计：{{ reconstruction.design === 'balanced' ? '全部被试均衡分配' : '全部条件交叉' }} · {{ reconstruction.subjects_expected }} 名被试 · {{ reconstruction.cases_expected }} 个预定个案</p><div class="scroll"><table><thead><tr><th>污染条件</th><th>观测值</th><th>有效 / 分配被试</th><th>状态</th></tr></thead><tbody><tr v-for="[key, row] in caseRows" :key="key"><td>{{ key }}</td><td>{{ value(row.metrics?.[reconstructionMetric]?.value) }}</td><td>{{ row.metrics?.[reconstructionMetric]?.n_valid }} / {{ row.metrics?.[reconstructionMetric]?.n_total }}</td><td>{{ status(row.metrics?.[reconstructionMetric]?.status) }}</td></tr></tbody></table></div></template>
     </section>
+    <SearchInterpretation :search-id="searchId" :frozen="guideFrozen" />
   </div>
   <p v-else class="empty">该候选的多维评价尚未完成。数值执行和评价记录会在文件列表中保留。</p>
 </template>

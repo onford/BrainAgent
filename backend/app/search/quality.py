@@ -743,7 +743,12 @@ def _evaluate_epochs(epochs, sfreq, channel_names, *, reference, baseline, posit
             add("psd_window_quantiles", quantiles, power_unit + "/Hz",
                 "Q10/Q50/Q90_over_full_4s_windows(channel_median_PSD)",
                 details={"frequencies_hz": wf.tolist(), "full_windows": len(full_windows),
-                         "excluded_short_tail_windows": len(parts) - len(full_windows)})
+                         "excluded_short_tail_windows": len(parts) - len(full_windows),
+                         "window_channel_median_psd": np.median(wp, axis=1).tolist(),
+                         "windows": [{"epoch_index": int(i), "start_seconds_in_epoch": start / sfreq,
+                                      "stop_seconds_in_epoch": end / sfreq}
+                                     for i in np.flatnonzero(valid) for start, end in sample_windows
+                                     if end - start == round(4 * sfreq)]})
         else:
             add("psd_window_quantiles", None, power_unit + "/Hz", "full_4s_window_PSD_quantiles",
                 reason="no_complete_4_second_window; shorter_epoch_PSD_is_reported_separately",

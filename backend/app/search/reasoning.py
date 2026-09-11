@@ -73,6 +73,7 @@ def measured_feedback(candidate):
 
 
 def feedback(state, sources):
+    from .interpretation import interpretation_context
     panel = state["panel"]
     candidates = state["candidates"]
     def rank(candidate):
@@ -89,6 +90,7 @@ def feedback(state, sources):
             families[family] = c["id"]
     detailed.update(families.values())
     context = {
+        "interpretation": interpretation_context(sources),
         "protocol": {
             k: v for k, v in state["protocol"].items() if k not in {"catalog", "space"}
         },

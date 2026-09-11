@@ -446,10 +446,12 @@ def _post_reference(data, raw, channels, steps):
 
 def _measure(values, fs, channels, history, *, baseline=None, trial_ids=None, positions=None,
              baseline_audit=None):
+    from .quality_diagnostics import diagnostic_views
     if not len(values) or not np.isfinite(values).all(axis=(1, 2)).any():
         return _gate(_empty("no_available_measurement_epochs"), history, trial_ids)
     report = evaluate_quality(values, fs, channels, baseline_epochs_V=baseline,
                               montage_positions=positions).model_dump(mode="json")
+    report["metadata"]["diagnostic_views"] = diagnostic_views(values, fs, channels, positions, trial_ids)
     if baseline_audit is not None:
         for m in report["metrics"]:
             if m["metricID"].startswith("erds_"):

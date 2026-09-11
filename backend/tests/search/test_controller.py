@@ -921,7 +921,7 @@ async def test_expired_resume_cannot_reselect_unverified_cached_result(
 
 
 @pytest.mark.asyncio
-async def test_real_subprocess_api_search_and_owner_boundary(factory, tmp_path):
+async def test_real_subprocess_rejects_undersized_panel_and_preserves_owner_boundary(factory, tmp_path):
     import httpx
     from fastapi import FastAPI
     from app.api.routes.searches import router
@@ -949,23 +949,20 @@ async def test_real_subprocess_api_search_and_owner_boundary(factory, tmp_path):
         identity = response.json()["id"]
         await asyncio.wait_for(service.tasks[identity], timeout=65)
         state = (await client.get(f"/api/searches/{identity}")).json()
-        assert state["status"] == "stopped", state["error"]
-        assert [c["status"] for c in state["candidates"]] == ["evaluated", "evaluated"]
-        assert state["usage"]["candidates"] == 2
-        assert state["usage"]["peak_worker_memory_bytes"] > 0
-        receipt = state["candidates"][0]["receipt"]
-        assert receipt["coverage"]["eligible"] == receipt["coverage"]["predicted"]
-        assert receipt["coverage"]["train"]["predicted"] == 0
-        assert (
-            state["panel"]["train_subjects"] != state["panel"]["development_subjects"]
-        )
-        report = await client.get(
-            f"/api/searches/{identity}/artifacts/report.html?download=false"
-        )
-        assert report.status_code == 200 and "开发面板" in report.text
+        # The two-subject fixture cannot satisfy EEGNet's outer-train plus
+        # independent early-stop split. Preparation must reject it, not fall
+        # back to the historical CSP evaluator.
+        assert state["status"] == "failed"
+        assert "DataUnevaluable" in state["error"] and "EEGNet" in state["error"]
+        assert state["selected_candidate_id"] is None
+        frozen = await client.get(f"/api/searches/{identity}/artifacts/interpretation-guide.json?download=false")
+        assert frozen.status_code == 200
+        assert digest(frozen.json()) == state["protocol"]["interpretation_guide_hash"]
+        current = await client.get("/api/searches/interpretation-guide")
+        assert current.status_code == 200 and current.json() == frozen.json()
         assert (
             await client.get(
                 f"/api/searches/{identity}", headers={"X-Brain-Agent-Owner-ID": "other"}
             )
         ).status_code == 404
-        assert (await client.post(f"/api/searches/{identity}/retry")).status_code == 422
+        assert (await client.get(f"/api/searches/{identity}/artifacts/interpretation-guide.json", headers={"X-Brain-Agent-Owner-ID": "other"})).status_code == 404

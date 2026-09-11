@@ -18,6 +18,13 @@ async def create(body: SearchRequest, request: Request, user=Depends(get_current
     return checked(request.app.state.searches.create, user.owner_id, body)
 
 
+@router.get("/interpretation-guide")
+def guide(user=Depends(get_current_user)):
+    from app.search.interpretation import interpretation_guide
+
+    return interpretation_guide()
+
+
 @router.get("/{identity}")
 def get(
     identity: str,
