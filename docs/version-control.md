@@ -1,6 +1,6 @@
 # 版本管理
 
-源码仓库跟踪代码、Schema、报告模板、测试和维护文档。每完成一版可用修改即提交；删除的实现及修改说明通过 `git log`、`git show`、`git diff` 查阅，不以 `_old`、`_backup`、`v2` 旁路目录保留在当前产品中。Schema 的版本字段用于格式校验，属于正式契约。
+源码仓库跟踪代码、Schema、报告模板、测试和维护文档。每完成一版可用修改，完成必要验证后即提交并 push 到当前分支对应的远端（用户于 2026-09-11 明确约定）。只提交本次范围内的文件，不带入其他任务的未提交改动。删除的实现及修改说明通过 `git log`、`git show`、`git diff` 查阅，不以 `_old`、`_backup`、`v2` 旁路目录保留在当前产品中。Schema 的版本字段用于格式校验，属于正式契约。
 
 报告和记录采用唯一正式路径，例如 `survey/local-inspection.json`、`survey/local-events.tsv`、`survey/reports/data-information.html`。报告展示数据来源、检查时间和科学限制；不包含代码修补说明。重新生成时同步检查引用、清单哈希和下载包。
 

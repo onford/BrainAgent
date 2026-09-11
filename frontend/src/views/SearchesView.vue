@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
+import SearchDecisionOverview from '../components/SearchDecisionOverview.vue'
 import SearchMethodExplorer from '../components/SearchMethodExplorer.vue'
 import SearchAssessment from '../components/SearchAssessment.vue'
 import SearchParameters from '../components/SearchParameters.vue'
@@ -13,7 +14,7 @@ const route = useRoute(), router = useRouter()
 const searches = ref<SearchSummary[]>([]), current = ref<SearchState | null>(null)
 const loading = ref(false), listLoading = ref(false), busy = ref(false)
 const error = ref(''), listError = ref('')
-const tab = ref('candidates'), inspectedId = ref(''), reportName = ref('')
+const tab = ref('overview'), inspectedId = ref(''), reportName = ref('')
 const artifactQuery = ref('')
 const artifactOpened = ref<Record<string, boolean>>({}), artifactPages = ref<Record<string, number>>({})
 const artifactPageSize = 30
@@ -27,7 +28,15 @@ const phases: Record<string, string> = { freeze_panel: '冻结开发面板', can
 const actionLabels: Record<string, string> = { initial_schedule: '制定初始计划', model_decision: '决定下一步', enumerate_remaining: '穷举剩余候选', invalid_proposal: '无效提议', finish: '结束搜索', request_evidence: '补充证据', propose_candidate: '提出候选' }
 const stopReasons: Record<string, string> = { cancelled_by_user: '用户停止', service_interrupted: '服务中断', time_budget_exhausted: '时间预算耗尽', candidate_budget_exhausted: '候选预算耗尽', proposal_budget_exhausted: '提议预算耗尽', memory_budget_exhausted: '内存预算耗尽', disk_budget_exhausted: '磁盘预算耗尽', execution_conditions_unavailable: '执行条件不可用', reference_failed: '基线评估失败', resource_unavailable: '执行资源不可用', catalog_exhausted: '候选目录已遍历', schedule_exhausted: '计划已执行完毕', model_finished: '模型决定结束搜索' }
 const strategies: Record<SearchStrategy, string> = { adaptive: '自适应', random: '随机顺序对照', exhaustive: '穷举', one_shot: '一次性提案对照' }
-const tabs = { candidates: '候选比较', methods: '探索空间', assessment: '多维评价', rounds: '轮次时间线', subjects: '开发被试', artifacts: '报告 / 文件' }
+const assessmentAxis = ref('utility')
+const resultsPanel = ref<HTMLElement>()
+function navigateEvidence(view: string, candidateId?: string, axis = 'utility') {
+  if (candidateId && candidates.value.some(c => c.id === candidateId)) inspectedId.value = candidateId
+  assessmentAxis.value = axis
+  tab.value = view
+  void nextTick(() => resultsPanel.value?.scrollIntoView?.({ block: 'start' }))
+}
+const tabs = { overview: '决策概览', candidates: '候选比较', methods: '探索空间', assessment: '多维评价', rounds: '轮次时间线', subjects: '开发被试', artifacts: '报告 / 文件' }
 const budgetFields = [
   { key: 'max_candidates', label: '候选数', min: 1, max: 256 },
   { key: 'max_proposals', label: '提议数', min: 0, max: 1024 },
@@ -283,9 +292,13 @@ async function control(action: 'cancel' | 'retry') {
     if (!disposed && version === generation) schedule(searchId, version)
   }
 }
+watch(() => [route.query.view, route.query.axis], () => {
+  tab.value = typeof route.query.view === 'string' && route.query.view in tabs ? route.query.view : 'overview'
+  assessmentAxis.value = typeof route.query.axis === 'string' ? route.query.axis : 'utility'
+})
 watch(() => [route.query.id, route.query.workflow], () => {
   const version = ++generation
-  clearPoll(); error.value = ''; current.value = null; inspectedId.value = ''; reportName.value = ''; tab.value = 'candidates'
+  clearPoll(); error.value = ''; current.value = null; inspectedId.value = ''; reportName.value = ''; tab.value = typeof route.query.view === 'string' && route.query.view in tabs ? route.query.view : 'overview'; assessmentAxis.value = typeof route.query.axis === 'string' ? route.query.axis : 'utility'
   artifactQuery.value = ''; artifactOpened.value = {}; artifactPages.value = {}
   artifactsLoading.value = false; artifactRetries.value = 0
   loading.value = !!id.value
@@ -358,10 +371,11 @@ onBeforeUnmount(() => { disposed = true; generation++; clearPoll() })
             <p v-if="cspEvaluation && !eegnetUtility">次要对照使用 log-variance（对数方差）+ Logistic Regression（逻辑回归），用于检查表示与预测行为。</p>
             <p v-if="cspEvaluation">策略比较：公共处理、逐被试统一尺度、统一规则逐被试对齐、按信号诊断条件对齐。个体参数由各被试自己的整批无标签数据离线拟合；条件策略未触发对齐时保持空间结构，仅统一尺度，确保各被试均为无量纲表示。整批数据适配与在线逐试次预测的条件不同。</p>
           </details>
-          <section class="card results">
+          <section ref="resultsPanel" class="card results">
             <nav class="tabs" aria-label="搜索结果视图"><button v-for="(name, key) in tabs" :key="key" :aria-pressed="tab === key" @click="tab = key">{{ name }}<small v-if="key === 'candidates'">{{ candidates.length }}</small><small v-if="key === 'rounds'">{{ actions.length }}</small><small v-if="key === 'artifacts'">{{ artifacts.length }}</small></button></nav>
-            <section v-if="tab === 'methods'" class="tab-content"><SearchMethodExplorer :entries="current.registry ?? []" :space="current.protocol?.space" /></section>
-            <section v-else-if="tab === 'assessment'" class="tab-content"><div class="section-heading"><h2>候选的多维评价</h2><label>候选 <select :value="inspected?.id" @change="inspectedId = ($event.target as HTMLSelectElement).value"><option v-for="candidate in candidates" :key="candidate.id" :value="candidate.id">{{ candidate.title || candidate.id }}</option></select></label></div><SearchOperatorUsage v-if="inspected" :search-id="current.id" :candidate-id="inspected.id" :usage="inspected.receipt?.operator_usage" /><SearchAssessment v-if="inspected" :guide-frozen="!!current.protocol?.interpretation_guide_hash" :search-id="current.id" :candidate-id="inspected.id" :base-path="inspected.receipt?.assessment_path" :assessment="inspected.receipt?.assessment"><template #parameters><SearchParameters :protocol="current.protocol" :panel="panel" :recipe="current.registry?.find(r => r.id === inspected?.id)?.recipe" /></template></SearchAssessment></section>
+            <section v-if="tab === 'overview'" class="tab-content"><SearchDecisionOverview :state="current" @navigate="navigateEvidence" /></section>
+            <section v-else-if="tab === 'methods'" class="tab-content"><SearchMethodExplorer :entries="current.registry ?? []" :space="current.protocol?.space" /></section>
+            <section v-else-if="tab === 'assessment'" class="tab-content"><div class="section-heading"><h2>候选的多维评价</h2><label>候选 <select :value="inspected?.id" @change="inspectedId = ($event.target as HTMLSelectElement).value"><option v-for="candidate in candidates" :key="candidate.id" :value="candidate.id">{{ candidate.title || candidate.id }}</option></select></label></div><SearchOperatorUsage v-if="inspected" :search-id="current.id" :candidate-id="inspected.id" :usage="inspected.receipt?.operator_usage" /><SearchAssessment v-if="inspected" :initial-axis="assessmentAxis" :guide-frozen="!!current.protocol?.interpretation_guide_hash" :search-id="current.id" :candidate-id="inspected.id" :base-path="inspected.receipt?.assessment_path" :assessment="inspected.receipt?.assessment"><template #parameters><SearchParameters :protocol="current.protocol" :panel="panel" :recipe="current.registry?.find(r => r.id === inspected?.id)?.recipe" /></template></SearchAssessment></section>
             <section v-else-if="tab === 'candidates'" class="tab-content" aria-label="候选比较">
               <div class="section-heading"><h2>策略开发 BA 比较</h2><span class="muted">{{ multiMetric ? `主指标：${utilityLabel} · Δ 为 CSP 锚点相对基线的百分点` : `评价器：${evaluatorLabel} · 被试平均 BA · Δ 为相对基线的百分点` }}</span></div>
               <div v-if="candidates.length" class="table-scroll"><table><thead><tr><th>候选 / 参数</th><th>状态</th><th>主评分 BA</th><th>次要对照 BA</th><th>平均 Δ</th><th>覆盖（预测 / 合格）</th><th>选择</th><th>详情</th></tr></thead><tbody><tr v-for="candidate in candidates" :key="candidate.id" :class="{ selected: candidate.id === current.selected_candidate_id }"><td><strong>{{ candidate.title || candidate.id }}</strong><small v-if="multiMetric">{{ recipeSummary(candidate.id) || candidate.id }}</small><small v-else>{{ candidate.id }} · {{ candidate.parameters?.l_freq ?? '—' }}–{{ candidate.parameters?.h_freq ?? '—' }} Hz · {{ candidate.parameters?.reference === 'average' ? '平均参考' : candidate.parameters?.reference === 'original' ? '原始参考' : '参考未知' }}</small><small v-if="candidate.parameters?.adaptation">{{ adaptationLabel(candidate.parameters.adaptation) }}<template v-if="candidate.parameters.adaptation === 'conditional_alignment' && candidate.parameters.alignment_threshold != null"> · 条件阈值 {{ count(candidate.parameters.alignment_threshold) }}</template></small></td><td>{{ label(candidate.status) }}<small v-if="candidate.receipt?.status">回执：{{ label(candidate.receipt.status) }}</small><details v-if="candidate.error" class="candidate-error"><summary>错误</summary><pre>{{ candidate.error }}</pre></details></td><td class="score">{{ percent(multiMetric ? candidate.receipt?.assessment?.selection_score : candidate.receipt?.macro_ba) }}<small v-if="multiMetric">CSP 锚点 {{ percent(candidate.receipt?.macro_ba) }}</small></td><td>{{ percent(candidate.receipt?.secondary_macro_ba) }}</td><td>{{ delta(candidate.receipt?.mean_delta) }}<small v-if="candidate.receipt?.paired_subject_ci">描述性区间 {{ delta(candidate.receipt.paired_subject_ci.low) }} ～ {{ delta(candidate.receipt.paired_subject_ci.high) }}<br />{{ candidate.receipt.paired_subject_ci.n_subjects }} 名配对被试 · 开发比较</small></td><td>{{ count(candidate.receipt?.coverage?.predicted) }} / {{ count(candidate.receipt?.coverage?.eligible) }}</td><td><span v-if="candidate.id === current.selected_candidate_id" class="selection-mark">✓ 开发评估选中</span><span v-else class="muted">—</span></td><td><button :aria-label="`查看候选 ${candidate.id} 的开发被试`" @click="inspectedId = candidate.id; tab = 'subjects'">查看被试 →</button></td></tr></tbody></table></div>

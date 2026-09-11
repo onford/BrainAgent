@@ -8,9 +8,10 @@ import QualityPlots from './QualityPlots.vue'
 import SearchInterpretation from './SearchInterpretation.vue'
 import { numeric, type Series } from '../utils/assessmentPlots'
 
-const props = defineProps<{ searchId: string; candidateId: string; basePath?: string | null; assessment?: Record<string, any> | null; guideFrozen?: boolean }>()
-const showQualityPlots = ref(false)
-const axis = ref('utility'), metric = ref('ba'), stage = ref('processed_task'), query = ref('')
+const props = defineProps<{ searchId: string; candidateId: string; basePath?: string | null; assessment?: Record<string, any> | null; guideFrozen?: boolean; initialAxis?: string }>()
+const showQualityPlots = ref(props.initialAxis === 'quality')
+const axis = ref(['quality','reconstruction'].includes(props.initialAxis ?? '') ? props.initialAxis! : 'utility'), metric = ref('ba'), stage = ref('processed_task'), query = ref('')
+watch(() => props.initialAxis, selected => { axis.value = ['quality','reconstruction'].includes(selected ?? '') ? selected! : 'utility'; showQualityPlots.value = selected === 'quality' })
 const data = computed(() => props.assessment)
 const utility = computed(() => data.value?.utility)
 const isV2 = computed(() => data.value?.schema_version === 'assessment-v2' || utility.value?.utility_version === 2)
@@ -35,7 +36,7 @@ async function loadUtility() {
 const quality = computed(() => data.value?.quality?.summary)
 const fullQuality = ref<Record<string, any> | null>(null), qualityError = ref(''), qualityLoading = ref(false)
 let requestNumber = 0
-watch(() => [props.searchId, props.candidateId, props.basePath, props.assessment], () => { requestNumber++; fullQuality.value = null; qualityError.value = ''; qualityLoading.value = false; stage.value = 'processed_task'; showQualityPlots.value = false })
+watch(() => [props.searchId, props.candidateId, props.basePath, props.assessment], () => { requestNumber++; fullQuality.value = null; qualityError.value = ''; qualityLoading.value = false; stage.value = 'processed_task'; showQualityPlots.value = props.initialAxis === 'quality' })
 watch(stage, async selected => {
   if (selected === 'processed_task' || fullQuality.value) return
   const path = data.value?.quality?.receipt_artifact?.path
@@ -63,6 +64,7 @@ function value(v: unknown) { return typeof v === 'number' && Number.isFinite(v) 
 function percent(v: unknown) { return typeof v === 'number' ? `${(v * 100).toFixed(2)}%` : '—' }
 function status(v: string) { return ({ evaluated: '已评价', complete: '完整', partial: '部分可用', incomplete: '未完整', failed: '失败', not_applicable: '不适用', not_computable: '无法计算', not_assigned: '未分配', ok: '已计算' } as Record<string, string>)[v] ?? v }
 function link(ref: any) { return ref?.path && props.basePath ? searchArtifactUrl(props.searchId, { name: `candidates/${props.candidateId}/${props.basePath}/${ref.path}` }) : undefined }
+function direction(v: unknown) { return ({ non_monotonic: '没有统一的越高或越低越好', lower_is_better: '越低越好（在适用条件内）', higher_is_better: '越高越好（在适用条件内）' } as Record<string, string>)[String(v)] || '结合适用条件与测量定义解读' }
 function record(v: unknown): any { return v && typeof v === 'object' ? v : {} }
 const seedSeries = computed<Series[]>(() => [{ name: 'EEGNet 种子', connect: false, points: Object.entries(fullUtility.value?.learners?.eegnet?.seeds ?? {}).map(([seed, run], i) => ({ x: i+1, y: numeric(run.summary?.[metric.value]?.mean), label: `seed ${seed} · ${run.status}` })) }])
 const learnerSeries = computed<Series[]>(() => {
@@ -77,6 +79,7 @@ const reconstructionProvenance = computed(() => ({ search_id: props.searchId, ca
 <template>
   <div v-if="data" class="assessment">
     <div class="summary"><div><span>策略选择分数</span><strong>{{ percent(data.selection_score) }}</strong><small>{{ isV2 ? 'EEGNet · 三种子 × 被试等权 · 开发结果' : '历史 v1 · 三个模型 × 被试等权 · 开发结果' }}</small></div><div><span>冻结范围</span><strong>{{ data.coverage?.subjects_expected }} <small>被试</small></strong><small>{{ data.coverage?.records_expected }} 条记录 · {{ data.coverage?.eligible_trials }} 个合格试次</small></div><div><span>评价状态</span><strong class="state">{{ status(data.status) }}</strong><small>不适用项与失败保留原分母</small></div></div>
+    <div v-if="initialAxis === 'parameters'" class="parameter-entry"><h3>配方参数与实际执行</h3><p class="note">上方逐记录执行统计说明算子是否实际应用；下方区分冻结参数和测量配置。</p><slot name="parameters" /></div>
     <nav aria-label="评价维度"><button v-for="(name, key) in { utility: '训练效用', quality: '信号质量', reconstruction: '重建实验' }" :key="key" :aria-pressed="axis === key" @click="axis = key">{{ name }}</button></nav>
     <section v-if="axis === 'utility'">
       <div class="tools"><label>查看指标 <select v-model="metric"><option v-for="(name, key) in statistics" :key="key" :value="key">{{ name }}</option></select></label><a v-if="link(utility?.receipt_artifact)" :href="link(utility.receipt_artifact)" target="_blank" rel="noopener">完整模型、逐被试与预测记录 ↗</a></div>
@@ -104,7 +107,7 @@ const reconstructionProvenance = computed(() => ({ search_id: props.searchId, ca
       <p v-if="qualityLoading" class="note">正在读取该阶段的完整记录…</p><p v-if="qualityError" class="reason">{{ qualityError }}</p>
       <button v-if="basePath && data.quality?.receipt_artifact?.path" :aria-pressed="showQualityPlots" @click="showQualityPlots = !showQualityPlots">{{ showQualityPlots ? '收起信号图表' : '打开信号图表与实际参数' }}</button>
       <QualityPlots v-model:stage="stage" v-if="showQualityPlots && basePath" :search-id="searchId" :candidate-id="candidateId" :base-path="basePath" :receipt-path="data.quality.receipt_artifact.path" />
-      <div v-if="quality" class="scroll"><table><thead><tr><th>指标</th><th>观测值</th><th>单位</th><th>状态 / 明细</th></tr></thead><tbody><tr v-for="[key, row] in qualityRows" :key="key"><td>{{ labels[key] ?? key }}<small v-if="labels[key]">{{ key }}</small></td><td>{{ value(record(row).value) }}</td><td>{{ record(row).unit }}</td><td>{{ status(record(row).status) }}<details><summary>分母与解释</summary><pre>{{ JSON.stringify(row, null, 2) }}</pre></details></td></tr></tbody></table></div>
+      <div v-if="quality" class="scroll"><table><thead><tr><th>指标</th><th>观测值</th><th>单位</th><th>状态 / 明细</th></tr></thead><tbody><tr v-for="[key, row] in qualityRows" :key="key"><td>{{ labels[key] ?? key }}<small v-if="labels[key]">{{ key }}</small></td><td>{{ value(record(row).value) }}</td><td>{{ record(row).unit }}</td><td>{{ status(record(row).status) }}<details class="metric-reading"><summary>覆盖与解读</summary><p><strong>覆盖被试：</strong>{{ record(row).denominator?.available_subjects ?? '未记录' }} / {{ record(row).denominator?.expected_subjects ?? '未记录' }}</p><p><strong>如何比较：</strong>{{ direction(record(row).direction) }}</p><p v-if="record(row).formula"><strong>计算定义：</strong>{{ record(row).formula }}</p><p v-if="record(row).aggregation === 'equal_subjects_mean'"><strong>汇总方式：</strong>被试等权平均</p><p v-if="record(row).reason"><strong>状态原因：</strong>{{ record(row).reason }}</p><p>本项用于信号诊断，不参与主评分加权。解释时结合信号阶段、单位、参考方式与通带。</p><details><summary>原始测量记录</summary><pre>{{ JSON.stringify(row, null, 2) }}</pre></details></details></td></tr></tbody></table></div>
     </section>
     <section v-else>
       <div class="tools"><label>查看指标 <select v-model="reconstructionMetric"><option v-for="key in reconstructionMetrics" :key="key" :value="key">{{ labels[key] ?? key }}</option></select></label><a v-if="link(data.reconstruction?.receipt_artifact)" :href="link(data.reconstruction.receipt_artifact)" target="_blank" rel="noopener">污染配置、对照与逐被试结果 ↗</a></div>
@@ -113,7 +116,7 @@ const reconstructionProvenance = computed(() => ({ search_id: props.searchId, ca
       <AssessmentPlot v-if="reconstruction" title="污染残余与原信号改变" :series="reconstructionSeries" x-label="clean retention NRMSE（改变程度）" y-label="paired NRMSE（污染残余）" caption="每点对应一种污染条件的组均值。两轴的有效被试可能不同，人数见点标签；用于观察残余污染与信号改变，不用于配对推断或综合排名。" :provenance="reconstructionProvenance" />
       <template v-if="reconstruction"><p class="note">设计：{{ reconstruction.design === 'balanced' ? '全部被试均衡分配' : '全部条件交叉' }} · {{ reconstruction.subjects_expected }} 名被试 · {{ reconstruction.cases_expected }} 个预定个案</p><div class="scroll"><table><thead><tr><th>污染条件</th><th>观测值</th><th>有效 / 分配被试</th><th>状态</th></tr></thead><tbody><tr v-for="[key, row] in caseRows" :key="key"><td>{{ key }}</td><td>{{ value(row.metrics?.[reconstructionMetric]?.value) }}</td><td>{{ row.metrics?.[reconstructionMetric]?.n_valid }} / {{ row.metrics?.[reconstructionMetric]?.n_total }}</td><td>{{ status(row.metrics?.[reconstructionMetric]?.status) }}</td></tr></tbody></table></div></template>
     </section>
-    <slot name="parameters" />
+    <slot v-if="initialAxis !== 'parameters'" name="parameters" />
     <SearchInterpretation :search-id="searchId" :frozen="guideFrozen" />
   </div>
   <div v-else><p class="empty">该候选的多维评价尚未完成。可先查看运行参数，执行记录见文件列表。</p><slot name="parameters" /><SearchInterpretation :search-id="searchId" :frozen="guideFrozen" /></div>

@@ -4,22 +4,23 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
 import { artifactDescription, type WorkflowArtifact } from '../utils/artifacts'
 import { searchArtifactUrl } from '../api/searches'
+import WorkflowEvidence from '../components/workflows/WorkflowEvidence.vue'
 import ReportReader from '../components/workflows/ReportReader.vue'
 import ArtifactExplorer from '../components/workflows/ArtifactExplorer.vue'
 import type { SavedWorkflowEvaluation, WorkflowSearchSummary } from '../types/search'
 
 type Stage = { name: string; label: string; status: string; error?: string }
 type Workflow = { id: string; schema_version?: string; search_id?: string | null; search_summary?: WorkflowSearchSummary; engine?: string; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: { data_evaluation?: SavedWorkflowEvaluation; data_preprocessing?: { search_id?: string | null }; [key: string]: any }; events: {time:string;agent:string;message:string}[]; artifacts: WorkflowArtifact[] }
-type View = 'reports' | 'files' | 'logs' | 'delivery'
+type View = 'evidence' | 'reports' | 'files' | 'logs' | 'delivery'
 const route = useRoute(), router = useRouter()
 const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
 const roots = ref<string[]>([]), source = ref(''), busy = ref(false), error = ref('')
-const selectedId = ref(''), view = ref<View>('reports'), focused = ref(false)
+const selectedId = ref(''), view = ref<View>('evidence'), focused = ref(false)
 const files = ref<InstanceType<typeof ArtifactExplorer>>()
 const createDialog = ref<HTMLDialogElement>(), stageDialog = ref<HTMLDialogElement>()
 const stageName = ref(''), logQuery = ref('')
 const labels: Record<string,string> = {queued:'等待开始',pending:'等待执行',running:'正在执行',completed:'已完成',failed:'需要处理',interrupted:'等待恢复'}
-const viewLabels: Record<View,string> = {reports:'报告阅读',files:'记录文件',logs:'执行日志',delivery:'训练数据'}
+const viewLabels: Record<View,string> = {evidence:'流程与证据',reports:'报告阅读',files:'记录文件',logs:'执行日志',delivery:'训练数据'}
 let timer: ReturnType<typeof setTimeout> | undefined
 let disposed = false
 const supportedWorkflow = computed(() => current.value?.schema_version === '1' && current.value.engine === 'diagnostic-policy-search-v2')
@@ -51,7 +52,7 @@ const stageDescriptions: Record<string,string> = {
   data_survey:'核对本地文件、官网与论文，整理统计和后续操作需要的文献。',
   data_collection:'检查数据接入条件、核对任务标签，并生成标准数据副本。',
   data_preprocessing:'自动运行诊断驱动的预算策略搜索，比较频带、参考方式与逐被试无标签对齐策略。',
-  data_evaluation:'按开发评估中 CSP + 收缩 LDA 的被试平均平衡准确率选择方法，并记录选择依据。',
+  data_evaluation:'按本运行冻结的主指标选择预处理方法；评分协议、完整性与选择依据见关联搜索。',
   data_report:'将已验证的过程数据组织为可阅读的处理报告。',
   data_delivery:'导出训练数组、标签、被试分组和复现记录。',
 }
@@ -80,7 +81,7 @@ async function refresh(id:string) {
 }
 async function select(id:string) {
   if(timer) clearTimeout(timer)
-  if(selectedId.value!==id) { current.value=null; view.value='reports'; focused.value=false; logQuery.value='' }
+  if(selectedId.value!==id) { current.value=null; view.value='evidence'; focused.value=false; logQuery.value='' }
   selectedId.value=id
   await router.replace({path:'/workflows',query:{id}})
   await refresh(id)
@@ -128,8 +129,9 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
       </section>
       <section class="work-area" aria-label="运行产物工作区">
         <div v-if="searchId || (supportedWorkflow && current.outputs.data_collection)" v-show="!focused" class="content-toolbar" aria-label="预算搜索入口"><div><strong>{{ supportedWorkflow ? '诊断驱动的预算策略搜索' : '关联搜索记录' }}</strong><p v-if="supportedWorkflow" class="muted">流程自动运行搜索，按开发评估选择预处理策略。</p><p v-if="measuredEvaluation" class="muted">开发 BA {{ developmentScore }}<template v-if="evaluation?.selected_method_ref"> · 所选方法 {{ evaluation.selected_method_ref.id }}</template></p><div v-if="searchSummary" class="search-summary" aria-label="关联搜索进度"><p role="status">{{ searchStatuses[searchSummary.status] ?? searchSummary.status }}<template v-if="searchSummary.message"> · {{ searchSummary.message }}</template></p><p>候选 {{ count(searchSummary.usage?.candidates) }} / {{ count(searchSummary.budget?.max_candidates) }} · 提议 {{ count(searchSummary.usage?.proposals) }} / {{ count(searchSummary.budget?.max_proposals) }} · 证据读取 {{ count(searchSummary.usage?.evidence_reads) }} / {{ count(searchSummary.budget?.max_evidence_reads) }} · 耗时 {{ count(searchSummary.usage?.elapsed_seconds) }} / {{ count(searchSummary.budget?.max_seconds) }} 秒</p><p v-if="searchSummary.selected_candidate_id">所选候选 {{ searchSummary.selected_candidate_id }}</p></div></div><RouterLink v-if="searchId" class="primary" :to="{path:'/searches',query:{id:searchId}}">查看策略搜索 →</RouterLink><span v-else role="status">等待自动启动搜索</span></div>
-        <nav v-show="!focused" class="workspace-tabs" aria-label="工作区视图"><button v-for="(label,key) in viewLabels" :key="key" :aria-pressed="view===key" @click="view=key">{{label}}<span v-if="key==='reports'">{{reports.length}}</span><span v-if="key==='files'">{{current.artifacts.length}}</span></button><span class="workspace-caption">{{view==='reports'?'选择报告，在此阅读':view==='files'?'按模块查找全部产物':view==='logs'?'最近的记录显示在前':'下载与复现'}}</span></nav>
+        <nav v-show="!focused" class="workspace-tabs" aria-label="工作区视图"><button v-for="(label,key) in viewLabels" :key="key" :aria-pressed="view===key" @click="view=key">{{label}}<span v-if="key==='reports'">{{reports.length}}</span><span v-if="key==='files'">{{current.artifacts.length}}</span></button><span class="workspace-caption">{{view==='evidence'?'从证据理解每一步':view==='reports'?'选择报告，在此阅读':view==='files'?'按模块查找全部产物':view==='logs'?'最近的记录显示在前':'下载与复现'}}</span></nav>
         <div class="workspace-body">
+          <WorkflowEvidence :workflow-id="current.id" v-show="view==='evidence'" :search-id="searchId" :evaluation="evaluation" :report-count="reports.length" @reports="view='reports'" @files="view='files'" />
           <ReportReader v-show="view==='reports'" :reports="reports" :workflow-id="current.id" :file-url="fileUrl" :focused="focused" @focus="focused=!focused" @exit-focus="focused=false" />
           <ArtifactExplorer v-show="view==='files'" ref="files" :artifacts="current.artifacts" :workflow-id="current.id" :file-url="fileUrl" />
           <section v-show="view==='logs'" class="logs-panel" aria-label="执行日志"><header class="content-toolbar"><div><h2>执行日志</h2><span>{{current.events.length}} 条记录 · 最新在前</span></div><input v-model="logQuery" type="search" placeholder="搜索执行记录…" aria-label="搜索执行记录" /></header><ol class="event-list"><li v-for="event in events" :key="`${current.id}-${event.id}`"><time>{{date(event.time)}}</time><div><span class="event-agent">{{current.stages.find(s=>s.name===event.agent)?.label ?? event.agent}}</span><p>{{event.message}}</p></div></li><li v-if="!events.length" class="empty-message">{{logQuery?'没有匹配的执行记录。':'流程开始后，执行记录会在此更新。'}}</li></ol></section>

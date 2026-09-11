@@ -66,6 +66,20 @@ describe('SearchesView', () => {
     vi.useRealTimers()
   })
 
+  it('opens the decision overview first and navigates to a candidate evidence view', async () => {
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('[aria-label="决策概览"]').text()).toContain('这次预处理是怎样决定的')
+    await button(wrapper, '查看处理与参数').trigger('click')
+    expect(wrapper.findComponent({ name: 'SearchAssessment' }).props('initialAxis')).toBe('parameters')
+    expect(wrapper.findComponent({ name: 'SearchAssessment' }).props('candidateId')).toBe('c1')
+  })
+
+  it('opens the exact evidence destination from a workflow link', async () => {
+    const { wrapper } = await open('/searches?id=search-1&view=assessment&axis=quality')
+    expect(wrapper.findComponent({ name: 'SearchAssessment' }).props('initialAxis')).toBe('quality')
+    expect(wrapper.find('[aria-label="决策概览"]').exists()).toBe(false)
+  })
+
   it('creates from the workflow query with the exact default budget and opens the returned state', async () => {
     apiRequest.mockImplementation(async (path: string, init?: RequestInit) => path === '/api/searches' && !init ? [] : state({ status: 'preparing' }))
     const { wrapper, router } = await open('/searches?workflow=source-1')
@@ -175,6 +189,7 @@ describe('SearchesView', () => {
     expect(wrapper.text()).toContain('LLM 调用 4')
     expect(wrapper.text()).toContain('停止原因：达到候选预算')
     expect(wrapper.text()).toContain('训练 2 人，开发 2 人')
+    await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('72.5%')
     expect(wrapper.get('tr.selected').text()).toContain('+2.5 pp')
     expect(wrapper.get('tr.selected').text()).toContain('98 / 100')
@@ -357,6 +372,7 @@ describe('SearchesView', () => {
     expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
     expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('对数方差 + 标准化 + 逻辑回归')
     expect(wrapper.text()).not.toContain('CSP')
+    await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('72.5%')
     await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
     expect(wrapper.get('iframe').attributes('src')).toContain('/api/searches/search-1/artifacts/report/report.html?download=false')
@@ -373,6 +389,7 @@ describe('SearchesView', () => {
     const { wrapper } = await open('/searches?id=search-1')
     expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
     expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('保存的评价器')
+    await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('62.0%')
     expect(wrapper.text()).not.toContain('CSP')
     const calls = apiRequest.mock.calls.length
@@ -435,6 +452,7 @@ describe('SearchesView', () => {
           subjects: { S003: { applied_adaptation: 'scale_only', gate_passed: false, fallback_reason: '未达到条件阈值', covariance_anisotropy: 8, gate_metric_value: 2, fit_trials: 40, transform_path: null, transform_sha256: null, unit: 'dimensionless' } } } } }] })
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('60.0%')
     expect(wrapper.get('tr.selected').text()).toContain('描述性区间 -2.0 pp ～ +10.0 pp')
     expect(wrapper.get('tr.selected').text()).toContain('2 名配对被试 · 开发比较')
@@ -585,6 +603,7 @@ describe('SearchesView', () => {
     })
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
+    await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tbody').text()).toContain(translated)
     expect(wrapper.get('tbody').text()).toContain('— / —')
     await button(wrapper, '开发被试').trigger('click')

@@ -139,6 +139,7 @@ const result = await build({
       if (normalized.endsWith('/src/api/client.ts')) return `export {apiUrl, apiRequest} from 'virtual:offline-runtime'`
       if (normalized.endsWith('/src/views/WorkflowsView.vue') && !id.includes('?')) {
         source = replace(source, "import { apiRequest, apiUrl } from '../api/client'", "import { apiRequest } from '../api/client'\nimport { artifactUrl } from 'virtual:offline-runtime'")
+        source = replace(source, '<WorkflowEvidence :workflow-id=', '<WorkflowEvidence offline :workflow-id=')
         const start = source.indexOf('function fileUrl(')
         const end = source.indexOf('\n}', start)
         if (start < 0 || end < 0) throw new Error('Cannot locate the original artifact URL helper.')
