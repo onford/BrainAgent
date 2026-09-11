@@ -46,6 +46,7 @@ const snapshot = { workflow, embedded, capturedAt: new Date().toISOString() }
 const data = gzipSync(Buffer.from(JSON.stringify(snapshot)), { level: 9 }).toString('base64')
 
 const runtime = `
+import { t } from ${JSON.stringify(path.join(frontend, 'src/i18n/index.ts').replaceAll('\\', '/'))};
 export let snapshot;
 const urls = new Map();
 export async function initialize() {
@@ -55,11 +56,11 @@ export async function initialize() {
 }
 export const apiUrl = path => path;
 export async function apiRequest(path, init = {}) {
-  if (init.method && init.method !== 'GET') throw new Error('此文件只展示已保存的运行结果。');
+  if (init.method && init.method !== 'GET') throw new Error(t('This file displays saved results only.'));
   if (path === '/api/workflows/sources') return {allowed_roots: [snapshot.workflow.request.source_root]};
   if (path === '/api/workflows') return [snapshot.workflow];
   if (path === '/api/workflows/' + snapshot.workflow.id) return snapshot.workflow;
-  throw new Error('离线快照未包含此内容。');
+  throw new Error(t('This content is not included in the offline snapshot.'));
 }
 export function artifactText(name) { return snapshot.embedded[name]?.content || ''; }
 export function artifactUrl(name) {
@@ -94,13 +95,20 @@ export function installOfflineLinks() {
 `
 
 const entry = `
-import { createApp } from 'vue';
+import { createApp, watch } from 'vue';
+import { initializeLocale, locale, t } from ${JSON.stringify(path.join(frontend, 'src/i18n/index.ts').replaceAll('\\', '/'))};
 import { createRouter, createMemoryHistory } from 'vue-router';
 import WorkflowsView from ${JSON.stringify(path.join(frontend, 'src/views/WorkflowsView.vue').replaceAll('\\', '/'))};
 import ${JSON.stringify(path.join(frontend, 'src/style.css').replaceAll('\\', '/'))};
 import { initialize, installOfflineLinks, snapshot } from 'virtual:offline-runtime';
 (async () => {
   try {
+    initializeLocale();
+    watch(locale, () => {
+      document.title = t('Brain Agent · Saved results · Offline');
+      document.getElementById('offline-record-note').textContent = t('This file remains in the original run directory. The offline edition includes its metadata; large signal arrays, training arrays, and per-record intermediate files are not embedded.');
+      document.querySelector('#offline-record-dialog button').textContent = t('Close');
+    }, {immediate:true});
     await initialize();
     const router = createRouter({history:createMemoryHistory(), routes:[{path:'/workflows',component:WorkflowsView}]});
     await router.push({path:'/workflows',query:{id:snapshot.workflow.id}});
@@ -109,7 +117,7 @@ import { initialize, installOfflineLinks, snapshot } from 'virtual:offline-runti
     installOfflineLinks();
     document.documentElement.dataset.snapshotReady = 'true';
   } catch (error) {
-    document.getElementById('app').textContent = '无法打开离线快照。请使用近期版本的 Edge、Chrome、Firefox 或 Safari。' + error.message;
+    document.getElementById('app').textContent = t('Unable to open the offline snapshot. Use a recent version of Edge, Chrome, Firefox, or Safari.') + ' ' + error.message;
     console.error(error);
   }
 })();
@@ -145,13 +153,13 @@ const result = await build({
         if (start < 0 || end < 0) throw new Error('Cannot locate the original artifact URL helper.')
         source = source.slice(0, start) + 'function fileUrl(name: string, download = true) { return artifactUrl(name) }' + source.slice(end + 2)
         source = replace(source, "if(active.value) timer=setTimeout(()=>void refresh(id),2000)", '// This saved state never polls the backend.')
-        source = replace(source, "toLocaleString('zh-CN',{month:", "toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:")
-        source = replace(source, '<RouterLink to="/" aria-label="返回对话">←</RouterLink>', '<span class="offline-back" aria-label="离线展示">←</span>')
-        source = replace(source, '<span class="brand-caption">数据工作区</span>', '<span class="brand-caption">数据工作区 · 离线展示</span>')
+        source = replace(source, "toLocaleString(formatLocale.value,{month:", "toLocaleString(formatLocale.value,{timeZone:'Asia/Shanghai',month:")
+        source = replace(source, '<RouterLink to="/" :aria-label="t(\'Back to chat\')">←</RouterLink>', '<span class="offline-back" :aria-label="t(\'Offline edition\')">←</span>')
+        source = replace(source, '<span class="brand-caption">{{ t(\'Data workspace\') }}</span>', '<span class="brand-caption">{{ t(\'Data workspace\') }} · {{ t(\'Offline edition\') }}</span>')
         source = replace(source, '<select :value="selectedId"', '<select disabled :value="selectedId"')
-        source = replace(source, '<button class="primary new-run" @click="createDialog?.showModal()">', '<button class="primary new-run" disabled title="离线展示，不能新建流程">')
-        source = replace(source, '<RouterLink v-if="searchId" class="primary" :to="{path:\'/searches\',query:{id:searchId}}">查看策略搜索 →</RouterLink>', '<button v-if="searchId" class="primary" disabled title="策略搜索详情需在在线工作区查看">查看策略搜索 →</button>')
-        source = source.replaceAll(':disabled="busy" @click="retry"', 'disabled title="离线展示"')
+        source = replace(source, '<button class="primary new-run" @click="createDialog?.showModal()">', '<button class="primary new-run" disabled :title="t(\'Offline edition: new workflows are unavailable.\')">')
+        source = replace(source, '<RouterLink v-if="searchId" class="primary" :to="{path:\'/searches\',query:{id:searchId}}">{{ t(\'View strategy search →\') }}</RouterLink>', '<button v-if="searchId" class="primary" disabled :title="t(\'Search details require the online workspace.\')">{{ t(\'View strategy search →\') }}</button>')
+        source = source.replaceAll(':disabled="busy" @click="retry"', 'disabled :title="t(\'Offline edition\')"')
         return source
       }
       if (normalized.endsWith('/components/workflows/ReportReader.vue') && !id.includes('?')) {
@@ -191,19 +199,19 @@ const css = outputs.filter(item => item.type === 'asset' && item.fileName.endsWi
 if (!js || !css) throw new Error('The export must contain both compiled UI and stylesheet.')
 const capturedAt = snapshot.capturedAt
 const html = `<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; frame-src 'self' about: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="description" content="Brain Agent 已保存运行 ${id} 的离线展示，包含原始报告、执行日志和文件清单。">
-<title>Brain Agent · 最新运行结果 · 离线展示</title>
+<title>Brain Agent · Saved results · Offline</title>
 <style>${css}
 .workflow-page button:disabled{cursor:default}.offline-back{font-size:18px;color:#8c9c91;margin-right:8px}
 #offline-record-dialog{font:14px/1.6 system-ui,sans-serif;border:1px solid #d9e4dc;border-radius:16px;padding:28px;width:min(640px,90vw);color:#314d3b}
 #offline-record-dialog::backdrop{background:#19342455}#offline-record-dialog h2{font-size:17px;overflow-wrap:anywhere}#offline-record-dialog pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#f3f7f4;padding:16px;border-radius:8px}#offline-record-dialog button{background:#285e43;color:#fff;border:0;border-radius:7px;padding:8px 18px;cursor:pointer}
 </style></head><body>
 <!-- Frozen workflow: ${id}; captured: ${capturedAt}; original updated_at: ${workflow.updated_at}. -->
-<div id="app"><p style="padding:32px;color:#315b3e;background:#f2f5f3">正在打开已保存的运行结果…</p></div>
-<dialog id="offline-record-dialog"><h2 id="offline-record-name"></h2><p>此文件保留在原始运行目录中。离线展示包含完整文件清单；大体积信号、训练数组及逐记录中间文件未嵌入。</p><pre id="offline-record-meta"></pre><form method="dialog"><button>关闭</button></form></dialog>
-<noscript>请启用浏览器 JavaScript 以切换报告、查看日志。页面不连接网络或运行 Agent。</noscript>
+<div id="app"><p style="padding:32px;color:#315b3e;background:#f2f5f3">Loading saved results… / 正在打开已保存结果…</p></div>
+<dialog id="offline-record-dialog"><h2 id="offline-record-name"></h2><p id="offline-record-note"></p><pre id="offline-record-meta"></pre><form method="dialog"><button>Close / 关闭</button></form></dialog>
+<noscript>Enable JavaScript to browse reports and logs. No network connection is used. / 请启用 JavaScript 以浏览报告和日志；页面不连接网络。</noscript>
 <script id="snapshot-data" type="application/octet-stream">${data}</script>
 <script>${js.replaceAll('</script', '<\\/script')}</script></body></html>`
 await mkdir(path.dirname(output), {recursive:true})

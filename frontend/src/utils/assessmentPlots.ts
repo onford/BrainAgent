@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 export interface Point { x: number; y: number | null; label?: string }
 export interface Series { name: string; points: Point[]; connect?: boolean }
 export const finite = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -12,7 +13,7 @@ export function curve(name: string, x: unknown[], y: unknown[], convert = numeri
   return { name, points: x.map((v, i) => ({ x: v as number, y: convert(y[i]) })) }
 }
 export function perSubject(receipt: any, stage: string, metric: string): Series {
-  return { name: '逐被试', connect: false, points: Object.entries(receipt?.bysubject ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([id, row]: [string, any], i) => ({ x: i + 1, y: numeric(row.stages?.[stage]?.[metric]?.value), label: id })) }
+  return { get name() { return t('By subject') }, connect: false, points: Object.entries(receipt?.bysubject ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([id, row]: [string, any], i) => ({ x: i + 1, y: numeric(row.stages?.[stage]?.[metric]?.value), label: id })) }
 }
 // Preserve the recorded frequency/threshold grid; no interpolation or null=>0.
 export function metricCurves(row: any, detail = false): { series: Series[]; xLabel: string; yLabel: string } {
@@ -21,7 +22,7 @@ export function metricCurves(row: any, detail = false): { series: Series[]; xLab
   const result = { series: [] as Series[], xLabel: '', yLabel: row?.unit ?? '' }
   if (!Array.isArray(row?.value)) return result
   if (['oha', 'thv', 'chv'].includes(mid) && Array.isArray(axes?.thresholds_uv)) {
-    return { series: [curve(mid.toUpperCase(), axes.thresholds_uv, row.value)], xLabel: '阈值 (µV)', yLabel: '超限比例 (0–1)' }
+    return { series: [curve(mid.toUpperCase(), axes.thresholds_uv, row.value)], get xLabel() { return t('Threshold (µV)') }, get yLabel() { return t('Exceedance fraction (0–1)') } }
   }
   if (mid === 'psd' && Array.isArray(axes?.frequencies_hz)) {
     let values = row.value
@@ -33,10 +34,10 @@ export function metricCurves(row: any, detail = false): { series: Series[]; xLab
         return a.length ? (a[Math.floor((a.length - 1) / 2)]! + a[Math.floor(a.length / 2)]!) / 2 : null
       })))
     }
-    return { series: [curve('PSD', axes.frequencies_hz, values, db)], xLabel: '频率 (Hz)', yLabel: `dB(${row.unit})` }
+    return { series: [curve('PSD', axes.frequencies_hz, values, db)], get xLabel() { return t('Frequency (Hz)') }, yLabel: `dB(${row.unit})` }
   }
   if (mid === 'psd_window_quantiles' && Array.isArray(axes?.frequencies_hz)) {
-    return { series: row.value.map((values: unknown[], i: number) => curve(['Q10', 'Q50', 'Q90'][i] ?? String(i), axes.frequencies_hz, values, db)), xLabel: '频率 (Hz)', yLabel: `dB(${row.unit})` }
+    return { series: row.value.map((values: unknown[], i: number) => curve(['Q10', 'Q50', 'Q90'][i] ?? String(i), axes.frequencies_hz, values, db)), get xLabel() { return t('Frequency (Hz)') }, yLabel: `dB(${row.unit})` }
   }
   return result
 }

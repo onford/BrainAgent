@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t, formatLocale } from '../i18n'
 import { computed, ref } from 'vue'
 import { finite, exportSvg, downloadData, type Series } from '../utils/assessmentPlots'
 const props = defineProps<{ title: string; series: Series[]; xLabel: string; yLabel: string; caption: string; yDomain?: [number, number]; reference?: number; provenance?: unknown; equalAspect?: boolean }>()
@@ -21,7 +22,7 @@ const bounds = computed(() => {
 })
 const px = (x: number) => 78 + (x-bounds.value.x0)/(bounds.value.x1-bounds.value.x0)*650
 const py = (y: number) => 280 - (y-bounds.value.y0)/(bounds.value.y1-bounds.value.y0)*218
-const fmt = (v: number) => Number.isFinite(v) ? Number(v.toPrecision(4)).toLocaleString('zh-CN') : '—'
+const fmt = (v: number) => Number.isFinite(v) ? Number(v.toPrecision(4)).toLocaleString(formatLocale.value) : '—'
 function path(s: Series) {
   let previous = false
   return s.points.map(p => {
@@ -32,7 +33,7 @@ function path(s: Series) {
 </script>
 <template>
   <figure v-if="values.length" class="plot eeg-figure">
-    <div class="heading"><strong>{{ title }}</strong><div><button @click="exportSvg(svg, title)">下载图形 SVG</button><button @click="downloadData(title + '.json', { title, xLabel, yLabel, caption, series, provenance })">下载数据 JSON</button></div></div>
+    <div class="heading"><strong>{{ title }}</strong><div><button @click="exportSvg(svg, title)">{{ t('Download SVG') }}</button><button @click="downloadData(title + '.json', { title, xLabel, yLabel, caption, series, provenance })">{{ t('Download JSON') }}</button></div></div>
     <div class="plot-scroll"><svg ref="svg" viewBox="0 0 780 355" role="img" :aria-label="`${title}；${xLabel}；${yLabel}`" style="background:white;font:15px system-ui,sans-serif;color:#29433b;stroke:none" width="780" height="355">
       <title>{{ title }}</title><desc>{{ caption }}</desc>
       <text x="78" y="22" fill="#29433b" font-size="15">{{ yLabel }}</text>
@@ -41,11 +42,11 @@ function path(s: Series) {
       <g v-for="(s, i) in series" :key="s.name"><path v-if="s.connect !== false" :d="path(s)" fill="none" :stroke="colors[i % colors.length]" stroke-width="1.8" :stroke-dasharray="i % 3 === 1 ? '6 3' : i % 3 === 2 ? '2 3' : undefined" /><template v-for="(p, j) in s.points" :key="j"><circle v-if="finite(p.x) && finite(p.y)" :cx="px(p.x)" :cy="py(p.y)" :r="s.connect === false ? 3.5 : 1.7" :fill="colors[i % colors.length]"><title>{{ s.name }} · {{ p.label || fmt(p.x) }} · {{ fmt(p.y) }} {{ yLabel }}</title></circle></template></g>
       <text x="400" y="340" text-anchor="middle" fill="#29433b">{{ xLabel }}</text>
     </svg></div>
-    <div class="legend"><span v-for="(s, i) in series" :key="s.name" :style="{ color: colors[i % colors.length] }">{{ ['━', '┄', '┈'][i % 3] }} {{ s.name }} · {{ s.points.filter(p => finite(p.x) && finite(p.y)).length }}/{{ s.points.length }} 点</span></div>
+    <div class="legend"><span v-for="(s, i) in series" :key="s.name" :style="{ color: colors[i % colors.length] }">{{ t('{0} {1} · {2}/{3} points', { 0: ['━', '┄', '┈'][i % 3], 1: s.name, 2: s.points.filter(p => finite(p.x) && finite(p.y)).length, 3: s.points.length }) }}</span></div>
     <figcaption>{{ caption }}</figcaption>
-    <details><summary>查看点标签与数值</summary><div class="table-scroll"><table><thead><tr><th>系列</th><th>对象</th><th>{{ xLabel }}</th><th>{{ yLabel }}</th></tr></thead><tbody><template v-for="s in series" :key="s.name"><tr v-for="(p, i) in s.points" :key="i"><td>{{ s.name }}</td><td>{{ p.label || '—' }}</td><td>{{ fmt(p.x) }}</td><td>{{ finite(p.y) ? fmt(p.y) : '缺失' }}</td></tr></template></tbody></table></div></details>
+    <details><summary>{{ t('Point labels and values') }}</summary><div class="table-scroll"><table><thead><tr><th>{{ t('Series') }}</th><th>{{ t('Item') }}</th><th>{{ xLabel }}</th><th>{{ yLabel }}</th></tr></thead><tbody><template v-for="s in series" :key="s.name"><tr v-for="(p, i) in s.points" :key="i"><td>{{ s.name }}</td><td>{{ p.label || '—' }}</td><td>{{ fmt(p.x) }}</td><td>{{ finite(p.y) ? fmt(p.y) : t('Missing') }}</td></tr></template></tbody></table></div></details>
   </figure>
-  <p v-else class="unavailable">{{ title }}：没有可绘制的有限值；请查看状态和缺失原因。</p>
+  <p v-else class="unavailable">{{ t('{0}: no finite values to plot. See the status and reasons for missing data.', { 0: title }) }}</p>
 </template>
 <style scoped>
 .plot-scroll { overflow-x: auto; }

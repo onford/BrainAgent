@@ -53,6 +53,14 @@ async function click(element) {
 }
 const byText = (selector, text) => [...document.querySelectorAll(selector)].find(node => node.textContent.includes(text))
 await until(() => document.querySelector('.dataset-heading h1'))
+assert.equal(document.documentElement.lang, 'en')
+assert.ok(document.querySelector('.workspace-tabs').textContent.includes('Workflow and evidence'))
+const initialFrame = document.querySelector('.report-reader iframe')
+const initialSource = initialFrame?.getAttribute('srcdoc')
+await click(document.querySelector('button[lang="zh-CN"]'))
+assert.equal(document.documentElement.lang, 'zh-CN')
+assert.equal(document.querySelector('.report-reader iframe'), initialFrame)
+assert.equal(initialFrame?.getAttribute('srcdoc'), initialSource)
 assert.equal(document.querySelector('.dataset-heading h1').textContent, snapshot.workflow.outputs.data_survey.profile.name)
 assert.equal(document.querySelectorAll('.stages > li.completed').length, 6)
 assert.ok(document.querySelector('.new-run').disabled)
@@ -117,7 +125,7 @@ await tick()
 assert.deepEqual(network,[], 'The standalone HTML attempted a network request')
 assert.deepEqual(errors,[], 'The standalone HTML emitted an error')
 const result = {workflowId:receipt.workflowId, passed:true, networkRequests:network.length, errors,
-  checked:['gzip payload and embedded source hashes','file URL startup','original layout and six completed modules','execution controls disabled','all seven complete report srcdocs','report outline','focus mode','361 logs and filtering','24,812 artifact entries and filtering','large-file metadata','training shape','stage dialog and module filter'],
+  checked:['gzip payload and embedded source hashes','file URL startup','English default and Chinese switching without replacing reports','original layout and six completed modules','execution controls disabled','all seven complete report srcdocs','report outline','focus mode','361 logs and filtering','24,812 artifact entries and filtering','large-file metadata','training shape','stage dialog and module filter'],
   limitations:['jsdom does not perform visual rendering or implement native srcdoc navigation; complete iframe content and the first report load hook were checked.']}
 await writeFile(filename.replace(/\.html$/, '.verification.json'), JSON.stringify(result,null,2)+'\n')
 console.log(JSON.stringify(result,null,2))

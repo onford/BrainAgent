@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import { t } from '../i18n'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
@@ -25,11 +27,11 @@ const enabled = ref(true)
 const selected = computed(() => tools.value.find((tool) => tool.id === selectedId.value) ?? null)
 
 function statusLabel(tool: ToolIntegration): string {
-  if (!tool.enabled) return '已停用'
-  if (tool.status === 'valid') return '已验证'
-  if (tool.status === 'invalid') return '验证失败'
-  if (tool.credential_requirement === 'none' && !tool.configured) return '可直接使用'
-  return tool.configured ? '待验证' : '未配置'
+  if (!tool.enabled) return t('Disabled')
+  if (tool.status === 'valid') return t('Verified')
+  if (tool.status === 'invalid') return t('Verification failed')
+  if (tool.credential_requirement === 'none' && !tool.configured) return t('Ready to use')
+  return tool.configured ? t('Awaiting verification') : t('Not configured')
 }
 
 function statusClass(tool: ToolIntegration): string {
@@ -79,7 +81,7 @@ async function load(): Promise<void> {
     const next = tools.value.find((tool) => tool.id === selectedId.value) ?? tools.value[0]
     if (next) choose(next)
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '无法加载工具配置'
+    error.value = reason instanceof Error ? reason.message : t('Unable to load tool configuration')
   } finally {
     loading.value = false
   }
@@ -102,9 +104,9 @@ async function save(): Promise<void> {
     })
     tools.value = tools.value.map((tool) => tool.id === updated.id ? updated : tool)
     choose(updated)
-    notice.value = '配置已安全保存，连接状态已重置为待验证。'
+    notice.value = t('Configuration saved. Verify the connection to confirm the updated settings.')
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '保存失败'
+    error.value = reason instanceof Error ? reason.message : t('Save failed')
   } finally {
     busyAction.value = null
   }
@@ -118,25 +120,25 @@ async function validate(): Promise<void> {
   try {
     const result = await validateIntegration(selected.value.id)
     await load()
-    if (result.valid) notice.value = '连接验证成功。'
+    if (result.valid) notice.value = t('Connection verified.')
     else error.value = result.message
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '连接验证失败'
+    error.value = reason instanceof Error ? reason.message : t('Connection verification failed')
   } finally {
     busyAction.value = null
   }
 }
 
 async function clearConfiguration(): Promise<void> {
-  if (!selected.value || !window.confirm(`删除 ${selected.value.name} 的所有已保存配置？`)) return
+  if (!selected.value || !window.confirm(t('Delete all saved configuration for {0}?', { 0: selected.value.name }))) return
   busyAction.value = 'delete'
   error.value = null
   try {
     await deleteIntegration(selected.value.id)
     await load()
-    notice.value = '已删除该工具的用户配置。'
+    notice.value = t('User configuration for this tool was deleted.')
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : '删除失败'
+    error.value = reason instanceof Error ? reason.message : t('Deletion failed')
   } finally {
     busyAction.value = null
   }
@@ -148,22 +150,22 @@ onMounted(load)
 <template>
   <main class="integrations-page">
     <header class="registry-header">
-      <RouterLink to="/" class="back-link">← 返回对话</RouterLink>
-      <span class="runtime-state"><i></i>Credential vault ready</span>
+      <RouterLink to="/" class="back-link">{{ t('← Back to chat') }}</RouterLink>
+      <LanguageSwitcher />
     </header>
 
     <div class="integrations-shell">
       <section class="integrations-heading">
-        <span class="page-kicker">TOOL INTEGRATIONS</span>
-        <h1>外部工具与凭据</h1>
-        <p>为研究 Agent 配置外部数据源。密钥只会加密保存并在服务端调用时短暂解密，不会进入对话内容。</p>
+        <span class="page-kicker">{{ t('Tool integrations') }}</span>
+        <h1>{{ t('External tools and credentials') }}</h1>
+        <p>{{ t('Configure external data sources. Credentials are stored encrypted and decrypted only for server-side calls; they are not included in conversations.') }}</p>
       </section>
 
-      <div v-if="loading" class="integration-loading">正在读取工具定义…</div>
+      <div v-if="loading" class="integration-loading">{{ t('Loading tool definitions…') }}</div>
       <p v-else-if="error && !selected" class="integration-alert error">{{ error }}</p>
 
       <div v-else class="integration-workspace">
-        <nav class="tool-catalog" aria-label="外部工具列表">
+        <nav class="tool-catalog" :aria-label="t('External tools')">
           <button
             v-for="tool in tools"
             :key="tool.id"
@@ -189,19 +191,19 @@ onMounted(load)
 
           <div class="integration-meta">
             <span><strong>{{ selected.cost_policy.tier }}</strong>{{ selected.cost_policy.summary }}</span>
-            <span><strong>凭据</strong>{{ selected.credential_requirement === 'required' ? '必需' : selected.credential_requirement === 'optional' ? '可选' : '无需凭据' }}</span>
+            <span><strong>{{ t('Credentials') }}</strong>{{ selected.credential_requirement === 'required' ? t('Required') : selected.credential_requirement === 'optional' ? t('Optional') : t('No credentials needed') }}</span>
           </div>
 
           <form class="credential-form" @submit.prevent="save">
             <label class="enabled-row">
-              <span><strong>启用此工具</strong><small>停用后 Agent 无法取得该工具客户端。</small></span>
+              <span><strong>{{ t('Enable this tool') }}</strong><small>{{ t('Disabled tools are unavailable to the agent.') }}</small></span>
               <input v-model="enabled" type="checkbox" />
             </label>
 
             <div v-if="selected.credential_schema.length" class="credential-fields">
               <div v-for="field in selected.credential_schema" :key="field.key" class="credential-field">
                 <label :for="`${selected.id}-${field.key}`">
-                  {{ field.label }} <em v-if="field.required">必填</em>
+                  {{ field.label }} <em v-if="field.required">{{ t('Required field') }}</em>
                   <small v-if="field.description">{{ field.description }}</small>
                 </label>
                 <div class="credential-control">
@@ -220,7 +222,7 @@ onMounted(load)
                     :value="values[field.key]"
                     @change="updateValue(field, $event)"
                   >
-                    <option value="">请选择</option>
+                    <option value="">{{ t('Select an option') }}</option>
                     <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option>
                   </select>
                   <input
@@ -230,21 +232,21 @@ onMounted(load)
                     :checked="Boolean(values[field.key])"
                     @change="updateValue(field, $event)"
                   />
-                  <button v-if="field.configured && !removals[field.key]" type="button" class="field-remove" @click="removeField(field)">移除</button>
-                  <span v-if="removals[field.key]" class="removal-note">保存后移除</span>
+                  <button v-if="field.configured && !removals[field.key]" type="button" class="field-remove" @click="removeField(field)">{{ t('Remove') }}</button>
+                  <span v-if="removals[field.key]" class="removal-note">{{ t('Removed on save') }}</span>
                 </div>
               </div>
             </div>
-            <div v-else class="no-credentials">此服务可匿名访问，不需要保存凭据。</div>
+            <div v-else class="no-credentials">{{ t('This service supports anonymous access. No credentials need to be saved.') }}</div>
 
             <p v-if="notice" class="integration-alert success">{{ notice }}</p>
             <p v-if="error" class="integration-alert error">{{ error }}</p>
-            <p v-if="selected.last_validation_error" class="validation-history">最近验证：{{ selected.last_validation_error }}</p>
+            <p v-if="selected.last_validation_error" class="validation-history">{{ t('Last verified: {0}', { 0: selected.last_validation_error }) }}</p>
 
             <div class="integration-actions">
-              <button class="primary-action" type="submit" :disabled="Boolean(busyAction)">{{ busyAction === 'save' ? '保存中…' : '保存配置' }}</button>
-              <button class="secondary-action" type="button" :disabled="Boolean(busyAction)" @click="validate">{{ busyAction === 'validate' ? '验证中…' : '验证连接' }}</button>
-              <button v-if="selected.configured" class="danger-action" type="button" :disabled="Boolean(busyAction)" @click="clearConfiguration">删除配置</button>
+              <button class="primary-action" type="submit" :disabled="Boolean(busyAction)">{{ busyAction === 'save' ? t('Saving…') : t('Save configuration') }}</button>
+              <button class="secondary-action" type="button" :disabled="Boolean(busyAction)" @click="validate">{{ busyAction === 'validate' ? t('Verifying…') : t('Verify connection') }}</button>
+              <button v-if="selected.configured" class="danger-action" type="button" :disabled="Boolean(busyAction)" @click="clearConfiguration">{{ t('Delete configuration') }}</button>
             </div>
           </form>
         </section>

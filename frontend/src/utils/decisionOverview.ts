@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import type { SearchCandidate, SearchState } from '../types/search'
 
 export function assessmentProtocol(state: SearchState, candidate?: SearchCandidate) {
@@ -18,8 +19,8 @@ export function decisionScore(state: SearchState, candidate: SearchCandidate): n
 
 export function protocolLabel(state: SearchState, candidate?: SearchCandidate) {
   const kind = assessmentProtocol(state, candidate)
-  if (kind === 'eegnet') return 'EEGNet 三种子被试宏平均 BA'
-  if (kind === 'legacy-suite') return '历史协议 · 三主模型平均 BA'
+  if (kind === 'eegnet') return t('EEGNet subject-macro BA, averaged over three seeds')
+  if (kind === 'legacy-suite') return t('Legacy protocol · Three-primary-model mean BA')
   const learner = candidate?.receipt?.primary_learner ?? (candidate?.receipt?.evaluator_version === 1 ? 'logvariance-scaler-logistic-v1' : state.protocol?.evaluator)
-  return ['csp4_reg0.1_shrinkage_lda', 'csp-shrinkage-lda-v2'].includes(learner ?? '') ? 'CSP + 收缩 LDA · 被试平均 BA' : `保存的评价器${learner ? `（${learner}）` : ''} · BA`
+  return ['csp4_reg0.1_shrinkage_lda', 'csp-shrinkage-lda-v2'].includes(learner ?? '') ? t('CSP + shrinkage LDA · Subject-mean BA') : t('Saved evaluator{0} · BA', { 0: learner ? `（${learner}）` : '' })
 }

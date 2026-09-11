@@ -1,8 +1,32 @@
 import { mount, flushPromises } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import ReportReader from './ReportReader.vue'
+import { nextTick } from 'vue'
+import { setLocale } from '../../i18n'
 
 describe('ReportReader', () => {
+  it('keeps the report document and reading position when localized titles change', async () => {
+    const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [
+      { name: 'report/report.html', title: '处理报告', description: '说明' },
+    ] } })
+    const frame = wrapper.get('iframe').element
+    const doc = document.implementation.createHTMLDocument()
+    doc.body.innerHTML = '<main><h2>原始章节</h2><p>原始正文 63.27%</p></main>'
+    Object.defineProperty(doc, 'scrollingElement', { value: doc.documentElement })
+    Object.defineProperty(frame, 'contentDocument', { value: doc })
+    await wrapper.get('iframe').trigger('load')
+    doc.documentElement.scrollTop = 320
+    setLocale('en')
+    await wrapper.setProps({ reports: [{ name: 'report/report.html', title: 'Processing report', description: 'Description' }] })
+    await nextTick()
+    expect(wrapper.get('iframe').element).toBe(frame)
+    expect(doc.documentElement.scrollTop).toBe(320)
+    expect(doc.querySelector('main')!.textContent).toBe('原始章节原始正文 63.27%')
+    expect(wrapper.text()).toContain('Report navigation')
+    expect(wrapper.text()).not.toContain('Loading report…')
+    expect(wrapper.get('.outline').text()).toContain('原始章节')
+    wrapper.unmount()
+  })
   it('keeps the current reading when a result report is generated later', async () => {
     const basic = { name: 'survey/reports/dataset-basic.html', title: '基本信息', description: '范围' }
     const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [basic] } })

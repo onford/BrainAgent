@@ -8,6 +8,7 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     test: {
       environment: 'jsdom',
+      setupFiles: ['./tests/setup.ts'],
     },
     server: {
       port: Number(env.FRONTEND_PORT ?? 5173),

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
+import { t, formatLocale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useChatStore } from '../stores/chat'
@@ -22,40 +24,40 @@ const copiedMessageId = ref<string | null>(null)
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
 
 const currentTitle = computed(() =>
-  store.activeSession ? sessionTitle(store.activeSession) : '新对话',
+  store.activeSession ? sessionTitle(store.activeSession) : t('New conversation'),
 )
 
 function sessionTitle(session: Session): string {
   const firstUser = session.messages.find((message) => message.role === 'user')?.content.trim()
-  return firstUser?.replace(/\s+/g, ' ') || '新对话'
+  return firstUser?.replace(/\s+/g, ' ') || t('New conversation')
 }
 
 function sessionPreview(session: Session): string {
   const last = [...session.messages].reverse().find((message) => message.content.trim())
-  return last?.content.replace(/\s+/g, ' ') || '等待输入…'
+  return last?.content.replace(/\s+/g, ' ') || t('Waiting for input…')
 }
 
 function timeLabel(value: string): string {
   const date = new Date(value)
   const now = new Date()
   if (date.toDateString() === now.toDateString()) {
-    return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit' }).format(date)
+    return new Intl.DateTimeFormat(formatLocale.value, { hour: '2-digit', minute: '2-digit' }).format(date)
   }
-  return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(date)
+  return new Intl.DateTimeFormat(formatLocale.value, { month: 'numeric', day: 'numeric' }).format(date)
 }
 
 function agentLabel(name: string | null | undefined) {
-  return ({ orchestrator: '助手', data_survey: '数据调研', data_preprocessing: '数据预处理', data_collection: '数据接入', data_evaluation: '效果评价', data_report: '报告生成', data_delivery: '数据交付' } as Record<string,string>)[name ?? 'orchestrator'] || name
+  return ({ get orchestrator() { return t('Assistant') }, get data_survey() { return t('Data research') }, get data_preprocessing() { return t('Data preprocessing') }, get data_collection() { return t('Data ingestion') }, get data_evaluation() { return t('Performance evaluation') }, get data_report() { return t('Report generation') }, get data_delivery() { return t('Data delivery') } } as Record<string,string>)[name ?? 'orchestrator'] || name
 }
 
 function activityLabel(activity: StreamActivity): string {
   const labels: Record<string, string> = {
-    run_started: '开始分析',
-    thought: '规划下一步',
-    agent_started: '调用 Agent',
-    observation: '收到结果',
-    run_completed: '完成回答',
-    run_failed: '运行失败',
+    get run_started() { return t('Starting analysis') },
+    get thought() { return t('Planning next step') },
+    get agent_started() { return t('Calling agent') },
+    get observation() { return t('Result received') },
+    get run_completed() { return t('Response complete') },
+    get run_failed() { return t('Run failed') },
   }
   return activity.agent_name
     ? `${agentLabel(activity.agent_name)} · ${labels[activity.event_type] ?? activity.event_type}`
@@ -111,7 +113,7 @@ async function createConversation(): Promise<void> {
 async function removeConversation(session: Session): Promise<void> {
   if (store.runningSessionIds.includes(session.id)) return
   const title = sessionTitle(session)
-  if (!window.confirm(`确定删除“${title}”吗？此操作无法撤销。`)) return
+  if (!window.confirm(t('Delete “{0}”? This cannot be undone.', { 0: title }))) return
   await store.deleteSession(session.id).catch(() => undefined)
 }
 
@@ -135,7 +137,7 @@ async function copyMessage(message: ChatMessage): Promise<void> {
       copiedMessageId.value = null
     }, 1600)
   } catch {
-    store.error = '复制失败，请手动选择文本复制'
+    store.error = t('Copy failed. Select and copy the text manually.')
   }
 }
 
@@ -167,7 +169,7 @@ onBeforeUnmount(() => {
     <button
       v-if="sidebarOpen"
       class="sidebar-scrim"
-      aria-label="关闭会话侧栏"
+      :aria-label="t('Close conversation sidebar')"
       @click="sidebarOpen = false"
     />
 
@@ -180,17 +182,15 @@ onBeforeUnmount(() => {
       </div>
 
       <button class="new-chat-button" type="button" @click="createConversation">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-        新建对话
-        <kbd>⌘ K</kbd>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>{{ t('New chat') }}<kbd>⌘ K</kbd>
       </button>
 
       <div class="session-section-heading">
-        <span>最近对话</span>
+        <span>{{ t('Recent conversations') }}</span>
         <span v-if="store.loadingSessions" class="mini-spinner" />
       </div>
 
-      <nav class="session-list" aria-label="会话列表">
+      <nav class="session-list" :aria-label="t('Conversation list')">
         <div
           v-for="session in store.sessions"
           :key="session.id"
@@ -208,12 +208,12 @@ onBeforeUnmount(() => {
             <span
               v-if="store.runningSessionIds.includes(session.id)"
               class="session-running"
-              aria-label="运行中"
+              :aria-label="t('In progress')"
             />
             <span
               v-else-if="store.deletingSessionIds.includes(session.id)"
               class="mini-spinner"
-              aria-label="正在删除"
+              :aria-label="t('Deleting')"
             />
             <time v-else>{{ timeLabel(session.updated_at) }}</time>
           </button>
@@ -221,43 +221,41 @@ onBeforeUnmount(() => {
             type="button"
             class="session-delete"
             :disabled="store.runningSessionIds.includes(session.id) || store.deletingSessionIds.includes(session.id)"
-            :aria-label="`删除会话：${sessionTitle(session)}`"
-            title="删除会话"
+            :aria-label="t('Delete conversation: {0}', { 0: sessionTitle(session) })"
+            :title="t('Delete conversation')"
             @click="removeConversation(session)"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m3 0-1 13H7L6 7m4 4v5m4-5v5" /></svg>
           </button>
         </div>
-        <p v-if="!store.loadingSessions && store.sessions.length === 0" class="empty-sessions">
-          还没有对话。创建一个 session 开始研究。
-        </p>
+        <p v-if="!store.loadingSessions && store.sessions.length === 0" class="empty-sessions">{{ t('No conversations yet. Start a new chat to begin.') }}</p>
       </nav>
 
       <div class="sidebar-footer">
         <RouterLink to="/settings/integrations" class="sidebar-link">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" /><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1.1V21h-4v-.09A1.7 1.7 0 0 0 8.5 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1.1-.4H3v-4h.09A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1.1V3h4v.09A1.7 1.7 0 0 0 15.5 4.6a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.18.37.4.7.6 1 .3.3.7.5 1.1.5h.1v4h-.1c-.4 0-.8.2-1.1.5-.2.3-.42.63-.6 1Z" /></svg>
-          Tool integrations
+          {{ t('Tool integrations') }}
         </RouterLink>
-        <RouterLink to="/workflows" class="sidebar-link">数据流程</RouterLink>
+        <RouterLink to="/workflows" class="sidebar-link">{{ t('Data workflows') }}</RouterLink>
         <RouterLink to="/agents" class="sidebar-link">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20v-2.2A4.8 4.8 0 0 1 7.3 13h1.4a4.8 4.8 0 0 1 4.8 4.8V20m0-6.6a4.8 4.8 0 0 1 8 3.6v3" /></svg>
-          Agent registry
+          {{ t('Agent registry') }}
         </RouterLink>
-        <div class="runtime-state"><span></span>Orchestrator online</div>
+        <div class="runtime-state"><span></span>{{ t('Research workspace') }}</div>
       </div>
     </aside>
 
     <main class="conversation-pane">
       <header class="conversation-header">
-        <button class="mobile-menu" type="button" aria-label="打开会话侧栏" @click="sidebarOpen = true">
+        <button class="mobile-menu" type="button" :aria-label="t('Open conversation sidebar')" @click="sidebarOpen = true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
         </button>
         <div class="conversation-heading">
           <strong>{{ currentTitle }}</strong>
-          <small v-if="store.isStreaming"><span class="header-pulse" />{{ agentLabel(store.currentAgent) }} 正在工作</small>
-          <small v-else>研究对话</small>
+          <small v-if="store.isStreaming"><span class="header-pulse" />{{ t('{0} is working', { 0: agentLabel(store.currentAgent) }) }}</small>
+          <small v-else>{{ t('Research chat') }}</small>
         </div>
-        <button class="header-new-chat" type="button" aria-label="新建对话" @click="createConversation">
+        <LanguageSwitcher dark /><button class="header-new-chat" type="button" :aria-label="t('New chat')" @click="createConversation">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
         </button>
       </header>
@@ -267,14 +265,14 @@ onBeforeUnmount(() => {
           <div class="welcome-mark" aria-hidden="true">
             <span></span><span></span><span></span>
           </div>
-          <h1>今天想研究什么？</h1>
-          <p>可以从数据集、预处理方法或一个研究问题开始。</p>
+          <h1>{{ t('What would you like to explore?') }}</h1>
+          <p>{{ t('Start with a dataset, a preprocessing method, or a research question.') }}</p>
           <div class="prompt-suggestions">
-            <button type="button" @click="draft = '帮我调研一个公开神经数据集，并判断是否适合表征学习'">
-              <strong>调研公开数据</strong><span>比较数据规模、格式和研究价值</span>
+            <button type="button" @click="draft = t('Research a public neural dataset and assess its suitability for representation learning')">
+              <strong>{{ t('Explore public data') }}</strong><span>{{ t('Compare dataset size, formats, and research uses') }}</span>
             </button>
-            <button type="button" @click="draft = '分析我的神经数据预处理流程，并给出可复现的改进方案'">
-              <strong>审查数据流程</strong><span>检查预处理、质量控制与评估</span>
+            <button type="button" @click="draft = t('Review my neural data preprocessing pipeline and suggest reproducible improvements')">
+              <strong>{{ t('Review a data pipeline') }}</strong><span>{{ t('Inspect preprocessing, quality control, and evaluation') }}</span>
             </button>
           </div>
         </div>
@@ -292,14 +290,14 @@ onBeforeUnmount(() => {
             <div class="message-body">
               <div v-if="message.role === 'assistant'" class="message-author">
                 <strong>Brain Agent</strong>
-                <span v-if="message.pending" class="live-label"><i />处理中</span>
+                <span v-if="message.pending" class="live-label"><i />{{ t('Working') }}</span>
               </div>
 
               <details v-if="hasActivity(message)" class="agent-activity" :open="message.pending">
                 <summary>
                   <span v-if="message.pending" class="activity-spinner" />
                   <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m7 12 3 3 7-7" /></svg>
-                  {{ message.pending ? `${agentLabel(store.currentAgent)} 正在处理` : `查看 ${message.activities?.length} 条执行记录` }}
+                  {{ message.pending ? t('{0} is processing', { 0: agentLabel(store.currentAgent) }) : t('View {0} execution records', { 0: message.activities?.length }) }}
                   <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 5 5-5 5" /></svg>
                 </summary>
                 <div class="activity-list">
@@ -330,12 +328,12 @@ onBeforeUnmount(() => {
                 type="button"
                 class="message-copy-button"
                 :class="{ copied: copiedMessageId === message.id }"
-                :aria-label="copiedMessageId === message.id ? '已复制' : '复制消息'"
+                :aria-label="copiedMessageId === message.id ? t('Copied') : t('Copy message')"
                 @click="copyMessage(message)"
               >
                 <svg v-if="copiedMessageId !== message.id" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2" /></svg>
                 <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
-                <span>{{ copiedMessageId === message.id ? '已复制' : '复制' }}</span>
+                <span>{{ copiedMessageId === message.id ? t('Copied') : t('Copy') }}</span>
               </button>
             </div>
           </article>
@@ -349,19 +347,19 @@ onBeforeUnmount(() => {
             ref="textarea"
             v-model="draft"
             rows="1"
-            aria-label="发送消息"
-            placeholder="向 Brain Agent 提问…"
+            :aria-label="t('Send a message')"
+            :placeholder="t('Ask Brain Agent…')"
             @keydown="handleComposerKeydown"
           />
           <div class="composer-actions">
-            <span>Enter 发送 · Shift Enter 换行</span>
-            <button class="send-button" type="submit" :disabled="!draft.trim() || store.isStreaming" aria-label="发送">
+            <span>{{ t('Enter to send · Shift+Enter for a new line') }}</span>
+            <button class="send-button" type="submit" :disabled="!draft.trim() || store.isStreaming" :aria-label="t('Send')">
               <span v-if="store.isStreaming" class="send-spinner" />
               <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v14" /></svg>
             </button>
           </div>
         </form>
-        <small class="composer-note">Agent 可能会出错，请检查重要的研究结论和数据处理结果。</small>
+        <small class="composer-note">{{ t('Check important research findings and processing results for errors.') }}</small>
       </div>
     </main>
   </div>

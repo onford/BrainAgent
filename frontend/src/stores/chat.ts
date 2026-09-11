@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { streamChat } from '../api/chat'
@@ -44,7 +45,7 @@ export const useChatStore = defineStore('chat', () => {
         activeSessionId.value = sessions.value[0].id
       }
     } catch (reason) {
-      error.value = reason instanceof Error ? reason.message : '无法加载会话'
+      error.value = reason instanceof Error ? reason.message : t('Unable to load conversations')
     } finally {
       loadingSessions.value = false
     }
@@ -95,7 +96,7 @@ export const useChatStore = defineStore('chat', () => {
         activeSessionId.value = sessions.value[index]?.id ?? sessions.value[index - 1]?.id ?? null
       }
     } catch (reason) {
-      error.value = reason instanceof Error ? reason.message : '无法删除会话'
+      error.value = reason instanceof Error ? reason.message : t('Unable to delete conversation')
       throw reason
     } finally {
       deletingSessionIds.value = deletingSessionIds.value.filter((id) => id !== sessionId)
@@ -116,7 +117,7 @@ export const useChatStore = defineStore('chat', () => {
     if (event.event_type === 'run_completed') {
       assistant.content = stringifyValue(event.data.final_answer)
     } else if (event.event_type === 'run_failed') {
-      assistant.content = event.message || 'Agent 运行失败'
+      assistant.content = event.message || t('Agent execution failed')
       assistant.error = true
       assistant.pending = false
     }
@@ -169,7 +170,7 @@ export const useChatStore = defineStore('chat', () => {
     } catch (reason) {
       assistantMessage.pending = false
       assistantMessage.error = true
-      assistantMessage.content = reason instanceof Error ? reason.message : '流式请求失败'
+      assistantMessage.content = reason instanceof Error ? reason.message : t('Streaming request failed')
       error.value = assistantMessage.content
     } finally {
       assistantMessage.pending = false

@@ -1,20 +1,21 @@
+import { t } from '../i18n'
 export type ReaderReport = { name: string; title: string; description: string }
 
 const sections = [
-  { id: 'results', title: '处理结果', purpose: '了解处理过程与交付内容' },
-  { id: 'data', title: '数据认识', purpose: '确认数据范围、核对结果与统计' },
-  { id: 'methods', title: '方法依据', purpose: '查阅相关研究与预处理依据' },
-  { id: 'other', title: '其他报告', purpose: '本流程保存的补充材料' },
+  { id: 'results', get title() { return t('Processing results') }, get purpose() { return t('Processing and delivery overview') } },
+  { id: 'data', get title() { return t('Dataset overview') }, get purpose() { return t('Data scope, cross-checks, and statistics') } },
+  { id: 'methods', get title() { return t('Method references') }, get purpose() { return t('Related research and preprocessing evidence') } },
+  { id: 'other', get title() { return t('Other reports') }, get purpose() { return t('Supplementary material saved with this workflow') } },
 ]
 
 const catalog: Record<string, { group: string; hint: string }> = {
-  'report/report.html': { group: 'results', hint: '处理过程、评价与交付' },
-  'survey/reports/dataset-basic.html': { group: 'data', hint: '来源、许可与任务范围' },
-  'survey/reports/data-information.html': { group: 'data', hint: '本地、官网与论文核对' },
-  'survey/reports/statistics.html': { group: 'data', hint: '被试、通道与事件规模' },
-  'survey/reports/literature-usage.html': { group: 'methods', hint: '数据集的分析与算法应用' },
-  'survey/reports/literature-discussion.html': { group: 'methods', hint: '数据特点、问题与限制' },
-  'survey/reports/literature-preprocessing.html': { group: 'methods', hint: '处理方法与参数依据' },
+  'report/report.html': { group: 'results', get hint() { return t('Processing, evaluation, and delivery') } },
+  'survey/reports/dataset-basic.html': { group: 'data', get hint() { return t('Source, license, and task scope') } },
+  'survey/reports/data-information.html': { group: 'data', get hint() { return t('Local data, official sources, and paper cross-checks') } },
+  'survey/reports/statistics.html': { group: 'data', get hint() { return t('Subjects, channels, and events') } },
+  'survey/reports/literature-usage.html': { group: 'methods', get hint() { return t('Dataset analysis and algorithm applications') } },
+  'survey/reports/literature-discussion.html': { group: 'methods', get hint() { return t('Data characteristics, issues, and limitations') } },
+  'survey/reports/literature-preprocessing.html': { group: 'methods', get hint() { return t('Processing methods and parameter rationale') } },
 }
 
 export function groupReports(reports: ReaderReport[], query = '') {

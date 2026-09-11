@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t, formatLocale } from '../../i18n'
 import { RouterLink } from 'vue-router'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { apiRequest } from '../../api/client'
@@ -24,31 +25,31 @@ watch(() => [props.workflowId, props.searchId, props.offline], () => {
   void loadRelated()
 }, { immediate: true })
 onBeforeUnmount(() => { serial++ })
-const searchLabel = (item: SearchSummary) => `${new Date(item.created_at).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${item.id.slice(0,8)} · ${{completed:'已完成',failed:'失败',stopped:'已停止',cancelled:'已取消',running:'执行中',interrupted:'已中断',preparing:'准备中'}[item.status] || item.status}`
+const searchLabel = (item: SearchSummary) => `${new Date(item.created_at).toLocaleString(formatLocale.value, {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})} · ${item.id.slice(0,8)} · ${{get completed() { return t('Completed') },get failed() { return t('Failed') },get stopped() { return t('Stopped') },get cancelled() { return t('Cancelled') },get running() { return t('Running') },get interrupted() { return t('Interrupted') },get preparing() { return t('Preparing') }}[item.status] || item.status}`
 const emit = defineEmits<{ reports: []; files: [] }>()
 const destinations = [
-  { title: '决策概览', view: 'overview', axis: '', summary: '所选方案、评分规则与候选比较。' },
-  { title: '信号图表', view: 'assessment', axis: 'quality', summary: '各处理阶段的功率谱、幅度与通道关系。' },
-  { title: '评价指标', view: 'assessment', axis: 'utility', summary: '模型表现、被试差异、信号质量与重建结果。' },
-  { title: '预处理方案', view: 'assessment', axis: 'parameters', summary: '处理步骤、参数及逐记录执行情况。' },
-  { title: 'Agent 决策记录', view: 'rounds', axis: '', summary: '提案理由、竞争解释与实测核验。' },
+  { get title() { return t('Decision overview') }, view: 'overview', axis: '', get summary() { return t('Selected method, scoring rules, and candidate comparison.') } },
+  { get title() { return t('Signal plots') }, view: 'assessment', axis: 'quality', get summary() { return t('Power spectra, amplitude, and channel relationships at each stage.') } },
+  { get title() { return t('Evaluation metrics') }, view: 'assessment', axis: 'utility', get summary() { return t('Model performance, subject variability, signal quality, and reconstruction.') } },
+  { get title() { return t('Preprocessing methods') }, view: 'assessment', axis: 'parameters', get summary() { return t('Processing steps, parameters, and per-record execution.') } },
+  { get title() { return t('Agent decision history') }, view: 'rounds', axis: '', get summary() { return t('Proposal rationale, competing explanations, and measurement checks.') } },
 ]
 </script>
 <template>
-  <section class="workflow-evidence" aria-label="流程与证据">
-    <header><h2>分析结果</h2><p>图表、评价指标、处理方案与报告。</p></header>
+  <section class="workflow-evidence" :aria-label="t('Workflow and evidence')">
+    <header><h2>{{ t('Analysis results') }}</h2><p>{{ t('Plots, metrics, processing methods, and reports.') }}</p></header>
     <div v-if="!searchId" class="availability">
-      <p v-if="loading" role="status">正在加载搜索记录…</p>
-      <p v-else-if="retrievalError" role="alert">搜索记录加载失败。<button @click="loadRelated">重试</button></p>
+      <p v-if="loading" role="status">{{ t('Loading search records…') }}</p>
+      <p v-else-if="retrievalError" role="alert">{{ t('Search records could not be loaded.') }}<button @click="loadRelated">{{ t('Retry') }}</button></p>
       <template v-else-if="related.length">
-        <label>搜索记录 <select v-model="inspectedSearch"><option value="">选择要查看的搜索</option><option v-for="item in related" :key="item.id" :value="item.id">{{ searchLabel(item) }}</option></select></label>
-        <small>这些搜索使用本流程的数据；结果与本流程的原交付分别记录。</small>
+        <label>{{ t('Search records') }}<select v-model="inspectedSearch"><option value="">{{ t('Choose a search to inspect') }}</option><option v-for="item in related" :key="item.id" :value="item.id">{{ searchLabel(item) }}</option></select></label>
+        <small>{{ t('These searches use this workflow\'s data. Their results are recorded separately from the original delivery.') }}</small>
       </template>
-      <p v-else>{{ offline ? '此离线版仅收录流程报告。' : '暂无搜索记录，可查看已有报告与文件。' }}</p>
-      <p v-if="evaluation?.selection_policy === 'random'" class="selection-note">原交付采用随机选择，未按指标择优。</p>
+      <p v-else>{{ offline ? t('This offline edition contains workflow reports only.') : t('No search records yet. Existing reports and files remain available.') }}</p>
+      <p v-if="evaluation?.selection_policy === 'random'" class="selection-note">{{ t('The original delivery used random selection, not metric-based selection.') }}</p>
     </div>
-    <p v-else-if="offline" class="availability">离线版可阅读已收录报告，搜索图表和决策详情需在线查看。</p>
-    <div class="evidence-grid"><article v-for="item in destinations" :key="item.view + item.axis"><h3>{{ item.title }}</h3><p>{{ item.summary }}</p><RouterLink v-if="evidenceSearchId && !offline" :to="{path:'/searches', query:{id:evidenceSearchId, view:item.view, ...(item.axis ? {axis:item.axis} : {})}}">打开{{ item.title }} →</RouterLink><span v-else class="unavailable">{{ offline ? '仅在线查看' : '暂不可用' }}</span></article><article><h3>报告与原始记录</h3><p>{{ reportCount }} 篇报告，以及测量、模型和交付文件。</p><div><button @click="emit('reports')">阅读报告 →</button><button @click="emit('files')">查看文件 →</button></div></article></div>
+    <p v-else-if="offline" class="availability">{{ t('Included reports are available offline. Search plots and decision details require an online connection.') }}</p>
+    <div class="evidence-grid"><article v-for="item in destinations" :key="item.view + item.axis"><h3>{{ item.title }}</h3><p>{{ item.summary }}</p><RouterLink v-if="evidenceSearchId && !offline" :to="{path:'/searches', query:{id:evidenceSearchId, view:item.view, ...(item.axis ? {axis:item.axis} : {})}}">{{ t('Open {0} →', { 0: item.title }) }}</RouterLink><span v-else class="unavailable">{{ offline ? t('Online only') : t('Not yet available') }}</span></article><article><h3>{{ t('Reports and original records') }}</h3><p>{{ t('{0} reports, plus measurements, models, and delivery files.', { 0: reportCount }) }}</p><div><button @click="emit('reports')">{{ t('Read reports →') }}</button><button @click="emit('files')">{{ t('View files →') }}</button></div></article></div>
   </section>
 </template>
 <style scoped>

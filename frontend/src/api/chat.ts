@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { apiRequest } from './client'
 import type { ChatResponse } from '../types/agent'
 
@@ -21,9 +22,9 @@ export async function streamChat(
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({ detail: response.statusText }))
-    throw new Error(body.detail ?? '流式请求失败')
+    throw new Error(body.detail ?? t('Streaming request failed'))
   }
-  if (!response.body) throw new Error('浏览器未提供可读响应流')
+  if (!response.body) throw new Error(t('The browser did not provide a readable response stream'))
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()

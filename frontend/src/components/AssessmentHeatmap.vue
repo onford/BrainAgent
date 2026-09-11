@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n'
 import { computed, ref } from 'vue'
 import { finite, exportSvg, downloadData } from '../utils/assessmentPlots'
 const props = defineProps<{ title: string; rows: string[]; columns: string[]; values: (number | null)[][]; unit: string; caption: string; diverging?: boolean; provenance?: unknown }>()
@@ -26,22 +27,22 @@ function color(v: unknown) {
   if (props.diverging) return t < .5 ? `hsl(18 65% ${40+100*t}%)` : `hsl(208 60% ${140-100*t}%)`
   return `hsl(159 45% ${96-63*t}%)`
 }
-const fmt = (v: unknown) => finite(v) ? Number(v.toPrecision(4)).toString() : '缺失'
+const fmt = (v: unknown) => finite(v) ? Number(v.toPrecision(4)).toString() : t('Missing')
 </script>
 <template>
   <figure v-if="numbers.length" class="heatmap eeg-figure">
-    <div class="heading"><strong>{{ title }}</strong><button @click="exportSvg(svg, title + '-page-' + (currentPage+1) + '-columns-' + (currentColumnPage+1))">下载本页 SVG</button><button @click="downloadData(title + '.json', { rows, columns, values, unit, caption, provenance })">下载全部数据 JSON</button></div>
-    <p v-if="pages > 1"><button :disabled="currentPage === 0" @click="page = currentPage-1">上一页</button> {{ currentPage+1 }} / {{ pages }} · 全部 {{ rows.length }} 行 <button :disabled="currentPage+1 === pages" @click="page = currentPage+1">下一页</button></p>
-    <p v-if="columnPages > 1"><button :disabled="currentColumnPage === 0" @click="columnPage = currentColumnPage-1">上一组列</button> {{ currentColumnPage+1 }} / {{ columnPages }} · 全部 {{ columns.length }} 列 <button :disabled="currentColumnPage+1 === columnPages" @click="columnPage = currentColumnPage+1">下一组列</button></p>
+    <div class="heading"><strong>{{ title }}</strong><button @click="exportSvg(svg, title + '-page-' + (currentPage+1) + '-columns-' + (currentColumnPage+1))">{{ t('Download this page as SVG') }}</button><button @click="downloadData(title + '.json', { rows, columns, values, unit, caption, provenance })">{{ t('Download all data as JSON') }}</button></div>
+    <p v-if="pages > 1"><button :disabled="currentPage === 0" @click="page = currentPage-1">{{ t('Previous page') }}</button>{{ t('{0} / {1} · {2} rows in total', { 0: currentPage+1, 1: pages, 2: rows.length }) }}<button :disabled="currentPage+1 === pages" @click="page = currentPage+1">{{ t('Next page') }}</button></p>
+    <p v-if="columnPages > 1"><button :disabled="currentColumnPage === 0" @click="columnPage = currentColumnPage-1">{{ t('Previous columns') }}</button>{{ t('{0} / {1} · {2} columns in total', { 0: currentColumnPage+1, 1: columnPages, 2: columns.length }) }}<button :disabled="currentColumnPage+1 === columnPages" @click="columnPage = currentColumnPage+1">{{ t('Next columns') }}</button></p>
     <div class="scroll"><svg ref="svg" :viewBox="`0 0 ${width} ${height}`" :width="width" :height="height" role="img" :aria-label="title" style="font:11px system-ui,sans-serif;background:white;stroke:none">
       <title>{{ title }}</title><desc>{{ caption }}</desc>
-      <text x="12" y="20" fill="#344c40">{{ unit }} · 全部页共同色限 {{ fmt(limits[0]) }} ～ {{ fmt(limits[1]) }} · 灰色 = 缺失</text>
+      <text x="12" y="20" fill="#344c40">{{ t('{0} · Shared color limits: {1} to {2} · Gray: missing', { 0: unit, 1: fmt(limits[0]), 2: fmt(limits[1]) }) }}</text>
       <g v-for="(row, r) in visible" :key="row.i"><text x="116" :y="51+r*23" text-anchor="end" fill="#344c40">{{ row.label.length > 19 ? row.label.slice(0,18)+'…' : row.label }}<title>{{ row.label }}</title></text><rect v-for="(col, c) in visibleColumns" :key="c" :x="125+c*cell" :y="36+r*23" :width="cell-1" height="22" :fill="color(values[row.i]?.[col.i])"><title>{{ row.label }} · {{ col.label }} · {{ fmt(values[row.i]?.[col.i]) }} {{ unit }}</title></rect></g>
       <template v-for="(col, c) in visibleColumns" :key="c"><text v-if="visibleColumns.length < 40 || c % Math.ceil(visibleColumns.length/20) === 0" :transform="`translate(${130+c*cell},${48+visible.length*23}) rotate(55)`" fill="#344c40">{{ col.label }}</text></template>
     </svg></div>
-    <figcaption>{{ caption }} 有效单元格 {{ numbers.length }} / {{ values.reduce((n, row) => n + row.length, 0) }}；缺失不填零。鼠标悬停可查看完整标签及数值。</figcaption>
+    <figcaption>{{ t('{0} Valid cells: {1} / {2}. Missing values are not replaced with zero. Hover for labels and values.', { 0: caption, 1: numbers.length, 2: values.reduce((n, row) => n + row.length, 0) }) }}</figcaption>
   </figure>
-  <p v-else class="empty">{{ title }}：没有可绘制的有限值。</p>
+  <p v-else class="empty">{{ t('{0}: no finite values to plot.', { 0: title }) }}</p>
 </template>
 <style scoped>
 .scroll { overflow: auto; margin-top: 12px; }

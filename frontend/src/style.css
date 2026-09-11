@@ -310,3 +310,5 @@ svg:not([role="img"]) { width: 20px; height: 20px; fill: none; stroke: currentCo
   .integration-actions { flex-wrap: wrap; }
   .danger-action { margin-left: 0; }
 }
+
+.conversation-heading{flex:1}.conversation-header .header-new-chat{margin-left:0;flex:none}

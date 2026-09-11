@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n'
 import { computed, ref, watch } from 'vue'
 import { apiRequest } from '../api/client'
 const props = defineProps<{ searchId: string; frozen?: boolean }>()
@@ -18,47 +19,47 @@ async function load() {
 const cards = computed(() => (guide.value?.cards ?? []).filter((c: any) => JSON.stringify(c).toLowerCase().includes(query.value.toLowerCase())))
 const sources = (ids: string[]) => (guide.value?.sources ?? []).filter((s: any) => ids.includes(s.id))
 const evidenceLabels: Record<string, string> = {
-  method_documentation_and_primary_abstract: '方法文档与研究摘要',
-  engineering_descriptive: '描述性工程参数',
-  conditional_primary_method: '有适用条件的原始方法',
-  mathematical_definition_and_engineering: '数学定义与工程约定',
-  engineering_proxy: '间接诊断指标',
-  method_documentation_and_engineering: '方法文档与工程约定',
-  project_paired_counterfactual_design: '本项目重建实验设计',
-  frozen_project_protocol: '本运行评价协议',
+  get method_documentation_and_primary_abstract() { return t('Method documentation and research abstract') },
+  get engineering_descriptive() { return t('Descriptive engineering parameters') },
+  get conditional_primary_method() { return t('Primary method with applicability conditions') },
+  get mathematical_definition_and_engineering() { return t('Mathematical definition and engineering convention') },
+  get engineering_proxy() { return t('Indirect diagnostic proxy') },
+  get method_documentation_and_engineering() { return t('Method documentation and engineering convention') },
+  get project_paired_counterfactual_design() { return t('Project reconstruction design') },
+  get frozen_project_protocol() { return t('Run evaluation protocol') },
 }
 </script>
 <template>
   <details class="guide" @toggle="expanded = ($event.target as HTMLDetailsElement).open; expanded && load()">
-    <summary>阅读指南 <span>指标含义 · 参数依据 · 参考文献</span></summary>
-    <p class="note">{{ frozen ? '本运行的指标说明。' : '此运行没有配套指南，以下为现行说明。' }}</p>
-    <p v-if="loading" role="status">正在加载阅读指南…</p>
-    <p v-if="error" role="alert">指南暂时无法加载。<button @click="load">重新加载</button></p>
+    <summary>{{ t('Interpretation guide') }}<span>{{ t('Metric definitions · Parameter rationale · References') }}</span></summary>
+    <p class="note">{{ frozen ? t('Metric guidance saved with this run.') : t('This run has no saved guide. Current guidance is shown below.') }}</p>
+    <p v-if="loading" role="status">{{ t('Loading interpretation guide…') }}</p>
+    <p v-if="error" role="alert">{{ t('The guide could not be loaded.') }}<button @click="load">{{ t('Reload') }}</button></p>
     <template v-if="guide">
       <div class="guide-toolbar">
-        <label>查找主题 <input v-model="query" type="search" placeholder="例如：功率谱、基线、相关性" /></label>
-        <small>{{ cards.length }} 个主题 · 审阅于 {{ guide.reviewed_at }}</small>
+        <label>{{ t('Find a topic') }}<input v-model="query" type="search" :placeholder="t('For example: PSD, baseline, correlation')" /></label>
+        <small>{{ t('{0} topics · Reviewed {1}', { 0: cards.length, 1: guide.reviewed_at }) }}</small>
       </div>
-      <p v-if="!cards.length" class="note" role="status">没有匹配的主题，请尝试指标名称或参数关键词。</p>
+      <p v-if="!cards.length" class="note" role="status">{{ t('No matching topics. Try a metric name or parameter keyword.') }}</p>
       <div class="guide-cards">
         <details v-for="card in cards" :key="card.id" class="knowledge-card">
           <summary><strong>{{ card.title }}</strong><p>{{ card.reading }}</p></summary>
           <div class="card-body">
-            <p class="conditions"><strong>适用条件</strong>{{ card.conditions.join('；') }}</p>
+            <p class="conditions"><strong>{{ t('Applicability') }}</strong>{{ card.conditions.join('；') }}</p>
             <div class="reading-columns">
-              <section><h4>其他可能原因</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>
-              <section><h4>建议核查</h4><ul><li v-for="item in card.checks" :key="item">{{ item }}</li></ul></section>
+              <section><h4>{{ t('Alternative explanations') }}</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>
+              <section><h4>{{ t('Suggested checks') }}</h4><ul><li v-for="item in card.checks" :key="item">{{ item }}</li></ul></section>
             </div>
-            <p class="limit"><strong>解释边界</strong>{{ card.forbidden_inference }}</p>
+            <p class="limit"><strong>{{ t('Interpretation limits') }}</strong>{{ card.forbidden_inference }}</p>
             <dl><template v-for="(value, key) in card.parameters" :key="key"><dt>{{ key }}</dt><dd>{{ value }}</dd></template></dl>
-            <p class="note">{{ evidenceLabels[card.evidence_level] || '参考依据' }} · 实际采用值见运行参数与测量记录。</p>
-            <details class="references"><summary>参考文献与定位 · {{ card.source_ids.length }}</summary>
+            <p class="note">{{ t('{0} · Actual values are recorded in run parameters and measurements.', { 0: evidenceLabels[card.evidence_level] || t('Supporting evidence') }) }}</p>
+            <details class="references"><summary>{{ t('References and locations · {0}', { 0: card.source_ids.length }) }}</summary>
               <ul><li v-for="source in sources(card.source_ids)" :key="source.id"><a :href="source.url" target="_blank" rel="noopener">{{ source.title }} ↗</a><small>{{ source.locator }} · {{ source.evidence }}</small></li></ul>
             </details>
           </div>
         </details>
       </div>
-      <details class="scope"><summary>适用范围与限制</summary><p v-for="gap in guide.research_gaps" :key="gap.topic"><strong>{{ gap.topic }}：</strong>{{ gap.decision }}</p><small>知识版本 {{ guide.schema_version }}</small></details>
+      <details class="scope"><summary>{{ t('Scope and limitations') }}</summary><p v-for="gap in guide.research_gaps" :key="gap.topic"><strong>{{ gap.topic }}：</strong>{{ gap.decision }}</p><small>{{ t('Knowledge version {0}', { 0: guide.schema_version }) }}</small></details>
     </template>
   </details>
 </template>

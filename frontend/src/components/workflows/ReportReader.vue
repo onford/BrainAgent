@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../../i18n'
 import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { groupReports, reportHeadings, type ReaderReport, type ReportHeading } from '../../utils/reportNavigation'
 import { installReportPagination } from '../../utils/reportPagination'
@@ -31,7 +32,7 @@ function choose(name: string) {
 }
 
 watch(() => props.workflowId, () => { selected.value = ordered.value[0]?.name ?? ''; query.value = ''; navigationMode.value = 'reports'; headings.value = []; positions.clear(); activeHeading.value = -1 })
-watch(() => [props.workflowId, report.value?.name], () => { loading.value = true; loadError.value = false; headings.value = []; activeHeading.value = -1; detach?.() })
+watch([() => props.workflowId, () => report.value?.name], () => { loading.value = true; loadError.value = false; headings.value = []; activeHeading.value = -1; detach?.() })
 function loaded() {
   loading.value = false
   detach?.()
@@ -84,43 +85,43 @@ onBeforeUnmount(() => detach?.())
 </script>
 
 <template>
-  <section class="report-reader" aria-label="报告阅读区">
-    <button class="directory-toggle" :aria-expanded="navigationOpen" @click="navigationOpen = !navigationOpen">{{ navigationOpen ? '收起目录' : '目录与章节' }} <span>{{ report?.title || '暂无报告' }}</span></button>
-    <aside class="report-navigation" :class="{ 'is-open': navigationOpen }" aria-label="报告导航">
-      <div class="nav-header"><strong>报告导航</strong><span>{{ reports.length }} 篇</span></div>
-      <div class="navigation-modes" aria-label="目录视图">
-        <button :aria-pressed="navigationMode === 'reports'" @click="navigationMode = 'reports'">全部报告</button>
-        <button :aria-pressed="navigationMode === 'chapters'" @click="navigationMode = 'chapters'">本篇章节 <span>{{ headings.length }}</span></button>
+  <section class="report-reader" :aria-label="t('Report reader')">
+    <button class="directory-toggle" :aria-expanded="navigationOpen" @click="navigationOpen = !navigationOpen">{{ navigationOpen ? t('Hide navigation') : t('Reports and sections') }} <span>{{ report?.title || t('No reports yet') }}</span></button>
+    <aside class="report-navigation" :class="{ 'is-open': navigationOpen }" :aria-label="t('Report navigation')">
+      <div class="nav-header"><strong>{{ t('Report navigation') }}</strong><span>{{ t('{0} reports', { 0: reports.length }) }}</span></div>
+      <div class="navigation-modes" :aria-label="t('Navigation view')">
+        <button :aria-pressed="navigationMode === 'reports'" @click="navigationMode = 'reports'">{{ t('All reports') }}</button>
+        <button :aria-pressed="navigationMode === 'chapters'" @click="navigationMode = 'chapters'">{{ t('Current report sections') }}<span>{{ headings.length }}</span></button>
       </div>
       <div v-show="navigationMode === 'reports'">
-        <label class="report-search"><span>查找报告</span><input v-model="query" type="search" placeholder="标题、主题或用途" /></label>
-        <nav aria-label="选择报告">
+        <label class="report-search"><span>{{ t('Find a report') }}</span><input v-model="query" type="search" :placeholder="t('Title, topic, or purpose')" /></label>
+        <nav :aria-label="t('Choose a report')">
           <section v-for="group in groups" :key="group.id" class="report-group">
             <h3>{{ group.title }} <span>{{ group.reports.length }}</span></h3><p class="group-purpose">{{ group.purpose }}</p>
             <button v-for="item in group.reports" :key="item.name" :data-report-name="item.name" :aria-pressed="report?.name === item.name" @click="choose(item.name)">
-              <span class="report-title">{{ item.title }}</span><small>{{ item.hint }}</small><span v-if="report?.name === item.name" class="reading-mark">正在阅读</span>
+              <span class="report-title">{{ item.title }}</span><small>{{ item.hint }}</small><span v-if="report?.name === item.name" class="reading-mark">{{ t('Reading') }}</span>
             </button>
           </section>
         </nav>
-        <p v-if="!groups.length" class="nav-empty">{{ reports.length ? '没有匹配的报告，试试其他关键词。' : '已生成的报告会按主题出现在这里。' }}</p>
+        <p v-if="!groups.length" class="nav-empty">{{ reports.length ? t('No matching reports. Try another keyword.') : t('Generated reports appear here by topic.') }}</p>
       </div>
-      <nav v-show="navigationMode === 'chapters'" class="outline" aria-label="报告章节">
+      <nav v-show="navigationMode === 'chapters'" class="outline" :aria-label="t('Report sections')">
         <p class="chapter-caption">{{ report?.title }}</p>
-        <p v-if="!headings.length" class="nav-empty">{{ loading && report ? '正在读取章节…' : '此报告没有可导航的章节。' }}</p>
+        <p v-if="!headings.length" class="nav-empty">{{ loading && report ? t('Loading sections…') : t('This report has no navigable sections.') }}</p>
         <button v-for="(heading,index) in headings" :key="index" :class="{ subheading: heading.level === 3 }" :aria-current="activeHeading === index ? 'location' : undefined" @click="jump(index)">{{ heading.title }}</button>
       </nav>
     </aside>
     <div v-if="report" class="document">
-      <header class="document-toolbar"><div><h2>{{report.title}}</h2><p>{{report.description}}</p><small class="document-location" v-if="headings.length">{{ sectionCount }} 个主章节<span v-if="activeHeading >= 0"> · {{ headings[activeHeading]?.title }}</span></small></div><div class="reader-actions">
-        <button @click="emit('focus')">{{focused?'退出专注':'专注阅读'}}</button>
-        <a :href="fileUrl(report.name,false)" target="_blank" rel="noopener">新窗口 ↗</a>
-        <a :href="fileUrl(report.name)">下载</a>
+      <header class="document-toolbar"><div><h2>{{report.title}}</h2><p>{{report.description}}</p><small class="source-language">{{ t('Saved content is shown in its original language.') }}</small><small class="document-location" v-if="headings.length">{{ t('{0} main sections', { 0: sectionCount }) }}<span v-if="activeHeading >= 0"> · {{ headings[activeHeading]?.title }}</span></small></div><div class="reader-actions">
+        <button @click="emit('focus')">{{focused?t('Exit focus mode'):t('Focus mode')}}</button>
+        <a :href="fileUrl(report.name,false)" target="_blank" rel="noopener">{{ t('New window ↗') }}</a>
+        <a :href="fileUrl(report.name)">{{ t('Download') }}</a>
       </div></header>
-      <p v-if="loading" class="reader-notice" role="status">正在载入报告…</p>
-      <p v-if="loadError" class="reader-notice" role="alert">报告暂时无法在此预览，请使用“新窗口”或下载查看。</p>
+      <p v-if="loading" class="reader-notice" role="status">{{ t('Loading report…') }}</p>
+      <p v-if="loadError" class="reader-notice" role="alert">{{ t('This report cannot be previewed here. Open it in a new window or download it.') }}</p>
       <iframe :key="workflowId+report.name" ref="frame" :src="fileUrl(report.name,false)" :title="report.title" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-downloads" @load="loaded" />
     </div>
-    <div v-else class="reader-empty"><span class="empty-icon">▤</span><h2>报告将在调研完成后出现在这里</h2><p>上方可以查看进度，执行日志中保留当前操作与处理记录。</p></div>
+    <div v-else class="reader-empty"><span class="empty-icon">▤</span><h2>{{ t('Reports appear here after data research completes') }}</h2><p>{{ t('Progress appears above. Execution logs record current actions and processing details.') }}</p></div>
   </section>
 </template>
 

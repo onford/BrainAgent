@@ -1,49 +1,50 @@
 <script setup lang="ts">
+import { t } from '../i18n'
 import { computed } from 'vue'
 const props = defineProps<{ protocol: any; recipe?: any; panel?: any; expanded?: boolean }>()
 const operators = computed(() => props.protocol?.space?.operators ?? [])
 const definition = (id: string) => Array.isArray(operators.value) ? operators.value.find((o: any) => o.id === id) : operators.value[id]
 const training = computed(() => props.protocol?.utility_protocol?.eegnet?.training ?? props.protocol?.utility_execution?.eegnet_training)
-const format = (value: unknown) => value == null ? '未记录' : typeof value === 'object' ? JSON.stringify(value) : String(value)
-function domain(value: any) { return !value ? '固定或未记录' : value.kind === 'choice' ? format(value.values ?? value.choices) : `${value.minimum ?? '—'} ～ ${value.maximum ?? '—'} (${value.kind})` }
-const origins: Record<string, string> = { engineering: '工程约定', literature: '文献依据', mathematical: '数学约束', implementation: '实现约束' }
-const fitScopes: Record<string, string> = { none: '无需拟合', source_train: '仅源训练数据', target_unlabelled: '目标无标签数据' }
-const trainingNames: Record<string, string> = { max_epochs: '训练轮数上限', patience: '早停耐心轮数', batch_size: '批大小', learning_rate: '学习率', validation_fraction: '早停验证比例', split_seed: '划分种子' }
+const format = (value: unknown) => value == null ? t('Not recorded') : typeof value === 'object' ? JSON.stringify(value) : String(value)
+function domain(value: any) { return !value ? t('Fixed or not recorded') : value.kind === 'choice' ? format(value.values ?? value.choices) : `${value.minimum ?? '—'} ～ ${value.maximum ?? '—'} (${value.kind})` }
+const origins: Record<string, string> = { get engineering() { return t('Engineering convention') }, get literature() { return t('Literature evidence') }, get mathematical() { return t('Mathematical constraint') }, get implementation() { return t('Implementation constraint') } }
+const fitScopes: Record<string, string> = { get none() { return t('No fitting required') }, get source_train() { return t('Source training data only') }, get target_unlabelled() { return t('Unlabeled target data') } }
+const trainingNames: Record<string, string> = { get max_epochs() { return t('Maximum epochs') }, get patience() { return t('Early-stopping patience') }, get batch_size() { return t('Batch size') }, get learning_rate() { return t('Learning rate') }, get validation_fraction() { return t('Validation fraction for early stopping') }, get split_seed() { return t('Split seed') } }
 const grid = computed(() => props.panel?.output_contract)
 </script>
 <template>
   <details class="parameters" :open="expanded">
-    <summary>运行参数 <span>处理顺序 · 数据范围 · 训练配置</span></summary>
-    <p class="note">以下为本次参数；允许范围是搜索边界，不是推荐值。</p>
-    <h4>处理顺序</h4>
+    <summary>{{ t('Run parameters') }}<span>{{ t('Processing order · Data scope · Training configuration') }}</span></summary>
+    <p class="note">{{ t('Parameters used in this run. Allowed ranges define search bounds, not recommended values.') }}</p>
+    <h4>{{ t('Processing order') }}</h4>
     <ol v-if="recipe?.nodes?.length" class="operators">
       <li v-for="(node, index) in recipe.nodes" :key="node.id">
         <span class="order">{{ Number(index)+1 }}</span>
         <div class="operator-body">
           <strong>{{ definition(node.operator)?.title || node.operator }}</strong>
-          <small>{{ fitScopes[definition(node.operator)?.fit_scope] || definition(node.operator)?.fit_scope || '拟合数据范围未记录' }}</small>
+          <small>{{ fitScopes[definition(node.operator)?.fit_scope] || definition(node.operator)?.fit_scope || t('Fitting data scope not recorded') }}</small>
           <dl v-if="Object.keys(node.parameters || {}).length"><template v-for="(v, k) in node.parameters" :key="k"><dt>{{ k }}</dt><dd>{{ format(v) }} {{ definition(node.operator)?.domains?.[k]?.unit }}</dd></template></dl>
-          <p v-else class="note">固定步骤，具体设置见完整协议。</p>
+          <p v-else class="note">{{ t('Fixed step. See the full protocol for its settings.') }}</p>
           <details v-if="Object.keys(definition(node.operator)?.domains ?? {}).length" class="domains">
-            <summary>允许范围与依据</summary>
-            <dl v-for="(v, k) in definition(node.operator)?.domains ?? {}" :key="k"><dt>{{ k }}</dt><dd>{{ domain(v) }} · {{ (v as any).unit }}<p>{{ origins[(v as any).origin] || (v as any).origin }} · {{ (v as any).rationale }}</p><small v-if="(v as any).evidence_ids?.length">依据 ID：{{ format((v as any).evidence_ids) }}</small></dd></dl>
+            <summary>{{ t('Allowed ranges and rationale') }}</summary>
+            <dl v-for="(v, k) in definition(node.operator)?.domains ?? {}" :key="k"><dt>{{ k }}</dt><dd>{{ domain(v) }} · {{ (v as any).unit }}<p>{{ origins[(v as any).origin] || (v as any).origin }} · {{ (v as any).rationale }}</p><small v-if="(v as any).evidence_ids?.length">{{ t('Evidence IDs: {0}', { 0: format((v as any).evidence_ids) }) }}</small></dd></dl>
           </details>
         </div>
       </li>
     </ol>
-    <p v-else class="note">未保存算子配方。</p>
+    <p v-else class="note">{{ t('No operator recipe was saved.') }}</p>
     <div class="parameter-columns">
-      <section><h4>数据与评价</h4><dl>
-        <dt>通道数</dt><dd>{{ grid?.channels?.length ?? '未记录' }}</dd>
-        <dt>输出采样率</dt><dd>{{ format(grid?.sfreq) }}<template v-if="grid?.sfreq != null"> Hz</template></dd>
-        <dt>任务时间窗</dt><dd>{{ format(grid?.tmin) }} ～ {{ format(grid?.tmax) }} s</dd>
-        <dt>主模型</dt><dd>{{ format(protocol?.utility_protocol?.primary_suite) }}</dd>
-        <dt>训练种子</dt><dd>{{ format(protocol?.utility_protocol?.seeds ?? protocol?.utility_protocol?.eegnet?.seeds ?? protocol?.assessment?.seeds) }}</dd>
-        <dt>模型并发上限</dt><dd>{{ format(protocol?.utility_execution?.max_workers) }}</dd>
+      <section><h4>{{ t('Data and evaluation') }}</h4><dl>
+        <dt>{{ t('Channels') }}</dt><dd>{{ grid?.channels?.length ?? t('Not recorded') }}</dd>
+        <dt>{{ t('Output sampling frequency') }}</dt><dd>{{ format(grid?.sfreq) }}<template v-if="grid?.sfreq != null"> Hz</template></dd>
+        <dt>{{ t('Task time window') }}</dt><dd>{{ format(grid?.tmin) }} ～ {{ format(grid?.tmax) }} s</dd>
+        <dt>{{ t('Primary model') }}</dt><dd>{{ format(protocol?.utility_protocol?.primary_suite) }}</dd>
+        <dt>{{ t('Training seeds') }}</dt><dd>{{ format(protocol?.utility_protocol?.seeds ?? protocol?.utility_protocol?.eegnet?.seeds ?? protocol?.assessment?.seeds) }}</dd>
+        <dt>{{ t('Maximum concurrent models') }}</dt><dd>{{ format(protocol?.utility_execution?.max_workers) }}</dd>
       </dl></section>
-      <section><h4>EEGNet 训练配置</h4><dl v-if="training"><template v-for="(v, k) in training" :key="k"><dt>{{ trainingNames[String(k)] || k }}</dt><dd>{{ format(v) }}</dd></template></dl><p v-else class="note">此协议未记录 EEGNet 训练配置。</p></section>
+      <section><h4>{{ t('EEGNet training configuration') }}</h4><dl v-if="training"><template v-for="(v, k) in training" :key="k"><dt>{{ trainingNames[String(k)] || k }}</dt><dd>{{ format(v) }}</dd></template></dl><p v-else class="note">{{ t('This protocol has no recorded EEGNet training configuration.') }}</p></section>
     </div>
-    <details class="raw"><summary>完整参数记录</summary><pre>{{ JSON.stringify({ output_contract: grid, selection: protocol?.metric, utility: protocol?.utility_protocol, execution: protocol?.utility_execution, recipe, bindings: (recipe?.nodes ?? []).map((n: any) => ({ operator: n.operator, bindings: definition(n.operator)?.bindings })) }, null, 2) }}</pre></details>
+    <details class="raw"><summary>{{ t('Full parameter record') }}</summary><pre>{{ JSON.stringify({ output_contract: grid, selection: protocol?.metric, utility: protocol?.utility_protocol, execution: protocol?.utility_execution, recipe, bindings: (recipe?.nodes ?? []).map((n: any) => ({ operator: n.operator, bindings: definition(n.operator)?.bindings })) }, null, 2) }}</pre></details>
   </details>
 </template>
 <style scoped>
