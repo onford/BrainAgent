@@ -44,6 +44,10 @@ function timeLabel(value: string): string {
   return new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' }).format(date)
 }
 
+function agentLabel(name: string | null | undefined) {
+  return ({ orchestrator: '助手', data_survey: '数据调研', data_preprocessing: '数据预处理', data_collection: '数据接入', data_evaluation: '效果评价', data_report: '报告生成', data_delivery: '数据交付' } as Record<string,string>)[name ?? 'orchestrator'] || name
+}
+
 function activityLabel(activity: StreamActivity): string {
   const labels: Record<string, string> = {
     run_started: '开始分析',
@@ -54,7 +58,7 @@ function activityLabel(activity: StreamActivity): string {
     run_failed: '运行失败',
   }
   return activity.agent_name
-    ? `${activity.agent_name} · ${labels[activity.event_type] ?? activity.event_type}`
+    ? `${agentLabel(activity.agent_name)} · ${labels[activity.event_type] ?? activity.event_type}`
     : labels[activity.event_type] ?? activity.event_type
 }
 
@@ -250,8 +254,8 @@ onBeforeUnmount(() => {
         </button>
         <div class="conversation-heading">
           <strong>{{ currentTitle }}</strong>
-          <small v-if="store.isStreaming"><span class="header-pulse" />{{ store.currentAgent ?? 'orchestrator' }} 正在工作</small>
-          <small v-else>Orchestrated agent session</small>
+          <small v-if="store.isStreaming"><span class="header-pulse" />{{ agentLabel(store.currentAgent) }} 正在工作</small>
+          <small v-else>研究对话</small>
         </div>
         <button class="header-new-chat" type="button" aria-label="新建对话" @click="createConversation">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
@@ -264,7 +268,7 @@ onBeforeUnmount(() => {
             <span></span><span></span><span></span>
           </div>
           <h1>今天想研究什么？</h1>
-          <p>描述你的神经科学问题。Orchestrator 会规划步骤，并在这里实时汇报各 Agent 的进展。</p>
+          <p>可以从数据集、预处理方法或一个研究问题开始。</p>
           <div class="prompt-suggestions">
             <button type="button" @click="draft = '帮我调研一个公开神经数据集，并判断是否适合表征学习'">
               <strong>调研公开数据</strong><span>比较数据规模、格式和研究价值</span>
@@ -288,14 +292,14 @@ onBeforeUnmount(() => {
             <div class="message-body">
               <div v-if="message.role === 'assistant'" class="message-author">
                 <strong>Brain Agent</strong>
-                <span v-if="message.pending" class="live-label"><i />LIVE</span>
+                <span v-if="message.pending" class="live-label"><i />处理中</span>
               </div>
 
               <details v-if="hasActivity(message)" class="agent-activity" :open="message.pending">
                 <summary>
                   <span v-if="message.pending" class="activity-spinner" />
                   <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m7 12 3 3 7-7" /></svg>
-                  {{ message.pending ? `${store.currentAgent ?? 'orchestrator'} 正在处理` : `查看 ${message.activities?.length} 条执行记录` }}
+                  {{ message.pending ? `${agentLabel(store.currentAgent)} 正在处理` : `查看 ${message.activities?.length} 条执行记录` }}
                   <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 5 5-5 5" /></svg>
                 </summary>
                 <div class="activity-list">
@@ -350,9 +354,6 @@ onBeforeUnmount(() => {
             @keydown="handleComposerKeydown"
           />
           <div class="composer-actions">
-            <button class="attach-button" type="button" aria-label="附件功能尚未启用" title="附件功能尚未启用" disabled>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
-            </button>
             <span>Enter 发送 · Shift Enter 换行</span>
             <button class="send-button" type="submit" :disabled="!draft.trim() || store.isStreaming" aria-label="发送">
               <span v-if="store.isStreaming" class="send-spinner" />

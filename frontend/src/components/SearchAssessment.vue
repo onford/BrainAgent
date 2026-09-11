@@ -78,8 +78,8 @@ const reconstructionProvenance = computed(() => ({ search_id: props.searchId, ca
 
 <template>
   <div v-if="data" class="assessment">
-    <div class="summary"><div><span>策略选择分数</span><strong>{{ percent(data.selection_score) }}</strong><small>{{ isV2 ? 'EEGNet · 三种子 × 被试等权 · 开发结果' : '历史 v1 · 三个模型 × 被试等权 · 开发结果' }}</small></div><div><span>冻结范围</span><strong>{{ data.coverage?.subjects_expected }} <small>被试</small></strong><small>{{ data.coverage?.records_expected }} 条记录 · {{ data.coverage?.eligible_trials }} 个合格试次</small></div><div><span>评价状态</span><strong class="state">{{ status(data.status) }}</strong><small>不适用项与失败保留原分母</small></div></div>
-    <div v-if="initialAxis === 'parameters'" class="parameter-entry"><h3>配方参数与实际执行</h3><p class="note">上方逐记录执行统计说明算子是否实际应用；下方区分冻结参数和测量配置。</p><slot name="parameters" /></div>
+    <div class="summary"><div><span>策略选择分数</span><strong>{{ percent(data.selection_score) }}</strong><small>{{ isV2 ? 'EEGNet · 三种子 × 被试等权 · 开发结果' : '历史 v1 · 三个模型 × 被试等权 · 开发结果' }}</small></div><div><span>评价范围</span><strong>{{ data.coverage?.subjects_expected }} <small>被试</small></strong><small>{{ data.coverage?.records_expected }} 条记录 · {{ data.coverage?.eligible_trials }} 个合格试次</small></div><div><span>评价状态</span><strong class="state">{{ status(data.status) }}</strong><small>覆盖与缺失见各项指标</small></div></div>
+    <div v-if="initialAxis === 'parameters'" class="parameter-entry"><h3>配方参数与实际执行</h3><p class="note">各步骤的执行情况、处理参数与训练配置。</p><slot name="parameters" /></div>
     <nav aria-label="评价维度"><button v-for="(name, key) in { utility: '训练效用', quality: '信号质量', reconstruction: '重建实验' }" :key="key" :aria-pressed="axis === key" @click="axis = key">{{ name }}</button></nav>
     <section v-if="axis === 'utility'">
       <div class="tools"><label>查看指标 <select v-model="metric"><option v-for="(name, key) in statistics" :key="key" :value="key">{{ name }}</option></select></label><a v-if="link(utility?.receipt_artifact)" :href="link(utility.receipt_artifact)" target="_blank" rel="noopener">完整模型、逐被试与预测记录 ↗</a></div>
@@ -119,7 +119,7 @@ const reconstructionProvenance = computed(() => ({ search_id: props.searchId, ca
     <slot v-if="initialAxis !== 'parameters'" name="parameters" />
     <SearchInterpretation :search-id="searchId" :frozen="guideFrozen" />
   </div>
-  <div v-else><p class="empty">该候选的多维评价尚未完成。可先查看运行参数，执行记录见文件列表。</p><slot name="parameters" /><SearchInterpretation :search-id="searchId" :frozen="guideFrozen" /></div>
+  <div v-else><p class="empty">该候选暂无多维评价结果。运行参数与已有记录仍可查看。</p><slot name="parameters" /><SearchInterpretation :search-id="searchId" :frozen="guideFrozen" /></div>
 </template>
 
 <style scoped>

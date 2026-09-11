@@ -16,7 +16,7 @@ it('uses the saved guide for frozen runs and labels current guidance on history'
   expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/new/artifacts/interpretation-guide.json?download=false')
   await wrapper.setProps({ searchId: 'old', frozen: false }); await flushPromises()
   expect(apiRequest).toHaveBeenLastCalledWith('/api/searches/interpretation-guide')
-  expect(wrapper.text()).toContain('历史运行未冻结')
+  expect(wrapper.text()).toContain('此运行没有配套指南')
 })
 
 it('shows recorded seeds and domain provenance without inventing missing values', () => {

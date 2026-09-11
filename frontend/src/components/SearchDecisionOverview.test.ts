@@ -12,7 +12,7 @@ describe('SearchDecisionOverview', () => {
     const wrapper = mount(SearchDecisionOverview, { props: { state } })
     expect(wrapper.get('.decision-result').text()).toContain('尚未选定方案')
     expect(wrapper.text()).toContain('与预测不符')
-    expect(wrapper.text()).toContain('尚未正常完成')
+    expect(wrapper.text()).toContain('搜索尚未完成')
     await wrapper.get('.candidate-list button').trigger('click')
     expect(wrapper.emitted('navigate')![0]).toEqual(['assessment', 'c1', 'utility'])
     wrapper.unmount()

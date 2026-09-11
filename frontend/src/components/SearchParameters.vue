@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-const props = defineProps<{ protocol: any; recipe?: any; panel?: any }>()
+const props = defineProps<{ protocol: any; recipe?: any; panel?: any; expanded?: boolean }>()
 const operators = computed(() => props.protocol?.space?.operators ?? [])
 const definition = (id: string) => Array.isArray(operators.value) ? operators.value.find((o: any) => o.id === id) : operators.value[id]
 const training = computed(() => props.protocol?.utility_protocol?.eegnet?.training ?? props.protocol?.utility_execution?.eegnet_training)
@@ -12,16 +12,16 @@ const trainingNames: Record<string, string> = { max_epochs: '训练轮数上限'
 const grid = computed(() => props.panel?.output_contract)
 </script>
 <template>
-  <details class="parameters">
+  <details class="parameters" :open="expanded">
     <summary>运行参数 <span>处理顺序 · 数据范围 · 训练配置</span></summary>
-    <p class="note">参数来自本运行保存的协议与配方。允许范围说明可探索的空间，不表示推荐值。</p>
+    <p class="note">以下为本次参数；允许范围是搜索边界，不是推荐值。</p>
     <h4>处理顺序</h4>
     <ol v-if="recipe?.nodes?.length" class="operators">
       <li v-for="(node, index) in recipe.nodes" :key="node.id">
         <span class="order">{{ Number(index)+1 }}</span>
         <div class="operator-body">
           <strong>{{ definition(node.operator)?.title || node.operator }}</strong>
-          <small>{{ fitScopes[definition(node.operator)?.fit_scope] || definition(node.operator)?.fit_scope || '拟合权限未记录' }}</small>
+          <small>{{ fitScopes[definition(node.operator)?.fit_scope] || definition(node.operator)?.fit_scope || '拟合数据范围未记录' }}</small>
           <dl v-if="Object.keys(node.parameters || {}).length"><template v-for="(v, k) in node.parameters" :key="k"><dt>{{ k }}</dt><dd>{{ format(v) }} {{ definition(node.operator)?.domains?.[k]?.unit }}</dd></template></dl>
           <p v-else class="note">固定步骤，具体设置见完整协议。</p>
           <details v-if="Object.keys(definition(node.operator)?.domains ?? {}).length" class="domains">
@@ -43,7 +43,7 @@ const grid = computed(() => props.panel?.output_contract)
       </dl></section>
       <section><h4>EEGNet 训练配置</h4><dl v-if="training"><template v-for="(v, k) in training" :key="k"><dt>{{ trainingNames[String(k)] || k }}</dt><dd>{{ format(v) }}</dd></template></dl><p v-else class="note">此协议未记录 EEGNet 训练配置。</p></section>
     </div>
-    <details class="raw"><summary>完整冻结协议与参数</summary><pre>{{ JSON.stringify({ output_contract: grid, selection: protocol?.metric, utility: protocol?.utility_protocol, execution: protocol?.utility_execution, recipe, bindings: (recipe?.nodes ?? []).map((n: any) => ({ operator: n.operator, bindings: definition(n.operator)?.bindings })) }, null, 2) }}</pre></details>
+    <details class="raw"><summary>完整参数记录</summary><pre>{{ JSON.stringify({ output_contract: grid, selection: protocol?.metric, utility: protocol?.utility_protocol, execution: protocol?.utility_execution, recipe, bindings: (recipe?.nodes ?? []).map((n: any) => ({ operator: n.operator, bindings: definition(n.operator)?.bindings })) }, null, 2) }}</pre></details>
   </details>
 </template>
 <style scoped>

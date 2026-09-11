@@ -31,7 +31,7 @@ const evidenceLabels: Record<string, string> = {
 <template>
   <details class="guide" @toggle="expanded = ($event.target as HTMLDetailsElement).open; expanded && load()">
     <summary>阅读指南 <span>指标含义 · 参数依据 · 参考文献</span></summary>
-    <p class="note">{{ frozen ? '以下知识版本随本运行保存。' : '此历史运行未冻结解读知识；以下为当前阅读参考。' }}</p>
+    <p class="note">{{ frozen ? '本运行的指标说明。' : '此运行没有配套指南，以下为现行说明。' }}</p>
     <p v-if="loading" role="status">正在加载阅读指南…</p>
     <p v-if="error" role="alert">指南暂时无法加载。<button @click="load">重新加载</button></p>
     <template v-if="guide">
@@ -39,7 +39,6 @@ const evidenceLabels: Record<string, string> = {
         <label>查找主题 <input v-model="query" type="search" placeholder="例如：功率谱、基线、相关性" /></label>
         <small>{{ cards.length }} 个主题 · 审阅于 {{ guide.reviewed_at }}</small>
       </div>
-      <p class="reading-path">先核对测量条件，再比较可能解释，最后选择下一项核查。</p>
       <p v-if="!cards.length" class="note" role="status">没有匹配的主题，请尝试指标名称或参数关键词。</p>
       <div class="guide-cards">
         <details v-for="card in cards" :key="card.id" class="knowledge-card">
@@ -47,8 +46,8 @@ const evidenceLabels: Record<string, string> = {
           <div class="card-body">
             <p class="conditions"><strong>适用条件</strong>{{ card.conditions.join('；') }}</p>
             <div class="reading-columns">
-              <section><h4>还可能是什么原因</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>
-              <section><h4>接下来核查什么</h4><ul><li v-for="item in card.checks" :key="item">{{ item }}</li></ul></section>
+              <section><h4>其他可能原因</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>
+              <section><h4>建议核查</h4><ul><li v-for="item in card.checks" :key="item">{{ item }}</li></ul></section>
             </div>
             <p class="limit"><strong>解释边界</strong>{{ card.forbidden_inference }}</p>
             <dl><template v-for="(value, key) in card.parameters" :key="key"><dt>{{ key }}</dt><dd>{{ value }}</dd></template></dl>
@@ -72,7 +71,6 @@ summary { cursor: pointer; color: #253e43; }
 small { display: block; }
 .guide-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 14px 0; }
 input { display: block; width: min(320px, 100%); margin-top: 5px; padding: 9px 12px; border: 1px solid #cbd9dd; border-radius: 7px; background: #fff; color: #253e43; font: inherit; }
-.reading-path { padding: 12px 14px; border-left: 3px solid #3d8b82; background: #f2f7f6; color: #3c625f; }
 .guide-cards { display: grid; gap: 10px; }
 .knowledge-card { border: 1px solid #e0e7e9; border-radius: 8px; }
 .knowledge-card > summary { padding: 14px 16px; }

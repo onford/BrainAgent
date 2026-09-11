@@ -68,7 +68,7 @@ describe('SearchesView', () => {
 
   it('opens the decision overview first and navigates to a candidate evidence view', async () => {
     const { wrapper } = await open('/searches?id=search-1')
-    expect(wrapper.get('[aria-label="决策概览"]').text()).toContain('这次预处理是怎样决定的')
+    expect(wrapper.get('[aria-label="决策概览"]').text()).toContain('预处理结果')
     await button(wrapper, '查看处理与参数').trigger('click')
     expect(wrapper.findComponent({ name: 'SearchAssessment' }).props('initialAxis')).toBe('parameters')
     expect(wrapper.findComponent({ name: 'SearchAssessment' }).props('candidateId')).toBe('c1')
@@ -262,7 +262,7 @@ describe('SearchesView', () => {
   it('handles partial states without treating missing metrics as zero and shows structured panel data', async () => {
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ usage: undefined, candidates: undefined, actions: undefined, artifacts: undefined, selected_candidate_id: null, panel: { train_subjects: ['S001'], development_subjects: ['S003'] }, budget: { ...state().request.budget, max_evidence_reads: 0, max_memory_mb: 2048, max_disk_mb: 4096 } }))
     const { wrapper } = await open('/searches?id=search-1')
-    expect(wrapper.text()).toContain('尚无候选')
+    expect(wrapper.text()).toContain('暂无候选结果')
     expect(wrapper.text()).toContain('尚未选择')
     expect(wrapper.text()).toContain('内存 2,048 MB')
     expect(wrapper.text()).toContain('磁盘 4,096 MB')
