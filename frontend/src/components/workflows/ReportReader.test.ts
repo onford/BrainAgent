@@ -3,6 +3,34 @@ import { describe, expect, it, vi } from 'vitest'
 import ReportReader from './ReportReader.vue'
 
 describe('ReportReader', () => {
+  it('keeps the current reading when a result report is generated later', async () => {
+    const basic = { name: 'survey/reports/dataset-basic.html', title: '基本信息', description: '范围' }
+    const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [basic] } })
+    await wrapper.setProps({ reports: [basic, { name: 'report/report.html', title: '处理结果', description: '过程' }] })
+    expect(wrapper.get('iframe').attributes('src')).toBe('/survey/reports/dataset-basic.html')
+    wrapper.unmount()
+  })
+  it('filters the directory without replacing the open report and reveals a nested chapter', async () => {
+    const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [
+      { name: 'report/report.html', title: '处理结果', description: '过程' },
+      { name: 'survey/reports/statistics.html', title: '统计', description: '被试规模' },
+    ] } })
+    expect(wrapper.get('iframe').attributes('src')).toBe('/report/report.html')
+    await wrapper.get('input[type="search"]').setValue('统计')
+    expect(wrapper.findAll('nav[aria-label="选择报告"] button')).toHaveLength(1)
+    expect(wrapper.get('iframe').attributes('src')).toBe('/report/report.html')
+    const doc = document.implementation.createHTMLDocument()
+    doc.body.innerHTML = '<main><h2>概览</h2><details><summary>条件</summary><h3>限制</h3></details></main>'
+    Object.defineProperty(wrapper.get('iframe').element, 'contentDocument', { value: doc })
+    const scroll = vi.fn()
+    doc.querySelector('h3')!.scrollIntoView = scroll
+    await wrapper.get('iframe').trigger('load')
+    await wrapper.get('.outline .subheading').trigger('click')
+    expect(doc.querySelector('details')!.open).toBe(true)
+    expect(scroll).toHaveBeenCalledOnce()
+    expect(wrapper.get('.outline .subheading').attributes('aria-current')).toBe('location')
+    wrapper.unmount()
+  })
   it('builds chapter navigation from the report and restores its reading position', async () => {
     const wrapper = mount(ReportReader, {props:{workflowId:'run',focused:false,fileUrl:(name:string)=>`/${name}`,reports:[
       {name:'one.html',title:'第一篇',description:'范围'}, {name:'two.html',title:'第二篇',description:'文献'},

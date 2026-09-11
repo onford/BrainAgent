@@ -57,7 +57,10 @@ assert.equal(document.querySelector('.dataset-heading h1').textContent, snapshot
 assert.equal(document.querySelectorAll('.stages > li.completed').length, 6)
 assert.ok(document.querySelector('.new-run').disabled)
 assert.ok(document.querySelector('.run-picker select').disabled)
-assert.ok(byText('.content-toolbar button', '预算预处理搜索').disabled)
+const searchControl = byText('.content-toolbar button', '查看策略搜索') || byText('.content-toolbar button', '预算预处理搜索')
+const searchId = snapshot.workflow.search_id || snapshot.workflow.outputs.data_preprocessing?.search_id || snapshot.workflow.outputs.data_evaluation?.search_id
+if (searchId || searchControl) assert.ok(searchControl?.disabled)
+assert.equal(document.querySelector('.content-toolbar a[href*="/searches"]'), null)
 assert.equal(document.querySelector('.run-picker option').textContent.slice(0,11), '09/09 16:31')
 
 // srcdoc has no implementation in jsdom. Verify each complete source string;
@@ -68,7 +71,8 @@ const reportNames = ['survey/reports/dataset-basic.html','survey/reports/data-in
 for (let index = 0; index < reportButtons.length; index++) {
   await click(reportButtons[index])
   const frame = document.querySelector('.report-reader iframe')
-  assert.equal(frame.getAttribute('srcdoc'), snapshot.embedded[reportNames[index]].content)
+  const reportName = reportButtons[index].dataset.reportName || reportNames[index]
+  assert.equal(frame.getAttribute('srcdoc'), snapshot.embedded[reportName].content)
   assert.equal(frame.getAttribute('src'), null)
   if (index === 0) {
     frame.contentDocument.open(); frame.contentDocument.write(frame.getAttribute('srcdoc')); frame.contentDocument.close()

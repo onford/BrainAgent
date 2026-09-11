@@ -140,16 +140,16 @@ const result = await build({
       if (normalized.endsWith('/src/views/WorkflowsView.vue') && !id.includes('?')) {
         source = replace(source, "import { apiRequest, apiUrl } from '../api/client'", "import { apiRequest } from '../api/client'\nimport { artifactUrl } from 'virtual:offline-runtime'")
         const start = source.indexOf('function fileUrl(')
-        const end = source.indexOf('\nfunction date(', start)
+        const end = source.indexOf('\n}', start)
         if (start < 0 || end < 0) throw new Error('Cannot locate the original artifact URL helper.')
-        source = source.slice(0, start) + 'function fileUrl(name: string, download = true) { return artifactUrl(name) }' + source.slice(end)
+        source = source.slice(0, start) + 'function fileUrl(name: string, download = true) { return artifactUrl(name) }' + source.slice(end + 2)
         source = replace(source, "if(active.value) timer=setTimeout(()=>void refresh(id),2000)", '// This saved state never polls the backend.')
         source = replace(source, "toLocaleString('zh-CN',{month:", "toLocaleString('zh-CN',{timeZone:'Asia/Shanghai',month:")
         source = replace(source, '<RouterLink to="/" aria-label="返回对话">←</RouterLink>', '<span class="offline-back" aria-label="离线展示">←</span>')
         source = replace(source, '<span class="brand-caption">数据工作区</span>', '<span class="brand-caption">数据工作区 · 离线展示</span>')
         source = replace(source, '<select :value="selectedId"', '<select disabled :value="selectedId"')
         source = replace(source, '<button class="primary new-run" @click="createDialog?.showModal()">', '<button class="primary new-run" disabled title="离线展示，不能新建流程">')
-        source = replace(source, '<RouterLink class="primary" :to="{path:\'/searches\',query:{workflow:current.id}}">预算预处理搜索 →</RouterLink>', '<button class="primary" disabled title="离线展示，不能启动预算搜索">预算预处理搜索 →</button>')
+        source = replace(source, '<RouterLink v-if="searchId" class="primary" :to="{path:\'/searches\',query:{id:searchId}}">查看策略搜索 →</RouterLink>', '<button v-if="searchId" class="primary" disabled title="策略搜索详情需在在线工作区查看">查看策略搜索 →</button>')
         source = source.replaceAll(':disabled="busy" @click="retry"', 'disabled title="离线展示"')
         return source
       }
