@@ -1998,7 +1998,27 @@
         "seconds": 2.21,
         "request_limits_unchanged": true,
         "retry_does_not_renew_deadline": true
+      },
+      "full_target_context_size_preflight": {
+        "request_data_utf8_bytes": 327961,
+        "schema_instruction_utf8_bytes": 16320,
+        "selected_records": 327,
+        "scope": "Serialization only with archived source, no model call or fresh research acceptance"
       }
+    },
+    "full_backend_instrumentation": {
+      "commit": "87f0aab",
+      "passed": 1367,
+      "failed": 2,
+      "warnings": 109,
+      "seconds": 870.79,
+      "failures": "Historical workflow retry/run created a lock before read-only guard; fixed in current source without weakening tests."
+    },
+    "workflow_readonly_fix": {
+      "passed": 17,
+      "warnings": 2,
+      "seconds": 10.56,
+      "scope": "legacy workflow immutable files, supervisor lock, persistent model budget and search run control"
     }
   }
 }

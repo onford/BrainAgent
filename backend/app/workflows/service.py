@@ -224,7 +224,7 @@ class WorkflowService:
 
     def retry(self, owner, identity):
         import portalocker
-        self.get(owner, identity)
+        self.require_current(self.get(owner, identity))
         try:
             with portalocker.Lock(self.folder(identity) / 'workflow.lock', timeout=0):
                 state = self._retry_locked(owner, identity)
@@ -254,7 +254,7 @@ class WorkflowService:
 
     async def run(self, owner, identity):
         import portalocker
-        self.get(owner, identity)
+        self.require_current(self.get(owner, identity))
         lock = portalocker.Lock(self.folder(identity) / 'workflow.lock', timeout=0)
         try:
             lock.acquire()
