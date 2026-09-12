@@ -187,6 +187,9 @@ class WorkflowService:
             "artifacts": [],
             "error": None,
         }
+        from app.llm.budget import CallBudget, DEFAULT_LIMITS
+        CallBudget(self.folder(state['id']) / 'llm-budget.json',
+                   {**DEFAULT_LIMITS, 'max_seconds': request.model_budget_seconds})
         self.save(state)
         if start:
             self.start(owner, state["id"])

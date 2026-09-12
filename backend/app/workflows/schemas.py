@@ -29,6 +29,8 @@ class MethodResearchBudget(Contract):
 
 
 class WorkflowRequest(Contract):
+    model_budget_seconds: int = Field(default=21600, gt=0, le=604800,
+        description="Absolute model-request budget from workflow creation, including numerical waits. Frozen for this workflow; retries do not renew it. Request/token limits remain unchanged.")
     method_research_budget: MethodResearchBudget = Field(default_factory=MethodResearchBudget)
     source_root: str
     adapter: Literal["eegmmidb"] = "eegmmidb"

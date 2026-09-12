@@ -1980,7 +1980,7 @@
       "seconds": 910.3
     },
     "remote_sync": {
-      "verified_commit": "87f0aabdff28ae7d63070107791d3857ed63c203",
+      "verified_commit": "a5af55d",
       "branch": "dev-xx"
     },
     "resource_driver": {
@@ -1992,6 +1992,12 @@
         "passed": 54,
         "seconds": 26.1,
         "scope": "assessment orchestration, prediction audits, real exited-child telemetry; overlapping earlier driver tests"
+      },
+      "workflow_model_deadline_tests": {
+        "passed": 15,
+        "seconds": 2.21,
+        "request_limits_unchanged": true,
+        "retry_does_not_renew_deadline": true
       }
     }
   }

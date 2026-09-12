@@ -75,6 +75,7 @@ async def main(args):
     code_before = code_hashes(code)
     driver_before = file_hash(Path(__file__))
     request = {"source_root": str(source), "subjects": args.subjects,
+        "model_budget_seconds": args.model_budget_seconds,
         "search_budget": {"max_candidates": args.candidates, "max_seconds": args.seconds,
                           "max_memory_mb": args.memory_mb, "max_disk_mb": args.disk_mb},
         "method_research_budget": {"max_recovery_actions": 6, "max_seconds": args.method_research_seconds}}
@@ -173,6 +174,8 @@ if __name__ == "__main__":
     parser.add_argument("--memory-mb", type=int, default=16384)
     parser.add_argument("--disk-mb", type=int, default=65536)
     parser.add_argument("--method-research-seconds", type=float, default=900)
+    parser.add_argument("--model-budget-seconds", type=int, default=21600,
+                        help="Absolute model request budget frozen when this NEW workflow is created; numerical waits count toward it")
     parser.add_argument("--config", help="Original project .env file, never copied into evidence")
     parser.add_argument("--database-url", help="Explicit runtime database URL; use the actual service configuration")
     parser.add_argument("--resume-checkpoint", help="Restore an immutable failed upstream checkpoint into this NEW output root, then call the formal retry API")

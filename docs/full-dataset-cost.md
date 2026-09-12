@@ -34,3 +34,5 @@ python scripts/profile_search_cost.py --input-json E:/verified-collection/input.
 主机为 Intel Core Ultra 7 265（20 核/20 逻辑处理器）、68135153664 字节物理内存、Windows 11 build 26200；Python 3.12.14、torch 2.8.0+cpu、NumPy 1.26.4、SciPy 1.15.3、MNE 1.10.2。本次效用实际并发为 1（冻结允许上限为 2，由 16 GiB 总预算下的单模型内存预留约束），BLAS/Torch 线程为 1。测量期间存在同机目录检索及短时专项回归，原始备注保留；这些结果不是空闲主机基准。
 
 正式验收驱动 `backend/scripts/release_workflow_acceptance.py` 已区分实际 109 人范围与声明面板，记录数据集级元数据、文件增删、全部应用文件和驱动哈希。正式流程仍需独立创建、fresh 调研和真实来源候选参与；这项驱动修正不提升任何历史失败运行的验收状态。
+
+工作流请求可通过 `model_budget_seconds`（驱动参数 `--model-budget-seconds`）事前声明模型请求总时限，默认仍为 21600 秒，允许 1–604800 秒。新工作流创建时写入绝对截止时间，数值计算和排队等待均计时；恢复或重试不会重新开始计时。128 次请求、累计输入及输出预留等原有限额不变。全集数值搜索的时间预算与模型请求时限分别冻结和展示于原始请求/预算文件，不能在运行中延长任一限额。
