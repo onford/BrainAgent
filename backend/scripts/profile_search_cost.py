@@ -56,7 +56,7 @@ class ProfiledTree(ProcessTree):
         self.last = None
         self.trace_path = ROOT / f'resources-{self.stage}-{self.pid}.csv'
         self.trace = self.trace_path.open('w', newline='', encoding='utf-8', buffering=1)
-        self.writer = csv.DictWriter(self.trace, fieldnames=['wall_seconds', 'cpu_user_seconds', 'cpu_kernel_seconds',
+        self.writer = csv.DictWriter(self.trace, fieldnames=['observed_at_unix_seconds', 'wall_seconds', 'cpu_user_seconds', 'cpu_kernel_seconds',
              'rss_bytes', 'read_bytes', 'write_bytes', 'other_bytes', 'read_operations', 'write_operations',
              'other_operations', 'total_processes', 'active_processes', 'page_faults'])
         self.writer.writeheader()
@@ -69,7 +69,7 @@ class ProfiledTree(ProcessTree):
             raise ctypes.WinError(ctypes.get_last_error())
         rss = self.memory_bytes()
         self.peak_rss = max(self.peak_rss, rss)
-        row = dict(wall_seconds=time.perf_counter()-self.started,
+        row = dict(observed_at_unix_seconds=time.time(), wall_seconds=time.perf_counter()-self.started,
                    cpu_user_seconds=value.basic.user/1e7, cpu_kernel_seconds=value.basic.kernel/1e7,
                    rss_bytes=rss, total_processes=value.basic.processes, active_processes=value.basic.active,
                    page_faults=value.basic.faults)

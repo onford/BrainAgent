@@ -250,10 +250,35 @@ def test_real_candidate_sibling_attempt_and_development_denominator(tmp_path, ad
         assert set(summary["utility"]["learner_statistics"]["csp_lda"]) == METRIC_NAMES
         assert a.verify_assessment(out, summary, panel_hash=args[3]["panel_hash"], candidate_id="candidate") == summary
         assert json.loads((out / "assessment.json").read_text()) == summary
+        for stage in ('utility', 'quality', 'reconstruction'):
+            path = out / '_assessment/stage-resources' / f'{stage}.json'
+            observation = json.loads(path.read_text())
+            assert observation['outcome'] == 'returned'
+            assert observation['wall_seconds'] >= 0 and observation['supervisor_cpu_seconds'] >= 0
+            assert observation['io_wait_seconds'] is None
+            assert path.relative_to(out).as_posix() in {r['path'] for r in summary['artifacts']}
         assert "assessment.json" not in {r["path"] for r in summary["artifacts"]}
         with pytest.raises(ValueError, match="fresh"):
             a.assess_candidate(*args, out, probe)
     assert digest([a._dump(x) if not isinstance(x, Path) else str(x) for x in args]) == before
+
+
+def test_stage_observation_failure_and_tampering_remain_visible(tmp_path, adapters, monkeypatch):
+    def failed(*args):
+        raise RuntimeError('observed stage failed')
+    monkeypatch.setattr(a, 'evaluate_dataset_quality', failed)
+    args, probe = case(tmp_path)
+    out = tmp_path / 'assessment'
+    summary = a.assess_candidate(*args, out, probe)
+    assert summary['quality']['status'] == 'failed'
+    path = out / '_assessment/stage-resources/quality.json'
+    observation = json.loads(path.read_text())
+    assert observation['outcome'] == 'raised'
+    assert a.verify_assessment(out, summary) == summary
+    observation['wall_seconds'] += 1
+    write_json(path, observation)
+    with pytest.raises(ValueError, match='inventory/checksum/size'):
+        a.verify_assessment(out, summary)
 
 
 def test_missing_primary_no_partial_averaging(tmp_path, adapters, monkeypatch):

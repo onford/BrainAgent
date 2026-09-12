@@ -454,34 +454,38 @@ def assess_candidate(plan, result, store_root, panel, candidate_entry, core_rece
                 deepcopy(panel), deepcopy(candidate))
 
     selection_score = None
+    from .resource_observation import observe_stage
     try:
-        options = {"execution": utility_execution} if utility_execution is not None else {}
-        payload = evaluate_dataset_utility(*common(), deepcopy(core), output / "utility", **options)
-        utility, selection_score = _utility_summary(payload, panel, candidate, core, output / "utility", output)
+        with observe_stage(output, 'utility'):
+            options = {"execution": utility_execution} if utility_execution is not None else {}
+            payload = evaluate_dataset_utility(*common(), deepcopy(core), output / "utility", **options)
+            utility, selection_score = _utility_summary(payload, panel, candidate, core, output / "utility", output)
     except (MemoryError, UtilityExecutionError):
         raise
     except Exception as exc:
         reason, failure = _failure(output, "utility", exc, bindings)
         utility = _utility_failed(panel, reason, failure)
     try:
-        payload = evaluate_dataset_quality(*common(), output / "quality")
-        quality = _quality_summary(payload, panel, candidate, bindings, output / "quality", output)
+        with observe_stage(output, 'quality'):
+            payload = evaluate_dataset_quality(*common(), output / "quality")
+            quality = _quality_summary(payload, panel, candidate, bindings, output / "quality", output)
     except MemoryError:
         raise
     except Exception as exc:
         reason, failure = _failure(output, "quality", exc, bindings)
         quality = AuxiliarySummary(status="failed", reason=reason, summary=None, receipt_artifact=None, failure_artifact=failure)
     try:
-        if probe is None:
-            reason, failure = _failure(output, "reconstruction", ValueError("frozen_probe_panel_unavailable"), bindings, status="not_applicable")
-            reconstruction = AuxiliarySummary(status="not_applicable", reason=reason, summary=None,
-                                                receipt_artifact=None, failure_artifact=failure)
-        else:
-            _require(probe["panel_hash"] == panel["panel_hash"] and probe["input_hash"] == panel["input_hash"]
-                     and probe["probe_hash"] == digest({k: v for k, v in probe.items() if k != "probe_hash"}), "frozen probe binding/hash mismatch")
-            # Kuhn's order is candidate_entry, PROBE_PANEL, OUTPUT_DIR.
-            payload = evaluate_dataset_reconstruction(*common(), deepcopy(probe), output / "reconstruction")
-            reconstruction = _reconstruction_summary(payload, panel, candidate, probe, bindings, output / "reconstruction", output)
+        with observe_stage(output, 'reconstruction'):
+            if probe is None:
+                reason, failure = _failure(output, "reconstruction", ValueError("frozen_probe_panel_unavailable"), bindings, status="not_applicable")
+                reconstruction = AuxiliarySummary(status="not_applicable", reason=reason, summary=None,
+                                                    receipt_artifact=None, failure_artifact=failure)
+            else:
+                _require(probe["panel_hash"] == panel["panel_hash"] and probe["input_hash"] == panel["input_hash"]
+                         and probe["probe_hash"] == digest({k: v for k, v in probe.items() if k != "probe_hash"}), "frozen probe binding/hash mismatch")
+                # Kuhn's order is candidate_entry, PROBE_PANEL, OUTPUT_DIR.
+                payload = evaluate_dataset_reconstruction(*common(), deepcopy(probe), output / "reconstruction")
+                reconstruction = _reconstruction_summary(payload, panel, candidate, probe, bindings, output / "reconstruction", output)
     except MemoryError:
         raise
     except Exception as exc:

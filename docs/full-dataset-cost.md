@@ -23,12 +23,14 @@ python scripts/profile_search_cost.py --input-json E:/verified-collection/input.
 - 独立图执行探针尝试开启 Job storage attribution，保留队列、服务和字节原始计数；未确认时间单位时不转换成秒。主线程 cProfile 的累计时间相互重叠，不能相加；其开销计入测量。
 - 图探针仅测共享图执行、检查点和保存，并逐记录比较最终物理数组；它不产生新的 15 次 EEGNet 训练。图成本与完整候选成本分别报告。
 
+新评价在 `_assessment/stage-resources/` 保存效用、质量、重建的独立起止时间、墙钟和当前评价进程 CPU 时间；这些文件纳入产物清单和哈希验证。`returned` 仅指函数返回，不能替代科学评价状态；异常记为 `raised`，强制退出而未写出文件的阶段保持缺测。该 CPU 字段明确不包含效用或原生子进程，需结合它们的回执及外部 Job 计数。观测代码不改变模型、输入范围或资源限额。
+
 计数依据：[Microsoft Job CPU accounting](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_basic_accounting_information)、[I/O counters](https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-io_counters)、[Microsoft hcsshim storage attribution](https://github.com/microsoft/hcsshim/blob/main/internal/jobobject/jobobject.go)。纯进程 I/O 等待目前标记为未测得。
 
 ## 当前运行
 
 2026-09-13 的 `full-cost-1` 在独立冻结副本上运行，原定总预算为 7200 秒。15 次 EEGNet 训练已完成，效用进程记录约 4160.875 秒；质量和重建评价尚未全部完成，因此目前没有完整候选成本结论。若触及原定预算，将保留失败产物，在新目录声明新预算，不能延长旧运行。
 
-主机为 Intel Core Ultra 7 265（20 核/20 逻辑处理器）、68135153664 字节物理内存、Windows 11 build 26200；Python 3.12.14、torch 2.8.0+cpu、NumPy 1.26.4、SciPy 1.15.3、MNE 1.10.2。效用模型进程上限为 1，BLAS/Torch 线程为 1。测量期间存在同机目录检索及短时专项回归，原始备注保留；这些结果不是空闲主机基准。
+主机为 Intel Core Ultra 7 265（20 核/20 逻辑处理器）、68135153664 字节物理内存、Windows 11 build 26200；Python 3.12.14、torch 2.8.0+cpu、NumPy 1.26.4、SciPy 1.15.3、MNE 1.10.2。本次效用实际并发为 1（冻结允许上限为 2，由 16 GiB 总预算下的单模型内存预留约束），BLAS/Torch 线程为 1。测量期间存在同机目录检索及短时专项回归，原始备注保留；这些结果不是空闲主机基准。
 
 正式验收驱动 `backend/scripts/release_workflow_acceptance.py` 已区分实际 109 人范围与声明面板，记录数据集级元数据、文件增删、全部应用文件和驱动哈希。正式流程仍需独立创建、fresh 调研和真实来源候选参与；这项驱动修正不提升任何历史失败运行的验收状态。
