@@ -50,7 +50,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "实质文献方法自主参与闭环",
-      "current": "C 的 14 个源方法全阻塞；D 只执行公共 resample/epoch 的来源适配。7–30 Hz 和 60 Hz 陷波来源方案未调度；定向文献小测不等于自主成功。",
+      "current": "第6次fresh流程在81ac1a1完成调研至交付六阶段，6个控制/派生候选被评价；实质文献候选因宽窗丢Trial不可比，文献闭环门槛仍失败。数据与代码未变化，预算耗尽后已完成结果正常保留。评分窗修订7401c8f的第7次fresh流程进行中。",
       "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。",
       "dependencies": [
         "I01",
@@ -732,7 +732,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "状态化分区拟合图",
-      "current": "train/calibration 重放只支持不依赖模型、决定或外部参数端口的确定性前处理；复杂清理后再拟合仍受限。",
+      "current": "train/calibration 先裁分区，再在独立执行器重放完整信号、模型、诊断及参数端口依赖；源全记录状态保留但不供该拟合复用。不同显式拟合区间和已有人工决定不重新解释。非零起点/区间外扰动验证目标模型逐位不变，Worker完整落盘验签通过；增加重放内存/磁盘预算。34项专项回归及8项最终资源/分区回归通过（重叠），最新全量回归待完成。",
       "solution_and_acceptance": "将每个拟合节点依赖与合法视图显式入图，先分区再重放可用依赖；对修改测试区间而训练模型应不变的故障用例验证泄漏边界。不支持组合继续拒绝。",
       "dependencies": [
         "I45"
@@ -743,7 +743,7 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "implemented_targeted_validation_passed"
     },
     {
       "id": "I37",
@@ -1633,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第九批评分窗口适配已通过专项回归；准备固定快照全量回归，继续分区状态依赖。fresh正式流程仍在81ac1a1独立运行，原失败记录不改写。",
+  "active_step": "第十批状态化分区重放完成专项验证；7401c8f固定快照全量回归及第7次真实闭环正在运行。接着处理研究议题覆盖与知识规则生命周期。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1815,6 +1815,14 @@
       "rejection_fixture": "Source BAD annotations prevent restoration; source baseline window preserved",
       "limitations": "Synthetic integration uses reduced learner training for regression only; real workflow 6 is an earlier immutable revision and has no scored literature candidate yet",
       "push": "Through 0f55219 confirmed; later pushes and remote verification failed or were ambiguous due GitHub network connectivity"
+    },
+    "tenth_batch": {
+      "graph_and_composition": "34 passed, 11 warnings, 66.26 seconds",
+      "final_partition_and_resources": "8 passed, 6.96 seconds; overlap with previous suite",
+      "isolation": "Changing samples outside a nonzero calibration interval changes the global model but leaves the partition target model bit-identical",
+      "integration": "Planner -> Worker -> output checksums; separate replay contexts, fitted models, decisions and main logs retained",
+      "unsupported": "Manual decisions bound to another data context and different explicit fit partitions remain blocked",
+      "live6": "live-integrated-6-result.json; completed workflow, failed literature gate, preserved read-only historical evidence"
     }
   }
 }

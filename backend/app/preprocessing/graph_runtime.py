@@ -108,10 +108,11 @@ def transition(packet,y,artifacts,spec,params,node_id=None):
 
 
 class GraphExecutor:
-    def __init__(self,record,steps,packet,directory,cancelled=lambda:False,assets=None):
+    def __init__(self,record,steps,packet,directory,cancelled=lambda:False,assets=None,_partition_scope=None):
         self.record=record;self.steps={s.id:s for s in steps};self.root_packet=packet
         self.directory=Path(directory);self.cancelled=cancelled
         self.assets=assets or {}
+        self.partition_scope = deepcopy(_partition_scope)
         self.nodes={'raw':{'packet':packet,'model':None,'artifacts':{}}};self.logs=[]
 
     def check(self):
@@ -145,37 +146,70 @@ class GraphExecutor:
         return result
 
     def scoped_packet(self,step):
+        if self.partition_scope is not None:
+            packet = deepcopy(self.nodes[step.input]['packet'])
+            scope = deepcopy(self.partition_scope)
+            if isinstance(packet.data, mne.BaseEpochs):
+                scope['ids'] = list(packet.trial_ids)
+            return packet, scope
         if step.adaptation_scope=='record_unlabeled':
             # Explicit record adaptation fits the selected, already processed
             # data branch. Never refit or replay upstream model/decision nodes.
             packet=deepcopy(self.nodes[step.input]['packet'])
             scope={'role':'calibration','ids':list(packet.trial_ids) if isinstance(packet.data,mne.BaseEpochs) else [self.record.id+':'+step.input+':record_unlabeled']}
             return packet,scope
+        raise ValueError('partition fits require an isolated dependency executor')
+
+    def partition_fit(self, step):
+        from .graph_partition import replay_ancestors
+        ancestors = replay_ancestors(step, list(self.steps.values()))
         packet=deepcopy(self.root_packet)
+        if not step.fit_scope or len(step.fit_scope.ids) != 1:
+            raise ValueError('partition fit requires one explicit calibration/train interval')
         part=next(p for p in self.record.intervals if p.id==step.fit_scope.ids[0])
+        if part.role not in ('train', 'calibration') or part.role != step.fit_scope.role:
+            raise ValueError('partition fit cannot consume a test or incompatible interval')
         raw=packet.data;lo=raw.first_samp+part.start;hi=raw.first_samp+part.stop
         keep=(packet.events[:,0]>=lo)&(packet.events[:,0]<hi)
         packet.events=packet.events[keep];packet.event_indices=packet.event_indices[keep]
         packet.trial_ids=[v for v,k in zip(packet.trial_ids,keep) if k]
         packet.data=raw.copy().crop(part.start/self.record.sfreq,(part.stop-1)/self.record.sfreq)
         scope={'role':part.role,'ids':[part.id]}
-        chain=[];name=step.input
-        while name!='raw':chain.append(self.steps[name]);name=self.steps[name].input
-        for ancestor in reversed(chain):
-            self.check();spec=DEFINITIONS[(ancestor.unit_id,ancestor.op)]
-            if ancestor.input_channels is not None:packet.data.pick(ancestor.input_channels)
-            params=self.runtime_params(ancestor,packet)
-            before=identity(packet)
-            with native_scope(self.cancelled, self.directory / ('fit-replay-' + ancestor.id)):
-                result=invoke_source(ancestor.unit_id,ancestor.op,packet.data,**params)
-            if identity(packet)!=before:raise ValueError('fit replay mutated input')
-            packet=transition(packet,result['data'],result['artifacts'],spec,params,node_id=ancestor.id)
-            self.logs.append({'step_id':ancestor.id,'branch':'fit_replay','scope':scope,'input_hash':before,'output_hash':identity(packet)})
-        if isinstance(packet.data,mne.BaseEpochs):scope['ids']=list(packet.trial_ids)
-        return packet,scope
+        folder = self.directory / ('fit-replay-' + step.id)
+        folder.mkdir(parents=True, exist_ok=False)
+        context = dict(policy='isolated-partition-dependency-replay-v1', target_step=step.id,
+            partition=dict(id=part.id, role=part.role, start=part.start, stop=part.stop),
+            root_input_hash=identity(packet), ancestor_step_ids=[s.id for s in ancestors],
+            external_fitted_state_reused=False)
+        write_json(folder/'context.json', context)
+        child = GraphExecutor(self.record, ancestors + [step], packet, folder, self.cancelled,
+            assets=self.assets, _partition_scope=scope)
+        for ancestor in ancestors:
+            child.execute(ancestor)
+            log = child.logs[-1]
+            log.update(branch='fit_replay', replay_target=step.id, replay_context=context)
+            self.logs.append(deepcopy(log))
+            write_json(folder/ancestor.id/'execution.json', log)
+        # Keep the target's normal artifact path. Every dependency is resolved
+        # against the isolated child nodes, including diagnostic parameter ports.
+        child.directory = self.directory
+        out = child.execute(step)
+        log = child.logs[-1]
+        original = self.nodes[step.input]['packet']
+        removed = {r['event_index']: r for r in log['removed_events']}
+        for index, trial in zip(original.event_indices, original.trial_ids):
+            if index not in out.event_indices and int(index) not in removed:
+                removed[int(index)] = dict(event_index=int(index), trial_id=trial, reasons=['FIT_SCOPE_SELECTION'])
+        log.update(removed_events=list(removed.values()), partition_replay=context)
+        self.nodes[step.id] = child.nodes[step.id]
+        self.logs.append(log)
+        write_json(self.directory/step.id/'execution.json', log)
+        return out
 
     def execute(self,step):
         self.check();spec=DEFINITIONS[(step.unit_id,step.op)]
+        if spec['fit'] and self.partition_scope is None and step.adaptation_scope != 'record_unlabeled':
+            return self.partition_fit(step)
         original=self.nodes[step.input]['packet'];packet=deepcopy(original);scope=None
         if spec['fit']:packet,scope=self.scoped_packet(step)
         if step.input_channels is not None:packet.data.pick(step.input_channels)

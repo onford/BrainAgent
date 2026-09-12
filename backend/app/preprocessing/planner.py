@@ -377,12 +377,14 @@ def create_plan(
                             expected={'forward':'forward','projs':'projections','annotations':'annotations'}[field]
                             if snapshot['kind']!=expected:raise ValueError('incompatible scientific asset port')
                             assets[asset_ref.id]=snapshot
+                    from .graph_partition import replay_work
+                    replayed = replay_work(steps)
                     estimate = (
                         signal_bytes(record, steps, data.collection.root)
-                        * (len(steps) + 8)
+                        * (len(steps) + len(replayed) + 8)
                         * 3
                     )
-                    for s in steps:
+                    for s in [*steps, *replayed]:
                         if s.op in ('asr_clean','asr_apply'):
                             # ASRpy materializes channel-pair moving covariance arrays.
                             estimate += (8 * len(record.channels) ** 2 * record.samples * 6
@@ -477,7 +479,7 @@ def create_plan(
     for config in records:
         config.estimated_disk_bytes = input_bytes[config.record_id] + signal_bytes(
             record_index[config.record_id], config.steps, data.collection.root
-        ) * (len(config.steps) + 6 + int(any(s.op == "epoch" for s in config.steps)))
+        ) * (len(config.steps) + len(replay_work(config.steps)) + 6 + int(any(s.op == "epoch" for s in config.steps)))
     estimated_disk = sum(c.estimated_disk_bytes for c in records)
     resources = budget(store.root, request)
     require_capacity("disk", estimated_disk, resources.disk_limit_bytes)

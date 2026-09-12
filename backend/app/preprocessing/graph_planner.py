@@ -82,12 +82,9 @@ def compile_graph(method,record,data,parameters):
                 partitions={i.id:i for i in record.intervals}
                 if any(i not in partitions or partitions[i].role!=step.fit_scope.role for i in step.fit_scope.ids):raise ValueError('fit scope includes unknown/test/incompatible partition')
                 if step.adaptation_scope not in ('none',step.fit_scope.role):raise ValueError('declared adaptation and fit role disagree')
-            cursor='raw' if step.adaptation_scope=='record_unlabeled' else step.input
-            while cursor!='raw':
-                ancestor=next(s for s in steps if s.id==cursor);a=DEFINITIONS[(ancestor.unit_id,ancestor.op)]
-                if a['model_kind'] or a['decision'] or ancestor.adaptation_scope!='none' or ancestor.artifact_inputs or ancestor.parameter_inputs:
-                    raise ValueError('partition fit ancestors must be replayable without fitted state or externally bound decisions')
-                cursor=ancestor.input
+            if step.adaptation_scope != 'record_unlabeled':
+                from .graph_partition import replay_ancestors
+                replay_ancestors(step, steps)
             if 'scope' in p and p['scope']!='$scope':raise ValueError('scope must be runtime-bound to actual selected samples/trials')
         elif step.fit_scope:raise ValueError('fit_scope supplied to non-fitting operation')
         if spec['decision']:

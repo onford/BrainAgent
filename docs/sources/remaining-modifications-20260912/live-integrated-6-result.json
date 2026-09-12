@@ -1,0 +1,117 @@
+{
+  "status": "completed",
+  "acceptance_passed": false,
+  "workflow_id": "b4e18b702e464aa587c49243eae7ddb5",
+  "stages": [
+    {
+      "error": null,
+      "finished_at": "2026-09-12T14:56:14.310432+00:00",
+      "label": "数据调研",
+      "name": "data_survey",
+      "started_at": "2026-09-12T14:49:01.282419+00:00",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-09-12T14:56:40.410462+00:00",
+      "label": "数据接入",
+      "name": "data_collection",
+      "started_at": "2026-09-12T14:56:14.753436+00:00",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-09-12T15:39:21.249770+00:00",
+      "label": "数据预处理",
+      "name": "data_preprocessing",
+      "started_at": "2026-09-12T14:56:40.798801+00:00",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-09-12T15:39:23.281452+00:00",
+      "label": "结果选择",
+      "name": "data_evaluation",
+      "started_at": "2026-09-12T15:39:21.868679+00:00",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-09-12T15:39:24.504774+00:00",
+      "label": "数据报告",
+      "name": "data_report",
+      "started_at": "2026-09-12T15:39:23.483020+00:00",
+      "status": "completed"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-09-12T15:39:43.113282+00:00",
+      "label": "数据交付",
+      "name": "data_delivery",
+      "started_at": "2026-09-12T15:39:24.706787+00:00",
+      "status": "completed"
+    }
+  ],
+  "error": null,
+  "search_id": "ff1f6f18828d4d939889260999952350",
+  "literature_participation": {
+    "status": "not_evaluated",
+    "evaluated_candidate_ids": [],
+    "distinct_from_controls_evaluated_ids": [],
+    "substantive_literature_evaluated_ids": [],
+    "eligible_candidate_ids": [
+      "paper-cf4eb6d2c868c5d85a0a5821"
+    ],
+    "statement": "本轮文献方法未进入评价；不能宣称调研驱动闭环已经完成。"
+  },
+  "selected_candidate_id": "candidate-f4b5cded8c194ff02256ba45",
+  "candidates": [
+    {
+      "id": "bp8-30-average",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.498435441370224
+    },
+    {
+      "id": "paper-cf4eb6d2c868c5d85a0a5821",
+      "status": "candidate_invalid",
+      "error": "missing eligible original trial; denominator is frozen",
+      "score": null
+    },
+    {
+      "id": "basic-acquisition-reference",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.48567193675889325
+    },
+    {
+      "id": "candidate-c0ba69e75d769005b7560e49",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.6260704874835309
+    },
+    {
+      "id": "candidate-3878f29e6c21b50e64f1fb71",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.6352108036890646
+    },
+    {
+      "id": "candidate-fd5da8a1f4387c59eb3d3c80",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.488965744400527
+    },
+    {
+      "id": "candidate-f4b5cded8c194ff02256ba45",
+      "status": "evaluated",
+      "error": null,
+      "score": 0.6429512516469038
+    }
+  ],
+  "mechanical_gate_passed": false,
+  "review_required": "Verify source parameters, non-preset semantics, subsequent model use and final selection accounting.",
+  "original_data_unchanged": true,
+  "code_unchanged_during_run": true,
+  "code_digest_after": "d5446918960dba0c30b6df387a9332d880fa0869532e978e2fcd2704b4e49086"
+}
