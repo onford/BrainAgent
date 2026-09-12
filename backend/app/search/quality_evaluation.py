@@ -588,6 +588,8 @@ def _reduce(report):
         r = {k: deepcopy(m[k]) for k in ("metricID", "unit", "direction", "status", "reason", "formula")}
         r.update(value=None, axes={}, denominator=deepcopy(m["denominator"]),
                  selection_role="proxy_observation", limitations=deepcopy(m.get("limitations", [])))
+        r['within_record_reduction']=('channel_median_then_epoch_mean_at_each_frequency' if mid=='psd'
+            else 'retain_declared_curve_axes' if mid in _CURVES else 'mean_of_finite_values_over_all_metric_axes')
         if m["value"] is not None:
             a = np.asarray(m["value"], dtype=float)
             r["denominator"]["finite_values_before_reduction"] = int(np.isfinite(a).sum())
@@ -620,6 +622,7 @@ def _aggregate(members, level):
         counts = None
         if good:
             compatible = all(m["unit"] == first["unit"] and m.get("axes", {}) == first.get("axes", {})
+                             and m.get('within_record_reduction')==first.get('within_record_reduction')
                              and np.shape(m["value"]) == np.shape(first["value"]) for _, m in good)
             if not compatible:
                 reason, status = "measurement_axes_differ_no_interpolation_or_scalar_fallback", "not_comparable"
@@ -636,6 +639,7 @@ def _aggregate(members, level):
                        "direction": first["direction"], "status": status, "reason": reason,
                        "formula": first["formula"], "axes": first.get("axes", {}),
                        "aggregation": "equal_" + level + "_mean",
+                       "within_record_reduction":first.get('within_record_reduction'),
                        "applicability": "available" if status == "ok" else "partial" if value is not None else "unavailable",
                        "selection_role": "proxy_observation", "limitations": list(_LIMITATIONS),
                        "denominator": {"expected_" + level: len(rows), "available_" + level: len(good),

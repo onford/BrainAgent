@@ -133,7 +133,7 @@ from pathlib import Path
 from app.preprocessing.parallel import RecordProcessPool
 from app.preprocessing.schemas import ExecutionPlan
 if __name__ == '__main__':
-    plan = ExecutionPlan.model_validate_json(Path(sys.argv[1]).read_text())
+    plan = ExecutionPlan.model_validate_json(Path(sys.argv[1]).read_text(encoding='utf-8'))
     pool = RecordProcessPool(plan, sys.argv[2], sys.argv[3], 2)
     pid = pool.executor.submit(os.getpid).result(timeout=20)
     pool.executor.submit(time.sleep, 60)

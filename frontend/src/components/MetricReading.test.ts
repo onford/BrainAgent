@@ -14,6 +14,13 @@ async function open(wrapper: ReturnType<typeof mount>) {
 }
 beforeEach(() => vi.mocked(apiRequest).mockReset())
 describe('evidence-based metric reading', () => {
+  it('keeps an unverified hypothesis visibly separate from measured facts', async () => {
+    vi.mocked(apiRequest).mockResolvedValue({ ...reply, reading: { claims: [{ ...reply.reading.claims[0], epistemic_status: 'unverified_hypothesis', assumptions: ['一个待核对前提'], competing_explanation: '另一种可能原因', testable_prediction: '需要测量的结果' }] } })
+    const wrapper = mount(MetricReading, { props }); await open(wrapper)
+    expect(wrapper.find('.claim').text()).toContain('待验证假设')
+    expect(wrapper.find('.claim').text()).toContain('另一种可能原因')
+    expect(wrapper.find('.claim').text()).toContain('需要测量的结果')
+  })
   it('loads on demand, preserves zero coverage and links the cited theory', async () => {
     vi.mocked(apiRequest).mockResolvedValue(reply)
     const wrapper = mount(MetricReading, { props })

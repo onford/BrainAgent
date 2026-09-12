@@ -50,6 +50,7 @@ class FakeLLM(LLMClient):
         self.context = ctx
         card = ctx["cards"][0]
         result = {"assessment": "insufficient", "claims": [{"text": "任务片段不足五秒，无法用持续平坦条件判断平坦占比。",
+                  "epistemic_status":"measurement_limit","basis":["recorded_missingness","recorded_execution"],
                   "evidence_ids": ["metric:flat_fraction", "missing", "execution"],
                   "card_ids": [card["id"]], "source_ids": [card["source_ids"][0]]}], "next_check": None}
         if self.change:
@@ -64,6 +65,25 @@ def test_context_resolves_record_reason_and_actual_execution(saved):
     assert ctx["evidence"]["execution"]["profiles"][0]["executed_operations"][0]["operator"] == "average_reference"
     assert ctx["evidence"]["metric:flat_fraction"]["value"] is None
     assert all("flat_fraction" in c["metrics"] for c in ctx["cards"])
+
+
+def test_reading_respects_its_frozen_source_suspension(saved):
+    from app.search.knowledge_registry import KnowledgeRegistry
+    from app.search.scientific_space import knowledge
+    from tests.search.test_knowledge_registry import EVIDENCE
+    root,state,req=saved
+    guide=interpretation_guide()
+    card=next(c for c in guide['cards'] if req.metric_id in c['metrics'])
+    url=next(s['url'] for s in guide['sources'] if s['id']==card['source_ids'][0])
+    book=knowledge().model_dump(mode='json')
+    # Synthetic catalog notice, not a statement about the real source.
+    book['sources'][0].update(url=url,status='suspended',status_reason='fixture',status_evidence=EVIDENCE,
+        status_observed_at='2026-09-13T00:00:00+00:00')
+    registry=KnowledgeRegistry(root/'test-registry',book)
+    snapshot=registry.get('fixture')
+    write(root/'knowledge-revision.json',snapshot)
+    state['protocol']['knowledge_revision_hash']=digest(snapshot)
+    with pytest.raises(ValueError,match='可用来源'):context(root,state,req)
 
 
 def test_small_threshold_curves_preserve_their_axes_but_large_arrays_are_not_fake_curves():

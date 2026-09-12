@@ -134,6 +134,8 @@ def test_real_bids_all_records_subject_equal_summary_and_read_only(tmp_path):
     assert s["coverage"]["eligible_trials"] == s["coverage"]["available_trials"] == 8
     assert set(s["metrics"]) == set(METRIC_IDS)
     assert s["composite_score"] is None
+    assert s['metrics']['psd']['within_record_reduction']=='channel_median_then_epoch_mean_at_each_frequency'
+    assert s['metrics']['mu_mean_psd']['within_record_reduction']=='mean_of_finite_values_over_all_metric_axes'
     a, b = (s["bysubject"][key]["metrics"]["oha"]["value"][0] for key in ("subject-01", "subject-02"))
     assert a != b
     assert s["metrics"]["oha"]["value"][0] == pytest.approx((a+b)/2)

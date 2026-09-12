@@ -337,6 +337,8 @@ def _compact_quality(native):
         row["denominator"] = {k: deepcopy(v) for k, v in denominator.items() if k not in {"expected_ids", "available_ids", "missing_reasons"}}
         row["denominator"]["missing_reason_counts"] = dict(Counter(denominator.get("missing_reasons", {}).values()))
         compact["metrics"][mid] = row
+        if metric.get('within_record_reduction'):
+            row['within_record_reduction']=metric['within_record_reduction']
     compact["stage_status_counts"] = {stage: dict(Counter(m["status"] for m in metrics.values()))
                                        for stage, metrics in native["stages"].items()}
     compact["detail_policy"] = "all_subject_record_metrics_and_full_curves_in_quality_receipt_and_detail_artifacts"

@@ -7,7 +7,7 @@ const props = defineProps<{ searchId: string; candidateId: string; stage: string
 type Source = { id: string; title: string; url: string; locator: string; evidence: string }
 type Result = {
   created_at: string; input_hash: string; model: { name: string }
-  reading: { assessment: string; claims: { text: string; source_ids: string[] }[]; next_check?: string | null }
+  reading: { assessment: string; claims: { text: string; source_ids: string[]; epistemic_status?: string; assumptions?: string[]; competing_explanation?: string; testable_prediction?: string }[]; next_check?: string | null }
   context: { sources: Source[]; cards: { id: string; title: string; reading: string }[] }
 }
 const result = ref<Result | null>(null), loading = ref(false), error = ref(''), expanded = ref(false)
@@ -18,6 +18,7 @@ const coverage = computed(() => {
 })
 const sources = computed(() => result.value?.context.sources.filter(s => result.value?.reading.claims.some(c => c.source_ids.includes(s.id))) ?? [])
 function source(id: string) { return sources.value.find(s => s.id === id) }
+const claimLabel = (status?: string) => ({ measurement_description: '测量描述', measurement_limit: '测量限制', unverified_hypothesis: '待验证假设' }[status ?? ''] ?? '历史模型解读（未分类）')
 async function load() {
   if (loading.value || result.value) return
   const request = ++serial
@@ -49,7 +50,10 @@ onBeforeUnmount(() => { serial++ })
     <p v-if="loading" class="muted" role="status">{{ t('Checking evidence and reading the knowledge base…') }}</p>
     <div v-if="error" role="alert"><p>{{ t('The interpretation is unavailable. No conclusion has been substituted.') }}</p><small>{{ error }}</small><button type="button" @click="load">{{ t('Retry interpretation') }}</button></div>
     <template v-if="result">
-      <p v-for="(claim, i) in result.reading.claims" :key="i" class="claim">{{ claim.text }} <template v-for="id in claim.source_ids" :key="id"><a v-if="source(id)" :href="source(id)!.url" :title="source(id)!.title" target="_blank" rel="noopener noreferrer" class="citation">[{{ sources.findIndex(s => s.id === id) + 1 }}]</a></template></p>
+      <div v-for="(claim, i) in result.reading.claims" :key="i" class="claim">
+        <p><strong>{{ claimLabel(claim.epistemic_status) }}：</strong>{{ claim.text }} <template v-for="id in claim.source_ids" :key="id"><a v-if="source(id)" :href="source(id)!.url" :title="source(id)!.title" target="_blank" rel="noopener noreferrer" class="citation">[{{ sources.findIndex(s => s.id === id) + 1 }}]</a></template></p>
+        <template v-if="claim.epistemic_status === 'unverified_hypothesis'"><p>前提：{{ claim.assumptions?.join('；') }}</p><p>竞争解释：{{ claim.competing_explanation }}</p><p>可检验预测：{{ claim.testable_prediction }}</p></template>
+      </div>
       <p v-if="result.reading.next_check" class="next-check">{{ t('To resolve this:') }} {{ result.reading.next_check }}</p>
       <small class="muted">{{ t('Model interpretation · {0} · Saved with this evidence', { 0: result.model.name }) }}</small>
       <details class="evidence"><summary>{{ t('Theory, sources and audit record') }}</summary>

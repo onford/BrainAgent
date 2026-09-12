@@ -15,6 +15,7 @@ from app.preprocessing.storage import digest, file_hash, within
 from .interpretation import Guide
 from .io import read, write
 from .neural_diagnostics import quality_input
+from .metric_claims import ClaimBasis, spectral_facts, inference_contract, validate_claim_basis
 
 
 class ReadingRequest(BaseModel):
@@ -31,6 +32,11 @@ class Claim(BaseModel):
     evidence_ids: list[str] = Field(min_length=1, max_length=8)
     card_ids: list[str] = Field(min_length=1, max_length=3)
     source_ids: list[str] = Field(min_length=1, max_length=4)
+    epistemic_status: Literal['measurement_description','measurement_limit','unverified_hypothesis']
+    basis: list[ClaimBasis] = Field(min_length=1,max_length=4)
+    assumptions: list[str] = Field(default_factory=list,max_length=3)
+    competing_explanation: str | None = Field(default=None,max_length=220)
+    testable_prediction: str | None = Field(default=None,max_length=220)
 
 
 class Reading(BaseModel):
@@ -62,7 +68,13 @@ next_check 仅在一个具体核查能解决当前关键缺口时填写，否则
 不要例行复述“缺失不是零/质量失败”，解释具体缺测条件就足够。主指标的解释已自足时，不追加关联指标的数值报表。
 峰峰值与 MAD 估计标准差之比并非已验证的瞬态/稀疏噪声判据；高斯噪声也可出现很大的极差与离散度之比。
 超限率要指明对应阈值及分母；不同阈值数组的最大值不是最坏被试/记录的值。
-每段中使用执行条件须引用 execution；使用缺测原因须引用 missing 或相应指标的 missing_detail。"""
+每段中使用执行条件须引用 execution；使用缺测原因须引用 missing 或相应指标的 missing_detail。
+显式选择 epistemic_status：测量描述、测量限制、待验证假设。basis 列出实际使用的推断前提，只能使用 inference_contract 中 available 的依据并引用其 requires。
+待验证假设必须写清 assumptions、competing_explanation 和 testable_prediction；不能把假设写成已确认事实。另两类这三个字段为空。
+总方差、幅度或滤波设置不证明低频占主导；频谱判断需要引用提供的 spectral_facts，且只限所保存的聚合PSD。数值秩/奇异容差不证明特征值严格为零。
+basis 是供程序检查的依据声明，必须与正文实际推导一致，不能通过省略依据来表达不被支持的结论。"""
+
+SYSTEM += '\nPSD曲线与频带标量可能采用不同的通道/窗口归约；未明确提供相同归约合同时，不能把频带标量称为该聚合曲线的积分或均值。'
 
 REVIEW = """你是同一解读的证据审查者。基于 context 独立检查草稿，输出最终 Reading JSON，必要时重写。
 逐句核对数值、单位、阈值轴、分母、阶段、引用与推导前提。引用存在不等于支持结论。
@@ -75,7 +87,8 @@ REVIEW = """你是同一解读的证据审查者。基于 context 独立检查�
 数值秩使用浮点容差，不能仅从数值秩或其被试均值反推严格为零的特征值；按已记录奇异原因表述。
 如草稿存在非法字段/引用，按 schema 修正。每段必须引用所用的实际 evidence、card 和 source ID。
 来源仅是给定知识卡来源，不要把自己的推导冒充文献结论。输出前再次检查引用标识是否在 context 中。
-正文不写技术字段名，如 line_ratio_50hz、OHA 等应按定义写成可读表述。"""
+正文不写技术字段名，如 line_ratio_50hz、OHA 等应按定义写成可读表述。
+核对 epistemic_status 和 basis 是否覆盖正文的所有推导。把未证实归因改成明确的待验证假设，或删去缺少前提的判断；不允许用“可能”掩饰频谱或比较证据缺失。"""
 
 
 def compact(value):
@@ -100,7 +113,7 @@ def compact(value):
 
 
 def measurement(row):
-    return {k: compact(row[k]) for k in ("value", "axes", "unit", "status", "reason", "denominator", "formula", "aggregation") if k in row}
+    return {k: compact(row[k]) for k in ("value", "axes", "unit", "status", "reason", "denominator", "formula", "aggregation",'within_record_reduction') if k in row}
 
 
 def context(root: Path, state: dict, request: ReadingRequest):
@@ -113,14 +126,27 @@ def context(root: Path, state: dict, request: ReadingRequest):
         raise ValueError("解读知识库哈希不一致")
     guide = Guide.model_validate(document)
     cards = [c.model_dump(mode="json") for c in guide.cards if request.metric_id in c.metrics]
+    knowledge_revision=None
+    if state['protocol'].get('knowledge_revision_hash'):
+        from .knowledge_registry import verify_snapshot,unavailable,normalized_url
+        knowledge_revision=verify_snapshot(read(root/'knowledge-revision.json'))
+        if digest(knowledge_revision)!=state['protocol']['knowledge_revision_hash']:
+            raise ValueError('解读所用冻结知识修订哈希不一致')
+        blocked_urls={normalized_url(url) for s in knowledge_revision['catalog']['sources'] if unavailable(s)
+                      for url in (s['url'],s.get('binding_original_url')) if url}
+        blocked_sources={s.id for s in guide.sources if normalized_url(s.url) in blocked_urls}
+        cards=[c for c in cards if not blocked_sources.intersection(c['source_ids'])]
     if not cards:
-        raise ValueError("知识库尚未覆盖此指标，暂不生成理论解读")
+        raise ValueError("冻结知识库尚无可用来源支持此指标，暂不生成理论解读")
     rows = quality.get("stages", {}).get(request.stage, {})
     if request.metric_id not in rows:
         raise ValueError("当前阶段未保存此项测量")
     relevant = {m for c in cards for m in c["metrics"]}
     evidence = {f"metric:{mid}": {**measurement(row), "reference": {**ref,
                 "json_pointer": f"/stages/{request.stage}/{mid}"}} for mid, row in rows.items() if mid in relevant}
+    facts=spectral_facts(rows.get('psd',{})) if 'psd' in relevant else None
+    if facts:
+        evidence['spectral_facts']={**facts,'reference':{**ref,'json_pointer':f'/stages/{request.stage}/psd'}}
     # Preserve each record's actual execution conditions; do not substitute the recipe.
     profiles, profile_records, detail_refs = {}, {}, []
     missing_by_metric = {mid: Counter() for mid in relevant if mid in rows}
@@ -144,7 +170,8 @@ def context(root: Path, state: dict, request: ReadingRequest):
                    "samples_per_epoch": d.get("n_samples_per_epoch"),
                    "metadata": {k: metadata[k] for k in ("measurement_view", "measurement_filter_applied", "input_unit_contract", "baseline_alignment_contract") if k in metadata},
                    "history": {k: v for k, v in history.items() if k != "operations"},
-                   "executed_operations": [{"operator": op.get("operator"), "parameters": {
+                   "executed_operations": [{"operator": op.get("operator"),"unit_id":op.get('unit_id'),"op":op.get('op'),
+                       "implementation_version":op.get('implementation_version'),"profile":op.get('profile'), "parameters": {
                        k: v for k, v in op.get("frozen_parameters", {}).items() if k not in ("picks", "channel_names")}}
                        for op in history.get("operations", [])]}
         key = digest(profile)
@@ -167,6 +194,7 @@ def context(root: Path, state: dict, request: ReadingRequest):
                             for sid, s in sorted(quality.get("bysubject", {}).items())}
     source_ids = {sid for c in cards for sid in c["source_ids"]}
     return {"request": request.model_dump(), "evidence": evidence, "cards": cards,
+            "inference_contract":inference_contract(evidence,request.metric_id),
             "sources": [s.model_dump(mode="json") for s in guide.sources if s.id in source_ids],
             "guide": {"schema_version": guide.schema_version, "sha256": digest(document), "path": "interpretation-guide.json"}}
 
@@ -178,6 +206,9 @@ def validate_reading(result: Reading, ctx: dict):
     cards = {c["id"]: c for c in ctx["cards"]}
     referenced = set()
     for claim in result.claims:
+        validate_claim_basis(claim,ctx)
+        if result.assessment=='insufficient' and claim.epistemic_status!='measurement_limit':
+            raise ValueError('缺测解读应标为测量限制')
         if not set(claim.evidence_ids) <= ctx["evidence"].keys() or not set(claim.card_ids) <= cards.keys():
             raise ValueError("模型解读引用了不存在的测量或知识卡")
         allowed = {s for cid in claim.card_ids for s in cards[cid]["source_ids"]}
@@ -252,7 +283,7 @@ class MetricReader:
                 {"role": "user", "content": json.dumps({**payload, "draft": draft}, ensure_ascii=False, allow_nan=False)},
             ], schema)
             validate_reading(result, ctx)
-            saved = {"schema_version": "metric-reading-1", "input_hash": cache_key,
+            saved = {"schema_version": "metric-reading-2", "input_hash": cache_key,
                      "created_at": datetime.now(timezone.utc).isoformat(), "model": self.model,
                      "context": ctx, "review": {"draft": draft, "passes": 1, "prompt_hash": digest(SYSTEM + REVIEW),
                                                 "scope": "model_self_review_not_independent_expert_validation"},
