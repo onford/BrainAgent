@@ -140,6 +140,8 @@ def basic_space():
     priors = [
         dict(
             id="continuous-before-epoch",
+            operator_match="unit_operation",
+            implementation_versions=["1", "2"],
             strength="hard",
             relation="before",
             operators=["resample", "epoch"],

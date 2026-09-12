@@ -185,8 +185,9 @@
         "D10"
       ],
       "historical_status": "尚未验证",
-      "status": "in_progress",
-      "historical_current": "52 单元集成并不证明 PREP、RELAX、HAPPE、Automagic 等完整作者流程均已复现；已有部分完整组合验收。"
+      "status": "partial",
+      "historical_current": "52 单元集成并不证明 PREP、RELAX、HAPPE、Automagic 等完整作者流程均已复现；已有部分完整组合验收。",
+      "implementation_note": "PREP/Automagic 已接入；RELAX 隔离依赖到位，原生两次输出最大差 0 V，完整驱动第 4 次完成，动态时间/通道/事件桥接未实现。HAPPE 仍缺 Optimization Toolbox。"
     },
     {
       "id": "I10",
@@ -325,7 +326,8 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation_note": "同一规则引擎审计普通配方与直接 v2 图；真实祖先次序、前置依赖、条件未知及显式版本选择器。未绑定变体留下覆盖缺口；研究知识全量机器谓词尚未完成。"
     },
     {
       "id": "I17",
@@ -342,7 +344,8 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation_note": "相反且适用的 before 规则同时记录；硬约束阻止执行，软冲突保留。复杂条件冲突/全局一致性分析待完善。"
     },
     {
       "id": "I18",
@@ -361,7 +364,8 @@
         "D6"
       ],
       "historical_status": "未完成",
-      "status": "pending"
+      "status": "partial",
+      "implementation_note": "冻结执行规则新增 revision/status/change_reason/supersedes，撤回项保留，替代须指向较低修订的撤回项；规则/配方哈希写入编译产物。研究库规则全量生命周期待完成。"
     },
     {
       "id": "I19",
@@ -1702,6 +1706,15 @@
       "scope": "conclusion eligibility / bounded truncation correction / workflow regressions",
       "result": "146 passed, 2 warnings",
       "log": ".local/remaining-modifications-20260912/conclusions-budget-tests-2.log"
+    },
+    "fifth_batch": {
+      "scope": "shared rule engine and source graph compilation",
+      "result": "67 unique tests passed across targeted runs; initial fixture failures preserved",
+      "logs": [
+        ".local/remaining-modifications-20260912/rule-engine-tests-2.log",
+        ".local/remaining-modifications-20260912/rule-engine-tests-3.log",
+        ".local/remaining-modifications-20260912/rule-engine-direct-tests.log"
+      ]
     }
   }
 }

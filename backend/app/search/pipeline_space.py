@@ -2,7 +2,6 @@
 
 from copy import deepcopy
 import math
-import operator as comparisons
 
 from pydantic import TypeAdapter
 
@@ -11,15 +10,6 @@ from .space_contracts import ExplorationSpace, PipelineEdit, PipelineRecipe
 
 
 _EDIT = TypeAdapter(PipelineEdit)
-_COMPARE = {
-    "eq": comparisons.eq,
-    "ne": comparisons.ne,
-    "lt": comparisons.lt,
-    "le": comparisons.le,
-    "gt": comparisons.gt,
-    "ge": comparisons.ge,
-    "in": lambda a, b: a in b,
-}
 
 
 def _check_value(value, domain, location):
@@ -35,23 +25,6 @@ def _check_value(value, domain, location):
             raise ValueError(f"{location}: parameter outside frozen bounds")
 
 
-def _predicate(predicate, recipe, context):
-    if predicate.scope == "context":
-        values = [context[predicate.key]] if predicate.key in context else []
-    else:
-        values = [
-            n.parameters[predicate.key]
-            for n in recipe.nodes
-            if n.operator == predicate.operator and predicate.key in n.parameters
-        ]
-    if not values or any(v is None for v in values):
-        return None
-    try:
-        return all(_COMPARE[predicate.comparison](v, predicate.value) for v in values)
-    except (TypeError, ValueError):
-        return None
-
-
 def validate_recipe(recipe, space, context=None):
     """Return a canonical recipe and applicable soft-prior disagreements."""
     space = (
@@ -64,7 +37,7 @@ def validate_recipe(recipe, space, context=None):
     )
     context = context or {}
     operators = {o.id: o for o in space.operators}
-    counts, positions = {}, {}
+    counts = {}
     stage = "continuous"
     input_highpass = 0.0
     seen = set()
@@ -89,7 +62,6 @@ def validate_recipe(recipe, space, context=None):
             if (node.graph.unit_id, node.graph.op, node.graph.profile, node.graph.implementation_version) != (spec.unit_id,spec.op,spec.profile,spec.implementation_version):
                 raise ValueError('graph operation differs from frozen operator')
         counts[spec.id] = counts.get(spec.id, 0) + 1
-        positions.setdefault(spec.id, []).append(i)
         if counts[spec.id] > spec.max_instances:
             raise ValueError(f"{spec.id}: maximum instances exceeded")
         missing = [key for key in spec.requires if context.get(key) is not True]
@@ -132,43 +104,8 @@ def validate_recipe(recipe, space, context=None):
             semantic_count=int(any(o.op in aliases[spec.op] and counts.get(o.id,0) for o in space.operators))
         if spec.required and semantic_count != 1:
             raise ValueError(f"required operator must occur exactly once: {spec.id}")
-    warnings = []
-    for prior in space.priors:
-        predicates = [_predicate(p, recipe, context) for p in prior.when]
-        if any(p is False for p in predicates):
-            continue
-        if any(p is None for p in predicates) and any(o in positions for o in prior.operators):
-            if prior.strength == "hard":
-                raise ValueError(f"{prior.id}: hard-prior applicability is unknown; supply required context")
-            warnings.append({"prior_id": prior.id, "reason": "适用条件未知，不能视为不适用：" + prior.rationale,
-                             "evidence_ids": prior.evidence_ids})
-            continue
-        ids = prior.operators
-        applies = ids[0] in positions
-        if prior.relation == "before":
-            violation = (
-                applies
-                and ids[1] in positions
-                and max(positions[ids[0]]) >= min(positions[ids[1]])
-            )
-        elif prior.relation == "requires":
-            violation = applies and not all(key in positions for key in ids[1:])
-        elif prior.relation == "incompatible":
-            violation = all(key in positions for key in ids)
-        else:
-            violation = applies and not all(
-                _predicate(p, recipe, context) for p in prior.requirements
-            )
-        if violation:
-            if prior.strength == "hard":
-                raise ValueError(f"{prior.id}: {prior.rationale}")
-            warnings.append(
-                {
-                    "prior_id": prior.id,
-                    "reason": prior.rationale,
-                    "evidence_ids": prior.evidence_ids,
-                }
-            )
+    from .rule_engine import audit, enforce
+    warnings = enforce(audit(recipe, space, context))
     return recipe, warnings
 
 

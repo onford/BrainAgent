@@ -17,9 +17,31 @@ def compile_recipe(entry, space, panel, context=None):
             if not context or 'preprocess_input' not in context:
                 raise ValueError('graph evaluation requires the frozen target input for alignment')
             check_method(resolved[0], PreprocessInput.model_validate(context['preprocess_input']), panel['output_contract'])
+        # Route direct source graphs through the same frozen rule evaluator.
+        from .graph_recipe import graph_operator
+        from types import SimpleNamespace
+        from .rule_engine import audit, enforce
+        bound_space = deepcopy(space.model_dump(mode='json') if isinstance(space, ExplorationSpace) else space)
+        nodes = []
+        for step in resolved[0].recipe:
+            op, parameters, _ = graph_operator(step, bound_space)
+            nodes.append(SimpleNamespace(id=step.id, operator=op, parameters=parameters,
+                input_from=step.input, model_from=step.model_from,
+                decision_from=step.decision_from, graph=step))
+        # The source MethodSpec is already validated. Auditing must not impose
+        # the editable recipe's node-count or cosmetic identifier restrictions.
+        projection = SimpleNamespace(nodes=nodes, model_dump=lambda **_: dict(
+            nodes=[{**vars(n), 'graph': n.graph.model_dump(mode='json')} for n in nodes],
+            output=resolved[0].output))
+        result = audit(projection, ExplorationSpace.model_validate(bound_space), context)
+        warnings = enforce(result)
+        resolved[0].lineage['rule_audit'] = result
+        resolved[0].adaptations.extend(w['reason'] for w in warnings)
         return resolved[0]
     space = ExplorationSpace.model_validate(space)
     recipe, warnings = validate_recipe(entry["recipe"], space, context)
+    from .rule_engine import audit
+    rule_audit = audit(recipe, space, context)
     operators = {o.id: o for o in space.operators}
     evidence_ids = list(
         dict.fromkeys(
@@ -128,6 +150,7 @@ def compile_recipe(entry, space, panel, context=None):
         + [w["reason"] for w in warnings],
         lineage={"kind": entry.get("origin"), "sources": entry.get("lineage", []),
                  "parent_ids": entry.get("parent_ids", []), "edits": entry.get("edits", []),
-                 "candidate_id": entry["id"], "recipe_hash": entry.get("recipe_hash")},
+                 "candidate_id": entry["id"], "recipe_hash": entry.get("recipe_hash"),
+                 "rule_audit": rule_audit},
         issues=entry.get("issues", []),
     )

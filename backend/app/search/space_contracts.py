@@ -144,6 +144,12 @@ class PriorCondition(Contract):
 
 class ScientificPrior(Contract):
     id: Identifier
+    revision: int = Field(default=1, ge=1)
+    status: Literal['active', 'revoked'] = 'active'
+    change_reason: str | None = None
+    supersedes: list[str] = Field(default_factory=list)
+    operator_match: Literal['registered_id', 'unit_operation'] = 'registered_id'
+    implementation_versions: list[Literal['1', '2']] = Field(default_factory=lambda: ['1'])
     strength: Literal["hard", "soft"]
     relation: Literal["before", "requires", "incompatible", "parameter_condition"]
     operators: list[str] = Field(min_length=1)
@@ -156,6 +162,10 @@ class ScientificPrior(Contract):
 
     @model_validator(mode="after")
     def relation_shape(self):
+        if (self.status == 'revoked' or self.revision > 1 or self.supersedes) and not (self.change_reason or '').strip():
+            raise ValueError('rule revisions/revocations require a change reason')
+        if not self.implementation_versions or len(set(self.implementation_versions)) != len(self.implementation_versions):
+            raise ValueError('rule implementation versions must be nonempty and unique')
         if (
             self.relation in {"before", "requires", "incompatible"}
             and len(self.operators) < 2
@@ -279,6 +289,11 @@ class ExplorationSpace(Contract):
             if any(n.operator not in operators for n in method.recipe.nodes):
                 raise ValueError("method references an unknown operator")
         for prior in self.priors:
+            prior_by_id = {p.id: p for p in self.priors}
+            for old_id in prior.supersedes:
+                old = prior_by_id.get(old_id)
+                if old is None or old.status != 'revoked' or old.revision >= prior.revision:
+                    raise ValueError('replacement must reference a retained revoked rule with lower revision')
             if not set(prior.operators) <= operators.keys():
                 raise ValueError("prior references an unknown operator")
             for predicate in prior.when + prior.requirements:
