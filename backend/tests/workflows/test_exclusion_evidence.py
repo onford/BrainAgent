@@ -71,3 +71,31 @@ def test_unresolved_secondary_claim_preserves_proposal_but_clears_local_flags():
     result = literature_matches(SimpleNamespace(literature_exclusions=[value]),
         {'records': [{'id': 'S001R04', 'subject': 'S001'}]})
     assert result.records[0].local_objects == [] and result.records[0].action == '不处理'
+
+
+@pytest.mark.parametrize('span,ids,verified', [
+    ('Recordings S088R03 and S089R04 were excluded.', ['S088R03', 'S089R04'], True),
+    ('Recordings S088R03 and S089R04 were excluded.', ['S100R04'], False),
+    ('Subjects 88 and 89 were excluded in three runs.', ['S088R03'], False),
+    ('Recording XS088R03 was excluded.', ['S088R03'], False),
+    ('Recording S088R030 was excluded.', ['S088R03'], False),
+])
+def test_recording_ids_need_exact_bounded_source_identity(span, ids, verified):
+    value, entry = claim(span, ids)
+    value.object_type = 'recording'
+    result = review_claim(value, entry)
+    assert (result['status'] == 'literal_scope_verified') == verified
+    assert result['effective']['reported_ids'] == (ids if verified else [])
+    assert result['proposed']['reported_ids'] == ids
+    local = literature_matches(SimpleNamespace(literature_exclusions=[value]),
+        {'records': [{'id': 'S088R03', 'subject': 'S088'}, {'id': 'S100R04', 'subject': 'S100'}]})
+    assert local.records[0].action == ('保留标记' if verified else '不处理')
+    assert result['automatic_exclusion_authorized'] is False
+
+
+@pytest.mark.parametrize('kind,ids', [('channel', ['C3']), ('trial', ['3']), ('unspecified', ['3']), ('subject', ['88', '88'])])
+def test_unscoped_or_duplicate_object_identifiers_cannot_be_verified(kind, ids):
+    value, entry = claim('Subjects 88 and channels C3 and trial 3 were excluded.', ids)
+    value.object_type = kind
+    result = review_claim(value, entry)
+    assert result['status'] == 'unresolved' and not result['effective']['reported_ids']

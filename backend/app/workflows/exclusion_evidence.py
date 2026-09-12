@@ -29,6 +29,10 @@ def validate_claim(claim, entry):
         if claim.reported_ids:
             raise ValueError('unspecified claims must keep reported_ids empty')
         return
+    if claim.object_type == 'unspecified' and claim.reported_ids:
+        raise ValueError('unidentified object types cannot carry local identifiers')
+    if len(set(claim.reported_ids)) != len(claim.reported_ids):
+        raise ValueError('reported object identifiers must be unique')
     if claim.claim_type == 'exclusion':
         explicit = re.search(r'\b(exclud\w*|remov\w*|discard\w*|reject\w*|omit\w*|eliminat\w*)\b|排除|剔除|舍弃', span, re.I)
         negated = re.search(r'\b(?:no|not|never|without)\b.{0,60}\b(?:exclud\w*|remov\w*|discard\w*|reject\w*|omit\w*|eliminat\w*)\b|未.{0,8}(?:排除|剔除)', span, re.I)
@@ -40,6 +44,15 @@ def validate_claim(claim, entry):
         numbers = subject_numbers(span)
         if any(not re.fullmatch(r'(?:S|sub-)?\d{1,3}', value) or int(re.sub(r'\D', '', value)) not in numbers for value in claim.reported_ids):
             raise ValueError('subject IDs must occur in an explicit subject list or bounded range in object_quote; do not infer IDs from counts, frequencies, other parameters or open-ended ranges; use unspecified with [] when unresolved')
+    elif claim.object_type == 'recording':
+        named = set(re.findall(r'(?<![A-Za-z0-9])S\d{3}R\d{2}(?![A-Za-z0-9])', span))
+        if any(not re.fullmatch(r'S\d{3}R\d{2}', value) or value not in named for value in claim.reported_ids):
+            raise ValueError('recording IDs must occur literally and completely in object_quote; do not expand a subject/run count into records')
+    elif claim.object_type in {'channel', 'trial'} and claim.reported_ids:
+        # Channel labels and trial numbers require recording/namespace context.
+        # Until that context has a checked mapping, even literal numbers cannot
+        # become a verified local-object claim.
+        raise ValueError('channel/trial claims require a verified recording and object namespace; retain unresolved source evidence')
 
 
 def review_claim(claim, entry):

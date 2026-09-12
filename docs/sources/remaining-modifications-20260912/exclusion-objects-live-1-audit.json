@@ -1,0 +1,208 @@
+{
+  "scope": "Read-only recheck of every saved live-7 proposed exclusion against its findings, stored documents and full 1526-record local inventory; no model calls or score reads.",
+  "claims": 2,
+  "rows": [
+    {
+      "review": {
+        "entry_id": "lit-003",
+        "proposed": {
+          "entry_id": "lit-003",
+          "claim_type": "exclusion",
+          "object_quote": "We removed the data\nfrom participants S88, S89, S92, and S100 because of the\ndamaged recording with multiple consecutive “rest” sections.",
+          "object_type": "subject",
+          "reported_ids": [
+            "S88",
+            "S89",
+            "S92",
+            "S100"
+          ],
+          "finding_ids": [
+            "fnd-c120-ds-1"
+          ],
+          "reason": "来源明确报告基于损坏记录（含多段连续 rest）删除四名被试的数据，属数据层面的排除声明；仅作为文献记录供代码侧本地匹配，不直接授权排除。"
+        },
+        "effective": {
+          "entry_id": "lit-003",
+          "claim_type": "exclusion",
+          "object_quote": "We removed the data\nfrom participants S88, S89, S92, and S100 because of the\ndamaged recording with multiple consecutive “rest” sections.",
+          "object_type": "subject",
+          "reported_ids": [
+            "S88",
+            "S89",
+            "S92",
+            "S100"
+          ],
+          "finding_ids": [
+            "fnd-c120-ds-1"
+          ],
+          "reason": "来源明确报告基于损坏记录（含多段连续 rest）删除四名被试的数据，属数据层面的排除声明；仅作为文献记录供代码侧本地匹配，不直接授权排除。"
+        },
+        "status": "literal_scope_verified",
+        "reason": null,
+        "automatic_exclusion_authorized": false
+      },
+      "source_checks": [
+        {
+          "finding_id": "fnd-c120-ds-1",
+          "source_id": "s-c1206579671b7e76",
+          "quote_in_stored_source": true
+        }
+      ],
+      "local_match": {
+        "policy": "仅排除已确认的结构性失败；资料缺失、参数差异和文献排除建议保留标记。未执行信号质量筛选。",
+        "records": [
+          {
+            "entry_id": "lit-003",
+            "claim_type": "exclusion",
+            "object_quote": "We removed the data\nfrom participants S88, S89, S92, and S100 because of the\ndamaged recording with multiple consecutive “rest” sections.",
+            "object_type": "subject",
+            "reported_ids": [
+              "S88",
+              "S89",
+              "S92",
+              "S100"
+            ],
+            "finding_ids": [
+              "fnd-c120-ds-1"
+            ],
+            "reason": "来源明确报告基于损坏记录（含多段连续 rest）删除四名被试的数据，属数据层面的排除声明；仅作为文献记录供代码侧本地匹配，不直接授权排除。",
+            "local_objects": [
+              "S088R01",
+              "S088R02",
+              "S088R03",
+              "S088R04",
+              "S088R05",
+              "S088R06",
+              "S088R07",
+              "S088R08",
+              "S088R09",
+              "S088R10",
+              "S088R11",
+              "S088R12",
+              "S088R13",
+              "S088R14",
+              "S089R01",
+              "S089R02",
+              "S089R03",
+              "S089R04",
+              "S089R05",
+              "S089R06",
+              "S089R07",
+              "S089R08",
+              "S089R09",
+              "S089R10",
+              "S089R11",
+              "S089R12",
+              "S089R13",
+              "S089R14",
+              "S092R01",
+              "S092R02",
+              "S092R03",
+              "S092R04",
+              "S092R05",
+              "S092R06",
+              "S092R07",
+              "S092R08",
+              "S092R09",
+              "S092R10",
+              "S092R11",
+              "S092R12",
+              "S092R13",
+              "S092R14",
+              "S100R01",
+              "S100R02",
+              "S100R03",
+              "S100R04",
+              "S100R05",
+              "S100R06",
+              "S100R07",
+              "S100R08",
+              "S100R09",
+              "S100R10",
+              "S100R11",
+              "S100R12",
+              "S100R13",
+              "S100R14"
+            ],
+            "match_status": "selected",
+            "action": "保留标记"
+          }
+        ]
+      }
+    },
+    {
+      "review": {
+        "entry_id": "lit-003",
+        "proposed": {
+          "entry_id": "lit-003",
+          "claim_type": "inclusion_scope",
+          "object_quote": "As a result, only 105 participants’ data were used in this\nexperiment, and each participant had 42 or 44 trials (the mean\nvalue is 43.6)",
+          "object_type": "subject",
+          "reported_ids": [],
+          "finding_ids": [
+            "fnd-c120-ds-1",
+            "fnd-c120-ds-2"
+          ],
+          "reason": "来源说明其分析实际使用 105 名被试，是该文自身的使用范围声明；105 为样本计数而非可展开的被试标识列表，故 reported_ids 留空。"
+        },
+        "effective": {
+          "entry_id": "lit-003",
+          "claim_type": "unspecified",
+          "object_quote": "As a result, only 105 participants’ data were used in this\nexperiment, and each participant had 42 or 44 trials (the mean\nvalue is 43.6)",
+          "object_type": "unspecified",
+          "reported_ids": [],
+          "finding_ids": [
+            "fnd-c120-ds-1",
+            "fnd-c120-ds-2"
+          ],
+          "reason": "来源对象尚未确认：object_quote must be an exact short span of a cited finding；原提案说明：来源说明其分析实际使用 105 名被试，是该文自身的使用范围声明；105 为样本计数而非可展开的被试标识列表，故 reported_ids 留空。"
+        },
+        "status": "unresolved",
+        "reason": "object_quote must be an exact short span of a cited finding",
+        "automatic_exclusion_authorized": false
+      },
+      "source_checks": [
+        {
+          "finding_id": "fnd-c120-ds-1",
+          "source_id": "s-c1206579671b7e76",
+          "quote_in_stored_source": true
+        },
+        {
+          "finding_id": "fnd-c120-ds-2",
+          "source_id": "s-c1206579671b7e76",
+          "quote_in_stored_source": true
+        }
+      ],
+      "local_match": {
+        "policy": "仅排除已确认的结构性失败；资料缺失、参数差异和文献排除建议保留标记。未执行信号质量筛选。",
+        "records": [
+          {
+            "entry_id": "lit-003",
+            "claim_type": "unspecified",
+            "object_quote": "As a result, only 105 participants’ data were used in this\nexperiment, and each participant had 42 or 44 trials (the mean\nvalue is 43.6)",
+            "object_type": "unspecified",
+            "reported_ids": [],
+            "finding_ids": [
+              "fnd-c120-ds-1",
+              "fnd-c120-ds-2"
+            ],
+            "reason": "来源对象尚未确认：object_quote must be an exact short span of a cited finding；原提案说明：来源说明其分析实际使用 105 名被试，是该文自身的使用范围声明；105 为样本计数而非可展开的被试标识列表，故 reported_ids 留空。",
+            "local_objects": [],
+            "match_status": "unresolved",
+            "action": "不处理"
+          }
+        ]
+      }
+    }
+  ],
+  "source_hashes": {
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-7\\workflows\\52ced03caa984f25a860669d1bbc953d\\collection\\source-claim-review.json": "1543d5fe550888cc85fa2fedac5092b84720aadebc859cf8329e8c3322d50be3",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-7\\workflows\\52ced03caa984f25a860669d1bbc953d\\survey\\literature.json": "819109d4a1d8cc730bb5023ff2bbc76b5cbcbc9663dc26c831a6523024eb740e",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-7\\workflows\\52ced03caa984f25a860669d1bbc953d\\survey\\sources.json": "77857fdc0ed29bf0315c798c9e7d477f0641c6dfdb3d73a2dd79239a30e9c55e",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\bids-fresh-2\\survey\\survey.json": "abfc04fdccf68fe02dc56a4281068eca6d955cdb66d2a81a298875e207860105"
+  },
+  "originals_unchanged": true,
+  "elapsed_seconds": 0.0,
+  "automatic_exclusions": 0,
+  "limitations": "Literal object matching is not independent semantic or scientific validation; no scientific quality threshold introduced."
+}
