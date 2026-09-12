@@ -1,0 +1,236 @@
+{
+  "providers": [
+    {
+      "attempts": [
+        {
+          "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225904.0968559,
+            "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225905.3502395,
+            "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225905.381127,
+      "provider": "arxiv",
+      "started_at": 1789225903.2760303
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "0f6a6a57fde12480ed404b05c57bfadc8278895a14f6468ac5cb859784cff0bf",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789226503.4150848,
+            "fetched_at": 1789225905.4142907,
+            "output_sha256": "0f6a6a57fde12480ed404b05c57bfadc8278895a14f6468ac5cb859784cff0bf",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "0f6a6a57fde12480ed404b05c57bfadc8278895a14f6468ac5cb859784cff0bf",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "hit",
+            "expires_at": 1789226503.4150848,
+            "fetched_at": 1789225905.4142907,
+            "output_sha256": "0f6a6a57fde12480ed404b05c57bfadc8278895a14f6468ac5cb859784cff0bf",
+            "request_outcome": "cached_snapshot",
+            "snapshot_age_seconds": 0.11504673957824707,
+            "transport_attempts": 0
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225905.5563838,
+      "provider": "crossref",
+      "started_at": 1789225903.2760303
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789226503.4415834,
+            "fetched_at": 1789225905.811272,
+            "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "hit",
+            "expires_at": 1789226503.4415834,
+            "fetched_at": 1789225905.811272,
+            "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+            "request_outcome": "cached_snapshot",
+            "snapshot_age_seconds": 0.06494903564453125,
+            "transport_attempts": 0
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225908.8506188,
+      "full_text": {
+        "characters": 80000,
+        "id": "s-ff0ffdfa06eb46fc",
+        "kind": "paper",
+        "retrieved_at": "2026-09-12T15:11:48.796362+00:00",
+        "sha256": "bc197cb6a2795b2f8f3c108780f93fe9b1e43b3d2075417b961b6d04f832d794",
+        "title": "A Multimodal fNIRS–EEG Dataset for Unilateral Limb Motor Imagery",
+        "truncated": true,
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13458765/fullTextXML"
+      },
+      "provider": "europe_pmc",
+      "started_at": 1789225903.2760303
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225904.6980734,
+            "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225905.464832,
+            "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225905.4897742,
+      "provider": "github",
+      "started_at": 1789225903.2745192
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "6e162bdca12aaad3bbd1a7076b7f0bba1613f1147e2034ae34deaf03fb637ca3",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789226503.385852,
+            "fetched_at": 1789225905.0259142,
+            "output_sha256": "6e162bdca12aaad3bbd1a7076b7f0bba1613f1147e2034ae34deaf03fb637ca3",
+            "request_outcome": "response_received",
+            "snapshot_age_seconds": 0,
+            "status_code": 200,
+            "transport_attempts": 1
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "6e162bdca12aaad3bbd1a7076b7f0bba1613f1147e2034ae34deaf03fb637ca3",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "hit",
+            "expires_at": 1789226503.385852,
+            "fetched_at": 1789225905.0259142,
+            "output_sha256": "6e162bdca12aaad3bbd1a7076b7f0bba1613f1147e2034ae34deaf03fb637ca3",
+            "request_outcome": "cached_snapshot",
+            "snapshot_age_seconds": 0.11148381233215332,
+            "transport_attempts": 0
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225905.1994271,
+      "provider": "openalex",
+      "started_at": 1789225903.2760303
+    },
+    {
+      "attempts": [
+        {
+          "reason": "semantic_scholar rate limit; requested wait 1.0s, request not resent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        },
+        {
+          "reason": "semantic_scholar shared cooldown: 0.8s remaining; no request sent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        }
+      ],
+      "finished_at": 1789225904.7924998,
+      "provider": "semantic_scholar",
+      "started_at": 1789225903.2745192
+    },
+    {
+      "attempts": [
+        {
+          "reason": "unpaywall is not configured",
+          "status": "failed",
+          "type": "ToolNotConfiguredError"
+        },
+        {
+          "reason": "unpaywall is not configured",
+          "status": "failed",
+          "type": "ToolNotConfiguredError"
+        }
+      ],
+      "finished_at": 1789225903.4993742,
+      "provider": "unpaywall",
+      "started_at": 1789225903.2760303
+    }
+  ],
+  "scope": "Live configured providers through actual HTTP clients; separate from formal workflow acceptance. Cache hits are reused observations, not fresh network reads. No model calls or injected workflow methods.",
+  "artifact_directory": ".local/remaining-modifications-20260912/provider-live-2",
+  "code_verification": {
+    "code_digest": "253f63e6744b1576841442404557f9ad775f4fd4ace37915d13c1c461ca2dea1",
+    "code_unchanged": true
+  }
+}

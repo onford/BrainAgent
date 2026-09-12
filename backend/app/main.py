@@ -1,6 +1,7 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from urllib.parse import urlsplit
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +50,7 @@ def create_app(
         credential_cipher,
         timeout_seconds=app_settings.external_tool_timeout_seconds,
         max_retries=app_settings.external_tool_max_retries,
+        state_root=Path(app_settings.workflow_root).parent / 'provider-state',
     )
     preprocessing_service = PreprocessingService(
         app_settings.preprocessing_root, app_settings.preprocessing_input_roots, llm

@@ -243,7 +243,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "检索供应商实际可用性",
-      "current": "真实调用部分匿名源遭限流；Europe PMC/Crossref 已成功；Unpaywall 真实请求尚未验收，不能把样例回归当联网成功。",
+      "current": "实际配置下 GitHub、Crossref、Europe PMC、arXiv、OpenAlex 均取得过成功检索。跨工作流/实例共享供应商冷却，按用户、凭据、端点和参数隔离缓存，记录获取时间/快照年龄/传输尝试数；缓存最多128项/64MiB、默认最多600秒，尊重响应更短有效期及禁用缓存指令。Unpaywall 未配置，Semantic Scholar 实测限流，不能宣称所有供应商都可用。",
       "solution_and_acceptance": "按供应商记录可用性、退避、缓存、缺失配置和替代来源；完成实际配置下的失败转移与正文获取验收，保留低相关结果筛选。",
       "dependencies": [],
       "sources": [
@@ -252,7 +252,7 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_update": "修复 GitHub 403 主/次级限流误判凭据失效；有限重试尊重 Retry-After 和 x-ratelimit-reset，过长等待返回限流/不可用，不缩短服务器最低等待。模型重试同样不提前重发。102 项集成/模型回归通过；跨任务共享 provider 冷却/缓存与真实故障切换仍待补齐。"
+      "implementation_update": "provider-live-2 在代码不变的情况下验证：Crossref/Europe PMC/OpenAlex 第二次请求缓存命中且传输尝试0；GitHub/arXiv遵守响应过期条件而再次实际请求；Semantic Scholar第二次被共享冷却阻断。Europe PMC正文读取到80000字符并明确truncated=true。已请求用户提供Unpaywall所需联系邮箱。"
     },
     {
       "id": "I13",
@@ -1633,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第七批来源解析与调研目标约束回归通过；冻结新版本fresh正式验收，然后继续供应商共享冷却/缓存与后续未完成项。",
+  "active_step": "第八批供应商缓存/冷却及真实配置验证完成，Unpaywall待联系邮箱；fresh正式流程独立运行中，文献较长窗口造成固定分母缺失，继续处理窗口与状态依赖适配。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1797,6 +1797,16 @@
       "parser_replay": "source-numeric-audit.json; no historical scientific review promoted"
     },
     "sixth_commit": "83a23cb",
-    "sixth_push_attempt": "failed connecting to GitHub after 21s; retry pending with seventh commit"
+    "sixth_push_attempt": "failed connecting to GitHub after 21s; retry pending with seventh commit",
+    "eighth_batch": {
+      "provider_tool_workflow_tests": "85 passed, 2 warnings",
+      "subsequent_provider_navigation_parallel_tests": "74 passed",
+      "final_provider_state_tests": "17 passed",
+      "live_results": [
+        "provider-live-1-summary.json",
+        "provider-live-2-summary.json"
+      ],
+      "note": "Targeted batches overlap; do not sum as unique coverage. Full backend 1159-pass evidence predates this provider/cache revision."
+    }
   }
 }

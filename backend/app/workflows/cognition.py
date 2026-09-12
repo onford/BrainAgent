@@ -307,6 +307,8 @@ class WorkflowCognition:
                     action.tool, self.context, query=action.query, limit=10
                 )
                 if not result.success:
+                    if result.metadata.get('retrieval'):
+                        output = {'retrieval': result.metadata['retrieval'], 'error_code': result.metadata.get('error_code')}
                     raise ValueError(result.error)
                 output = result.output
             else:

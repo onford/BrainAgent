@@ -7,11 +7,7 @@ class GitHubClient(HttpExternalToolClient):
     async def search_repositories(
         self, query: str, *, limit: int = 10
     ) -> dict[str, Any]:
-        response = await self._request(
-            "/search/repositories",
-            params={"q": query, "per_page": max(1, min(limit, 100))},
-        )
-        return response.json()
+        return await super().search(query, limit=limit)
 
-    async def search(self, query: str, **kwargs: Any) -> dict[str, Any]:
-        return await self.search_repositories(query, limit=int(kwargs.get("limit", 10)))
+    def _search_request(self, query: str, kwargs: dict[str, Any]):
+        return '/search/repositories', {'q': query, 'per_page': max(1, min(int(kwargs.get('limit', 10)), 100))}

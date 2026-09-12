@@ -141,6 +141,7 @@ class ToolRegistry:
                 extra=tool_log_extra,
             )
             return result
+        client = None
         try:
             query = kwargs.pop("query")
             if not isinstance(query, str) or not query.strip():
@@ -156,6 +157,9 @@ class ToolRegistry:
             )
             if isinstance(normalized_output, dict) and normalized_output.get("warning"):
                 raise ExternalToolUnavailableError("Malformed search response")
+            retrieval = getattr(client, 'last_request_metadata', None)
+            if isinstance(normalized_output, dict) and retrieval is not None:
+                normalized_output['retrieval'] = dict(retrieval)
             result_count = (
                 normalized_output.get("result_count", "-")
                 if isinstance(normalized_output, dict)
@@ -175,10 +179,12 @@ class ToolRegistry:
                 metadata={
                     "tool": name,
                     "kind": "external",
+                    **({'retrieval': dict(retrieval)} if retrieval is not None else {}),
                     **self._save_evidence(context, name, output),
                 },
             )
         except Exception as exc:
+            retrieval = getattr(client, 'last_request_metadata', None)
             error_code, safe_error = self._safe_error(exc)
             log_extra = log_context(
                 run_id=context.run_id,
@@ -207,6 +213,7 @@ class ToolRegistry:
                     "tool": name,
                     "kind": "external",
                     "error_code": error_code,
+                    **({'retrieval': dict(retrieval)} if retrieval is not None else {}),
                 },
             )
 

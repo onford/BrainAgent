@@ -43,12 +43,15 @@ class ExternalToolRegistry:
         timeout_seconds: float = 10,
         max_retries: int = 2,
         transport: httpx.AsyncBaseTransport | None = None,
+        state_root=None,
     ) -> None:
         self._database = database
         self._cipher = cipher
         self._timeout_seconds = timeout_seconds
         self._max_retries = max_retries
         self._transport = transport
+        from app.integrations.clients.state import ProviderState
+        self._provider_state = ProviderState(state_root) if state_root is not None else None
         self._client_factories = {
             "http": HttpExternalToolClient,
             "github": GitHubClient,
@@ -88,7 +91,10 @@ class ExternalToolRegistry:
             }
             if required - set(credentials):
                 raise ToolNotConfiguredError(f"{tool_id} is missing required credentials")
-            return self._build_client(definition, credentials)
+            client = self._build_client(definition, credentials)
+            if isinstance(client, HttpExternalToolClient) and self._provider_state is not None:
+                client.attach_state(self._provider_state, owner_id)
+            return client
 
     async def is_available(
         self, tool_id: str, context: AgentContext

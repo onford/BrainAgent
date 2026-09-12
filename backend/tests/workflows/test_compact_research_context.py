@@ -58,6 +58,7 @@ def test_navigation_preserves_all_urls_actions_and_source_identity_without_fullt
         ],
     )
     sources = ResearchSources.model_validate(payload)
+    sources.observations[0].output['retrieval'] = {'cache': 'hit', 'fetched_at': 1000, 'snapshot_age_seconds': 20}
     before = sources.model_dump()
     compact = navigation_context(sources)
     assert sources.model_dump() == before
@@ -65,6 +66,7 @@ def test_navigation_preserves_all_urls_actions_and_source_identity_without_fullt
     assert doc["sha256"] == "a" * 64 and doc["links"] == [url + "/supplement"]
     assert doc["preview_is_full_source"] is False and doc["truncated"] is True
     observation = compact["observations"][0]
+    assert observation['output']['retrieval'] == sources.observations[0].output['retrieval']
     assert observation["action"] == before["observations"][0]["action"]
     assert observation["output"]["urls"] == [url, url + "/code"]
     assert observation["output"]["items"][0]["citations"] == 7

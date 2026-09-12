@@ -25,6 +25,7 @@ def navigation_context(sources):
             'source_id': output.get('source_id'), 'items': items,
             'urls': sorted(urls(output)), 'raw_output_sha256': digest(output),
             'raw_output_location': 'survey/sources.json',
+            **({'retrieval': output['retrieval']} if 'retrieval' in output else {}),
         }})
     return dict(sources=documents, observations=observations,
         navigation_context_policy=('These are literal previews and observed navigation metadata, not full evidence or scientific summaries. '

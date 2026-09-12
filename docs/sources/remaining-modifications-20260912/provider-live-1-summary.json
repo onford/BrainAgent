@@ -1,0 +1,184 @@
+{
+  "providers": [
+    {
+      "attempts": [
+        {
+          "reason": "arxiv is temporarily unavailable",
+          "status": "failed",
+          "type": "ExternalToolUnavailableError"
+        },
+        {
+          "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789225884.2406242,
+            "fetched_at": 1789225285.4255023,
+            "output_sha256": "7b09db9c9fc7f2b07bc2d5ea2e912acea766acf11aa3677d1f2e3fdeb89e4093",
+            "snapshot_age_seconds": 0
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225285.5764277,
+      "provider": "arxiv",
+      "started_at": 1789225268.4976685
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "f48c3ba8ab418889d5daadb3d9862fa3c2f062ce6f85faf53143577d022ee726",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789225868.6331422,
+            "fetched_at": 1789225270.776904,
+            "output_sha256": "f48c3ba8ab418889d5daadb3d9862fa3c2f062ce6f85faf53143577d022ee726",
+            "snapshot_age_seconds": 0
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "f48c3ba8ab418889d5daadb3d9862fa3c2f062ce6f85faf53143577d022ee726",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "hit",
+            "expires_at": 1789225868.6331422,
+            "fetched_at": 1789225270.776904,
+            "output_sha256": "f48c3ba8ab418889d5daadb3d9862fa3c2f062ce6f85faf53143577d022ee726",
+            "snapshot_age_seconds": 0.12699532508850098
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225270.943188,
+      "provider": "crossref",
+      "started_at": 1789225268.4976685
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": 1789225868.6613998,
+            "fetched_at": 1789225271.563506,
+            "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+            "snapshot_age_seconds": 0
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "hit",
+            "expires_at": 1789225868.6613998,
+            "fetched_at": 1789225271.563506,
+            "output_sha256": "0644d095f6fc924c6f77d019a9980d90f235bdabf8213be10274eed7d7cd9df8",
+            "snapshot_age_seconds": 0.12181472778320312
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225276.4754927,
+      "full_text": {
+        "characters": 80000,
+        "id": "s-ff0ffdfa06eb46fc",
+        "kind": "paper",
+        "retrieved_at": "2026-09-12T15:01:15.182407+00:00",
+        "sha256": "bc197cb6a2795b2f8f3c108780f93fe9b1e43b3d2075417b961b6d04f832d794",
+        "title": "A Multimodal fNIRS–EEG Dataset for Unilateral Limb Motor Imagery",
+        "truncated": true,
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13458765/fullTextXML"
+      },
+      "provider": "europe_pmc",
+      "started_at": 1789225268.4976685
+    },
+    {
+      "attempts": [
+        {
+          "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225269.6719527,
+            "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+            "snapshot_age_seconds": 0
+          },
+          "status": "success"
+        },
+        {
+          "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+          "result_count": 3,
+          "retrieval": {
+            "cache": "miss",
+            "expires_at": null,
+            "fetched_at": 1789225270.4166925,
+            "output_sha256": "1b1d989dec78b7626e8c321c89ceaa2ec7463a6d9dc5f49d80559d4971ef6eb4",
+            "snapshot_age_seconds": 0
+          },
+          "status": "success"
+        }
+      ],
+      "finished_at": 1789225270.7257943,
+      "provider": "github",
+      "started_at": 1789225268.4946203
+    },
+    {
+      "attempts": [
+        {
+          "reason": "openalex rate limit; requested wait 36.0s, request not resent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        },
+        {
+          "reason": "openalex shared cooldown: 35.7s remaining; no request sent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        }
+      ],
+      "finished_at": 1789225269.733135,
+      "provider": "openalex",
+      "started_at": 1789225268.496138
+    },
+    {
+      "attempts": [
+        {
+          "reason": "semantic_scholar rate limit; requested wait 1.0s, request not resent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        },
+        {
+          "reason": "semantic_scholar shared cooldown: 0.8s remaining; no request sent",
+          "status": "failed",
+          "type": "ExternalToolRateLimitError"
+        }
+      ],
+      "finished_at": 1789225269.6087801,
+      "provider": "semantic_scholar",
+      "started_at": 1789225268.496138
+    },
+    {
+      "attempts": [
+        {
+          "reason": "unpaywall is not configured",
+          "status": "failed",
+          "type": "ToolNotConfiguredError"
+        },
+        {
+          "reason": "unpaywall is not configured",
+          "status": "failed",
+          "type": "ToolNotConfiguredError"
+        }
+      ],
+      "finished_at": 1789225268.7184935,
+      "provider": "unpaywall",
+      "started_at": 1789225268.4976685
+    }
+  ],
+  "scope": "Live configured providers through actual HTTP clients; separate from formal workflow acceptance. Cache hits are reused observations, not fresh network reads. No model calls or injected workflow methods.",
+  "artifact_directory": ".local/remaining-modifications-20260912/provider-live-1"
+}
