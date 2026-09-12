@@ -14,6 +14,8 @@ const originName = (s: string) => ({ engineering_screen: '工程筛查值，未�
 const outcomeName = (s: string) => ({ condition_met: '条件成立', condition_not_met: '条件不成立', unavailable: '测量不可用' }[s] ?? s)
 const actionName = (s: string) => ({ propose_candidate: '提出候选', request_evidence: '补充证据', request_diagnostic: '请求诊断', finish: '结束搜索' }[s] ?? s)
 const responses = (id: string) => (props.actions ?? []).filter(a => a.status === 'completed' && a.action === 'model_decision' && a.result?.diagnostic_response?.diagnostic_id === id)
+const temporalName = (s: string) => ({ normalized_change: '未对齐变化 NRMSE', gain: '相对增益', zero_lag_correlation: '零时移相关', lag_ms: '波形相关峰偏移', energy_centroid_shift_ms: '能量时间重心变化' }[s] ?? s)
+const numericValue = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? v.toPrecision(5) : '不可用'
 </script>
 
 <template>
@@ -40,6 +42,15 @@ const responses = (id: string) => (props.actions ?? []).filter(a => a.status ===
           <p v-for="a in responses(d.id)" :key="a.index">实际决定：{{ actionName(a.result.decision.action) }} · {{ a.result.diagnostic_response.disposition === 'revise' ? '修订计划' : '遵循分支' }} · {{ a.result.diagnostic_response.reason }}</p>
         </div>
         <a v-if="d.artifact" :href="searchArtifactUrl(searchId, { name: d.artifact.path })" target="_blank" rel="noopener">完整诊断与测量定位</a>
+        <div v-if="d.common_view_change" class="temporal-change">
+          <h5>共同视图的波形与时间变化</h5>
+          <p>保留原始幅度和时间位置；相关峰偏移不代表生理潜伏期。周期歧义、边界峰和缺测保留为不可用。</p>
+          <table><thead><tr><th>测量</th><th>数值</th><th>单位</th><th>完整记录</th></tr></thead>
+            <tbody><tr v-for="(m, name) in d.common_view_change.summary" :key="name"><td>{{ temporalName(String(name)) }}</td><td>{{ numericValue(m.value) }}</td><td>{{ m.unit }}</td><td>{{ m.available_records }} / {{ m.expected_records }}</td></tr></tbody>
+          </table>
+          <p v-for="r in d.common_view_change.records" :key="r.record_id">{{ r.record_id }}：{{ r.status === 'evaluated' ? `已测 ${r.expected_trial_channel_pairs} 个试次/通道对；${r.ambiguous_lag_pairs} 个偏移不可辨识` : '缺少已验证的共同视图，无法比较' }}</p>
+          <p>这些变化不能分离纯伪迹，也不能证明神经信息无损。</p>
+        </div>
         <details v-for="r in d.prior_evaluation?.rules" :key="r.id">
           <summary>{{ ruleTitle(r) }}：{{ stateName(r.condition_state) }}</summary>
           <p>观测：{{ r.observed?.value ?? '缺失' }} {{ r.observed?.unit }}；{{ reasonName(r.reason) }}</p>

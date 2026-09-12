@@ -165,6 +165,72 @@ def test_registration_rejects_duplicate_and_noncallable_code():
     with pytest.raises(ValueError): register(DiagnosticDefinition('untrusted', '1', 'x', 'x', (), 'print(labels)'))
 
 
+def common_fixture(diagnostic):
+    import numpy as np
+    from app.search.physical_contrast import contrast_epochs
+    root, state, request, path, ref = diagnostic
+    source = np.random.default_rng(8).normal(size=(2, 2, 401)) * 1e-5
+    arrays, contrast = contrast_epochs(source, source * .9, sfreq=200, channels=['C3', 'C4'],
+        source_trial_ids=['a', 'b'], processed_trial_ids=['a', 'b'], source_history={'nominal_band_hz': [1, 45]},
+        processed_history={'nominal_band_hz': [1, 45]}, time_window=[0, 2])
+    artifacts = []
+    for name, array in arrays.items():
+        target = path.parent / (name + '.npy')
+        np.save(target, array, allow_pickle=False)
+        artifacts.append(dict(view=name, path=target.name, sha256=file_hash(target), unit='V', shape=list(array.shape), record_id='r'))
+    contrast['artifacts'] = artifacts
+    q = read(path)
+    q['bysubject'] = {'group': {'records': [{'record_id': 'r', 'coverage': {'eligible_trials': 2}, 'physical_contrast': contrast}]}}
+    q['coverage'] = {'records_expected': 1, 'records_visited': 1}
+    write(path, q); ref['sha256'] = file_hash(path)
+    request.update(kind='common_view_change', stage='processed_task')
+    request['experiment'].update(metric='common_view_change.summary.normalized_change.value', threshold=.05)
+    return root, state, request, path, ref
+
+
+def test_registered_common_view_diagnostic_reads_verified_arrays_and_preserves_error(diagnostic):
+    root, state, request, path, ref = common_fixture(diagnostic)
+    result = run_diagnostic(root, state, request)
+    assert result['common_view_change']['summary']['normalized_change']['value'] == pytest.approx(.1)
+    assert result['decision_effect']['outcome'] == 'condition_met'
+    assert len(result['input_artifacts']) == 3
+    assert result['common_view_change']['neural_preservation'] == 'not_established'
+    path.parent.joinpath('source.npy').write_bytes(b'changed')
+    with pytest.raises(ValueError, match='哈希'): run_diagnostic(root, state, request)
+
+
+def test_unvisited_record_inventory_cannot_be_reported_as_complete(diagnostic):
+    root, state, request, path, ref = common_fixture(diagnostic)
+    q = read(path)
+    q['coverage']['records_expected'] = 2
+    write(path, q); ref['sha256'] = file_hash(path)
+    result = run_diagnostic(root, state, request)
+    assert result['decision_effect']['outcome'] == 'unavailable'
+    assert result['common_view_change']['summary']['normalized_change']['expected_records'] == 2
+    assert result['common_view_change']['summary']['normalized_change']['value'] is None
+
+
+@pytest.mark.parametrize('change', ['missing_contract', 'hash', 'time_window', 'geometry', 'unit', 'duplicate'])
+def test_common_view_rejects_unverified_geometry_and_arrays(diagnostic, change):
+    root, state, request, path, ref = common_fixture(diagnostic)
+    q = read(path)
+    contrast = q['bysubject']['group']['records'][0]['physical_contrast']
+    if change == 'missing_contract': contrast.pop('contract')
+    if change == 'hash': contrast['contract_sha256'] = '0' * 64
+    if change == 'time_window': contrast['contract']['time_window'] = [0, 3]
+    if change == 'geometry': contrast['contract']['geometry'] = 'warped'
+    if change == 'unit': contrast['artifacts'][0]['unit'] = 'dimensionless'
+    if change == 'duplicate': contrast['artifacts'].append(contrast['artifacts'][0])
+    if change in {'time_window', 'geometry'}: contrast['contract_sha256'] = digest(contrast['contract'])
+    write(path, q); ref['sha256'] = file_hash(path)
+    if change == 'missing_contract':
+        result = run_diagnostic(root, state, request)
+        assert result['decision_effect']['outcome'] == 'unavailable'
+        assert result['common_view_change']['summary']['normalized_change']['value'] is None
+    else:
+        with pytest.raises(ValueError): run_diagnostic(root, state, request)
+
+
 @pytest.mark.asyncio
 async def test_model_decision_gate_records_rejection_then_explicit_revision(diagnostic, monkeypatch):
     root, state, request, *_ = diagnostic

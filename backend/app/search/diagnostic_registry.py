@@ -1,6 +1,7 @@
 """Versioned, trusted diagnostic kernels; requests cannot supply executable code."""
 from dataclasses import dataclass
 import hashlib
+import io
 import json
 import math
 from pathlib import Path
@@ -50,6 +51,7 @@ class DiagnosticDefinition:
     scalar_paths: tuple[str, ...]
     handler: object
     reference_required: bool = False
+    stages: tuple[str, ...] = ('source_raw', 'source_task', 'processed_task', 'processed_continuous')
 
 
 _REGISTRY = {}
@@ -61,16 +63,16 @@ def register(definition):
     _REGISTRY[definition.kind] = definition
 
 
-def _profile(quality, reference, baseline, stage):
+def _profile(quality, reference, baseline, stage, context):
     return {}
 
 
-def _paired(quality, reference, baseline, stage):
+def _paired(quality, reference, baseline, stage, context):
     from .neural_diagnostics import comparison
     return comparison(baseline, quality, {}, {}, stage)
 
 
-def _spectrum(quality, reference, baseline, stage):
+def _spectrum(quality, reference, baseline, stage, context):
     from .metric_claims import spectral_facts
     row = quality.get('stages', {}).get(stage, {}).get('psd', {})
     facts = spectral_facts(row)
@@ -78,6 +80,11 @@ def _spectrum(quality, reference, baseline, stage):
                 'reason': row.get('reason') or 'complete_positive_psd_with_frequency_axis_required'},
             'status': 'evaluated' if facts else 'unavailable',
             'spectral_reference': {**reference, 'json_pointer': f'/stages/{stage}/psd'}}
+
+
+def _common_change(quality, reference, baseline, stage, context):
+    from .temporal_preservation import common_view_diagnostic
+    return common_view_diagnostic(quality, context)
 
 
 METRICS = ('line_ratio_50hz', 'line_ratio_60hz', 'low_correlation_fraction', 'flat_fraction',
@@ -93,6 +100,11 @@ register(DiagnosticDefinition('spectral_distribution', '1', 'verified_saved_psd_
     'Finite nonnegative complete PSD; mean over saved nonfrequency axes; first maximum bin and trapezoid integral on strictly increasing saved frequencies. No peak interpolation or neural-origin inference.',
     ('spectral_distribution.maximum_bin_hz', 'spectral_distribution.maximum_bin_psd',
      'spectral_distribution.integral_on_saved_grid'), _spectrum))
+register(DiagnosticDefinition('common_view_change', '1', 'verified_paired_common_physical_voltage_arrays',
+    'Unshifted normalized error/gain/correlation, bounded delay with ties and boundary maxima unavailable, and energy-centroid change. Full original trial/channel denominator. No alignment or neural-truth claim.',
+    tuple('common_view_change.summary.' + name + '.value' for name in
+          ('normalized_change', 'gain', 'zero_lag_correlation', 'lag_ms', 'energy_centroid_shift_ms')),
+    _common_change, stages=('processed_task',)))
 
 
 def catalog():
@@ -102,7 +114,7 @@ def catalog():
             'max_output_bytes_per_call': 4 * 1024**2, 'max_seconds_per_call': 60,
             'timeout_enforcement': 'cooperative between bounded reads and kernels; not a hard OS deadline'},
         'definitions': [{'kind': d.kind, 'version': d.version, 'input_domain': d.input_domain,
-            'stages': ['source_raw', 'source_task', 'processed_task', 'processed_continuous'],
+            'stages': list(d.stages),
             'reference_required': d.reference_required, 'label_permission': 'none',
             'numeric_contract': d.numeric_contract, 'scalar_paths': list(d.scalar_paths),
             'artifacts': ['hashed_diagnostic_json', 'hashed_input_references', 'branch_observation_and_next_action']}
@@ -114,7 +126,7 @@ def validate_request(protocol, request):
     frozen = (protocol or {}).get('diagnostic_registry')
     if definition is None:
         raise ValueError('诊断未注册，不能执行模型提供的代码')
-    if request.get('stage') not in {'source_raw', 'source_task', 'processed_task', 'processed_continuous'}:
+    if request.get('stage') not in definition.stages:
         raise ValueError('诊断输入阶段不在注册合同内')
     if frozen is None:
         if protocol is not None and request['kind'] not in {'signal_profile', 'paired_comparison'}:
@@ -189,7 +201,7 @@ class DiagnosticInputBudget:
         if time.monotonic() >= self.deadline:
             raise ValueError('诊断时间预算已用尽')
 
-    def read(self, path, expected_hash):
+    def _payload(self, path, expected_hash):
         self.check()
         path = Path(path)
         size = path.stat().st_size
@@ -202,4 +214,15 @@ class DiagnosticInputBudget:
         self.check()
         if len(data) != size or hashlib.sha256(data).hexdigest() != expected_hash:
             raise ValueError('诊断输入哈希不一致')
-        return json.loads(data.decode('utf-8'))
+        return data
+
+    def read(self, path, expected_hash):
+        return json.loads(self._payload(path, expected_hash).decode('utf-8'))
+
+    def read_array(self, path, expected_hash):
+        import numpy as np
+        result = np.load(io.BytesIO(self._payload(path, expected_hash)), allow_pickle=False)
+        if not isinstance(result, np.ndarray) or result.dtype.kind != 'f':
+            raise ValueError('诊断数组必须是浮点电压，不能包含pickle或归档')
+        self.check()
+        return result

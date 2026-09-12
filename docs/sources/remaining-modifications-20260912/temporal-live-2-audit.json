@@ -1,0 +1,818 @@
+{
+  "status": "completed",
+  "summary": {
+    "normalized_change": {
+      "value": 0.15563107480902955,
+      "status": "ok",
+      "expected_records": 12,
+      "available_records": 12,
+      "unit": "ratio",
+      "reason": null
+    },
+    "gain": {
+      "value": 0.941528397652624,
+      "status": "ok",
+      "expected_records": 12,
+      "available_records": 12,
+      "unit": "ratio",
+      "reason": null
+    },
+    "zero_lag_correlation": {
+      "value": 0.9874948801857876,
+      "status": "ok",
+      "expected_records": 12,
+      "available_records": 12,
+      "unit": "correlation",
+      "reason": null
+    },
+    "lag_ms": {
+      "value": 0.0,
+      "status": "ok",
+      "expected_records": 12,
+      "available_records": 12,
+      "unit": "ms",
+      "reason": null
+    },
+    "energy_centroid_shift_ms": {
+      "value": 2.1541653943509664,
+      "status": "ok",
+      "expected_records": 12,
+      "available_records": 12,
+      "unit": "ms",
+      "reason": null
+    }
+  },
+  "records": [
+    {
+      "record_id": "S001R04",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.13950707998729375,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9513586198126752,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9900867064486428,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 3.523024577075163,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "399ca67ec9b8449a7c2f439b06f741eb6c4c22aa74e9a5431ad85cb761d884b0"
+    },
+    {
+      "record_id": "S001R08",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.13959071697269662,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9512530544711371,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9901216763165035,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 1.6998441518615695,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "9b67b7af17be24215f1815da03d2ffc9f39894fe2686239d2bc6e88f6880290d"
+    },
+    {
+      "record_id": "S001R12",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.13123248061266216,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9554726449796845,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9913490212151006,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 0.9685957191900427,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "d2606c74b413193b1634c8e28bd589bc9217afad3c1e0ca733c8cb47f34178c5"
+    },
+    {
+      "record_id": "S002R04",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.14184635515240376,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.949669082276185,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.98953769451785,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 5.90103005399809,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "88468718a58bf8313d8e3c57b21f0d468451d45a8d69a153993cefba3f9e1c3c"
+    },
+    {
+      "record_id": "S002R08",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.13021974496567548,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9569559858723868,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9914190877859436,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": -1.1706429380299908,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "f8b697865191c75a28aed42c1a90fefef8c53010c44f9f13809b1a0e888e94f0"
+    },
+    {
+      "record_id": "S002R12",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.14513956310295958,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.950213262247616,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9884772341353156,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 1.9366889772628306,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "31a9807901a8d080fa386413d3c22c13d837f9685237f2353136f2bc9ee651db"
+    },
+    {
+      "record_id": "S003R04",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.1826479756886549,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9247227151964731,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9833683265957839,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 8.242304755605923,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "768dea77eb0f52cadb545a0318af6673c08877cdaa5fb395a4661326d0b02613"
+    },
+    {
+      "record_id": "S003R08",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.17455946874982944,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9262284950360354,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9846518150663087,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 0.45178099570481517,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "a70bd594efe8e81bc0cb228358cdf2c74e7895e386e8f37dc85204ca330d8339"
+    },
+    {
+      "record_id": "S003R12",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.18215143047770258,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9240385992944955,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9835183399478713,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 5.871743949612999,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "1456fca63787cf9225fe10ed3b087abde9da4ad4fe51d0ba23df27abc1c44aff"
+    },
+    {
+      "record_id": "S004R04",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.18580144924011138,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9253628479623518,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9822579754623582,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": -5.585760029283572,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "0e01ca5f111a7e096a96c07a66eff81a37a3c0cdf24cbbe60eef394065e0a93f"
+    },
+    {
+      "record_id": "S004R08",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.1593607114304228,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.9414674419459754,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9871073385533596,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 1.3661027900018563,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "67dce4d22e5ea1fbb12af6c7f593c99e03b01ef527f81cb7e34628d919ab9378"
+    },
+    {
+      "record_id": "S004R12",
+      "status": "evaluated",
+      "summary": {
+        "normalized_change": {
+          "value": 0.1555159213279421,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "gain": {
+          "value": 0.941598022736471,
+          "status": "ok",
+          "unit": "ratio",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "zero_lag_correlation": {
+          "value": 0.9880433461844135,
+          "status": "ok",
+          "unit": "correlation",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "lag_ms": {
+          "value": 0.0,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        },
+        "energy_centroid_shift_ms": {
+          "value": 2.6452717292118693,
+          "status": "ok",
+          "unit": "ms",
+          "expected": 960,
+          "available": 960,
+          "reason": null
+        }
+      },
+      "parameters": {
+        "sfreq": 160.0,
+        "tmin": 0.0,
+        "max_lag_seconds": 0.1,
+        "actual_max_lag_samples": 16,
+        "tie_tolerance": 1e-08,
+        "amplitude_alignment": "none",
+        "time_alignment": "none"
+      },
+      "paired_trials": 15,
+      "expected_trial_channel_pairs": 960,
+      "ambiguous_lag_pairs": 0,
+      "ambiguous_examples": [],
+      "examples_truncated": false,
+      "comparison_contract_sha256": "10759d8e77d29758f33e9fa602324e2ecdd95263c90a4e9c6de5a89734a33a6f"
+    }
+  ],
+  "diagnostic_sha256": "64e86f17420224640dd859d04861c04ebcebdac81a83aaac1d4da20e9ccfa2d4",
+  "decision_effect": {
+    "experiment": {
+      "hypothesis": "Common-view normalized change exceeds .05",
+      "competing_explanation": "Smaller observed change",
+      "metric": "common_view_change.summary.normalized_change.value",
+      "comparison": "gt",
+      "threshold": 0.05,
+      "threshold_rationale": "Numerical integration test prediction only, not a physiological threshold",
+      "branches": {
+        "condition_met": {
+          "next_action": "finish",
+          "reason": "Record measured changes and remaining limitations"
+        },
+        "condition_not_met": {
+          "next_action": "finish",
+          "reason": "Record measured changes and remaining limitations"
+        },
+        "unavailable": {
+          "next_action": "finish",
+          "reason": "Record measured changes and remaining limitations"
+        }
+      }
+    },
+    "value": 0.15563107480902955,
+    "outcome": "condition_met",
+    "selected_branch": {
+      "next_action": "finish",
+      "reason": "Record measured changes and remaining limitations"
+    },
+    "interpretation": "A numeric condition tests a prediction; it does not establish its proposed mechanism."
+  },
+  "input_bytes_observed": 62198806,
+  "input_files_observed": 25,
+  "elapsed_seconds": 4.172000000005937,
+  "original_artifacts_unchanged": true,
+  "review_code_unchanged": true,
+  "code_sha256": "c98f956b60169677bf95ea31d3f964e4dee1a47e8761ffbdbdf98d0107562955",
+  "scientific_scope": "Common-view descriptive changes only; no neural ground truth or artifact isolation, no new candidate or classifier run."
+}

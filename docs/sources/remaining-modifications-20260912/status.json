@@ -399,7 +399,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "强神经保护测量",
-      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；仍需周期/非周期分离、时序失真、侧化与移除信号保护的适用性和已知源验证。个体峰频拟合及据此选择个体预处理已从目标撤回，不列作待实现能力。",
+      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；新增注册的未对齐误差/增益/相关峰偏移/能量时间重心诊断，周期歧义和边界峰保持不可辨识，完整记录/试次/通道分母验签。95项回归及真实12记录只读复核通过。周期/非周期、侧化、更多已知源与独立真实保护验证仍未完成；个体峰频拟合及个体预处理已撤回。",
       "solution_and_acceptance": "逐项实现适用性和有效时间支持，保留基线/分母/不确定性；先做已知信号验证，再做真实 EEG。不能以“典型 ERD”作为必须制造的形态。",
       "dependencies": [
         "I19",
@@ -413,7 +413,8 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation": "docs/temporal-preservation.md"
     },
     {
       "id": "I21",
@@ -1638,7 +1639,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第十九批完成I25的固定前向源、真实EOG模板和有限滤波/负对照验证；117项回归、84组验签结果。继续I20的适用时间/频谱与移除信号保护测量，再处理I22。I25全方法/多源/独立真值范围仍未完成。",
+  "active_step": "第二十批完成I20的共同视图波形/时序诊断及注册，95项后端专项、158项前端及构建通过，12记录真实只读复核通过；继续周期/非周期及侧化测量，然后I22受约束分支回退。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1883,6 +1884,12 @@
       "matrix": "84 processor-condition results with all four declared synthetic scenarios, 7.781 s",
       "source": "A01T byte-identical to provider; 42806453 bytes; SHA256 retained",
       "audit": "docs/sources/remaining-modifications-20260912/source-validation-3-audit.json"
+    },
+    "temporal_preservation": {
+      "backend": "95 passed, 83.22 s",
+      "frontend": "158 passed; build passed",
+      "real": "12 records, 180 trials, 62198806 input bytes, 4.172 s; historical files and review code unchanged",
+      "audit": "docs/sources/remaining-modifications-20260912/temporal-live-2-audit.json"
     }
   }
 }

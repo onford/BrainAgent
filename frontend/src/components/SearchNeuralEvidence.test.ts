@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest'
 import SearchNeuralEvidence from './SearchNeuralEvidence.vue'
 
 describe('neural evidence provenance', () => {
+  it('keeps unidentifiable timing unavailable with its full denominator', () => {
+    const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
+      diagnostics: [{ id: 'd', common_view_change: { summary: { lag_ms: { value: null, unit: 'ms', available_records: 0, expected_records: 2 },
+        normalized_change: { value: .1, unit: 'ratio', available_records: 2, expected_records: 2 } },
+        records: [{ record_id: 'r', status: 'evaluated', expected_trial_channel_pairs: 4, ambiguous_lag_pairs: 2 }] } }] } })
+    expect(wrapper.get('table').text()).toContain('波形相关峰偏移不可用ms0 / 2')
+    expect(wrapper.text()).toContain('2 个偏移不可辨识')
+    expect(wrapper.text()).toContain('不能证明神经信息无损')
+  })
   it('distinguishes unavailable measurements, planned branches and revised decisions', () => {
     const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
       diagnostics: [{ id: 'd', decision_effect: { experiment: { hypothesis: '频谱峰值较高', competing_explanation: '峰值较低', threshold_rationale: '待验证预测' },

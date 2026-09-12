@@ -885,7 +885,7 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
             record_summary['measurement_frames']={s:{k:v for k,v in f.items() if k!='contract'}
                                                    for s,f in detail['measurement_frames'].items()}
             contrast=detail.get('physical_contrast',dict(status='not_comparable',reason='verified_processed_output_unavailable',paired_trials=0))
-            record_summary['physical_contrast']={k:v for k,v in contrast.items() if k not in {'views','contract','limitations'}}
+            record_summary['physical_contrast']={k:v for k,v in contrast.items() if k not in {'views','limitations'}}
             record_summaries.append(record_summary)
             subject_records.append(record_summary)
             del detail

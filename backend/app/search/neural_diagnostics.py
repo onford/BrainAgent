@@ -169,7 +169,16 @@ def run_diagnostic(root, state, request, budget=None):
         baseline, base_ref = quality_input(root, state, other, budget)
         result["reference_candidate_id"] = other
         result["input_artifacts"].append(base_ref)
-    result.update(definition.handler(quality, ref, baseline, stage))
+    array_refs = []
+    def read_array(artifact):
+        path = within(within(Path(root), ref['path']).parent, artifact['path'])
+        values = budget.read_array(path, artifact['sha256'])
+        if artifact.get('unit') != 'V' or list(values.shape) != artifact.get('shape'):
+            raise ValueError('诊断电压数组的单位或维度不一致')
+        array_refs.append(dict(path=path.relative_to(Path(root)).as_posix(), sha256=artifact['sha256']))
+        return values
+    result.update(definition.handler(quality, ref, baseline, stage, {'read_array': read_array, 'check': budget.check}))
+    result['input_artifacts'].extend(array_refs)
     budget.check()
     result['diagnostic_contract'] = {'kind': definition.kind, 'version': definition.version,
         'registry_sha256': state['protocol'].get('diagnostic_registry_hash'),

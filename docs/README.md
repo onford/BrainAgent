@@ -12,6 +12,7 @@
 | [预处理评价协议](preprocessing-evaluation.md) | EEGNet 主指标、CSP-LDA 对照、数据权限与选择规则 |
 | [已知源重建验证](known-source-validation.md) | 固定前向源、真实记录EOG模板、负对照及真实EEG证据的边界 |
 | [诊断注册与决策响应](diagnostic-registry.md) | 输入、预算、预测分支和下一动作的可执行合同 |
+| [波形和时间变化](temporal-preservation.md) | 共同视图上的完整分母、周期歧义和时序测量边界 |
 | [预处理策略搜索](offline-preprocessing-search.md) | 方法空间、预算、候选谱系与证据读取 |
 | [本轮文献方法接入](literature-method-mainflow.md) | 多分支拆解、真实方法空间、受约束组合、来源追踪与验证边界 |
 | [图表与解读](visualization-and-interpretation.md) | 图表范围、参数依据、知识卡和解释边界 |
