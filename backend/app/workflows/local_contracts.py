@@ -7,6 +7,7 @@ from typing import Annotated, Literal, get_args
 
 from pydantic import Field, model_validator
 from app.preprocessing.schemas import Contract
+from .local_metadata import MetadataInspection
 
 CoverageKey = Literal[
     "scope.inventory",
@@ -179,6 +180,7 @@ class LocalObservation(Contract):
     statistics: ObservationStatistics
     coverage: dict[CoverageKey, CoverageItem]
     provenance: ObservationProvenance
+    metadata_inspection: MetadataInspection | None = None
 
     @model_validator(mode="after")
     def references(self):
@@ -259,6 +261,14 @@ class LocalObservation(Contract):
     def research_context(self):
         """Group identical measurements; retain every member and every exception."""
         value = self.model_dump(mode="json", exclude={"recordings", "subjects"})
+        if self.metadata_inspection:
+            # Full tables/annotation pairs stay in the saved artifact; the model
+            # gets inventories, declared fields, missingness and every mismatch.
+            meta=value['metadata_inspection']
+            for f in meta['structured_files']:
+                f['stored_rows']=len(f.pop('rows'))
+            for comparison in meta['wfdb_comparisons'].values():
+                comparison.pop('annotations',None)
         value["subjects"] = {
             "count": len(self.subjects),
             "metadata": {

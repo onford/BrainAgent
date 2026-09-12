@@ -1,0 +1,40 @@
+{
+  "official_downloads": [
+    {
+      "path": "SHA256SUMS.txt",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/SHA256SUMS.txt",
+      "remote_sha256": "7f5d16957d8ee7bce86cc7ccba0e5994f63f33781607eb3f838392d49311a208",
+      "local_sha256": "7f5d16957d8ee7bce86cc7ccba0e5994f63f33781607eb3f838392d49311a208",
+      "bytes": 259919,
+      "status": "identical"
+    },
+    {
+      "path": "S001/S001R01.edf.event",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S001/S001R01.edf.event",
+      "remote_sha256": "98cfbe863896ed90aa76ff95ad4151ed3b02157854cfa6a974121fc123c109c0",
+      "local_sha256": "98cfbe863896ed90aa76ff95ad4151ed3b02157854cfa6a974121fc123c109c0",
+      "bytes": 38,
+      "status": "identical"
+    },
+    {
+      "path": "S001/S001R03.edf.event",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S001/S001R03.edf.event",
+      "remote_sha256": "ba934fef5794a278b361c657b30c7a254a5c2d10754a37f484373d779d37bf66",
+      "local_sha256": "ba934fef5794a278b361c657b30c7a254a5c2d10754a37f484373d779d37bf66",
+      "bytes": 638,
+      "status": "identical"
+    },
+    {
+      "path": "S088/S088R03.edf.event",
+      "url": "https://physionet.org/files/eegmmidb/1.0.0/S088/S088R03.edf.event",
+      "remote_sha256": "a27a31471bf1b8bc6ff9b144eb110e9eb0711b24514aaf47ed1cd94395c10b7e",
+      "local_sha256": "a27a31471bf1b8bc6ff9b144eb110e9eb0711b24514aaf47ed1cd94395c10b7e",
+      "bytes": 566,
+      "status": "identical"
+    }
+  ],
+  "local_manifest_file_count_checked": 3052,
+  "absent_from_local_manifest": [],
+  "local_manifest_hash_mismatches": [],
+  "interpretation": "Hash identity establishes published file correspondence, not event semantic correctness."
+}

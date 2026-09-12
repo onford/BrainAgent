@@ -83,6 +83,7 @@ class ObservationBuilder:
             selection_basis="从被试目录发现全部 Run；对象身份按 EEGMMIDB 目录和文件名解析",
         )
         self.records, self.channels, self.acquisition, self.events = {}, {}, {}, []
+        self.inventory=inventory
 
     def add(self, record, raw, values):
         import numpy as np
@@ -327,12 +328,38 @@ class ObservationBuilder:
             "统计分母是成功读取的记录，失败记录单列",
             ["#/statistics"],
         )
+        from .local_metadata import inspect_metadata
+        from .wfdb_annotations import compare_events
+        from .dataset import SourceChangedError
+        try:
+            metadata=inspect_metadata(self.root,self.inventory)
+            for rid,record in good.items():
+                relative=record['source_file']+'.event'
+                source=self.root/relative
+                if source.is_symlink() or not source.resolve().is_relative_to(self.root.resolve()):
+                    raise ValueError('annotation sidecar escapes the inspected source root')
+                events=[{'label':e.label,'onset_s':e.onset_s,'duration_s':e.duration_s}
+                        for e in self.events if e.record_id==rid]
+                metadata.wfdb_comparisons[rid]=compare_events(source,relative,events,record['sampling_rate_hz'])
+        except ValueError as exc:
+            raise SourceChangedError(str(exc)) from exc
+        roots=metadata.discovered_bids_roots
+        add('organization.bids','organization','源 BIDS 根信息',1,1,
+            f'在完整文件清单发现 {len(roots)} 个 dataset_description.json；不是官方标准验证',
+            ['#/metadata_inspection/discovered_bids_roots'],status='observed' if roots else 'not_found')
+        checks=list(metadata.wfdb_comparisons.values())
+        compared=sum(c.status in {'matched','mismatch'} for c in checks)
+        missing=sum(c.status=='not_found' for c in checks)
+        add('events.sidecars','events','WFDB .event 与 EDF 标签/时间/持续时间对照',compared,total,
+            f'{compared} 条完成对照，{sum(c.status=="mismatch" for c in checks)} 条不一致，{missing} 条无对应辅助文件；未解析项单列，不自动删除对象',
+            ['#/metadata_inspection/wfdb_comparisons'],status='observed' if compared==total else 'not_found' if missing==total else 'partial' if compared else 'not_checked')
         value = LocalObservation(
             scope=self.scope,
             subjects={s: {} for s in self.scope["selected_subjects"]},
             recordings=self.records,
             channel_sets=self.channels,
             acquisition_sets=self.acquisition,
+            metadata_inspection=metadata,
             coverage=coverage,
             statistics=dict(
                 selected_records=total,

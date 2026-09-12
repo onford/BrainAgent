@@ -307,6 +307,19 @@ def observation_html(local):
     sections["metadata"] = (
         "<p>被试编号来自目录和文件名；原始患者标识保留在记录详情。年龄、性别、健康状态等未经解析确认的字段保持未知。</p>"
     )
+    if local.metadata_inspection:
+        import json
+        meta=local.metadata_inspection
+        sections['organization'] += '<h3>结构化元数据发现</h3><p>发现的 BIDS 根候选：'+escape(', '.join(meta.discovered_bids_roots) or '清单内未发现 dataset_description.json')+'</p><p>发现元数据不等于标准验证通过，也不自动解释字段继承或记录适用性。</p>'
+        sections['metadata'] += table(['文件','状态','原字段声明 / 表列','已保存行数','缺失或未知字段'],[
+            [r.path,STATUS.get(r.status,r.status),json.dumps(r.values,ensure_ascii=False) if r.values else ', '.join(r.columns),
+                len(r.rows),', '.join(r.unavailable_fields) or r.reason or ''] for r in meta.structured_files])
+        sections['metadata'] += '<p>完整表格和哈希见 local-inspection.json。字段保留原字符串，n/a 不转成推测值；模板坐标不作为个体实测坐标。</p>'
+        sections['events'] += '<h3>WFDB 辅助注释对照</h3><p>保留字节中样点 0 的真实 note；时间、标签和持续时间分别核对。对照完成不授权改变任务语义或删除记录。</p>'
+        sections['events'] += table(['记录','结果','EDF / WFDB 条数','最大起点差（样点）','最大持续时间差（样点）','说明'],[
+            [rid,{'matched':'对照一致','mismatch':'对照有差异'}.get(r.status,STATUS.get(r.status,r.status)),
+                f'{r.edf_count} / {r.wfdb_count}',r.maximum_onset_difference_samples,r.maximum_duration_difference_samples,r.reason or '']
+            for rid,r in meta.wfdb_comparisons.items()])
     duration_groups = {}
     for key, r in local.recordings.items():
         if r.decoded_signal:

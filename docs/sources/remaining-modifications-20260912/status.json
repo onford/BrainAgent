@@ -828,7 +828,8 @@
         "C6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "pending",
+      "metadata_update": "已实现结构化本地元数据与全部 1526 组 WFDB/EDF 比较；1260 一致、266 数量不同，3052 文件符合官方清单。BIDS 继承、逐记录元数据适用、自由文本与其他格式仍待完成；不自动排除。"
     },
     {
       "id": "I41",
@@ -1640,7 +1641,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十三批I22步骤检查点/工程条件复核/共享影子计划完成专项与12记录真实恢复验证。继续I25独立验证缺口及I40/I41数据事实和标准检查。",
+  "active_step": "第二十四批完成本地元数据与全量 WFDB 核查；I40 保持部分完成。继续 I41 官方 BIDS 校验。I25 独立科学验证缺口仍保留。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1913,6 +1914,15 @@
       "frontend": "161 passed; build passed",
       "real": "12 initial pauses; 12 shared replacement completions; direct crop maximum error 0 V; originals unchanged; 53.828 s",
       "audit": "docs/sources/remaining-modifications-20260912/step-review-live-1-audit.json"
+    },
+    "local_metadata": {
+      "backend": "29 passed, 2 warnings, 55.69 s",
+      "real": "1526 pairs; 1260 matched, 266 count mismatches; official 3052 file hashes matched; inputs/code unchanged",
+      "audit": "docs/sources/remaining-modifications-20260912/metadata-live-1-audit.json"
+    },
+    "full_backend_step_review": {
+      "commit": "ad18d2b",
+      "result": "1306 passed, 109 warnings, 835.95 s"
     }
   }
 }

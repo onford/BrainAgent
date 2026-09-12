@@ -16,6 +16,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+inspection = ["wfdb==4.3.1", "soundfile==0.13.1", "bids-validator-deno==3.0.1", "deno==2.9.6"]
 eeg = [
   "mne==1.10.2", "mne-bids==0.17.0", "numpy==1.26.4",
   "scipy==1.15.3", "scikit-learn==1.6.1", "pandas==2.2.3",

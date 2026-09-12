@@ -2,7 +2,6 @@
 import json
 import math
 
-import numpy as np
 from pydantic import Field
 
 from .schemas import Contract, ExecutionPlan, MethodSpec, Step, ParameterSource
@@ -16,6 +15,7 @@ def _exclusive_json(path, value):
 
 
 def checkpoint(executor, step, original, packet, descriptor, log):
+    import numpy as np
     from .graph_runtime import values
     x = values(packet.data)
     finite_count, count, maximum, square_sum = 0, 0, 0., 0.
