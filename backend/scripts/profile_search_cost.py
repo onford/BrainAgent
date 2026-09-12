@@ -170,6 +170,9 @@ async def main(args):
         frozen_input_unchanged=snapshot_hashes(input_root)==input_before,
         source_input_unchanged=file_hash(source_input)==source_hash,
         final_agent_acceptance=False, interpretation='Complete baseline cost probe; no substantive-paper or independent-test claim')
+    summary['execution_finished'] = bool(candidates and result['status'] == 'stopped'
+        and all(c['status'] == 'evaluated' and (c.get('receipt') or {}).get('assessment') for c in candidates))
+    summary['assessment_statuses'] = [(c.get('receipt') or {}).get('assessment', {}).get('status') for c in candidates]
     summary['measurement_complete'] = bool(candidates and result['status'] == 'stopped'
         and all(c['status'] == 'evaluated' and (c.get('receipt') or {}).get('assessment', {}).get('status') == 'complete' for c in candidates)
         and summary['frozen_code_unchanged'] and summary['frozen_input_unchanged'] and summary['source_input_unchanged'])

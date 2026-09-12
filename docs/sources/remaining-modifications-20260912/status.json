@@ -672,7 +672,7 @@
       ],
       "historical_status": "未充分验证",
       "status": "in_progress",
-      "implementation_update": "Windows Job CPU/I/O 保留已退出子进程，0.25 秒 RSS 采样；共享主机测量备注保留。15 次训练完成，完整评价仍待结束，尚无完整候选成本结论。"
+      "implementation_update": "基础完整流程成本已取得，数据和冻结代码不变；重建 17 个脉冲案例保留不适用，不能冒充科学全项通过。图组件测量仍进行中，不能用外部观测差值填 I/O 等待。"
     },
     {
       "id": "I33",
@@ -1648,7 +1648,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I32 全集成本测量继续：109 人/327 记录/15 次 EEGNet 训练完成，质量及重建尚未全部完成；原 7200 秒截止时间不变。测量驱动与 I27 范围保护专项通过。",
+  "active_step": "I32 基础候选按原预算结束：109 人/327 记录/4918 试次/15 次 EEGNet 训练；墙钟 6995.450 秒。质量完整，重建 92 可评价/17 不适用，三轴 partial 保留。共享 v2 图成本仍在测量。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -2004,6 +2004,14 @@
         "schema_instruction_utf8_bytes": 16320,
         "selected_records": 327,
         "scope": "Serialization only with archived source, no model call or fresh research acceptance"
+      },
+      "baseline": {
+        "wall_seconds": 6995.450481900014,
+        "execution_finished": true,
+        "assessment_status": "partial",
+        "reconstruction_evaluated": 92,
+        "reconstruction_not_applicable": 17,
+        "audit": "full-cost-1-review.json"
       }
     },
     "full_backend_instrumentation": {
@@ -2018,7 +2026,18 @@
       "passed": 17,
       "warnings": 2,
       "seconds": 10.56,
-      "scope": "legacy workflow immutable files, supervisor lock, persistent model budget and search run control"
+      "scope": "legacy workflow immutable files, supervisor lock, persistent model budget and search run control",
+      "attached_retired_protocols": {
+        "passed": 27,
+        "warnings": 2,
+        "seconds": 194.92,
+        "versions": [
+          null,
+          "1",
+          "2"
+        ],
+        "historical_bytes_unchanged": true
+      }
     }
   }
 }

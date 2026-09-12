@@ -1,0 +1,255 @@
+{
+  "schema_version": "resource-cost-review-1",
+  "date": "2026-09-13",
+  "scope": "Complete frozen protocol execution; scientific assessment remains partial because 17 assigned pulse cases are not applicable. Not a fresh research workflow or final-agent acceptance.",
+  "search_id": "37b30859e59c4cec9e215524403a747f",
+  "original_audit": {
+    "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\full-cost-1\\audit.json",
+    "sha256": "f79dad6423d713783bb7696e08b21805a857611aa17a41912d77e30fa57c726b"
+  },
+  "execution_finished": true,
+  "scientific_assessment_complete": false,
+  "assessment_status": "partial",
+  "stages": {
+    "utility": {
+      "status": "evaluated",
+      "reason": null
+    },
+    "quality": {
+      "status": "evaluated",
+      "reason": null
+    },
+    "reconstruction": {
+      "status": "partial",
+      "reason": "reconstruction_has_failed_or_undefined_assigned_cases"
+    }
+  },
+  "participants": 109,
+  "selected_records": 327,
+  "trials": 4918,
+  "eegnet_fits": 15,
+  "total_eegnet_epochs": 438,
+  "wall_seconds": 6995.450481900014,
+  "preprocessing_seconds": 627.9467397999979,
+  "evaluation_seconds": 6322.384850799994,
+  "utility_processes": {
+    "csp_lda": {
+      "blas_threads": 1,
+      "cpu_seconds": 0.9375,
+      "input_mode": "read-only memmap",
+      "learner": "csp_lda",
+      "parent_pid": 25396,
+      "pid": 28152,
+      "process_peak_rss_bytes": 333238272,
+      "rss_bytes": 167223296,
+      "start_method": "spawn",
+      "thread_pools": [
+        {
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libopenblas",
+          "version": "0.3.23.dev"
+        },
+        {
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "version": null
+        },
+        {
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "version": "0.3.28"
+        }
+      ],
+      "wall_seconds": 2.75
+    },
+    "eegnet": {
+      "blas_threads": 1,
+      "cpu_seconds": 4098.5625,
+      "input_mode": "read-only memmap",
+      "learner": "eegnet",
+      "parent_pid": 25396,
+      "pid": 30048,
+      "process_peak_rss_bytes": 3389665280,
+      "rss_bytes": 608337920,
+      "start_method": "spawn",
+      "thread_pools": [
+        {
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libopenblas",
+          "version": "0.3.23.dev"
+        },
+        {
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "vcomp",
+          "version": null
+        },
+        {
+          "internal_api": "openblas",
+          "num_threads": 1,
+          "prefix": "libscipy_openblas",
+          "version": "0.3.28"
+        },
+        {
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "libiomp",
+          "version": null
+        },
+        {
+          "internal_api": "openmp",
+          "num_threads": 1,
+          "prefix": "libiomp",
+          "version": null
+        }
+      ],
+      "wall_seconds": 4154.906000000003
+    }
+  },
+  "output_bytes": 16763206086,
+  "controller_sampled_peak_tree_rss_bytes": 4266209280,
+  "resource_stages": [
+    {
+      "final_job_counters": {
+        "active_processes": 0,
+        "cpu_kernel_seconds": 6.140625,
+        "cpu_user_seconds": 3.09375,
+        "other_bytes": 67265772,
+        "other_operations": 988919,
+        "page_faults": 82713,
+        "read_bytes": 7185590640,
+        "read_operations": 76110,
+        "rss_bytes": 0,
+        "total_processes": 3,
+        "wall_seconds": 9.608507400000235,
+        "write_bytes": 2013777,
+        "write_operations": 31
+      },
+      "io_scope": "Windows Job IO transfer counters include all current and exited members; not physical disk traffic",
+      "io_wait_seconds": null,
+      "io_wait_status": "not_measured; CPU idle/wall differences are not IO wait",
+      "launcher_pid": 27276,
+      "returncode": 0,
+      "sampled_peak_tree_rss_bytes": 193830912,
+      "sampling_errors": [],
+      "sampling_period_seconds": 0.25,
+      "stage": "prepare",
+      "trace_path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\full-cost-1\\resources-prepare-27276.csv",
+      "trace_sha256": "1a0619200f3109b27738b73fbd11127826f859781a099b9b6adb11b63402c0ad",
+      "wall_seconds": 9.608569400006672
+    },
+    {
+      "final_job_counters": {
+        "active_processes": 0,
+        "cpu_kernel_seconds": 1229.671875,
+        "cpu_user_seconds": 5184.0,
+        "other_bytes": 1337319202,
+        "other_operations": 16287815,
+        "page_faults": 360997918,
+        "read_bytes": 208950082811,
+        "read_operations": 1663783,
+        "rss_bytes": 0,
+        "total_processes": 9,
+        "wall_seconds": 6953.877945500004,
+        "write_bytes": 15845072480,
+        "write_operations": 503754
+      },
+      "io_scope": "Windows Job IO transfer counters include all current and exited members; not physical disk traffic",
+      "io_wait_seconds": null,
+      "io_wait_status": "not_measured; CPU idle/wall differences are not IO wait",
+      "launcher_pid": 27872,
+      "returncode": 0,
+      "sampled_peak_tree_rss_bytes": 4169105408,
+      "sampling_errors": [],
+      "sampling_period_seconds": 0.25,
+      "stage": "candidate",
+      "trace_path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\full-cost-1\\resources-candidate-27872.csv",
+      "trace_sha256": "98d9d93ddf022e3b0aa6dacead6d957cada36bde06501d87c87eb2b8d59b948e",
+      "wall_seconds": 6953.878001499994
+    }
+  ],
+  "reconstruction": {
+    "expected_cases": 109,
+    "status_counts": {
+      "evaluated": 92,
+      "not_applicable": 17
+    },
+    "resources": {
+      "clean_replays": 109,
+      "corrupted_replays": 92,
+      "detail_bytes": 11116689,
+      "largest_metric_input_arrays_bytes": 15613440,
+      "largest_source_array_bytes": 10240000,
+      "persisted_signal_array_count": 0,
+      "source_records_read": 109,
+      "wall_seconds": 88.75317789999826
+    },
+    "not_applicable_reason": "Some frozen trials have zero cleanproxy or negligible injected artifact in the common band; denominator retained. No threshold or cohort changes made."
+  },
+  "integrity": {
+    "frozen_code_unchanged": true,
+    "frozen_input_unchanged": true,
+    "source_input_unchanged": true
+  },
+  "measurement_notes": {
+    "ambient_interference": [
+      {
+        "kind": "assistant file-name enumeration",
+        "start_local": "2026-09-13T04:51:02+08:00",
+        "stopped_at": "2026-09-12T20:53:29.002032+00:00",
+        "scope": "rg --files in .local; no raw signal reads, but competing filesystem metadata activity",
+        "effect": "unknown; full-cost wall measurements include this interval; not an idle-host benchmark"
+      },
+      {
+        "kind": "targeted telemetry accounting test",
+        "time": "2026-09-12T21:07:38.226790+00:00",
+        "scope": "One short child process CPU/65536-byte stdout probe; no EEG training or source dataset scan",
+        "effect": "not an idle-host benchmark"
+      },
+      {
+        "kind": "read-only legacy control regression",
+        "time": "2026-09-12T21:17:16.659361+00:00",
+        "scope": "Small simulated-data regression for refusing legacy protocol mutations; no real EEG model training",
+        "effect": "Shared-host measurement; original application snapshot remains unchanged"
+      },
+      {
+        "kind": "frontend regression and build",
+        "time": "2026-09-12T21:32:28.820592+00:00",
+        "scope": "No additional EEG training; Node/Vitest/Vite activity on the shared host",
+        "effect": "Wall measurement includes ambient development activity, not an idle-host benchmark"
+      }
+    ],
+    "unchanged_numerics": true,
+    "continuation_notes": [
+      {
+        "time": "2026-09-12T22:19:17.109541+00:00",
+        "activity": "Full backend regression at independent git worktree 87f0aab scheduled during late quality evaluation, after all 15 EEGNet fits. Shared-host CPU/storage contention remains part of the wall measurement; no idle-host claim."
+      }
+    ]
+  },
+  "measurement_notes_sha256": "c16550d9b03b24a05ee9f35e9e9587859580e82bfadc41be13d34a30da2ba75c",
+  "final_agent_acceptance": false,
+  "io_wait_seconds": null,
+  "io_wait_status": "not measured; Windows Job transfer counters are not physical disk traffic and wall minus CPU is not IO wait",
+  "baseline_record_execution": {
+    "memory_limit_bytes": 17179869184,
+    "peak_aggregate_child_rss_bytes": 2550861824,
+    "pool_closed": true,
+    "queue_bound": 4,
+    "sampling_interval_seconds": 0.25,
+    "sampling_note": "RSS is sampled between parent-side artifact/SQLite operations",
+    "sqlite_writer": "parent_process",
+    "start_method": "spawn",
+    "worker_pids": [
+      19832,
+      21756,
+      30332,
+      32072
+    ],
+    "workers": 4
+  }
+}

@@ -206,6 +206,9 @@ class WorkflowService:
                 "此运行的执行协议与当前版本不同，请新建运行；已有产物保持只读"
             )
         check_format(self.folder(state["id"]))
+        if state.get('search_id'):
+            searches = self.search_service()
+            searches.require_current(searches.get(state['owner'], state['search_id']))
 
     async def resume(self):
         for path in self.root.glob("*/workflow.json"):

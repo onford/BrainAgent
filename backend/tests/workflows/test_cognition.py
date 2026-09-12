@@ -57,6 +57,32 @@ async def test_historical_execution_is_read_only(source, tmp_path, historical):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('version', [None, '1', '2'])
+async def test_current_workflow_cannot_resume_an_attached_retired_search(source, tmp_path, version):
+    from app.preprocessing.storage import write_json
+    service = WorkflowService(tmp_path / 'runs', [source], PreprocessingService(tmp_path / 'prep'))
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source)), start=False)
+    searches = service.search_service()
+    state.update(status='interrupted', search_id='e' * 32)
+    service.save(state)
+    write_json(searches.folder(state['search_id']) / 'search.json', {
+        'owner': OWNER, 'protocol': {} if version is None else {'version': version}})
+    protected = [service.folder(state['id']), searches.folder(state['search_id'])]
+    def inventory():
+        return {p: p.read_bytes() for root in protected for p in root.rglob('*') if p.is_file()}
+    before = inventory()
+    with pytest.raises(ValueError, match='只读'):
+        service.start(OWNER, state['id'])
+    with pytest.raises(ValueError, match='只读'):
+        service.retry(OWNER, state['id'])
+    with pytest.raises(ValueError, match='只读'):
+        await service.run(OWNER, state['id'])
+    await service.resume()
+    assert not service.tasks
+    assert before == inventory()
+
+
+@pytest.mark.asyncio
 async def test_survey_plan_schema_fixes_all_required_target_medium_pairs():
     contract = survey_plan_contract()
     plan = await WorkflowLLM().structured_output([{}, {"content": "{}"}], contract)
