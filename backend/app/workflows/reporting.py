@@ -272,7 +272,8 @@ def render_report(folder):
                 data.standardization.supported_scope
                 + "；"
                 + data.standardization.validation
-                + "。完整官方 BIDS validator 未运行。"
+                + ("。完整官方 BIDS validator 未运行。" if data.standardization.official_validator == 'not_run'
+                   else "。官方校验状态：" + data.standardization.official_validator)
             )
             if data.standardization
             else "此历史运行未记录标准化验证范围"

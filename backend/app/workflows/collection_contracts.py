@@ -3,6 +3,7 @@
 from typing import Literal
 from pydantic import Field, model_validator
 from app.preprocessing.schemas import Contract
+from .bids_validation import OfficialValidation
 
 Category = Literal[
     "scope_files",
@@ -142,9 +143,20 @@ class Standardization(Contract):
     supported_scope: str
     unsupported_modalities: list[str]
     validation: str
-    official_validator: Literal["not_run"]
+    official_validator: Literal["not_run", "passed", "passed_with_warnings", "failed", "unavailable",
+                                "timed_out", "cancelled", "invalid_result", "input_changed", "review_required"]
+    official_validation: OfficialValidation | None = None
     coordinate_source: str
     source_events: int = Field(ge=0)
     standardized_events: int = Field(ge=0)
     training_events: int = Field(ge=0)
     file_count: int = Field(ge=0)
+
+    @model_validator(mode='after')
+    def official_receipt_matches_status(self):
+        if self.official_validator == 'not_run':
+            if self.official_validation is not None:
+                raise ValueError('not_run cannot carry an official validation result')
+        elif self.official_validation is None or self.official_validator != self.official_validation.status:
+            raise ValueError('official status must have a matching receipt')
+        return self

@@ -259,11 +259,18 @@ def check_sources(survey):
             raise ValueError(f"源文件已变化：{record['source_path']}")
 
 
-def collect(survey, folder, workflow_id, service, owner):
+def collect(survey, folder, workflow_id, service, owner, *, cancelled=lambda: False):
     import mne
     import numpy as np
     from mne_bids import BIDSPath, write_raw_bids
+    from .bids_validation import BIDS_VERSION, validate_bids
 
+    def check_cancelled():
+        if cancelled():
+            from app.preprocessing.runner import Cancelled
+            raise Cancelled('collection cancelled')
+
+    check_cancelled()
     check_sources(survey)
     bids_root = folder / "bids"
     root = Path(survey["source_root"])
@@ -287,6 +294,7 @@ def collect(survey, folder, workflow_id, service, owner):
     )
     channel_mapping, event_mapping = [], []
     for item in kept:
+        check_cancelled()
         path = within(root, item["source_path"])
         # Only inspection failures are excluded. Conversion errors fail the stage,
         # rather than silently leaving partial BIDS file groups in the selection.
@@ -463,6 +471,7 @@ def collect(survey, folder, workflow_id, service, owner):
     description_path = bids_root / "dataset_description.json"
     description = json.loads(description_path.read_text(encoding="utf-8"))
     description["Name"] = survey["profile"]["name"]
+    description["BIDSVersion"] = BIDS_VERSION
     if survey["profile"]["license"] != "unknown":
         description["License"] = survey["profile"]["license"]
     write_json(description_path, description)
@@ -487,11 +496,36 @@ def collect(survey, folder, workflow_id, service, owner):
     training_ids = [r["id"] for r in kept if r["run"] in TRAINING_RUNS]
     if not training_ids:
         raise ValueError("全部 Run 已接入，但没有可用于当前左右手运动想象训练的记录")
+    official = validate_bids(bids_root, folder / 'official-validator', cancelled=cancelled)
+    validation_text = (
+        f'Official BIDS validator {official.validator_version}, BIDS {official.bids_version}, '
+        f'schema {official.schema_version}: {official.status}; '
+        f'errors={official.errors}, warnings={official.warnings}; all TSV rows requested.'
+    )
+    write_json(
+        folder / 'standardization.json',
+        {
+            'standard': 'BIDS-EEG', 'version': description['BIDSVersion'],
+            'writer': 'mne-bids ' + audit.provenance.versions['mne-bids'],
+            'supported_scope': 'EEGMMIDB 全部本地 Run 的 BrainVision BIDS 工作副本；左右手运动想象记录映射训练标签，其余记录保留源事件标签',
+            'unsupported_modalities': ['BIDS-iEEG (eCoG/sEEG)', 'NWB'],
+            'validation': '信号往返、通道/时间一致性、完整事件映射、文件组/根元数据及输入合同检查；' + validation_text,
+            'official_validator': official.status,
+            'official_validation': official.model_dump(mode='json'),
+            'coordinate_source': 'standard_1005 template, not individual digitization',
+            'source_events': len(event_mapping), 'standardized_events': len(event_mapping),
+            'training_events': sum(e['training_selected'] for e in event_mapping),
+            'file_count': len(inventory),
+        },
+    )
+    if official.status not in {'passed', 'passed_with_warnings'}:
+        raise ValueError('官方 BIDS 校验未通过，未注册输入；' + validation_text + ' ' + (official.reason or ''))
+    check_cancelled()
     evidence = Evidence(
         source_url="workflow:" + workflow_id,
-        locator="collection/mapping.tsv and local EDF headers",
-        text="Local EDF decoded, EEGMMIDB adapter applied, BrainVision roundtrip checked; source bytes unchanged.",
-        source_version="1",
+        locator="collection/mapping.tsv, local EDF headers; collection/" + official.receipt_path,
+        text="Local EDF decoded, EEGMMIDB adapter applied, BrainVision roundtrip checked; source bytes unchanged. " + validation_text,
+        source_version=official.receipt_sha256,
     )
     facts = [evidence]
     research_folder = (
@@ -547,33 +581,17 @@ def collect(survey, folder, workflow_id, service, owner):
             records=records,
         ),
     )
+    check_cancelled()
     ref = service.register_input(owner, data)
     write_json(folder / "input.json", data.model_dump(mode="json"))
     table(folder, "mapping.tsv", mapping)
-    write_json(
-        folder / "standardization.json",
-        {
-            "standard": "BIDS-EEG",
-            "version": description["BIDSVersion"],
-            "writer": "mne-bids " + audit.provenance.versions["mne-bids"],
-            "supported_scope": "EEGMMIDB 全部本地 Run 的 BrainVision BIDS 工作副本；左右手运动想象记录映射训练标签，其余记录保留源事件标签",
-            "unsupported_modalities": ["BIDS-iEEG (eCoG/sEEG)", "NWB"],
-            "validation": "信号往返、通道/时间一致性、完整事件映射、文件组/根元数据及输入合同检查",
-            "official_validator": "not_run",
-            "coordinate_source": "standard_1005 template, not individual digitization",
-            "source_events": len(event_mapping),
-            "standardized_events": len(event_mapping),
-            "training_events": sum(e["training_selected"] for e in event_mapping),
-            "file_count": len(inventory),
-        },
-    )
     return {
         "input_ref": ref.model_dump(),
         "standardized_root": str(bids_root),
         "statistics": post,
         "excluded": excluded,
         "source_unchanged": True,
-        "validation": "BrainVision roundtrip and bounded BIDS input contract; full official BIDS validation not run",
+        "validation": "BrainVision roundtrip and bounded BIDS input contract; " + validation_text,
         "adaptations": [
             "Channel names standardized; standard_1005 template positions are not individual digitizations",
             "All T0/T1/T2 annotations preserved in BIDS; rest is explicit context outside training events",

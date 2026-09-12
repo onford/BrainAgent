@@ -1,0 +1,202 @@
+{
+  "status": "completed",
+  "standardization": {
+    "standard": "BIDS-EEG",
+    "version": "1.11.1",
+    "writer": "mne-bids 0.17.0",
+    "supported_scope": "EEGMMIDB 全部本地 Run 的 BrainVision BIDS 工作副本；左右手运动想象记录映射训练标签，其余记录保留源事件标签",
+    "unsupported_modalities": [
+      "BIDS-iEEG (eCoG/sEEG)",
+      "NWB"
+    ],
+    "validation": "信号往返、通道/时间一致性、完整事件映射、文件组/根元数据及输入合同检查；Official BIDS validator 3.0.1, BIDS 1.11.1, schema 1.2.7: passed_with_warnings; errors=0, warnings=70743; all TSV rows requested.",
+    "official_validator": "passed_with_warnings",
+    "official_validation": {
+      "status": "passed_with_warnings",
+      "validator_version": "3.0.1",
+      "deno_version": "2.9.6",
+      "bids_version": "1.11.1",
+      "schema_version": "1.2.7",
+      "declared_bids_version": "1.11.1",
+      "errors": 0,
+      "warnings": 70743,
+      "warning_dispositions": [
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "AnatomicalLandmarkCoordinateSystemDescription",
+          "occurrences": 109,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "FiducialsCoordinateSystem",
+          "occurrences": 109,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "FiducialsCoordinateSystemDescription",
+          "occurrences": 109,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "FiducialsCoordinateUnits",
+          "occurrences": 109,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "FiducialsCoordinates",
+          "occurrences": 109,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "HEDVersion",
+          "occurrences": 1,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "JSON_KEY_RECOMMENDED",
+          "field": "SourceDatasets",
+          "occurrences": 1,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "CapManufacturer",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "CapManufacturersModelName",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "CogAtlasID",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "CogPOID",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "DeviceSerialNumber",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "HeadCircumference",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "InstitutionAddress",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "InstitutionName",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "InstitutionalDepartmentName",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "Instructions",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "MISCChannelCount",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "ManufacturersModelName",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "SoftwareVersions",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "StimulusPresentation",
+          "occurrences": 1526,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "SubjectArtefactDescription",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        },
+        {
+          "code": "SIDECAR_KEY_RECOMMENDED",
+          "field": "TaskDescription",
+          "occurrences": 4578,
+          "action": "retain_missing_recommended_metadata",
+          "reason": "The official schema recommends this absent field. Retain its absence; do not fabricate acquisition, participant, or measured-coordinate facts. This disposition does not establish applicability of methods needing that metadata."
+        }
+      ],
+      "validated_files": 11013,
+      "input_unchanged": true,
+      "receipt_path": "official-validator/b3426bde3d7b4da2a340f0d5b72adf2e/receipt.json",
+      "receipt_sha256": "bb89f635e6117b441ae2ed998177dc385d19e200a84516dff1d4d963a94b0bdb",
+      "reason": null
+    },
+    "coordinate_source": "standard_1005 template, not individual digitization",
+    "source_events": 39569,
+    "standardized_events": 39569,
+    "training_events": 4918,
+    "file_count": 11013
+  },
+  "records": 1526,
+  "elapsed_seconds": 403.4060000000027,
+  "source_unchanged": true,
+  "code_unchanged": true
+}

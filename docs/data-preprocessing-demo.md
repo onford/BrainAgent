@@ -15,7 +15,7 @@ cd E:\work\BrainAgent\backend
 
 ```powershell
 $env:UV_PROJECT_ENVIRONMENT = '.venv-eeg'
-uv sync --python 3.12 --extra dev --extra eeg
+uv sync --python 3.12 --extra dev --extra eeg --extra inspection
 ```
 
 脚本不需要启动网页、不调用 LLM，会在 `backend/workspace/eeg-demo` 下生成：

@@ -36,16 +36,16 @@
 EEG 运行固定使用 Python 3.12；数值库与源表目标版本一致，完整安装解析见 `backend/uv.lock`。在 backend 目录执行：
 
 ```powershell
-uv sync --python 3.12 --extra dev --extra eeg
+uv sync --python 3.12 --extra dev --extra eeg --extra inspection
 $env:PREPROCESSING_ROOT='E:/work/BrainAgent/backend/workspace/preprocessing'
 $env:PREPROCESSING_INPUT_ROOTS='["E:/datasets/standardized"]'
-uv run --extra dev --extra eeg uvicorn app.main:create_app --factory --port 8000
+uv run --extra dev --extra eeg --extra inspection uvicorn app.main:create_app --factory --port 8000
 ```
 
 另一个终端使用**相同环境、相同绝对输出路径**启动 Worker：
 
 ```powershell
-uv run --extra dev --extra eeg python -m app.preprocessing.worker
+uv run --extra dev --extra eeg --extra inspection python -m app.preprocessing.worker
 ```
 
 API 需要已有 LLM 和凭据加密配置，配置方法沿用 README；Worker 的数值执行不调用 LLM。API 重启或对话断开不会停止独立 Worker。一个输出根只允许一个 Worker，操作系统文件锁在进程退出时释放，不会根据过期心跳抢占仍存活的进程。
@@ -114,8 +114,8 @@ EOG 校准分支先截取原始校准区间，再重放滤波/参考操作，避
 
 ```powershell
 # backend
-uv run --extra dev --extra eeg pytest -q
-uv run --extra dev --extra eeg python scripts/preprocessing_smoke.py --root workspace/eeg-smoke
+uv run --extra dev --extra eeg --extra inspection pytest -q
+uv run --extra dev --extra eeg --extra inspection python scripts/preprocessing_smoke.py --root workspace/eeg-smoke
 
 # frontend
 pnpm test

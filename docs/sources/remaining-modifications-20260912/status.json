@@ -815,7 +815,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "数据事实与缺失检查器",
-      "current": "当前仍缺通用 BIDS 根发现、WFDB event 对照、完整设备/接地/人口学/行为等本地提取；模板坐标不等于个体实测坐标。",
+      "current": "已实现结构化本地元数据与全部 1526 组 WFDB/EDF 比较；1260 一致、266 数量不同，3052 文件符合官方清单。BIDS 继承、逐记录元数据适用、自由文本与其他格式仍待完成；不自动排除。",
       "solution_and_acceptance": "按本地可获得文件实现对应只读检查器，关联官方资料；没有数据保持 unknown/not_checked，并明确哪些缺失会阻止哪些方法，不让报告自动补全。",
       "dependencies": [
         "I10",
@@ -828,15 +828,15 @@
         "C6"
       ],
       "historical_status": "部分实现",
-      "status": "pending",
-      "metadata_update": "已实现结构化本地元数据与全部 1526 组 WFDB/EDF 比较；1260 一致、266 数量不同，3052 文件符合官方清单。BIDS 继承、逐记录元数据适用、自由文本与其他格式仍待完成；不自动排除。"
+      "status": "partial",
+      "implementation": "docs/local-metadata-checks.md"
     },
     {
       "id": "I41",
       "priority": "P1",
       "scope": "正式版",
       "title": "完整官方 BIDS Validator",
-      "current": "当前合同 official_validator 只能取 not_run；MNE-BIDS 写入与逐点往返校验不能替代完整标准验证。",
+      "current": "固定官方 Validator 3.0.1 / Deno 2.9.6 / BIDS 1.11.1 / Schema 1.2.7 离线全文件全 TSV 行校验已在注册输入前执行；全部 1526 记录、11013 文件、39569 事件、4918 训练试次验收，0 错误、70743 缺失推荐元数据警告。完整哈希和原始问题列表保留，未知警告需复核；历史不改写。",
       "solution_and_acceptance": "固定 Validator/规范版本，对新标准化产物运行并保存 JSON 回执；区分错误与有理由保留的警告，核对单位、元数据、事件与数值回读。",
       "dependencies": [
         "I40",
@@ -848,7 +848,8 @@
         "C7"
       ],
       "historical_status": "未完成",
-      "status": "pending"
+      "status": "implemented_full_eegmmidb_validation_passed",
+      "implementation": "docs/official-bids-validation.md"
     },
     {
       "id": "I42",
@@ -1641,7 +1642,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十四批完成本地元数据与全量 WFDB 核查；I40 保持部分完成。继续 I41 官方 BIDS 校验。I25 独立科学验证缺口仍保留。",
+  "active_step": "第二十五批 I41 官方 BIDS 校验完成全量 EEGMMIDB 验收。继续 I42 对象证据和 I44 跨层合同；I25/I40 未完成的科学验证与元数据边界保留。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1923,6 +1924,12 @@
     "full_backend_step_review": {
       "commit": "ad18d2b",
       "result": "1306 passed, 109 warnings, 835.95 s"
+    },
+    "official_bids": {
+      "backend": "29 passed, 2 warnings, 54.84 s; additional artifact/process/exclusion batch 27 passed, overlaps next batch",
+      "real": "1526 records, 11013 files, 39569 source/standard events, 4918 training events; 0 errors, 70743 retained missing-recommended-field warnings; 403.406 s; inputs/code unchanged",
+      "audit": "docs/sources/remaining-modifications-20260912/bids-fresh-2-audit.json",
+      "receipt": "docs/sources/remaining-modifications-20260912/bids-fresh-2-official-receipt.json"
     }
   }
 }

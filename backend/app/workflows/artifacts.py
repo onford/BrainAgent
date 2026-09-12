@@ -70,6 +70,8 @@ def local_files(folder, state, previous=()):
             or path.name in COGNITIVE_FILES
             or name in LIVE_FILES | {"preprocessing/plan.json"}
             or name.startswith("preprocessing/literature-methods/")
+            or (name.startswith('collection/official-validator/')
+                and (path.parent / 'receipt.json').is_file())
             or (name == "training-data.zip" and delivery_completed)
         ):
             continue

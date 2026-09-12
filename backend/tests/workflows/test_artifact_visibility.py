@@ -22,3 +22,20 @@ def test_published_artifacts_exclude_hidden_directories_and_editor_residue(tmp_p
         tmp_path, {"stages": [{"name": "data_survey", "status": "completed"}]}
     )
     assert {a["name"] for a in published} == set(names[:2])
+
+
+def test_validator_outputs_publish_only_after_receipt_while_collection_active(tmp_path):
+    root = tmp_path / 'collection/official-validator/attempt'
+    root.mkdir(parents=True)
+    (root / 'result.json').write_text('{"issues":{}}', encoding='utf-8')
+    (root / 'stdout.log').write_text('', encoding='utf-8')
+    state = {'stages': [{'name': 'data_collection', 'status': 'running'}]}
+    assert local_files(tmp_path, state) == []
+    (root / 'receipt.json').write_text('{"status":"failed"}', encoding='utf-8')
+    published = local_files(tmp_path, state)
+    assert {a['name'] for a in published} == {
+        'collection/official-validator/attempt/' + name
+        for name in ['result.json', 'stdout.log', 'receipt.json']}
+    assert all(a['sha256'] for a in published)
+    state['stages'][0]['status'] = 'cancelled'
+    assert local_files(tmp_path, state, published) == published

@@ -387,14 +387,20 @@ class WorkflowService:
             await asyncio.to_thread(render_survey_reports, folder / "survey", value)
         elif name == "data_collection":
             review = await cognition.collection_review(state["outputs"]["data_survey"])
-            value = await asyncio.to_thread(
-                dataset.collect,
-                state["outputs"]["data_survey"],
-                folder / "collection",
-                identity,
-                self.preprocessing,
-                owner,
-            )
+            from threading import Event
+            stopped = Event()
+            try:
+                value = await asyncio.to_thread(
+                    dataset.collect,
+                    state["outputs"]["data_survey"],
+                    folder / "collection",
+                    identity,
+                    self.preprocessing,
+                    owner,
+                    cancelled=stopped.is_set,
+                )
+            finally:
+                stopped.set()
             value["adaptations"].extend(review.limitations)
         elif name == "data_preprocessing":
             value = await self.preprocess(state, request)

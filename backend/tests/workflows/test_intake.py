@@ -122,7 +122,12 @@ def test_complete_events_are_preserved_but_context_is_not_training(
         standard["standardized_events"],
         standard["training_events"],
     ) == (15, 15, 12)
-    assert standard["official_validator"] == "not_run"
+    assert standard["official_validator"] == "passed_with_warnings"
+    assert standard['official_validation']['errors'] == 0
+    assert standard['official_validation']['warnings'] > 0
+    assert standard['official_validation']['input_unchanged']
+    assert standard['version'] == '1.11.1'
+    assert (folder / standard['official_validation']['receipt_path']).is_file()
     assert result["statistics"]["behavior_records"] is None
     assert result["statistics"]["channel_observations"] == 192
     integrity = load(folder, "source-integrity.json")
