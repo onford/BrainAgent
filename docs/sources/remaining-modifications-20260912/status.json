@@ -1959,7 +1959,7 @@
       "backend_tests_passed": 54,
       "backend_warnings": 2,
       "backend_seconds": 141.61,
-      "frontend_tests_passed": 162,
+      "frontend_tests_passed": 164,
       "frontend_build": "passed",
       "independent_process_seconds": 7.75,
       "audit": "multi-backend-live-audit.json",
@@ -1968,7 +1968,8 @@
         "tests_passed": 10,
         "seconds": 8.85,
         "legacy_files_unchanged": true
-      }
+      },
+      "v2_ui_read_only": true
     },
     "full_backend_codec": {
       "commit": "399e152",
@@ -1977,7 +1978,7 @@
       "seconds": 910.3
     },
     "remote_sync": {
-      "verified_commit": "2ff9b599ffdf7dc760ce229c9a2bb8f56b192d66",
+      "verified_commit": "6ce5e60801e503be1defa2d30a8fb71e315634a4",
       "branch": "dev-xx"
     }
   }

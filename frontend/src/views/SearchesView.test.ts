@@ -11,7 +11,7 @@ vi.mock('../api/client', () => ({ apiRequest, apiUrl: (path: string) => `https:/
 
 function state(overrides: Partial<SearchState> = {}): SearchState {
   return {
-    schema_version: '1', protocol: { version: '2', evaluator: 'csp-shrinkage-lda-v2' }, id: 'search-1', workflow_id: 'source-1', status: 'completed',
+    schema_version: '1', protocol: { version: '3', evaluator: 'csp-shrinkage-lda-v2' }, id: 'search-1', workflow_id: 'source-1', status: 'completed',
     created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:10:00Z',
     request: { workflow_id: 'source-1', strategy: 'adaptive', seed: 42,
       budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } },
@@ -350,7 +350,7 @@ describe('SearchesView', () => {
   })
 
   it('shows actual CV folds without presenting the empty top-level training list as no training', async () => {
-    const latest = state({ panel: { evaluation_mode: 'group_cross_validation', train_subjects: [], development_subjects: ['S001', 'S002', 'S003'],
+    const latest = state({ protocol: { version: '2', evaluator: 'csp-shrinkage-lda-v2' }, panel: { evaluation_mode: 'group_cross_validation', train_subjects: [], development_subjects: ['S001', 'S002', 'S003'],
       folds: [
         { id: 'fold-01', train_subjects: ['S002', 'S003'], development_subjects: ['S001'] },
         { id: 'fold-02', train_subjects: ['S001', 'S003'], development_subjects: ['S002'] },
@@ -370,6 +370,17 @@ describe('SearchesView', () => {
     expect(wrapper.get('[aria-label="评分含义"]').text()).toContain('CSP 与分类器在每折训练被试上拟合')
     expect(wrapper.text()).toContain('不是独立测试结果')
     expect(wrapper.find('form').exists()).toBe(false)
+  })
+
+  it.each(['running', 'failed'])('keeps v2 reports readable with no execution controls for %s', async status => {
+    const latest = state({ status, protocol: { version: '2', evaluator: 'csp-shrinkage-lda-v2' } })
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+    const { wrapper } = await open('/searches?id=search-1')
+    expect(wrapper.get('.run-controls').text()).toContain('只读记录')
+    expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
+    await button(wrapper, '报告 / 文件').trigger('click'); await flushPromises()
+    expect(wrapper.get('iframe').attributes('src')).toContain('/api/searches/search-1/artifacts/report/report.html?download=false')
+    expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
   it.each([
