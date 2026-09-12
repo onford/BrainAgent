@@ -1,5 +1,7 @@
 import asyncio
 import re
+from time import time
+from math import isfinite
 from typing import Any
 
 import httpx
@@ -123,23 +125,50 @@ class HttpExternalToolClient(ExternalToolClient):
                     response = await client.get(
                         path, params=request_params, headers=headers
                     )
-                except (httpx.TimeoutException, httpx.NetworkError) as exc:
+                except (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError) as exc:
                     if attempt < self._max_retries:
                         await asyncio.sleep(0.1 * (2**attempt))
                         continue
                     raise ExternalToolUnavailableError(
                         f"{self.tool_id} is temporarily unavailable"
                     ) from exc
+                rate_limited = response.status_code == 429
+                if self.tool_id == 'github' and response.status_code == 403:
+                    rate_limited = (response.headers.get('x-ratelimit-remaining') == '0'
+                        or 'retry-after' in response.headers
+                        or 'rate limit' in response.text[:2000].lower())
+                if rate_limited:
+                    from app.llm.client import _retry_delay
+                    delay = _retry_delay(response.headers.get('retry-after'), attempt+1)
+                    if self.tool_id == 'github':
+                        if response.headers.get('x-ratelimit-remaining') == '0':
+                            try:
+                                reset = float(response.headers['x-ratelimit-reset']) - time()
+                                if isfinite(reset):
+                                    delay = max(delay, reset)
+                                else:
+                                    delay = max(delay, 60)
+                            except (KeyError, ValueError):
+                                delay = max(delay, 60)
+                        elif 'retry-after' not in response.headers:
+                            delay = max(delay, 60)
+                    # Respect the server minimum. A long cooldown is returned
+                    # to the caller for fallback, never shortened to retry early.
+                    if attempt < self._max_retries and delay <= min(30, self._timeout_seconds):
+                        await asyncio.sleep(delay)
+                        continue
+                    raise ExternalToolRateLimitError(
+                        f'{self.tool_id} rate limit; requested wait {delay:.1f}s, request not resent')
                 if response.status_code in {401, 403}:
                     raise ToolCredentialInvalidError(
                         f"{self.tool_id} rejected the configured credentials"
                     )
-                if response.status_code == 429:
-                    raise ExternalToolRateLimitError(
-                        f"{self.tool_id} rate limit was exceeded"
-                    )
                 if response.status_code >= 500 and attempt < self._max_retries:
-                    await asyncio.sleep(0.1 * (2**attempt))
+                    from app.llm.client import _retry_delay
+                    delay = _retry_delay(response.headers.get('retry-after'), attempt+1)
+                    if delay > min(30, self._timeout_seconds):
+                        raise ExternalToolUnavailableError(f'{self.tool_id} requested a longer cooldown; request not resent')
+                    await asyncio.sleep(delay)
                     continue
                 if response.status_code >= 400:
                     raise ExternalToolUnavailableError(

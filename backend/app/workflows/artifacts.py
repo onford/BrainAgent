@@ -24,6 +24,10 @@ COGNITIVE_FILES = {
     "literature.json",
     "local-inspection.json",
     "directory-tree.txt",
+    "dataset_verification-progress.json",
+    "literature_review-progress.json",
+    "evidence-grades.json",
+    "source-claim-review.json",
 }
 COGNITIVE_FILES.update(
     {

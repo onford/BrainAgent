@@ -113,6 +113,21 @@ class LiteratureExclusions(Contract):
     records: list[MatchedExclusion]
 
 
+class SourceClaimCheck(Contract):
+    entry_id: str
+    proposed: ReportedExclusion
+    effective: ReportedExclusion
+    status: Literal['unresolved', 'literal_scope_verified']
+    reason: str | None
+    automatic_exclusion_authorized: Literal[False]
+
+
+class SourceClaimReview(Contract):
+    schema_version: Literal['source-claim-review-1']
+    checks: list[SourceClaimCheck]
+    policy: str
+
+
 class SourceIntegrity(Contract):
     scope: str
     files: dict[str, str]

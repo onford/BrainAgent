@@ -207,7 +207,8 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation_update": "检索记录新增逐动作新增来源内容/URL/摘录计数、持久预算余量、明确停止原因和未完成目标。计数不等同科学新颖性或调研充分，不设置论文数量目标；方法覆盖充分性仍需最终来源/方法空间验收。"
     },
     {
       "id": "I11",
@@ -227,7 +228,8 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation_update": "文献筛选新增可定位来源访问等级、原文哈希/跨度和重复跨度歧义；访问、参数语义核验、执行、独立复现分开。引用量/星数单列，不提升证据等级。等级文件绑定文献清单哈希并在报告显示，方法执行等级仍由下游回执证明。"
     },
     {
       "id": "I12",
@@ -242,7 +244,8 @@
         "D4"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation_update": "修复 GitHub 403 主/次级限流误判凭据失效；有限重试尊重 Retry-After 和 x-ratelimit-reset，过长等待返回限流/不可用，不缩短服务器最低等待。模型重试同样不提前重发。102 项集成/模型回归通过；跨任务共享 provider 冷却/缓存与真实故障切换仍待补齐。"
     },
     {
       "id": "I13",
@@ -845,7 +848,7 @@
       ],
       "historical_status": "部分实现",
       "status": "implemented_pending_live_verification",
-      "implementation_update": "真实验收 c3e41847246b4db19e2f3f0fe58783cf 发现纳入范围误当排除的模型错误；新增 claim_type/object_quote，区分排除、纳入、留出和未知。只在被试名册短句中解析明确编号/有界范围，混合或否定排除、样本数与频率不生成排除对象。原验收保持失败，待 fresh 复验。"
+      "implementation_update": "第二次 fresh 验收发现 eliminated 与英文 Oxford comma 名单解析缺口，已补齐。次要来源对象主张核对失败保留 proposed/effective 审计，将有效编号清空为 unspecified；不授权剔除，不阻止结构/标签本身已核对的接入。未知引文 ID 与任务/运行/标签矛盾仍阻塞。新回归 36 项通过，待正式恢复复验。"
     },
     {
       "id": "I43",
@@ -909,7 +912,7 @@
       "historical_status": "未完成",
       "status": "in_progress",
       "historical_current": "起始工作区620文件已建立本地内容快照；共享处理范围已修订，服务版本快照接口已实现，整体回归及提交仍未完成。",
-      "implementation_update": "首批整合提交 7f4a490，独立检出源哈希一致。两次 push 分别连接重置与连接超时，本地提交已保存。第二批恢复/预算/排除核对修正通过专项回归，尚待新真实验收。"
+      "implementation_update": "已提交 7f4a490、f4528a1；三次 push 均因网络故障失败。两次 fresh 调研完成但接入对象核对失败；未进行数值搜索，历史输出不变。第三批修正待冻结后通过正式 retry 恢复验收。"
     },
     {
       "id": "I46",
@@ -1685,6 +1688,12 @@
       "live_integrated_1": "failed at collection evidence validation; no numeric search or exclusions executed",
       "commit": "7f4a490",
       "push": "failed twice, network connection reset/timeout"
+    },
+    "research_audit_followup": {
+      "backoff": "102 passed",
+      "research_evidence_scope": "36 passed including numeric workflow collection/recovery cases",
+      "live_2": "failed collection; fresh research retained at fb8fd5a6944b450b814bd824f7afac35",
+      "upstream_commit": "f4528a1"
     }
   }
 }

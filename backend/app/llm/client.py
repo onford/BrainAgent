@@ -36,7 +36,7 @@ def _retry_delay(retry_after: str | None, attempt: int) -> float:
                 requested = 0.0
         if isfinite(requested):
             delay = max(delay, requested)
-    return min(delay, _MAX_RETRY_DELAY_SECONDS)
+    return delay
 
 
 class StructuredOutputError(ValueError):
@@ -166,6 +166,10 @@ class OpenAICompatibleClient(LLMClient):
                             else None,
                             attempt,
                         )
+                        if delay > _MAX_RETRY_DELAY_SECONDS:
+                            raise RuntimeError(
+                                f'LLM provider requested a retry delay beyond this call budget ({delay:.1f}s); request not resent: {details}'
+                            ) from exc
                         logger.warning(
                             "llm_request_retry %s delay_seconds=%.1f",
                             details,

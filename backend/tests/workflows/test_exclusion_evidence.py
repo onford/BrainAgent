@@ -1,7 +1,7 @@
 import pytest
 
 from app.workflows.collection_contracts import ReportedExclusion
-from app.workflows.exclusion_evidence import subject_numbers, validate_claim
+from app.workflows.exclusion_evidence import subject_numbers, validate_claim, review_claim
 from app.workflows.intake import literature_matches
 from types import SimpleNamespace
 
@@ -52,3 +52,22 @@ def test_object_span_must_be_literal_and_uncertain_ids_remain_empty():
     value, entry = claim('Twenty subjects were excluded.', ['20'], 'unspecified')
     with pytest.raises(ValueError, match='reported_ids empty'):
         validate_claim(value, entry)
+
+
+def test_eliminated_and_oxford_comma_keep_the_full_reported_list():
+    text = 'Subjects 38, 88, 89, 82, 100, and 104 were eliminated.'
+    value, entry = claim(text, ['38', '88', '89', '82', '100', '104'])
+    assert subject_numbers(text) == {38, 88, 89, 82, 100, 104}
+    assert review_claim(value, entry)['status'] == 'literal_scope_verified'
+
+
+def test_unresolved_secondary_claim_preserves_proposal_but_clears_local_flags():
+    value, entry = claim('Subjects: 1-10.', ['1', '2'])
+    check = review_claim(value, entry)
+    assert check['proposed']['reported_ids'] == ['1', '2']
+    assert check['effective']['reported_ids'] == []
+    assert value.claim_type == 'unspecified'
+    assert check['automatic_exclusion_authorized'] is False
+    result = literature_matches(SimpleNamespace(literature_exclusions=[value]),
+        {'records': [{'id': 'S001R04', 'subject': 'S001'}]})
+    assert result.records[0].local_objects == [] and result.records[0].action == '不处理'

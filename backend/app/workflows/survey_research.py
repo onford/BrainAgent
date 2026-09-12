@@ -109,6 +109,8 @@ def missing_tasks(sources, goals, catalog, purpose, *, actionable_only=False):
 
 async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
     from .research_journal import ResearchJournal
+    from .research_progress import progress
+    from app.preprocessing.storage import write_json
 
     goals = plan.verification if purpose == "dataset_verification" else plan.literature
     valid_pairs = {(g.target, g.medium) for g in goals}
@@ -121,8 +123,11 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
         for t in catalog
         if t["available"] and t.get("category") in {"literature", "code"}
     }
+    stop_reason, rationale = None, None
     while (remaining := journal.remaining(purpose)):
         missing = missing_tasks(sources, goals, catalog, purpose)
+        measured_progress = progress(journal, purpose, missing)
+        write_json(agent.folder / agent.prefix / f'{purpose}-progress.json', measured_progress)
         pending = missing_tasks(sources, goals, catalog, purpose, actionable_only=True)
         action_schema = create_model(
             "SurveyAction",
@@ -182,6 +187,7 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
                 "missing_requirements": missing,
                 "required_next_attempts": pending,
                 "remaining_actions": remaining,
+                "measured_retrieval_progress": {**measured_progress, 'actions': measured_progress['actions'][-8:]},
                 "selection_criteria": SELECTION_CRITERIA,
             },
             "Choose 1-4 independent search/read actions, or finish alone. Each action declares its goal target and medium. "
@@ -198,13 +204,20 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
             "Usage literature must itself use the target dataset; a related-work citation alone is insufficient. Follow the cited primary work. "
             "Use read.query for excerpts beyond source previews. Failed/empty searches do not establish absence: satisfy required_next_attempts by changing provider or broadening the query with dataset aliases and English topic keywords. "
             "Read failures and abstract-only reads leave evidence gaps; try a returned full-text link or another candidate. After bounded attempts, retain missing_requirements as gaps even when finishing. Do not repeat successful actions. "
-            "Finish once required searches/reading attempts are done and sufficient evidence exists, or retain explicit gaps if no useful source remains.",
+            "Use measured content/URL/excerpt novelty to avoid duplicate work; these counts alone do not establish scientific sufficiency. Finish once required searches/reading attempts are done and sufficient evidence exists, or retain explicit gaps if no useful source remains. State the concrete stopping reason; never claim exhaustive coverage from this bounded search.",
             validate,
         )
         if batch.actions[0].action == "finish":
+            stop_reason, rationale = 'model_finished', batch.actions[0].rationale
             break
         await agent.research_batch(batch.actions, sources, available)
-    return missing_tasks(sources, goals, catalog, purpose)
+    missing = missing_tasks(sources, goals, catalog, purpose)
+    if stop_reason is None:
+        from time import time
+        stop_reason = 'deadline_expired' if time() >= journal.read()['budgets'][purpose]['expires_at'] else 'action_budget_exhausted'
+    write_json(agent.folder / agent.prefix / f'{purpose}-progress.json',
+        progress(journal, purpose, missing, stop_reason=stop_reason, rationale=rationale))
+    return missing
 
 
 def validate_verification(agent, value, sources, local):
@@ -554,6 +567,9 @@ async def research(agent, survey):
             ],
         )
         agent.save("survey/literature.json", literature)
+    from .evidence_grades import grade_review
+    from app.preprocessing.storage import write_json
+    write_json(agent.folder / 'survey/evidence-grades.json', grade_review(literature, sources))
     # Compatibility projection for the numeric pipeline; the authoritative two products remain separate.
     selected = [e for e in literature.entries if e.decision == "included"]
     facts = {f.id: f for f in verification.facts}

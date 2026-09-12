@@ -224,7 +224,14 @@ class DeliveryManifest(Contract):
         return self
 
 
+from .research_audit_contracts import EvidenceGrades, RetrievalProgress
+from .collection_contracts import SourceClaimReview
+
 JSON_MODELS = {
+    'survey/evidence-grades.json': EvidenceGrades,
+    'survey/dataset_verification-progress.json': RetrievalProgress,
+    'survey/literature_review-progress.json': RetrievalProgress,
+    'collection/source-claim-review.json': SourceClaimReview,
     "survey/research-plan.json": SurveyPlan,
     "survey/local-inspection.json": LocalObservation,
     "survey/verification.json": DatasetVerification,

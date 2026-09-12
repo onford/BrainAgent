@@ -398,6 +398,7 @@ class WorkflowCognition:
 
         def validate_review(value):
             validate_task_mappings(value, findings)
+            claim_checks = []
             for claim in value.literature_exclusions:
                 entry = entries.get(claim.entry_id)
                 if entry is None or not set(claim.finding_ids) <= {
@@ -407,8 +408,8 @@ class WorkflowCognition:
                         f"literature exclusions must cite findings of an included dataset-discussion entry; rejected entry={claim.entry_id}, findings={claim.finding_ids}; "
                         + str({key: [f['id'] for f in item['findings']] for key, item in entries.items()})
                     )
-                from .exclusion_evidence import validate_claim
-                validate_claim(claim, entry)
+                from .exclusion_evidence import review_claim
+                claim_checks.append(review_claim(claim, entry))
             required = {e["id"] for e in discussion if e.get("exclusions")}
             if not required <= {c.entry_id for c in value.literature_exclusions}:
                 raise ValueError(
@@ -421,6 +422,11 @@ class WorkflowCognition:
                     "differences belong in limitations. Compare against the current adapter_profile, "
                     "not superseded values mentioned in historical research conflicts."
                 )
+            from app.preprocessing.storage import write_json
+            from .collection_contracts import SourceClaimReview
+            write_json(self.folder / 'collection/source-claim-review.json',
+                SourceClaimReview(schema_version='source-claim-review-1', checks=claim_checks,
+                 policy='Literal/identifier checks are not independent semantic validation. Secondary literature object claims remain advisory. Unresolved proposals are preserved here, with effective IDs cleared; task/run/label contradictions still block collection.').model_dump(mode='json'))
 
         for iteration in range(3):
             # Runtime enum constrains references in the model's actual output

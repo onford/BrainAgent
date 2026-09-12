@@ -236,7 +236,6 @@ async def test_mixed_transient_failures_share_one_budget(delays):
     [
         ("7", 7.0),
         ("2.5", 2.5),
-        ("3600", 30.0),
         ("0", 1.0),
         ("-10", 1.0),
         ("not a date", 1.0),
@@ -260,7 +259,7 @@ async def test_retry_after_seconds_are_honored_and_bounded(
     assert delays == [expected] and len(calls) == 2
 
 
-@pytest.mark.parametrize("seconds, expected", [(12, 12.0), (3600, 30.0), (-60, 1.0)])
+@pytest.mark.parametrize("seconds, expected", [(12, 12.0), (-60, 1.0)])
 async def test_retry_after_http_date(delays, monkeypatch, seconds, expected):
     now = datetime(2026, 9, 9, 0, 0, 0, tzinfo=timezone.utc)
 
@@ -287,6 +286,17 @@ async def test_retry_after_http_date(delays, monkeypatch, seconds, expected):
 
     await make_client(handler).chat([])
     assert delays == [expected]
+
+
+@pytest.mark.parametrize('header', ['3600', 'Wed, 01 Jan 2098 00:00:00 GMT'])
+async def test_long_server_retry_interval_is_not_shortened(delays, header):
+    calls = []
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(429, headers={'Retry-After': header})
+    with pytest.raises(RuntimeError, match='request not resent'):
+        await make_client(handler).chat([])
+    assert len(calls) == 1 and delays == []
 
 
 async def test_retry_body_is_frozen_even_if_caller_changes_messages(

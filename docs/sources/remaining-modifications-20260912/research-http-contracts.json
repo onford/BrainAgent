@@ -1,0 +1,14 @@
+{
+  "accessed": "2026-09-12",
+  "sources": [
+    {
+      "url": "https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api",
+      "scope": "403/429 limits; honor retry-after and x-ratelimit-reset; secondary limits without headers wait at least one minute"
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After",
+      "scope": "delay seconds and HTTP date formats"
+    }
+  ],
+  "implementation": "Long server waits return an unavailable/rate-limited result rather than shortening the wait and retrying early. No credential failure is inferred from a recognized GitHub rate-limit response."
+}

@@ -331,10 +331,11 @@ def statistics(survey, local):
     )
 
 
-def literature(review, targets):
+def literature(review, targets, grades=None):
     sources = {s.id: s for s in review.sources}
     entries = [e for e in review.entries if e.target in targets]
     coverage = [c for c in review.coverage if c.target in targets]
+    grade_rows = {r['entry_id']: r for r in (grades or {}).get('rows', [])}
     body = "<h2>用途与调研覆盖</h2>" + table(
         ["用途", "资料类型", "下游章节", "状态", "纳入记录", "检索编号", "说明"],
         [
@@ -373,6 +374,11 @@ def literature(review, targets):
                 ],
             )
             body += evidence(e.findings, sources)
+            if e.id in grade_rows:
+                grade = grade_rows[e.id]
+                label = {'abstract_only': '仅摘要', 'located_source_text': '已定位来源正文',
+                         'source_text_without_located_findings': '取得文本但无定位论据'}[grade['access_grade']]
+                body += '<p class="muted">证据访问：' + label + '。参数语义、流程执行及独立复现须查看对应方法的后续证据；引用量与星数不提升证据等级。</p>'
             if e.exclusions:
                 body += (
                     '<h3>资料报告的排除事项</h3><p class="muted">需在数据接入阶段核对，不自动剔除本地对象。</p>'
@@ -418,14 +424,21 @@ def render_survey_reports(folder, value=None):
     local = load("local-inspection.json", LocalInspection)
     verification = load("verification.json", DatasetVerification)
     review = load("literature.json", LiteratureReview)
+    grades = None
+    if (folder / 'evidence-grades.json').exists():
+        from .research_audit_contracts import EvidenceGrades
+        from app.preprocessing.storage import digest
+        grades = load('evidence-grades.json', EvidenceGrades).model_dump(mode='json')
+        if grades['review_sha256'] != digest(review.model_dump(mode='json')):
+            raise ValueError('evidence grade snapshot differs from the literature review')
     sources = {d.id: d for d in load("sources.json", ResearchSources).documents}
     bodies = [
         basic(survey, verification, sources),
         information(local, verification, sources),
         statistics(survey, local),
-        literature(review, {"usage_analysis", "usage_algorithm"}),
-        literature(review, {"dataset_discussion"}),
-        literature(review, {"preprocessing_methods"}),
+        literature(review, {"usage_analysis", "usage_algorithm"}, grades),
+        literature(review, {"dataset_discussion"}, grades),
+        literature(review, {"preprocessing_methods"}, grades),
     ]
     template = Template(TEMPLATE.read_text(encoding="utf-8"))
     navigation = " ".join(
@@ -443,6 +456,7 @@ def render_survey_reports(folder, value=None):
                 "local-inspection.json",
                 "literature.json",
                 "sources.json",
+                *[name for name in ('evidence-grades.json', 'dataset_verification-progress.json', 'literature_review-progress.json') if (folder / name).exists()],
             )
         )
         text = template.substitute(
