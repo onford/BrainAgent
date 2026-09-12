@@ -695,7 +695,7 @@
       ],
       "historical_status": "待系统验收",
       "status": "partial",
-      "recovery_update": "已完成真实双记录共享 RELAX worker 强制退出/重启与完成记录保护；跨后端工作流缺少互斥、搜索远程取消依赖内存的缺口正在修复，尚未作完整服务联动验收。"
+      "recovery_update": "跨后端工作流/搜索互斥、持久取消与恢复代次、阻塞写入线程排空已实现，独立 Windows 多进程专项通过；54 项相关回归通过，部署服务联动/断网资源压力/跨平台仍待系统验收。"
     },
     {
       "id": "I34",
@@ -1646,7 +1646,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十八批 I37 真实原生生命周期及 I33 worker 崩溃恢复完成专项。继续 I33 跨后端互斥/取消和完整服务生命周期，再开展 I32 全面板资源测量。",
+  "active_step": "第二十九批 I33 跨后端互斥/持久取消/线程排空专项通过。继续 I32 全面板完整候选成本测量，再 I27 实质文献完整链。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1954,6 +1954,22 @@
     "full_backend_bids_and_exclusions": {
       "commit": "2bb79cd",
       "result": "1335 passed, 109 warnings, 872.51 s"
+    },
+    "multi_backend": {
+      "backend_tests_passed": 54,
+      "backend_warnings": 2,
+      "backend_seconds": 141.61,
+      "frontend_tests_passed": 162,
+      "frontend_build": "passed",
+      "independent_process_seconds": 7.75,
+      "audit": "multi-backend-live-audit.json",
+      "status": "targeted_passed"
+    },
+    "full_backend_codec": {
+      "commit": "399e152",
+      "passed": 1351,
+      "warnings": 109,
+      "seconds": 910.3
     }
   }
 }

@@ -958,6 +958,7 @@ export const en = [
   "Read-only record",
   "Processing…",
   "Stop search",
+  "Stopping search…",
   "Retry search",
   "Progress and budget",
   "Usage details",

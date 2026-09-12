@@ -215,6 +215,7 @@ class ActionRecord(Contract):
 
 class SearchState(Contract):
     schema_version: Literal["1"] = "1"
+    cancellation_requested: bool = False
     id: str
     owner: str
     workflow_id: str

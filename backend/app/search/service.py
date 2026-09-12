@@ -1,4 +1,5 @@
 import asyncio
+from app.owned_thread import _owned_thread
 from datetime import datetime, timezone
 import os
 from pathlib import Path
@@ -95,6 +96,8 @@ class SearchService:
 
     def describe(self, owner, identity, include_artifacts=True):
         state = self.get(owner, identity)
+        from .run_control import Controls
+        state['cancellation_requested'] = state['status'] in {'preparing', 'running', 'interrupted'} and Controls(self.folder(identity)).snapshot().pending is not None
         from .method_provenance import participation
         state["literature_participation"] = participation(state)
         from .recipe_contrast import contrasts_to_reference
@@ -115,6 +118,7 @@ class SearchService:
             "input.json": "标准化输入及校验清单",
             "files.json": "全部搜索与数值执行产物索引",
             "limits.json": "冻结资源预算",
+            "control.json": "跨执行器停止请求与恢复代次历史",
             "space.json": "算子、参数域、方法起点及可检查的科学先验",
             "registry.json": "候选完整配方、方法来源与算子编辑谱系",
             "method-intake.json": "本轮文献方法的可执行性检查、原始草案及编译结果",
@@ -518,19 +522,46 @@ class SearchService:
         await asyncio.gather(*active, return_exceptions=True)
 
     def cancel(self, owner, identity):
-        state = self.get(owner, identity)
-        if state["status"] not in {"preparing", "running", "interrupted"}:
-            raise ValueError("只有正在进行的搜索可以取消")
+        import portalocker
+        from .run_control import Controls
+        self.get(owner, identity)
+        controls = Controls(self.folder(identity))
+        with controls.transaction() as control:
+            state = self.get(owner, identity)
+            if state["status"] not in {"preparing", "running", "interrupted"}:
+                raise ValueError("只有正在进行的搜索可以取消")
+            controls.request(control, owner)
         self.cancelled.add(identity)
         task = self.tasks.get(identity)
         if task and not task.done():
             task.cancel()
         else:
-            state.update(status="cancelled", stop_reason="cancelled_by_user")
-            self.save(state)
+            try:
+                with portalocker.Lock(self.folder(identity) / 'search.lock', timeout=0):
+                    state = self.get(owner, identity)
+                    if state['status'] in {'preparing', 'running', 'interrupted'}:
+                        self.interrupt_pending(state, '用户已请求取消，尚未产生完整评价')
+                        state.update(status="cancelled", stop_reason="cancelled_by_user")
+                        self.save(state)
+            except portalocker.exceptions.LockException:
+                pass
         return self.describe(owner, identity)
 
     def retry(self, owner, identity):
+        import portalocker
+        from .run_control import Controls
+        self.get(owner, identity)
+        try:
+            with portalocker.Lock(self.folder(identity) / 'search.lock', timeout=0):
+                with Controls(self.folder(identity)).transaction() as control:
+                    self._retry_locked(owner, identity)
+                    Controls.resume(control)
+        except portalocker.exceptions.LockException as exc:
+            raise ValueError('搜索仍由执行器处理，待停止后再重试') from exc
+        self.start(owner, identity)
+        return self.describe(owner, identity)
+
+    def _retry_locked(self, owner, identity):
         state = self.get(owner, identity)
         try:
             self.verify_runtime(state)
@@ -557,8 +588,7 @@ class SearchService:
         self.cancelled.discard(identity)
         state.update(status="running", error=None, stop_reason=None)
         self.save(state)
-        self.start(owner, identity)
-        return self.describe(owner, identity)
+        return state
 
     def guard(self, state):
         if time.time() >= state["deadline"]:
@@ -736,7 +766,7 @@ class SearchService:
         action = self.action(state, "request_diagnostic", status="running", request=proposal, reason=proposal["reason"])
         started = time.monotonic()
         try:
-            result = await asyncio.to_thread(run_diagnostic, self.folder(state["id"]), state, proposal, inputs)
+            result = await _owned_thread(run_diagnostic, self.folder(state["id"]), state, proposal, inputs)
             self.guard(state)
             if any(d["id"] == result["id"] for d in state.get("diagnostics", [])):
                 raise ValueError("相同输入和诊断已经计算，不能通过改写问题重复计为新证据")
@@ -891,25 +921,85 @@ class SearchService:
         import portalocker
 
         root = self.folder(identity)
-        state = self.get(owner, identity)
+        self.get(owner, identity)
+        lock = portalocker.Lock(root / 'search.lock', timeout=0)
         try:
-            with portalocker.Lock(root / "search.lock", timeout=0):
-                self.verified.discard(identity)
-                await self._run(state)
+            lock.acquire()
         except portalocker.exceptions.LockException:
             return
+        try:
+            task = asyncio.current_task()
+            control_errors = []
+            monitor = asyncio.create_task(self._watch_cancellation(identity, task, control_errors))
+            try:
+                await self._run_locked(owner, identity, control_errors)
+            finally:
+                monitor.cancel()
+                await asyncio.gather(monitor, return_exceptions=True)
+        finally:
+            lock.release()
+
+    async def _watch_cancellation(self, identity, owner_task, errors):
+        from .run_control import Controls
+        controls = Controls(self.folder(identity))
+        while True:
+            await asyncio.sleep(.1)
+            try:
+                requested = controls.snapshot().pending is not None
+            except Exception as exc:
+                errors.append(f'{type(exc).__name__}: {exc}')
+                owner_task.cancel()
+                return
+            if requested:
+                self.cancelled.add(identity)
+                owner_task.cancel()
+                return
+
+    async def _run_locked(self, owner, identity, control_errors):
+        from .run_control import Controls
+        state = self.get(owner, identity)
+        self.verified.discard(identity)
+        self.cancelled.discard(identity)
+        try:
+            if state['status'] in {'completed', 'stopped', 'failed', 'cancelled'}:
+                return
+            await self._run_outcome(state)
         except asyncio.CancelledError:
+            try:
+                requested = Controls(self.folder(identity)).snapshot().pending is not None
+            except Exception as exc:
+                control_errors.append(f'{type(exc).__name__}: {exc}')
+                requested = False
             self.interrupt_pending(state, "搜索已中断，尚未产生完整评价")
             state["usage"]["elapsed_seconds"] = max(
                 0, time.time() - (state["deadline"] - state["budget"]["max_seconds"])
             )
             state.update(
-                status="cancelled" if identity in self.cancelled else "interrupted",
+                status="cancelled" if requested else "interrupted",
+                selected_candidate_id=None,
                 stop_reason="cancelled_by_user"
-                if identity in self.cancelled
+                if requested
                 else "service_interrupted",
             )
+            if control_errors:
+                state.update(status='failed', stop_reason='integrity_failure',
+                             error='Cancellation control unavailable: ' + control_errors[0],
+                             selected_candidate_id=None)
+                for candidate in state['candidates']:
+                    if candidate['status'] == 'evaluated':
+                        candidate['status'] = 'invalidated'
             self.save(state)
+
+    async def _run_outcome(self, state):
+        try:
+            from .run_control import Controls
+            try:
+                pending = Controls(self.folder(state['id'])).snapshot().pending
+            except Exception as exc:
+                raise IntegrityFailure(f'Cancellation control unavailable: {exc}') from exc
+            if pending is not None:
+                raise asyncio.CancelledError()
+            await self._run(state)
         except BudgetStop as exc:
             await self.stop(state, "stopped", str(exc))
         except BudgetExceeded as exc:
@@ -1403,7 +1493,7 @@ class SearchService:
         from .reporting import render
 
         try:
-            await asyncio.to_thread(render, self.folder(state["id"]), state)
+            await _owned_thread(render, self.folder(state["id"]), state)
         except Exception as exc:
             state.update(
                 status="failed",

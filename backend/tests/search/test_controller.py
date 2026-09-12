@@ -326,6 +326,8 @@ async def test_resume_rebuilds_interrupted_registry_projection_but_rejects_chang
     completed = await run(service, state)
     assert completed["status"] == "stopped", completed.get("error")
     assert read(root / "registry.json") == completed["registry"]
+    completed["status"] = "interrupted"  # simulate resumption, not a terminal no-op
+    service.save(completed)
     broken = read(root / "registry.json")
     broken[0]["title"] = "different content"
     write(root / "registry.json", broken)

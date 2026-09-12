@@ -959,6 +959,7 @@ export const zh = {
   "Read-only record": "只读记录",
   "Processing…": "正在处理…",
   "Stop search": "停止搜索",
+  "Stopping search…": "正在停止搜索…",
   "Retry search": "重试搜索",
   "Progress and budget": "进度与预算",
   "Usage details": "用量明细",

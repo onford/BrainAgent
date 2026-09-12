@@ -336,6 +336,19 @@ describe('SearchesView', () => {
     expect(wrapper.get('h1').text()).toContain('已取消')
   })
 
+  it('keeps polling while another backend is stopping the search', async () => {
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ status: 'running' }))
+    const { wrapper } = await open('/searches?id=search-1')
+    apiRequest.mockResolvedValueOnce(state({ status: 'running', cancellation_requested: true }))
+    await button(wrapper, '停止搜索').trigger('click'); await flushPromises()
+    expect(button(wrapper, '正在停止搜索…').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('h1').text()).toContain('执行中')
+    apiRequest.mockResolvedValue(state({ status: 'cancelled', cancellation_requested: false }))
+    await vi.advanceTimersByTimeAsync(2000); await flushPromises()
+    expect(wrapper.get('h1').text()).toContain('已取消')
+    expect(wrapper.text()).not.toContain('正在停止搜索…')
+  })
+
   it('shows actual CV folds without presenting the empty top-level training list as no training', async () => {
     const latest = state({ panel: { evaluation_mode: 'group_cross_validation', train_subjects: [], development_subjects: ['S001', 'S002', 'S003'],
       folds: [

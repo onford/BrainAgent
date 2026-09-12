@@ -24,6 +24,8 @@ from .cognition import WorkflowCognition
 from .cognition_contracts import ResearchSources
 
 
+from app.owned_thread import _owned_thread
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -218,6 +220,17 @@ class WorkflowService:
         await asyncio.gather(*running, return_exceptions=True)
 
     def retry(self, owner, identity):
+        import portalocker
+        self.get(owner, identity)
+        try:
+            with portalocker.Lock(self.folder(identity) / 'workflow.lock', timeout=0):
+                state = self._retry_locked(owner, identity)
+        except portalocker.exceptions.LockException as exc:
+            raise ValueError('工作流仍由执行器处理，待停止后再重试') from exc
+        self.start(owner, identity)
+        return state
+
+    def _retry_locked(self, owner, identity):
         state = self.get(owner, identity)
         self.require_current(state)
         if state["status"] not in {"failed", "interrupted"}:
@@ -229,7 +242,6 @@ class WorkflowService:
                 searches.retry(owner, search["id"])
         state.update(status="queued", error=None)
         self.save(state)
-        self.start(owner, identity)
         return state
 
     def event(self, state, stage, status, message):
@@ -238,6 +250,19 @@ class WorkflowService:
         )
 
     async def run(self, owner, identity):
+        import portalocker
+        self.get(owner, identity)
+        lock = portalocker.Lock(self.folder(identity) / 'workflow.lock', timeout=0)
+        try:
+            lock.acquire()
+        except portalocker.exceptions.LockException:
+            return self.get(owner, identity)
+        try:
+            return await self._run_locked(owner, identity)
+        finally:
+            lock.release()
+
+    async def _run_locked(self, owner, identity):
         state = self.get(owner, identity)
         if state["status"] == "completed":
             return state
@@ -348,9 +373,9 @@ class WorkflowService:
                 value = validate_stage(
                     name, json.loads(checkpoint.read_text(encoding="utf-8"))
                 )
-                await asyncio.to_thread(dataset.check_sources, value)
+                await _owned_thread(dataset.check_sources, value)
             else:
-                value = await asyncio.to_thread(
+                value = await _owned_thread(
                     dataset.inspect, root, request, folder / "survey"
                 )
                 # Persist the measured input before remote research can fail.
@@ -384,13 +409,13 @@ class WorkflowService:
             ]
             from .survey_reporting import render_survey_reports
 
-            await asyncio.to_thread(render_survey_reports, folder / "survey", value)
+            await _owned_thread(render_survey_reports, folder / "survey", value)
         elif name == "data_collection":
             review = await cognition.collection_review(state["outputs"]["data_survey"])
             from threading import Event
             stopped = Event()
             try:
-                value = await asyncio.to_thread(
+                value = await _owned_thread(
                     dataset.collect,
                     state["outputs"]["data_survey"],
                     folder / "collection",
@@ -398,6 +423,7 @@ class WorkflowService:
                     self.preprocessing,
                     owner,
                     cancelled=stopped.is_set,
+                    on_cancel=stopped.set,
                 )
             finally:
                 stopped.set()
@@ -411,7 +437,7 @@ class WorkflowService:
             plan = store.get(
                 execution_owner, Ref.model_validate(prep["plan_ref"]), "plan"
             )
-            value = await asyncio.to_thread(outputs.choose, search, plan, store)
+            value = await _owned_thread(outputs.choose, search, plan, store)
         elif name == "data_report":
             from app.llm.budget import BudgetExceeded
             try:
@@ -420,13 +446,13 @@ class WorkflowService:
                 # The report's measured tables and claim limits are deterministic.
                 # Exhausting narrative budget does not invalidate saved evidence.
                 cognition.progress('模型预算已用尽；报告使用已核验测量与固定结论，不生成额外叙述')
-            value = await asyncio.to_thread(
+            value = await _owned_thread(
                 outputs.report, state, folder / "report", self.preprocessing.store
             )
         elif name == "data_delivery":
             store, execution_owner = self.execution_store(state)
             delivery_state = {**state, "owner": execution_owner}
-            value = await asyncio.to_thread(
+            value = await _owned_thread(
                 outputs.deliver, delivery_state, folder / "delivery", store
             )
         else:

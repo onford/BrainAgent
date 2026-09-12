@@ -20,6 +20,7 @@ def search_engine_hash():
         if p.is_file() and p.suffix in {".py", ".json"}
     }
     hashes["../file_publish.py"] = file_hash(root.parent / "file_publish.py")
+    hashes["../owned_thread.py"] = file_hash(root.parent / "owned_thread.py")
     return digest(hashes)
 
 

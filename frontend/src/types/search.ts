@@ -232,6 +232,7 @@ export interface SearchPanel {
 }
 
 export interface SearchState extends SearchSummary {
+  cancellation_requested?: boolean
   candidate_contrasts_to_reference?: Record<string, { removed_operations: string[]; added_operations: string[]; parameter_changes: { operation: string; parameter: string; before: unknown; after: unknown }[]; shared_operation_order_changed: boolean; scope_changes: string[]; interpretation: string }>
   literature_participation?: { status: string; statement: string; evaluated_candidate_ids: string[]; distinct_from_controls_evaluated_ids: string[] }
   diagnostics?: Record<string, any>[]
