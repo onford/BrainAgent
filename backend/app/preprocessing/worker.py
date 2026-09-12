@@ -143,8 +143,10 @@ class Worker:
                     logger.exception(
                         "preprocessing_record_failed job=%s record=%s", job_id, key
                     )
+                    from .step_review import failure_artifacts
                     self.store.record_finish(
-                        job_id, key, "failed", error=f"{type(exc).__name__}: {exc}"
+                        job_id, key, "failed", error=f"{type(exc).__name__}: {exc}",
+                        result=failure_artifacts(output,self.store.root)
                     )
                 finally:
                     # Failed attempts are not rerun in this pass. Their files
@@ -228,7 +230,12 @@ class Worker:
                         self.store.record_finish(job_id, key, "completed", result=value["result"])
                         verified.add(key)
                     else:
-                        self.store.record_finish(job_id, key, value["status"], error=value.get("error"))
+                        stopped=value.get('result')
+                        if stopped:
+                            from .storage import within,file_hash
+                            if any(file_hash(within(self.store.root,a['path']))!=a['sha256'] for a in stopped['artifacts']):
+                                raise ParallelExecutionError('stopped record process returned changed artifacts')
+                        self.store.record_finish(job_id, key, value["status"], result=stopped,error=value.get("error"))
             pool.close()
         except BaseException:
             pool.abort()

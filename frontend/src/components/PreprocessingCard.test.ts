@@ -8,6 +8,21 @@ const request = vi.mocked(apiRequest)
 afterEach(() => { vi.useRealTimers(); vi.clearAllMocks() })
 
 describe('PreprocessingCard', () => {
+  it('loads anchored step review without confirming or submitting a replacement', async () => {
+    request.mockResolvedValueOnce({ job_id: 'job', status: 'failed', completed: 0, total: 1, records: [] })
+      .mockResolvedValueOnce({ checkpoints: [{ record_key: 'r', record_id: 'sub-01', step_id: 'filter', checkpoint_sha256: 'a'.repeat(64), review_status: 'pause_required',
+        observations: { rms: null, event_retention: 1 }, observation_units: { rms: 'V', event_retention: 'ratio_to_input_packet' },
+        postconditions: [{ policy: { id: 'amplitude', rationale: '工程预测' }, result: 'violated' }] }] })
+    const wrapper = mount(PreprocessingCard, { props: { output: { job_id: 'job' } } })
+    await flushPromises()
+    await wrapper.findAll('button').find(b => b.text() === '查看步骤复核')!.trigger('click')
+    await flushPromises()
+    expect(request).toHaveBeenLastCalledWith('/api/preprocessing/jobs/job/step-reviews')
+    expect(wrapper.text()).toContain('均方根幅度：不可用 V')
+    expect(wrapper.text()).toContain('旧决定和失败记录保留')
+    expect(request.mock.calls.every(c => !c[1]?.method)).toBe(true)
+    wrapper.unmount()
+  })
   it('requires a reason and confirms exactly the observed record and hashes', async () => {
     const pending = { record_key: 'r1', record_id: 'sub-01', step_id: 'mark', input_sha256: 'a'.repeat(64), model_sha256: null, parameters: { bads: ['C3'] }, reason: 'review' }
     request.mockResolvedValueOnce({ job_id: 'job', status: 'waiting_decision', completed: 0, total: 1, records: [] }).mockResolvedValueOnce([pending]).mockResolvedValueOnce({ plan_ref: { id: 'new', sha256: 'new' }, plan: { records: [{}], screening: [] } }).mockResolvedValueOnce(null)

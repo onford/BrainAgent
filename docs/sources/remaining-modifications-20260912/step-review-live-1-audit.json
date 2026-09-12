@@ -1,0 +1,142 @@
+{
+  "status": "completed",
+  "parent_job_id": "a537b0cfa9f7439dbdd13eb32e71043a",
+  "parent_status": "waiting_decision",
+  "parent_record_statuses": {
+    "S004R08": "waiting_decision",
+    "S002R12": "waiting_decision",
+    "S004R04": "waiting_decision",
+    "S002R08": "waiting_decision",
+    "S003R12": "waiting_decision",
+    "S001R04": "waiting_decision",
+    "S004R12": "waiting_decision",
+    "S002R04": "waiting_decision",
+    "S003R04": "waiting_decision",
+    "S001R08": "waiting_decision",
+    "S001R12": "waiting_decision",
+    "S003R08": "waiting_decision"
+  },
+  "checkpoints": 12,
+  "paused_checkpoints": 12,
+  "child_job_id": "2c370a7f0d754025b6b4f46842c2dc5a",
+  "child_status": "completed",
+  "child_record_count": 12,
+  "shared_method_count": 1,
+  "parent_state_unchanged": true,
+  "parent_files_unchanged": true,
+  "input_files_unchanged": true,
+  "code_unchanged": true,
+  "code_sha256": "6f421c1bad56fd3039f89d48e73128bcf83ea76dd7d6558be7cca3d974a46419",
+  "elapsed_seconds": 53.828000000008615,
+  "numeric_checks": [
+    {
+      "record_id": "S002R04",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S001R12",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S003R12",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S002R08",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S003R08",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S004R08",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S001R04",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S004R12",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S002R12",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S004R04",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S003R04",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    },
+    {
+      "record_id": "S001R08",
+      "status": "completed",
+      "shape": [
+        64,
+        9601
+      ],
+      "direct_original_crop_max_error_V": 0.0
+    }
+  ],
+  "scope": "Engineering recovery on real data only; full shared reexecution, no cached fit reuse, no scientific benefit or final-workflow acceptance."
+}

@@ -8,7 +8,7 @@ from app.runtime.result import AgentResult, Artifact
 
 class DataPreprocessingAgent(BaseAgent):
     name = "data_preprocessing"
-    description = "Plans or submits real EEG preprocessing using upstream references; reports durable job status."
+    description = "Plans/submits shared EEG preprocessing, reports durable status, reviews immutable step checkpoints and compiles explicit shared engineering shadow plans."
 
     def __init__(self, service=None, workflow=None):
         self.service = service
@@ -81,6 +81,18 @@ class DataPreprocessingAgent(BaseAgent):
                     "execution_status": result.status,
                     "status_url": f"/api/preprocessing/jobs/{result.job_id}",
                 }
+            elif action == 'step_reviews':
+                from app.preprocessing.step_review import reviews
+                result=await asyncio.to_thread(reviews,self.service,owner,inputs['job_id'])
+                output={**result,'job_id':inputs['job_id'],'execution_status':'reviewed'}
+            elif action == 'shadow_plan':
+                from app.preprocessing.step_review import ShadowRequest,shadow_plan
+                result=await asyncio.to_thread(shadow_plan,self.service,owner,inputs['job_id'],
+                    ShadowRequest.model_validate(inputs['request']))
+                output={'execution_status':'planned','plan_ref':result['plan_ref'].model_dump(),
+                    'review_ref':result['review_ref'].model_dump(),'parent_job_id':inputs['job_id'],
+                    'screening':[s.model_dump(mode='json') for s in result['plan'].screening],
+                    'record_count':len(result['plan'].records),'recovery':result['recovery']}
             elif action == "literature":
                 bundle = SurveyLiteratureBundle.model_validate(
                     self.service.store.get(
@@ -96,7 +108,7 @@ class DataPreprocessingAgent(BaseAgent):
                     "supplement_requests": result["supplement_requests"],
                 }
             else:
-                raise ValueError("action must be plan, submit, status or literature")
+                raise ValueError("action must be plan, submit, status, literature, step_reviews or shadow_plan")
             return AgentResult(
                 agent_name=self.name,
                 success=True,

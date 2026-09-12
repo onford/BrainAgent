@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Literal
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator, model_serializer
 
 
 class Contract(BaseModel):
@@ -164,6 +164,21 @@ class DecisionPolicy(Contract):
     model_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
 
 
+class Postcondition(Contract):
+    id: str = Field(pattern=r'^[a-z][a-z0-9_]*$')
+    metric: Literal['finite_fraction', 'maximum_abs', 'rms', 'event_retention', 'channel_retention']
+    comparison: Literal['ge', 'le']
+    threshold: float
+    rationale: str = Field(min_length=1, max_length=2000)
+    on_failure: Literal['observe', 'pause'] = 'pause'
+
+    @model_validator(mode='after')
+    def physical_threshold(self):
+        if self.threshold < 0 or (self.metric in ('finite_fraction','event_retention') and self.threshold > 1):
+            raise ValueError('postcondition threshold is outside its physical metric domain')
+        return self
+
+
 class Step(Contract):
     id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     unit_id: str
@@ -187,14 +202,25 @@ class Step(Contract):
     input_channels: list[str] | Literal['$eeg_channels','$all_channels'] | None = Field(default=None,min_length=1)
     record_decisions: dict[str,DecisionPolicy] = Field(default_factory=dict)
     decision_target: Literal['input','output'] = 'input'
+    postconditions: list[Postcondition] = Field(default_factory=list, max_length=16)
+
+    @model_serializer(mode='wrap')
+    def serialize_existing_contract(self, handler):
+        value = handler(self)
+        # An absent opt-in policy must not rewrite legacy plan hashes.
+        if not self.postconditions:
+            value.pop('postconditions', None)
+        return value
 
     @model_validator(mode="after")
     def versioned_ports(self):
         if self.implementation_version == "1" and (
             self.profile != "source" or self.artifact_inputs or self.parameter_inputs or self.asset_inputs or self.decision is not None or self.decision_target!='input'
-            or self.adaptation_scope != "none" or self.input_representation != "native" or self.input_channels is not None or self.record_decisions
+            or self.adaptation_scope != "none" or self.input_representation != "native" or self.input_channels is not None or self.record_decisions or self.postconditions
         ):
             raise ValueError("extended ports and profiles require implementation_version=2")
+        if len({p.id for p in self.postconditions}) != len(self.postconditions):
+            raise ValueError('postcondition ids must be unique')
         return self
 
 

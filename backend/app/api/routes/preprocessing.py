@@ -18,6 +18,8 @@ from app.runtime.context import AgentContext
 
 router = APIRouter(prefix="/preprocessing", tags=["preprocessing"])
 
+from app.preprocessing.step_review import ShadowRequest
+
 
 def service(request: Request) -> PreprocessingService:
     return request.app.state.preprocessing
@@ -50,6 +52,18 @@ class EvidenceUpload(Contract):
 
 class ResearchRequest(Contract):
     query: str = Field(min_length=1, max_length=2000)
+
+
+@router.get('/jobs/{job_id}/step-reviews')
+def step_reviews(job_id:str,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.step_review import reviews
+    return checked(reviews,svc,user.owner_id,job_id)
+
+
+@router.post('/jobs/{job_id}/shadow-plans',status_code=201)
+def create_shadow_plan(job_id:str,body:ShadowRequest,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.step_review import shadow_plan
+    return checked(shadow_plan,svc,user.owner_id,job_id,body)
 
 
 @router.get("/units")

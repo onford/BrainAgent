@@ -327,7 +327,7 @@ class Storage:
             (
                 r
                 for r in result.records
-                if r["key"] == key and r["status"] in ("completed", "waiting_decision")
+                if r["key"] == key and r["status"] in ("completed", "waiting_decision", "failed", "cancelled", "interrupted") and r.get('result')
             ),
             None,
         )

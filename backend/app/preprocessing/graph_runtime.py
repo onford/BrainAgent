@@ -110,6 +110,7 @@ def transition(packet,y,artifacts,spec,params,node_id=None):
 class GraphExecutor:
     def __init__(self,record,steps,packet,directory,cancelled=lambda:False,assets=None,_partition_scope=None):
         self.record=record;self.steps={s.id:s for s in steps};self.root_packet=packet
+        self.root_identity=identity(packet)
         self.directory=Path(directory);self.cancelled=cancelled
         self.assets=assets or {}
         self.partition_scope = deepcopy(_partition_scope)
@@ -304,6 +305,12 @@ class GraphExecutor:
             event_indices=out.event_indices.tolist(),trial_ids=out.trial_ids,
             channel_mapping={n:(getattr(y,'ch_names',[]).index(n) if n in getattr(y,'ch_names',[]) else None) for n in getattr(packet.data,'ch_names',[])})
         self.logs.append(log);write_json(directory/'execution.json',log)
+        from .step_review import checkpoint
+        ref,pause=checkpoint(self,step,original,out,saved,log)
+        log['checkpoint']=ref
+        write_json(directory/'execution.json',log)
+        if pause:
+            raise PendingDecision('postcondition review paused the graph; create an explicit shared shadow plan')
         return out
 
 

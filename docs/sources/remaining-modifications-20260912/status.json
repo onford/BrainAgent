@@ -445,7 +445,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "运行中复核与局部回退",
-      "current": "已有失败、条件 ASR、人工待决定及重试；缺每步观测→复核规则→影子分支→受约束回退的通用闭环。",
+      "current": "v2每步不可变检查点、5类工程条件与先保存后暂停已实现；API/agent支持绑定原检查点、保留条件与全部原始记录的共享局部替代计划，当前知识和全图适用性重编译，旧状态/产物不变。88项后端及12真实记录恢复验收通过。恢复采用从原数据完整重执行，不移植中间拟合状态。",
       "solution_and_acceptance": "保存步骤后条件和不可变检查点，显式重编译局部替代分支；原失败和决定不改写，回退本身也须验证适用性。",
       "dependencies": [
         "I19",
@@ -460,7 +460,8 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "implemented_targeted_validation_passed",
+      "implementation": "docs/step-review-and-shadow.md"
     },
     {
       "id": "I23",
@@ -1639,7 +1640,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十二批C3/C4配对ERDS及基线/留一敏感性完成专项和真实只读复核，继续I22运行复核与局部替代分支。",
+  "active_step": "第二十三批I22步骤检查点/工程条件复核/共享影子计划完成专项与12记录真实恢复验证。继续I25独立验证缺口及I40/I41数据事实和标准检查。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1903,9 +1904,15 @@
     },
     "sensor_lateralization": {
       "backend": "74 passed, 24.06 s",
-      "frontend": "160 passed; 7 component retest after template type fix; build passed",
+      "frontend": "160 passed; 6 component retest after template type fix; build passed",
       "real": "4 subjects, 12 records, 180 trials; 3844298 bytes per diagnostic; originals unchanged",
       "audit": "docs/sources/remaining-modifications-20260912/lateralization-live-1-audit.json"
+    },
+    "step_review": {
+      "backend": "88 passed, 2 warnings, 114.44 s",
+      "frontend": "161 passed; build passed",
+      "real": "12 initial pauses; 12 shared replacement completions; direct crop maximum error 0 V; originals unchanged; 53.828 s",
+      "audit": "docs/sources/remaining-modifications-20260912/step-review-live-1-audit.json"
     }
   }
 }

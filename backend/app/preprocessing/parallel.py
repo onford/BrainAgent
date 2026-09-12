@@ -108,10 +108,14 @@ def execute_record(index, output):
             validate_record_files(_ROOT, record)
             envelope.update(status="completed", result=result)
         except BaseException as exc:
+            from .graph_runtime import PendingDecision
             envelope.update(status="resource_error" if isinstance(exc, ResourceError) else (
-                "cancelled" if isinstance(exc, Cancelled) else "failed"),
+                "cancelled" if isinstance(exc, Cancelled) else 'waiting_decision' if isinstance(exc,PendingDecision) else "failed"),
                 error=f"{type(exc).__name__}: {exc}", failure_code=getattr(exc, "code", type(exc).__name__),
                 failure_details=getattr(exc, "details", {}), traceback=traceback.format_exc())
+            if output.exists():
+                from .step_review import failure_artifacts
+                envelope['result']=failure_artifacts(output,_STORAGE)
             print(envelope["traceback"], file=stream)
     execution = {"pid": os.getpid(), "parent_pid": os.getppid(), "start_method": "spawn",
                  "plan_initialization": "once_per_process", "record_index": index,

@@ -15,6 +15,10 @@ type Pending = { record_key: string; record_id: string; step_id: string; input_s
 const pending = ref<Pending[]>([])
 const reviewReasons = ref<Record<string, string>>({})
 const confirmedPlan = ref<{ plan_ref: Reference; plan: { records: unknown[]; screening: any[] } } | null>(null)
+type Checkpoint = { record_key: string; record_id: string; step_id: string; checkpoint_sha256: string; review_status: string; observations: Record<string, number | null>; observation_units: Record<string, string>; postconditions: any[] }
+const checkpoints = ref<Checkpoint[]>([])
+const reviewLoaded = ref(false)
+const stepName = (name: string) => ({ finite_fraction: '有限样本占比', maximum_abs: '最大绝对值', rms: '均方根幅度', event_retention: '事件保留比例', channel_retention: '通道保留比例' }[name] ?? name)
 let timer: ReturnType<typeof setTimeout> | undefined
 let disposed = false
 const labels: Record<string, string> = { get queued() { return t('Queued') }, get running() { return t('Processing') }, get completed() { return t('Processing complete') }, get partial() { return t('Partially complete') }, get failed() { return t('Processing failed') }, get interrupted() { return t('Awaiting recovery') }, get cancelled() { return t('Cancelled') }, get planned() { return t('Plan ready') }, get needs_input() { return t('Additional input needed') } }
@@ -67,6 +71,15 @@ async function confirmDecision(item: Pending) {
   } catch (e) { error.value = String(e) } finally { busy.value = false }
 }
 
+async function loadStepReviews() {
+  if (!job.value || busy.value) return
+  busy.value = true; error.value = ''
+  try {
+    const result = await apiRequest<{ checkpoints: Checkpoint[] }>(`/api/preprocessing/jobs/${job.value.job_id}/step-reviews`)
+    if (!disposed) { checkpoints.value = result.checkpoints; reviewLoaded.value = true }
+  } catch (e) { if (!disposed) error.value = String(e) } finally { busy.value = false }
+}
+
 onMounted(async () => {
   if (props.output.job_id) await refresh(props.output.job_id)
   else if (planUrl.value) {
@@ -86,7 +99,16 @@ onBeforeUnmount(() => { disposed = true; if (timer) clearTimeout(timer) })
     <p v-else-if="output.record_count !== undefined">{{ t('The plan contains {0} method–record combinations.', { 0: output.record_count }) }}</p>
     <p v-if="output.missing_fields?.length">{{ t('Required: {0}', { 0: output.missing_fields.join('、') }) }}</p>
     <p v-if="output.blocking_reason">{{ output.blocking_reason }}</p>
-    <p v-if="status === 'waiting_decision'">流程等待人工决定。请核对该记录的诊断、候选参数与数据和模型哈希，填写理由后生成新计划。</p>
+    <p v-if="status === 'waiting_decision'">流程已暂停。若是人工诊断决定，请核对下方参数与理由；若步骤后条件未满足，请查看步骤复核，由 agent 提出保留原条件、覆盖全部原始记录的新共享计划。</p>
+    <div v-if="reviewLoaded">
+      <p v-if="!checkpoints.length">此运行没有可核验的步骤检查点。</p>
+      <p v-else>步骤后条件用于工程复核，不证明神经信息保留。替代分支须重新编译并从原始输入运行；旧决定和失败记录保留。</p>
+      <details v-for="item in checkpoints" :key="item.record_key + item.step_id"><summary>{{ item.record_id }} · {{ item.step_id }} · {{ item.review_status === 'pause_required' ? '条件需要复核' : '已记录观测' }}</summary>
+        <p v-for="(value, name) in item.observations" :key="name">{{ stepName(String(name)) }}：{{ value === null ? '不可用' : value }} {{ item.observation_units[name] }}</p>
+        <p v-for="p in item.postconditions" :key="p.policy.id">{{ p.policy.id }} · {{ p.result }} · {{ p.policy.rationale }}</p>
+        <p>检查点 {{ item.checkpoint_sha256 }}</p>
+      </details>
+    </div>
     <details v-for="item in pending" :key="item.record_key + item.step_id"><summary>{{ item.record_id }} · {{ item.step_id }} · 等待决定</summary><pre>{{ item }}</pre><label>决定理由 <input v-model="reviewReasons[item.record_key]" :aria-label="item.record_id + ' 决定理由'"></label><button :disabled="busy || !reviewReasons[item.record_key]?.trim()" @click="confirmDecision(item)">确认所列决定并生成新计划</button></details>
     <PreprocessingCard v-if="confirmedPlan" :key="confirmedPlan.plan_ref.id" :output="{ plan_ref: confirmedPlan.plan_ref, record_count: confirmedPlan.plan.records.length, screening: confirmedPlan.plan.screening }" />
     <details v-if="output.screening?.length"><summary>{{ t('Method screening') }}</summary><ul><li v-for="(item, index) in output.screening" :key="index">{{ item.status }}：{{ item.reasons.join('；') }}</li></ul></details>
@@ -95,13 +117,14 @@ onBeforeUnmount(() => { disposed = true; if (timer) clearTimeout(timer) })
       <button v-if="!job && output.plan_ref && output.record_count" :disabled="busy" @click="act('submit')">{{ t('Run plan') }}</button>
       <button v-if="job && (active || status === 'waiting_decision')" :disabled="busy || job.cancel_requested" @click="act('cancel')">{{ t('Cancel processing') }}</button>
       <button v-if="job && ['partial', 'failed', 'cancelled'].includes(status)" :disabled="busy" @click="act('retry')">{{ t('Retry incomplete records') }}</button>
+      <button v-if="job && !active" :disabled="busy" @click="loadStepReviews">查看步骤复核</button>
       <button v-if="error && (job?.job_id || output.job_id)" @click="refresh(job?.job_id || output.job_id!)">{{ t('Refresh progress') }}</button>
     </div>
     <details v-if="job?.records.length"><summary>{{ t('Records and artifacts') }}</summary>
       <ul><li v-for="record in job.records" :key="record.key">
         <span>{{ t('{0} · Method {1} · {2} · Attempt {3}', { 0: record.record_id, 1: record.method_id.slice(0, 8), 2: labels[record.status] ?? record.status, 3: record.attempt }) }}</span>
         <p v-if="record.error">{{ record.error }}</p>
-        <details v-if="['completed', 'waiting_decision'].includes(record.status) && record.result"><summary>{{ t('Download artifacts') }}</summary><ul><li v-for="artifact in record.result.artifacts" :key="artifact.name"><a :href="artifactUrl(record, artifact)" download>{{ artifact.name }}</a></li></ul></details>
+        <details v-if="['completed', 'waiting_decision', 'failed', 'cancelled', 'interrupted'].includes(record.status) && record.result"><summary>{{ t('Download artifacts') }}</summary><ul><li v-for="artifact in record.result.artifacts" :key="artifact.name"><a :href="artifactUrl(record, artifact)" download>{{ artifact.name }}</a></li></ul></details>
       </li></ul>
     </details>
     <p v-if="error" role="alert">{{ error }}</p>
