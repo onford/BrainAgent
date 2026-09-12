@@ -6,6 +6,7 @@ saved-survey replay, injected candidates or evaluator parameter changes.
 
 import argparse
 import asyncio
+import re
 import shutil
 from pathlib import Path
 
@@ -22,27 +23,61 @@ def hashes(paths, root):
     return {p.relative_to(root).as_posix(): file_hash(p) for p in sorted(paths) if p.is_file()}
 
 
+def code_hashes(root):
+    return hashes([p for p in root.rglob("*") if "__pycache__" not in p.parts], root)
+
+
+def source_scope(source, output, subjects):
+    """Freeze the actual local scope before creating any acceptance artifacts."""
+    source = source.resolve(strict=True)
+    output = output.resolve()
+    if output.is_relative_to(source) or source.is_relative_to(output):
+        raise ValueError("Source and acceptance output trees must be disjoint")
+    available = sorted(p.name for p in source.iterdir()
+                       if p.is_dir() and re.fullmatch(r"S[0-9]{3}", p.name))
+    if not subjects or len(subjects) != len(set(subjects)) or set(subjects) - set(available):
+        raise ValueError("Declare unique, existing EEGMMIDB participant directories")
+    selected = sorted(subjects)
+    # Include dataset-level metadata even for a declared panel. Re-enumeration
+    # after the run detects added/deleted files, not only changes to known paths.
+    paths = [p for p in source.iterdir() if p.is_file()]
+    selected_paths = [p for subject in selected for p in (source / subject).rglob("*") if p.is_file()]
+    if not selected_paths:
+        raise ValueError("No declared source files")
+    paths += selected_paths
+    if any(not p.resolve().is_relative_to(source) for p in paths):
+        raise ValueError("Source file resolves outside the declared dataset")
+    complete = selected == [f"S{i:03d}" for i in range(1, 110)] and selected == available
+    scope = {"selected_participants": selected, "available_participants": available,
+             "full_eegmmidb_participant_scope": complete,
+             "covers_all_local_participant_directories": selected == available,
+             "scope_limitation": (
+                 "Full EEGMMIDB participant scope (109); MI task selection and frozen grouped development folds remain explicit. This is not independent validation."
+                 if complete else
+                 "Declared local participant panel; not verified as the full EEGMMIDB dataset or independent validation.")}
+    return hashes(paths, source), scope
+
+
 async def main(args):
     root, source = Path(args.output).resolve(), Path(args.source).resolve()
     if root.exists():
         raise ValueError("Acceptance output must be a new directory; historical evidence is immutable")
-    root.mkdir(parents=True)
+    before, scope = source_scope(source, root, args.subjects)
     original = Settings(_env_file=args.config) if args.config else Settings()
     if args.database_url:
         original = original.model_copy(update={"database_url_override": args.database_url})
     if not original.llm_api_key:
         raise ValueError("Configured model credentials are required")
+    root.mkdir(parents=True)
     settings = original.model_copy(update={"workflow_root": str(root / "workflows"),
         "preprocessing_root": str(root / "methods"), "log_dir": root / "logs", "db_create_tables": False})
-    source_paths = [p for subject in args.subjects for p in (source / subject).rglob("*") if p.is_file()]
-    if not source_paths:
-        raise ValueError("No declared source files")
-    before = hashes(source_paths, source)
     code = Path(__file__).resolve().parents[1] / "app"
-    code_before = hashes([p for p in code.rglob("*") if p.suffix in {".py", ".json"}], code)
+    code_before = code_hashes(code)
+    driver_before = file_hash(Path(__file__))
     request = {"source_root": str(source), "subjects": args.subjects,
-        "search_budget": {"max_candidates": args.candidates, "max_seconds": args.seconds},
-        "method_research_budget": {"max_recovery_actions": 6, "max_seconds": 900}}
+        "search_budget": {"max_candidates": args.candidates, "max_seconds": args.seconds,
+                          "max_memory_mb": args.memory_mb, "max_disk_mb": args.disk_mb},
+        "method_research_budget": {"max_recovery_actions": 6, "max_seconds": args.method_research_seconds}}
     recovery = None
     if args.resume_checkpoint:
         checkpoint = Path(args.resume_checkpoint).resolve()
@@ -61,7 +96,7 @@ async def main(args):
         "database_configuration": args.database_url or "Settings default", "config_file": args.config,
         "recovery": recovery,
         "dependency_overrides": [], "numerical_overrides": [], "retrieval": "fresh live provider tools and SourceReader",
-        "scope_limitation": "Declared subject subset is an integration acceptance panel, not full dataset or independent validation.",
+        **scope, "driver_sha256": driver_before,
         "source_hashes": before, "code_hashes": code_before, "code_digest": digest(code_before)})
     app = create_app(settings)
     result = {"status": "failed", "acceptance_passed": False}
@@ -105,16 +140,27 @@ async def main(args):
             result["http_error_detail"] = exc.response.text[:8000]
         print("FAILED", type(exc).__name__, str(exc), flush=True)
     finally:
-        result["original_data_unchanged"] = hashes(source_paths, source) == before
-        after = hashes([p for p in code.rglob("*") if p.suffix in {".py", ".json"}], code)
-        result["code_unchanged_during_run"] = after == code_before
-        result["code_digest_after"] = digest(after)
+        try:
+            source_after, scope_after = source_scope(source, root, args.subjects)
+            result["original_data_unchanged"] = source_after == before and scope_after == scope
+        except Exception as exc:
+            result["original_data_unchanged"] = False
+            result["source_verification_error"] = f"{type(exc).__name__}: {exc}"
+        try:
+            after = code_hashes(code)
+            result["code_unchanged_during_run"] = after == code_before
+            result["driver_unchanged_during_run"] = file_hash(Path(__file__)) == driver_before
+            result["code_digest_after"] = digest(after)
+        except Exception as exc:
+            result["code_unchanged_during_run"] = False
+            result["driver_unchanged_during_run"] = False
+            result["code_verification_error"] = f"{type(exc).__name__}: {exc}"
         if recovery:
             checkpoint = Path(recovery["checkpoint"])
             result["upstream_checkpoint_unchanged"] = hashes(checkpoint.rglob("*"), checkpoint) == recovery["hashes"]
         write(root / "result.json", result)
         print("RESULT", result["status"], "mechanical_gate", result.get("mechanical_gate_passed", False), flush=True)
-    return 0 if result.get("mechanical_gate_passed") and result["original_data_unchanged"] and result["code_unchanged_during_run"] else 1
+    return 0 if result.get("mechanical_gate_passed") and result["original_data_unchanged"] and result["code_unchanged_during_run"] and result["driver_unchanged_during_run"] else 1
 
 
 if __name__ == "__main__":
@@ -124,6 +170,9 @@ if __name__ == "__main__":
     parser.add_argument("--subjects", nargs="+", required=True)
     parser.add_argument("--candidates", type=int, default=6)
     parser.add_argument("--seconds", type=float, default=3600)
+    parser.add_argument("--memory-mb", type=int, default=16384)
+    parser.add_argument("--disk-mb", type=int, default=65536)
+    parser.add_argument("--method-research-seconds", type=float, default=900)
     parser.add_argument("--config", help="Original project .env file, never copied into evidence")
     parser.add_argument("--database-url", help="Explicit runtime database URL; use the actual service configuration")
     parser.add_argument("--resume-checkpoint", help="Restore an immutable failed upstream checkpoint into this NEW output root, then call the formal retry API")
