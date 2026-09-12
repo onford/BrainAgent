@@ -103,11 +103,25 @@ def shared_window_variant(method, data, output):
                 from app.preprocessing.schemas import EvaluationWindow
                 variant=method.model_copy(deep=True)
                 variant.evaluation_window=EvaluationWindow(**requested)
+                if (epoch.id == method.output and epoch.unit_id == 'EEG-EPOCH' and epoch.op == 'epoch'
+                    and not epoch.parameter_inputs and not epoch.artifact_inputs and not epoch.asset_inputs):
+                    score = epoch.model_copy(deep=True)
+                    score.id = 'scoring_epoch_' + digest([method.output, requested])[:12]
+                    if score.id in by_id:
+                        raise ValueError('scoring epoch node collision')
+                    for key, value in requested.items():
+                        score.params[key] = value
+                        score.parameter_sources[key] = ParameterSource(origin='target_binding', evidence_indices=[],
+                            rationale='Frozen scoring window on the same processed continuous signal; original epoch is retained.')
+                    variant.recipe.append(score)
+                    variant.output = score.id
+                    variant.evaluation_window = EvaluationWindow(**requested,
+                        policy='parallel-final-epoch-scoring-v1', source_output=method.output)
                 variant.title+=' · 保留源上下文的评分窗口'
                 variant.lineage.update(fidelity='engineering_adaptation',branch_id=method.lineage.get('branch_id',method.id)+'-scoring-window',
-                    original_method_hash=digest(method.model_dump(mode='json')),adaptation={'policy':'postprocessing-scoring-projection-v1',
+                    original_method_hash=digest(method.model_dump(mode='json')),adaptation={'policy':variant.evaluation_window.policy,
                     'original':original,'replacement':requested,'preserved':'all source operations, fit scopes, screening and baseline windows'})
-                variant.adaptations.append('源窗口与全部基线/拟合依赖原样执行，完成后另存评分投影；不改写论文方法。')
+                variant.adaptations.append('源窗口与全部基线/拟合依赖原样执行，另存工程评分输出；并行末端分段只允许恢复因记录边界缺少上下文的事件，禁止绕过坏段或其他筛除。')
                 return variant
     if not method.recipe or method.recipe[-1].op != "epoch" or method.output != method.recipe[-1].id:
         return None

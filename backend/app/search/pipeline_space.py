@@ -95,6 +95,8 @@ def validate_recipe(recipe, space, context=None):
         stage = stages[recipe.output]
     if any(node_id not in seen for node_id in recipe.output_roles.values()):
         raise ValueError('output role references a missing node')
+    if recipe.evaluation_window and recipe.evaluation_window.source_output and recipe.evaluation_window.source_output not in seen:
+        raise ValueError('scoring projection references a missing source output')
     if stage != "epochs":
         raise ValueError("pipeline must produce epochs on the shared output grid")
     for spec in space.operators:
@@ -144,7 +146,10 @@ def recipe_hash(recipe, space=None):
                 previous = names[n.id]
         payload = {"identity": space.semantic_identity, "operations": operations}
         if recipe.output is not None: payload['output'] = names[recipe.output]
-        if recipe.evaluation_window: payload['evaluation_window'] = recipe.evaluation_window.model_dump()
+        if recipe.evaluation_window:
+            payload['evaluation_window'] = recipe.evaluation_window.model_dump()
+            if recipe.evaluation_window.source_output:
+                payload['evaluation_window']['source_output'] = names[recipe.evaluation_window.source_output]
         if recipe.output_roles: payload['output_roles'] = {k:names[v] for k,v in recipe.output_roles.items()}
         return digest(payload)
     return digest(
@@ -195,6 +200,8 @@ def apply_edits(recipe, edits, space, context=None, donors=None):
                 raise ValueError("cannot remove a required source step")
             if edit.node_id in value.get('output_roles', {}).values():
                 raise ValueError('cannot remove a named source output')
+            if edit.node_id == (value.get('evaluation_window') or {}).get('source_output'):
+                raise ValueError('cannot remove the scoring projection source output')
             if value.get('output') == edit.node_id:
                 index = locate(edit.node_id)
                 previous = node.get('input_from') or (value['nodes'][index - 1]['id'] if index else 'raw')

@@ -296,15 +296,11 @@ def run_graph_record(plan,config,source_root,output,storage_root,cancelled):
             role_codec=Codec(output/'outputs'/role)
             write_json(output/'outputs'/role/'data.json',role_codec.verified_dump(executor.nodes[node]['packet'].data))
         if config.evaluation_window:
-            if not isinstance(final.data,mne.BaseEpochs) or final.unit!='V':raise ValueError('scoring projection requires physical epochs')
+            from .scoring_window import project
+            final, source, adaptation = project(executor, config.output, config.evaluation_window)
             original_codec=Codec(output/'source-output')
-            write_json(output/'source-output'/'data.json',original_codec.verified_dump(final.data))
-            lo,hi=config.evaluation_window.tmin,config.evaluation_window.tmax
-            if lo<final.data.tmin-1e-12 or hi>final.data.tmax+1e-12:raise ValueError('scoring projection cannot extend source window')
-            final=deepcopy(final);final.data=final.data.copy().crop(tmin=lo,tmax=hi);final.epoch_template=final.data
-            write_json(output/'evaluation-adapter.json',{'policy':'postprocessing-scoring-projection-v1',
-                'source_output_node':config.output,'window':config.evaluation_window.model_dump(),
-                'source_parameters_unchanged':True,'source_descriptor':'source-output/data.json'})
+            write_json(output/'source-output'/'data.json',original_codec.verified_dump(source.data))
+            write_json(output/'evaluation-adapter.json',adaptation)
         codec=Codec(output/'final')
         saved=codec.verified_dump(final.data);write_json(output/'final'/'data.json',saved)
         axes={'state':packet_state(final),'events':final.events.tolist(),'event_indices':final.event_indices.tolist(),'trial_ids':final.trial_ids,

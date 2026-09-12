@@ -186,7 +186,8 @@ def _data_chain(config):
 def _recipe(config, entry):
     """Bind frozen user parameters to actual executed steps, not signal spectra."""
     _recipe_steps(config, entry)
-    epochs = [i for i, s in enumerate(config.steps) if s.op == "epoch"]
+    lineage = {s.id for s in _data_chain(config)}
+    epochs = [i for i, s in enumerate(config.steps) if s.id in lineage and s.op in ('epoch', 'epoch_with_nonfinite')]
     _require(len(epochs) == 1, "unique_epoch_boundary_required")
     return epochs[0]
 

@@ -280,9 +280,16 @@ def _lineage(config):
 
 def _supported(config, contract, event_codes):
     _lineage(config)
+    chain = set()
+    by_id = {s['id']: s for s in config['steps']}
+    cursor = config['output']
+    while cursor != 'raw':
+        _require(cursor in by_id and cursor not in chain, 'GRID_MISMATCH', 'invalid output dependency')
+        chain.add(cursor)
+        cursor = by_id[cursor]['input']
     epoch_count = 0
     for step in config["steps"]:
-        if step["op"] == "epoch":
+        if step['id'] in chain and step["op"] in ('epoch', 'epoch_with_nonfinite'):
             epoch_count += 1
             _require(
                 all((config.get('evaluation_window') or step["params"]).get(k) == contract[k] for k in ("tmin", "tmax"))

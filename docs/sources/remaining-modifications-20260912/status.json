@@ -157,7 +157,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "复杂窗口和多输出语义",
-      "current": "已支持有限的最终 epoch 共同窗适配；依赖基线、筛查、拟合区间的窗口和多输出流尚未统一。",
+      "current": "源分析窗与评分窗分开保存。末端纯分段图可从相同连续处理结果另建公共评分窗，只恢复记录边界上下文缺失；存在源拒绝标记或其他筛除原因时阻塞。分段后基线/拟合依赖仍先完整执行再裁剪；一般复杂依赖仍待 I36。106项专项回归通过，fresh文献闭环待验证。",
       "solution_and_acceptance": "源方法与工程适配分支分开；显式映射上下文窗、分析窗、评分窗与输出角色。不能把共同窗覆盖原始科学依赖；兼容性无法证明时保留不可比。",
       "dependencies": [
         "I02",
@@ -170,7 +170,7 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression"
+      "status": "partially_implemented"
     },
     {
       "id": "I09",
@@ -1633,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第八批供应商缓存/冷却及真实配置验证完成，Unpaywall待联系邮箱；fresh正式流程独立运行中，文献较长窗口造成固定分母缺失，继续处理窗口与状态依赖适配。",
+  "active_step": "第九批评分窗口适配已通过专项回归；准备固定快照全量回归，继续分区状态依赖。fresh正式流程仍在81ac1a1独立运行，原失败记录不改写。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1807,6 +1807,14 @@
         "provider-live-2-summary.json"
       ],
       "note": "Targeted batches overlap; do not sum as unique coverage. Full backend 1159-pass evidence predates this provider/cache revision."
+    },
+    "ninth_batch": {
+      "targeted": "106 passed, 9 warnings, 70.10 seconds",
+      "log": ".local/remaining-modifications-20260912/scoring-window-tests-7.log",
+      "boundary_fixture": "All 78 frozen trials retained; original 25/26 source epochs per record preserved; all three assessment axes evaluated",
+      "rejection_fixture": "Source BAD annotations prevent restoration; source baseline window preserved",
+      "limitations": "Synthetic integration uses reduced learner training for regression only; real workflow 6 is an earlier immutable revision and has no scored literature candidate yet",
+      "push": "Through 0f55219 confirmed; later pushes and remote verification failed or were ambiguous due GitHub network connectivity"
     }
   }
 }

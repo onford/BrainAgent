@@ -103,3 +103,35 @@ def test_scoring_projection_preserves_source_baseline_and_all_three_axes(tmp_pat
         baseline=source.get_data()[:,:,source.times<=0].mean(axis=-1)
         np.testing.assert_allclose(baseline,0,atol=1e-18)
         np.testing.assert_array_equal(source.copy().crop(tmin=0,tmax=2).get_data(),np.load(root/'signal_V.npy'))
+
+
+def test_parallel_final_epoch_keeps_frozen_panel_and_three_axis_replay(tmp_path):
+    from tests.search.test_integrated_operator_evaluation import _synthetic_bids, _execute, _assess
+    from app.search.panel import freeze_panel
+    from app.preprocessing.schemas import Step, Evidence
+    from app.preprocessing.artifact_codec import Codec
+    import json
+    data = _synthetic_bids(tmp_path/'bids')
+    # Common 0..2 s windows are all valid, while 12 seconds of source context
+    # excludes the first event in each record. The denominator remains 78.
+    method = MethodSpec(id='edge-context', version='1', title='Boundary fixture', source='survey_literature',
+        mechanism='terminal epoch', evidence=[Evidence(source_url='fixture://edge', source_version='1',
+        locator='test', text='Synthetic boundary test; no paper claim.')], recipe=[Step(id='wide',
+        unit_id='EEG-EPOCH', op='epoch', implementation_version='2', evidence_indices=[0],
+        params={'events':'$events', 'event_id':'$event_id', 'picks':'$eeg_channels', 'tmin':-12., 'tmax':3.})],
+        output='wide', lineage={'kind':'literature', 'workflow_id':'fixture', 'branch_id':'edge'})
+    output = {'sfreq':160., 'tmin':0., 'tmax':2.}
+    space, context, report = build_workflow_space(data, output, refs([method]))
+    assert [r['status'] for r in report['methods']] == ['blocked', 'eligible'], report
+    entry = next(e for e in seed_entries(space, context) if e['origin']=='literature_adaptation')
+    panel = freeze_panel(data, {r.id:r.id for r in data.collection.records}, seed=47, **output)
+    run = _execute((tmp_path, data, context, panel, space, [], []), entry)
+    assert _assess(run)['selection_ready']
+    for config in run[0].records:
+        root = run[2]/config.record_id
+        descriptor = root/'source-output'/'data.json'
+        source = Codec(descriptor.parent).load(json.loads(descriptor.read_text(encoding='utf-8')))
+        assert len(source) == 25 and source.tmin == -12
+        audit = json.loads((root/'evaluation-adapter.json').read_text(encoding='utf-8'))
+        assert audit['restored_boundary_event_indices'] == [0]
+        assert config.evaluation_window.source_output in {s.id for s in config.steps}

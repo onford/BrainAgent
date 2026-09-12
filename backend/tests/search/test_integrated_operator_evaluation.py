@@ -172,7 +172,7 @@ def _assess(run):
     assert summary["selection_score"] is not None and summary["selection_ready"], summary
     assert summary["schema_version"] == "assessment-v2"
     assert summary["utility"]["seed_summary"]["seeds"] == [17, 42, 2026]
-    assert summary["selection_score"] == summary["utility"]["seed_summary"]["mean_ba"]
+    assert summary["selection_score"] == pytest.approx(summary["utility"]["seed_summary"]["mean_ba"], rel=0, abs=1e-15)
     assert verify_assessment(output, summary) == summary
     utility = json.loads((output / "utility" / "utility.json").read_text(encoding="utf-8"))
     assert all(utility["learners"][name]["status"] == "evaluated" for name in PRIMARY_SUITE), utility

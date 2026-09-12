@@ -134,6 +134,9 @@ def compile_recipe(entry, space, panel, context=None):
         rename_ports(step, names)
     if graph_method(steps):
         steps = promote(steps)
+    evaluation_window = recipe.evaluation_window.model_copy(deep=True) if recipe.evaluation_window else None
+    if evaluation_window and evaluation_window.source_output:
+        evaluation_window.source_output = names[evaluation_window.source_output]
     return MethodSpec(
         id=entry["id"],
         version="3",
@@ -142,7 +145,7 @@ def compile_recipe(entry, space, panel, context=None):
         mechanism=" -> ".join(n.operator for n in recipe.nodes),
         recipe=steps,
         output=names[recipe.output] if recipe.output else previous,
-        evaluation_window=recipe.evaluation_window,
+        evaluation_window=evaluation_window,
         output_roles={role:names[node] for role,node in recipe.output_roles.items()},
         evidence=evidence,
         applicability={"dataset_id": "eegmmidb", "task": "left_right_motor_imagery"},

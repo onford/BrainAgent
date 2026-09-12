@@ -223,11 +223,15 @@ class MethodDraft(Contract):
 class EvaluationWindow(Contract):
     tmin: float
     tmax: float
+    policy: Literal['postprocessing-scoring-projection-v1', 'parallel-final-epoch-scoring-v1'] = 'postprocessing-scoring-projection-v1'
+    source_output: str | None = None
 
     @model_validator(mode='after')
     def ordered(self):
         if self.tmin >= self.tmax:
             raise ValueError('evaluation window must be ordered')
+        if (self.policy == 'parallel-final-epoch-scoring-v1') != bool(self.source_output):
+            raise ValueError('parallel scoring requires an explicit source output; cropping has none')
         return self
 
 

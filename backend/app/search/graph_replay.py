@@ -24,7 +24,10 @@ def replay(raw, events, config):
         continuous=executor.nodes[epoch.input]['packet']
         output=final.data.copy()
         if config.get('evaluation_window'):
-            output.crop(**config['evaluation_window'])
+            from app.preprocessing.scoring_window import project
+            from app.preprocessing.schemas import EvaluationWindow
+            final, _, _ = project(executor, config['output'], EvaluationWindow.model_validate(config['evaluation_window']))
+            output = final.data.copy()
         trace=[dict(step_id=s.id,unit_id=s.unit_id,op=s.op,parameters=s.params,implementation_version='2',
                     fit_artifact_hashes={'model':fingerprint(executor.nodes[s.id]['model'])} if executor.nodes[s.id]['model'] is not None else {},
                     decision_binding=None) for s in steps]
