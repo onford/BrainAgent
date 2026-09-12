@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest'
 import SearchNeuralEvidence from './SearchNeuralEvidence.vue'
 
 describe('neural evidence provenance', () => {
+  it('keeps limited spectral windows and missing full-band results explicit', () => {
+    const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
+      diagnostics: [{ id: 'd', spectral_components: { signed_periodic_fraction: { value: null, available_records: 0, expected_records: 2 },
+        records: [{ record_id: 'r', status: 'partial', reason: 'requested_band_partially_supported', frequencies_hz: [4, 30], signed_periodic_fraction: -.1 }] } }] } })
+    expect(wrapper.text()).toContain('最多 16 秒')
+    expect(wrapper.text()).toContain('占比：不可用；完整记录 0 / 2')
+    expect(wrapper.text()).toContain('-0.10000')
+    expect(wrapper.text()).toContain('不是置信区间')
+  })
   it('keeps unidentifiable timing unavailable with its full denominator', () => {
     const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
       diagnostics: [{ id: 'd', common_view_change: { summary: { lag_ms: { value: null, unit: 'ms', available_records: 0, expected_records: 2 },

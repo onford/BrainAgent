@@ -1,0 +1,357 @@
+{
+  "status": "completed",
+  "diagnostics": [
+    {
+      "stage": "source_raw",
+      "status": "completed",
+      "numeric_status": "evaluated",
+      "summary": {
+        "status": "ok",
+        "value": 0.1203250476339409,
+        "expected_records": 12,
+        "available_records": 12,
+        "unit": "signed_ratio",
+        "band_hz": [
+          2.0,
+          30.0
+        ]
+      },
+      "records": [
+        {
+          "record_id": "S001R04",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.01758083617405558
+        },
+        {
+          "record_id": "S001R08",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.09178347610878389
+        },
+        {
+          "record_id": "S001R12",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.06366830362346487
+        },
+        {
+          "record_id": "S002R04",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.10201421027440656
+        },
+        {
+          "record_id": "S002R08",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.1635156869966475
+        },
+        {
+          "record_id": "S002R12",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.15020232392617494
+        },
+        {
+          "record_id": "S003R04",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.10503837935190559
+        },
+        {
+          "record_id": "S003R08",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.18706704235318067
+        },
+        {
+          "record_id": "S003R12",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.111092408639172
+        },
+        {
+          "record_id": "S004R04",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.13279084589403267
+        },
+        {
+          "record_id": "S004R08",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.17832700881810382
+        },
+        {
+          "record_id": "S004R12",
+          "status": "evaluated",
+          "reason": null,
+          "supported_analysis_band_hz": [
+            2.0,
+            30.0
+          ],
+          "signed_periodic_fraction": 0.14082004944736265
+        }
+      ],
+      "decision_effect": {
+        "experiment": {
+          "hypothesis": "The signed 2–30 Hz periodic fraction is positive",
+          "competing_explanation": "A nonpositive or unsupported estimate",
+          "metric": "spectral_components.signed_periodic_fraction.value",
+          "comparison": "gt",
+          "threshold": 0.0,
+          "threshold_rationale": "Numerical interface prediction only; not a physiological or performance target",
+          "branches": {
+            "condition_met": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            },
+            "condition_not_met": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            },
+            "unavailable": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            }
+          }
+        },
+        "value": 0.1203250476339409,
+        "outcome": "condition_met",
+        "selected_branch": {
+          "next_action": "finish",
+          "reason": "Record limited measurement support"
+        },
+        "interpretation": "A numeric condition tests a prediction; it does not establish its proposed mechanism."
+      },
+      "diagnostic_sha256": "79132ac269f6618b7a6ad00fe1bb335c84a61030659427066860845e5048d43c",
+      "input_bytes": 17602109,
+      "input_files": 13,
+      "elapsed_seconds": 1.7820000000065193
+    },
+    {
+      "stage": "processed_continuous",
+      "status": "completed",
+      "numeric_status": "unavailable",
+      "summary": {
+        "status": "unavailable",
+        "value": null,
+        "expected_records": 12,
+        "available_records": 0,
+        "unit": "signed_ratio",
+        "band_hz": [
+          2.0,
+          30.0
+        ]
+      },
+      "records": [
+        {
+          "record_id": "S001R04",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S001R08",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S001R12",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S002R04",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S002R08",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S002R12",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S003R04",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S003R08",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S003R12",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S004R04",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S004R08",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        },
+        {
+          "record_id": "S004R12",
+          "status": "not_applicable",
+          "reason": "insufficient_supported_frequency_bins_after_resampling",
+          "supported_analysis_band_hz": [
+            15.2,
+            15.789473684210527
+          ],
+          "signed_periodic_fraction": null
+        }
+      ],
+      "decision_effect": {
+        "experiment": {
+          "hypothesis": "The signed 2–30 Hz periodic fraction is positive",
+          "competing_explanation": "A nonpositive or unsupported estimate",
+          "metric": "spectral_components.signed_periodic_fraction.value",
+          "comparison": "gt",
+          "threshold": 0.0,
+          "threshold_rationale": "Numerical interface prediction only; not a physiological or performance target",
+          "branches": {
+            "condition_met": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            },
+            "condition_not_met": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            },
+            "unavailable": {
+              "next_action": "finish",
+              "reason": "Record limited measurement support"
+            }
+          }
+        },
+        "value": null,
+        "outcome": "unavailable",
+        "selected_branch": {
+          "next_action": "finish",
+          "reason": "Record limited measurement support"
+        },
+        "interpretation": "A numeric condition tests a prediction; it does not establish its proposed mechanism."
+      },
+      "diagnostic_sha256": "4a88f0ad4ba6fe1160ea7e231ae8469afcea0a2d433a09833091fd29693acb40",
+      "input_bytes": 17602109,
+      "input_files": 13,
+      "elapsed_seconds": 0.07799999999406282
+    }
+  ],
+  "elapsed_seconds": 85.29699999999139,
+  "code_sha256": "406ae2695decd3447d4222648aa06f7ebab810d1b85d02ea33d81997fb96b119",
+  "original_metadata_unchanged": true,
+  "source_unchanged": true,
+  "code_unchanged": true,
+  "scope": "Fixed continuous-window description only; no neural source identification, no classifier or whole workflow acceptance."
+}

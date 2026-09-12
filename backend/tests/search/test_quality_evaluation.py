@@ -136,6 +136,17 @@ def test_real_bids_all_records_subject_equal_summary_and_read_only(tmp_path):
     assert s["composite_score"] is None
     assert s['metrics']['psd']['within_record_reduction']=='channel_median_then_epoch_mean_at_each_frequency'
     assert s['metrics']['mu_mean_psd']['within_record_reduction']=='mean_of_finite_values_over_all_metric_axes'
+    from app.search.diagnostic_windows import verified_windows
+    context = {'check': lambda: None, 'read_array': lambda a: np.load(out/a['path'], allow_pickle=False)}
+    for stage in ('source_raw', 'processed_continuous'):
+        windows = list(verified_windows(s, stage, context))
+        assert len(windows) == 3
+        for rid, x, contract, reason, complete in windows:
+            assert reason is None and complete and x.shape == (1, 3, 2560)
+            assert contract['stage_samples'] > x.shape[-1]
+            artifact = contract['artifact']
+            assert file_hash(out/artifact['path']) == artifact['sha256']
+            assert artifact in receipt['artifacts']
     a, b = (s["bysubject"][key]["metrics"]["oha"]["value"][0] for key in ("subject-01", "subject-02"))
     assert a != b
     assert s["metrics"]["oha"]["value"][0] == pytest.approx((a+b)/2)

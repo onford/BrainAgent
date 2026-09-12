@@ -399,7 +399,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "强神经保护测量",
-      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；新增注册的未对齐误差/增益/相关峰偏移/能量时间重心诊断，周期歧义和边界峰保持不可辨识，完整记录/试次/通道分母验签。95项回归及真实12记录只读复核通过。周期/非周期、侧化、更多已知源与独立真实保护验证仍未完成；个体峰频拟合及个体预处理已撤回。",
+      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；新增注册的未对齐误差/增益/相关峰偏移/能量时间重心诊断，周期歧义和边界峰保持不可辨识，完整记录/试次/通道分母验签。95项回归及真实12记录只读复核通过。周期/非周期、侧化、更多已知源与独立真实保护验证仍未完成；个体峰频拟合及个体预处理已撤回。 已新增固定连续窗口IRASA式分解，频带/样本支持不足保留不可用；12真实记录只读验证通过。",
       "solution_and_acceptance": "逐项实现适用性和有效时间支持，保留基线/分母/不确定性；先做已知信号验证，再做真实 EEG。不能以“典型 ERD”作为必须制造的形态。",
       "dependencies": [
         "I19",
@@ -1639,7 +1639,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十批完成I20的共同视图波形/时序诊断及注册，95项后端专项、158项前端及构建通过，12记录真实只读复核通过；继续周期/非周期及侧化测量，然后I22受约束分支回退。",
+  "active_step": "第二十一批有界连续窗口周期/非周期诊断完成专项与真实只读验证；继续侧化/基线不确定性及I22。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1890,6 +1890,16 @@
       "frontend": "158 passed; build passed",
       "real": "12 records, 180 trials, 62198806 input bytes, 4.172 s; historical files and review code unchanged",
       "audit": "docs/sources/remaining-modifications-20260912/temporal-live-2-audit.json"
+    },
+    "spectral_components": {
+      "backend": "73 passed plus overlapping 1 integration check",
+      "frontend": "159 passed; build passed",
+      "real": "12 records; source evaluated, 8-30 Hz processed unavailable; 17602109 bytes per call; inputs unchanged",
+      "audit": "docs/sources/remaining-modifications-20260912/spectral-live-2-audit.json"
+    },
+    "full_backend_temporal": {
+      "commit": "651c01c",
+      "result": "1263 passed, 109 warnings, 821.01 s"
     }
   }
 }

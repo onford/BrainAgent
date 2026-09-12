@@ -87,6 +87,11 @@ def _common_change(quality, reference, baseline, stage, context):
     return common_view_diagnostic(quality, context)
 
 
+def _components(quality, reference, baseline, stage, context):
+    from .neural_spectra import spectral_components_diagnostic
+    return spectral_components_diagnostic(quality, stage, context)
+
+
 METRICS = ('line_ratio_50hz', 'line_ratio_60hz', 'low_correlation_fraction', 'flat_fraction',
             'numerical_rank', 'mu_mean_psd', 'beta_mean_psd', 'erds_mu', 'erds_beta',
             'emg_hf_proxy', 'covariance_trace')
@@ -105,6 +110,10 @@ register(DiagnosticDefinition('common_view_change', '1', 'verified_paired_common
     tuple('common_view_change.summary.' + name + '.value' for name in
           ('normalized_change', 'gain', 'zero_lag_correlation', 'lag_ms', 'energy_centroid_shift_ms')),
     _common_change, stages=('processed_task',)))
+register(DiagnosticDefinition('spectral_components', '1', 'verified_fixed_continuous_voltage_windows',
+    'IRASA-style reciprocal resampling with fixed Welch parameters and passband guard; signed periodic/aperiodic descriptions on first up to 16 seconds per record. Complete 2–30 Hz support required for aggregate. No peak/slope fitting or neural-origin inference.',
+    ('spectral_components.signed_periodic_fraction.value',), _components,
+    stages=('source_raw', 'processed_continuous')))
 
 
 def catalog():

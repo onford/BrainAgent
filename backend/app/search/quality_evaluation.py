@@ -719,9 +719,15 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                     source_history = _history(raw, metadata)
                     positions = _positions(raw, channels)
                     detail["source_files"] = records[rid].files
-                    detail["stages"]["source_raw"] = _measure(raw.get_data(picks=channels)[None],
+                    source_full = raw.get_data(picks=channels)[None]
+                    detail["stages"]["source_raw"] = _measure(source_full,
                                                                 raw.info["sfreq"], channels, source_history,
                                                                 positions=positions)
+                    from .diagnostic_windows import save_window
+                    detail['diagnostic_windows'] = {'source_raw': save_window(source_full, output=output,
+                        record_id=rid, stage='source_raw', sfreq=float(raw.info['sfreq']), channels=channels,
+                        history=_json(source_history))}
+                    del source_full
                     original = {r["event_id"]: r for r in mapping}
                     source_rows = [original[t["event_id"]] for t in trials if t["eligible"]]
                     ids = [r["event_id"] for r in source_rows]
@@ -788,6 +794,9 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                             full = _post_reference(continuous.get_data(picks=channels)[None], continuous, channels, post)
                             detail["stages"]["processed_continuous"] = _measure(full, contract["sfreq"], channels,
                                                                                  history, positions=positions)
+                            detail.setdefault('diagnostic_windows', {})['processed_continuous'] = save_window(full,
+                                output=output, record_id=rid, stage='processed_continuous', sfreq=contract['sfreq'],
+                                channels=channels, history=_json(history))
                             del full
                         detail["stages"]["processed_precue"] = _measure(baseline, contract["sfreq"], channels,
                                                                          history, trial_ids=ids, positions=positions)
@@ -884,6 +893,11 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                 for stage, report in detail['stages'].items()}
             record_summary['measurement_frames']={s:{k:v for k,v in f.items() if k!='contract'}
                                                    for s,f in detail['measurement_frames'].items()}
+            record_summary['diagnostic_windows'] = deepcopy(detail.get('diagnostic_windows', {}))
+            for stage, window in record_summary['diagnostic_windows'].items():
+                window['measurement_frame_sha256'] = detail['measurement_frames'][stage].get('sha256')
+                if detail['measurement_frames'][stage]['status'] != 'verified':
+                    window.update(status='unavailable', reason='stage_provenance_not_verified')
             contrast=detail.get('physical_contrast',dict(status='not_comparable',reason='verified_processed_output_unavailable',paired_trials=0))
             record_summary['physical_contrast']={k:v for k,v in contrast.items() if k not in {'views','limitations'}}
             record_summaries.append(record_summary)
@@ -918,4 +932,6 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
     path = output / "data-quality.json"
     write_json(path, _json(summary))
     artifact = {"kind": "quality_summary", "path": path.name, "sha256": file_hash(path), "bytes": path.stat().st_size}
-    return {"summary": summary, "detail_artifacts": detail_artifacts, "artifacts": [artifact, *detail_artifacts,*contrast_artifacts]}
+    windows = [w['contract']['artifact'] for r in record_summaries for w in r['diagnostic_windows'].values()
+               if 'contract' in w]
+    return {"summary": summary, "detail_artifacts": detail_artifacts, "artifacts": [artifact, *detail_artifacts,*contrast_artifacts,*windows]}

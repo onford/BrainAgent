@@ -51,6 +51,16 @@ const numericValue = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
           <p v-for="r in d.common_view_change.records" :key="r.record_id">{{ r.record_id }}：{{ r.status === 'evaluated' ? `已测 ${r.expected_trial_channel_pairs} 个试次/通道对；${r.ambiguous_lag_pairs} 个偏移不可辨识` : '缺少已验证的共同视图，无法比较' }}</p>
           <p>这些变化不能分离纯伪迹，也不能证明神经信息无损。</p>
         </div>
+        <div v-if="d.spectral_components" class="spectral-components">
+          <h5>周期与非周期频谱描述</h5>
+          <p>每条记录只读取该连续阶段起点最多 16 秒；不能代表整条记录，也不能据此区分神经信号与伪迹。未进行个体峰频或斜率拟合。</p>
+          <p>2–30 Hz 有符号周期差分占比：{{ numericValue(d.spectral_components.signed_periodic_fraction.value) }}；完整记录 {{ d.spectral_components.signed_periodic_fraction.available_records }} / {{ d.spectral_components.signed_periodic_fraction.expected_records }}</p>
+          <p>负差分保留；部分频带、短片段和缺失记录不会被静默排除后计算总体值。</p>
+          <details v-for="r in d.spectral_components.records" :key="r.record_id"><summary>{{ r.record_id }} · {{ r.status }} · {{ r.reason ?? '所请求频带均有估计支持' }}</summary>
+            <p v-if="r.frequencies_hz?.length">实测频率范围 {{ r.frequencies_hz[0] }}–{{ r.frequencies_hz[r.frequencies_hz.length - 1] }} Hz；占比 {{ numericValue(r.signed_periodic_fraction) }}</p>
+            <p>各重采样因子的分位数仅描述估计敏感性，不是置信区间。完整数值见诊断附件。</p>
+          </details>
+        </div>
         <details v-for="r in d.prior_evaluation?.rules" :key="r.id">
           <summary>{{ ruleTitle(r) }}：{{ stateName(r.condition_state) }}</summary>
           <p>观测：{{ r.observed?.value ?? '缺失' }} {{ r.observed?.unit }}；{{ reasonName(r.reason) }}</p>
