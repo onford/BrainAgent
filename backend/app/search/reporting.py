@@ -302,6 +302,12 @@ def render(root: Path, state):
     if selected is not None and (selected["status"] != "evaluated" or measured_score(selected.get("receipt")) is None):
         raise ValueError("selected candidate lacks a complete measured selection score")
     assessment_html = _assessment_sections(root, state)
+    from .conclusions import qualify
+    conclusions = qualify(state)
+    write(root / 'conclusion-eligibility.json', conclusions)
+    conclusion_html = '<h2>结论资格</h2>' + _table(['结论', '状态', '适用范围', '依据与缺口'], [
+        [c['title'], {'supported_within_scope':'可在限定范围报告', 'not_established':'尚未建立', 'unavailable':'缺少可用测量'}[c['status']],
+         c['scope'], c['reason']] for c in conclusions['claims']])
     operator_usage_html = _operator_usage_sections(root, state)
     from .method_provenance import method_status
     provenance = method_status(state)
@@ -342,6 +348,7 @@ def render(root: Path, state):
         ],
     }
     selection['method_provenance'] = next((r for r in provenance['methods'] if r.get('candidate_id') == state['selected_candidate_id']), None)
+    selection['conclusion_eligibility'] = conclusions
     write(root / "selection.json", selection)
     rows = []
     for c in state["candidates"]:
@@ -451,6 +458,7 @@ details{{border-bottom:1px solid #e0e8e9;padding:12px 0}}summary{{cursor:pointer
 <p class="muted">{escape(reasons.get(state["stop_reason"], state["stop_reason"] or ""))} · 累计 {state["usage"]["elapsed_seconds"]:.1f} 秒 ·
 候选 {state["usage"]["candidates"]}/{state["budget"]["max_candidates"]} · 提案 {state["usage"]["proposals"]}/{state["budget"]["max_proposals"]} · 阅读 {state["usage"]["evidence_reads"]}/{state["budget"]["max_evidence_reads"]}</p>
 <p>本结果用于当前开发条件下的流程选择。开发集被反复查看，没有进行独立确认，也不证明神经信号质量。</p>
+{conclusion_html}
 <h2>候选比较</h2><div class="scroll"><table><thead><tr><th>候选</th><th>状态</th><th>{comparison_metric}</th><th>{comparison_anchor}</th><th>CSP 相对参考差值</th><th>实际耗时</th><th>原因</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>
 {multidimensional}
 {operator_usage_html}

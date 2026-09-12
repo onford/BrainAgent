@@ -205,7 +205,11 @@ class PreprocessingOutput(Contract):
         return self
 
 
+from app.search.conclusions import ConclusionEligibility
+
+
 class EvaluationOutput(Contract):
+    conclusion_eligibility: ConclusionEligibility | None = None
     literature_participation: dict | None = None
     selection_policy: Literal["development_score"]
     quality_evaluated: Literal[True]
@@ -250,6 +254,17 @@ class EvaluationOutput(Contract):
             raise ValueError(
                 "selection must preserve the measured receipt and representation"
             )
+        if self.conclusion_eligibility is not None:
+            from app.search.conclusions import qualify
+
+            expected = qualify({
+                "selected_candidate_id": self.selected_candidate_id,
+                "panel": self.panel, "protocol": self.evaluation_protocol,
+                "candidates": [{"id": self.selected_candidate_id,
+                    "status": self.selected_receipt["status"], "receipt": self.selected_receipt}],
+            })
+            if self.conclusion_eligibility.model_dump(mode="json") != expected:
+                raise ValueError("conclusion eligibility must preserve verified selected evidence and claim limits")
         return self
 
 

@@ -31,6 +31,7 @@ def evaluation_context(data):
                 "reason",
                 "candidate_summary",
                 "literature_participation",
+                "conclusion_eligibility",
             )
             if key in data
         },

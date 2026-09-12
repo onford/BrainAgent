@@ -60,7 +60,7 @@ class OperatorDefinition(Contract):
     profile: str = 'source'
     input_stage: Literal["continuous", "epochs", "either"]
     output_stage: Literal["continuous", "epochs", "same"]
-    fit_scope: Literal["none", "record_unlabelled", "subject_unlabelled"]
+    fit_scope: Literal["none", "record_unlabelled"]
     domains: dict[str, ParameterDomain]
     defaults: dict[str, Any]
     bindings: dict[str, Any] = Field(default_factory=dict)

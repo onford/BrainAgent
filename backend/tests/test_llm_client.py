@@ -340,7 +340,7 @@ async def test_length_finish_is_capacity_error_even_for_valid_json(
     assert len(calls) == 1 and delays == []
 
 
-async def test_truncation_bypasses_workflow_semantic_repair(delays, tmp_path):
+async def test_truncation_allows_only_one_explicit_bounded_correction(delays, tmp_path):
     pytest.importorskip("mne")
     pytest.importorskip("mne_bids")
     from tests.workflows.fakes import Reader
@@ -355,8 +355,25 @@ async def test_truncation_bypasses_workflow_semantic_repair(delays, tmp_path):
     agent = make_cognition(tmp_path, Reader(), make_client(handler))
     with pytest.raises(RuntimeError, match="finish_reason=length"):
         await agent.ask("truncation", Answer, {}, "Return a count.")
-    assert len(calls) == 1 and delays == []
-    assert [record.status for record in agent.log.records] == ["failed"]
+    assert len(calls) == 2 and delays == []
+    assert calls[0].content != calls[1].content
+    assert [record.status for record in agent.log.records] == ["failed", "failed"]
+    budget = json.loads((agent.folder / 'llm-budget.json').read_text())
+    assert len(budget['attempts']) == 2
+
+
+async def test_truncated_reply_is_discarded_before_successful_correction(tmp_path):
+    from tests.workflows.fakes import Reader
+    from tests.workflows.test_parallel_research import make_cognition
+    calls = []
+    def handler(request):
+        calls.append(json.loads(request.content))
+        return completion('{"count": 999}', 'length') if len(calls) == 1 else completion('{"count": 7}')
+    agent = make_cognition(tmp_path, Reader(), make_client(handler))
+    answer = await agent.ask('bounded correction', Answer, {}, 'Return a count.')
+    assert answer.count == 7 and len(calls) == 2
+    assert '999' not in json.dumps(calls[1])
+    assert [r.status for r in agent.log.records] == ['failed', 'accepted']
 
 
 @pytest.mark.parametrize("content", ['{"count":', '{"count": "invalid"}'])

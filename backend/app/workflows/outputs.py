@@ -24,6 +24,7 @@ from .formats import ARRAY_FORMATS, PROVENANCE_FILES, delivery_members
 def choose(search_state, plan, store):
     """Project a terminal search winner; the supplied store is search/engine."""
     from app.search.method_provenance import participation
+    from app.search.conclusions import qualify
     if search_state["status"] not in {"completed", "stopped"}:
         raise ValueError("搜索尚未正常结束，不能交付候选")
     candidates = search_state["candidates"]
@@ -97,6 +98,9 @@ def choose(search_state, plan, store):
     selection = EvaluationOutput.model_validate(
         {
             "literature_participation": participation(search_state),
+            # Workflow delivery carries and verifies only the selected receipt.
+            # Paired comparisons remain in the search report with both receipts.
+            "conclusion_eligibility": qualify({**search_state, "candidates": [selected]}),
             "selection_policy": "development_score",
             "quality_evaluated": True,
             "search_id": search_state["id"],

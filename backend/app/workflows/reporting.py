@@ -424,6 +424,13 @@ def render_report(folder):
         ),
         selection_reason=escape(data.selection_reason),
         evaluation_summary=escape(evaluation_summary(selection)),
+        conclusion_rows=rows([
+            [c.title, {'supported_within_scope': '仅在声明范围内支持',
+                       'not_established': '尚未建立', 'unavailable': '证据未取得'}[c.status],
+             c.scope, c.reason]
+            for c in selection.conclusion_eligibility.claims
+        ] if selection and selection.conclusion_eligibility else [
+            ['结论范围', '未取得', '历史回执', '此回执未记录独立的结论资格审查。']]),
         candidate_rows=rows(
             [
                 [

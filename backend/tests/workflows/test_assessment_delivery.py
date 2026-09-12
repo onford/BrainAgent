@@ -249,6 +249,26 @@ def test_report_and_context_use_three_seed_score(real_delivery):
         reporting.evaluation_summary(EvaluationOutput.model_validate(wrong))
 
 
+@pytest.mark.parametrize('change', ['score', 'claim', 'hash', 'candidate'])
+def test_conclusion_projection_cannot_promote_or_detach_evidence(real_delivery, change):
+    selected = deepcopy(real_delivery.selection)
+    qualification = selected['conclusion_eligibility']
+    assert qualification['primary_development_score'] == selected['score']
+    claims = {c['id']: c for c in qualification['claims']}
+    assert claims['development_predictability']['status'] == 'supported_within_scope'
+    assert claims['independent_generalization']['status'] == 'not_established'
+    if change == 'score':
+        qualification['primary_development_score'] = .123
+    elif change == 'claim':
+        claims['neural_preservation']['status'] = 'supported_within_scope'
+    elif change == 'hash':
+        qualification['selected_assessment_sha256'] = '0' * 64
+    else:
+        qualification['selected_candidate_id'] = 'another'
+    with pytest.raises(ValueError, match='conclusion eligibility'):
+        EvaluationOutput.model_validate(selected)
+
+
 def test_dynamic_registry_and_required_assessment_cannot_be_bypassed(real_delivery):
     c = real_delivery
     for change in ("missing_assessment", "wrong_parameters", "wrong_winner"):

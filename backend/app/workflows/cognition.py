@@ -76,6 +76,7 @@ class WorkflowCognition:
         )
 
     async def ask(self, operation, model, inputs, instruction, validate=None):
+        from app.llm.client import OutputTruncatedError
         if self.llm is None:
             raise ValueError("此流程需要配置 LLM，无法用固定预设替代模型调研与规划")
         messages = [
@@ -91,6 +92,7 @@ class WorkflowCognition:
                 "content": json.dumps(inputs, ensure_ascii=False, default=str),
             },
         ]
+        truncated = False
         for attempt in range(3):
             self.progress(
                 f"模型正在{operation}" + (f"（修订 {attempt}）" if attempt else "")
@@ -106,6 +108,18 @@ class WorkflowCognition:
                     validate(value)
                     result = value.model_dump(mode="json")
                 return value
+            except OutputTruncatedError:
+                status, error = "failed", "OutputTruncatedError"
+                if truncated or attempt == 2:
+                    raise
+                truncated = True
+                # A new, explicitly corrected decision, charged to the same
+                # durable budget. Never parse or accept the incomplete reply.
+                messages.append({"role": "user", "content": (
+                    "The previous response reached the output limit before completing JSON. "
+                    "Make one compact decision: concise statements, reuse cited findings, "
+                    "no repeated explanation. Preserve every required field and evidence check; "
+                    "use explicit unknowns for unsupported claims. Do not reproduce a long analysis.")})
             except (ValidationError, ValueError) as exc:
                 status = "rejected"
                 validation = exc if isinstance(exc, ValidationError) else exc.__cause__
@@ -569,6 +583,7 @@ class WorkflowCognition:
             },
             "Write only concise interpretation to fill fixed report sections. Actual numeric tables are rendered by code. "
             "Explain source/engineering decisions for the selected candidate, uncertainty, retention and training limitations. "
+            "Respect selected_policy.conclusion_eligibility: supported_within_scope is descriptive evidence within its stated scope, not a general success claim. Do not promote not_established or unavailable claims. "
             "Epoch extraction is 分段, not a taper/window function unless a real taper operation was executed. "
             "Report the measured development score and its exact learner/protocol only. Do not claim independent test improvement, globally best preprocessing, or superior neural signal quality.",
             validate,

@@ -496,7 +496,8 @@ async def research(agent, survey):
             {
                 **inputs,
                 "sources": agent.source_context(sources),
-                "observations": [o.model_dump() for o in sources.observations],
+                "observations": [o.model_dump(exclude={"output"}) for o in sources.observations],
+                "observation_context_policy": "Citable evidence is in sources above. Raw tool bodies are retained in survey/sources.json; duplicated responses are omitted from this verification context.",
                 "retrieval_gaps": missing,
             },
             "Produce every fixed comparison row. Local observations group identical measured values and retain every record ID. Return local_fact_ids=[]; code attaches all measured references. Compare all groups, including minority values. Do not rewrite measurements, manufacture pointers, infer task identity from file names, or treat unperformed checks as absence. "

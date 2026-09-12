@@ -23,29 +23,19 @@ def verification_contract(local):
         finding_ids=(list[str], Field(description=(
             'Nonempty exact finding IDs for a non-null statement; [] if and only if statement is null.'))))
 
-    rows = []
-    for field in FIELDS:
-        rows.append(
-            create_model(
-                "Compare_" + field,
-                __base__=Comparison,
-                field=(Literal[field], ...),
-                official_sources=(statement, ...),
-                official_paper=(statement, ...),
-                local_fact_ids=(
-                    list[str],
-                    Field(
-                        max_length=0,
-                        description="Return []; measured local references are attached deterministically after validation.",
-                    ),
-                ),
-            )
-        )
+    # One enum row has exactly the same stored constraints as N identical
+    # discriminated variants. DatasetVerification checks unique full coverage.
+    row = create_model(
+        "CitedComparison", __base__=Comparison,
+        official_sources=(statement, ...), official_paper=(statement, ...),
+        local_fact_ids=(list[str], Field(max_length=0, description=(
+            "Return []; code attaches every measured reference for this field."))),
+    )
     return create_model(
         "DatasetVerification",
         __base__=DatasetVerification,
         comparisons=(
-            list[Annotated[Union[tuple(rows)], Field(discriminator="field")]],
+            list[row],
             Field(min_length=len(FIELDS), max_length=len(FIELDS)),
         ),
     )

@@ -39,6 +39,10 @@ def _retry_delay(retry_after: str | None, attempt: int) -> float:
     return delay
 
 
+class OutputTruncatedError(RuntimeError):
+    """A known completed response hit its output limit; never retry as transport IO."""
+
+
 class StructuredOutputError(ValueError):
     """Keep the rejected model reply so a caller can request a focused correction."""
 
@@ -200,7 +204,7 @@ class OpenAICompatibleClient(LLMClient):
                 choice = response_body["choices"][0]
                 finish_reason = choice.get("finish_reason") or "-"
                 if finish_reason == "length":
-                    raise RuntimeError(
+                    raise OutputTruncatedError(
                         "LLM output truncated (finish_reason=length); "
                         f"output/capacity limit reached: {details}"
                     )

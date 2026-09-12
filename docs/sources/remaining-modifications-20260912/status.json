@@ -66,7 +66,8 @@
         "D3"
       ],
       "historical_status": "实测失败",
-      "status": "previously_verified_requires_regression"
+      "status": "partial",
+      "implementation_note": "e8d11f4 fresh 运行在三方核对输出截断，未进入数值评价；不得计为真实闭环成功。修订后须新建运行。"
     },
     {
       "id": "I04",
@@ -285,7 +286,8 @@
       "historical_status": "部分实现",
       "status": "partial",
       "historical_current": "历史决策输入曾达 249230 tokens；已压缩重复恢复日志。全集、88 op 合同及长历史仍无全局上下文保证；候选信息价值/成本与停止判断主要依赖模型文字。",
-      "implementation_update": "工作流各阶段、MethodLibrary、关联搜索和指标解读共用持久模型预算；逐传输尝试预留请求/输入字节/输出 token 容量，失败不退款，绝对截止时间不重置。记录逐尝试 token 及未知费用。上下文压缩、旧聊天入口全覆盖与可配置费用上限待补齐。"
+      "implementation_update": "工作流各阶段、MethodLibrary、关联搜索和指标解读共用持久模型预算；逐传输尝试预留请求/输入字节/输出 token 容量，失败不退款，绝对截止时间不重置。记录逐尝试 token 及未知费用。上下文压缩、旧聊天入口全覆盖与可配置费用上限待补齐。",
+      "implementation_note": "正式调用已有共享持久化预算；精简三方核对重复 Schema/工具响应，截断最多一次显式修订，丢弃不完整结果。旧入口、价格与进一步上下文管理仍待完善。"
     },
     {
       "id": "I15",
@@ -486,7 +488,8 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "implemented_pending_independent_scientific_validation",
+      "implementation_note": "确定性结论资格绑定选中 assessment/协议，报告与交付拒绝篡改和科学主张提升；146 项专项回归通过。真实独立确认仍未执行。"
     },
     {
       "id": "I25",
@@ -1620,7 +1623,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I13/I14 恢复预算与真实验收暴露的 I42 接入证据修正；其他正式版未完成项继续按依赖推进",
+  "active_step": "四批专项回归通过；冻结新版本复验，同时继续未完成的经典原生链与规则执行工作",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1694,6 +1697,11 @@
       "research_evidence_scope": "36 passed including numeric workflow collection/recovery cases",
       "live_2": "failed collection; fresh research retained at fb8fd5a6944b450b814bd824f7afac35",
       "upstream_commit": "f4528a1"
+    },
+    "fourth_batch": {
+      "scope": "conclusion eligibility / bounded truncation correction / workflow regressions",
+      "result": "146 passed, 2 warnings",
+      "log": ".local/remaining-modifications-20260912/conclusions-budget-tests-2.log"
     }
   }
 }
