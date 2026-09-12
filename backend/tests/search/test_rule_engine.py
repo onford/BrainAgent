@@ -157,3 +157,31 @@ def test_fixed_bindings_distinguish_declared_null_from_unresolved_runtime_tokens
     value['operators'][0]['bindings']['h_freq']=30.
     with pytest.raises(ValueError, match='order'):
         validate_recipe(recipe, value)
+
+
+def test_incompatible_numeric_requirements_record_the_actual_variable(space, recipe):
+    value = configured(space)
+    rule = value['priors'][0]
+    rule.update(strength='soft',relation='parameter_condition',operators=['filter'],
+        requirements=[dict(scope='parameter',operator='filter',key='low',comparison='gt',value=10.)])
+    opposite = deepcopy(rule)
+    opposite.update(id='low-cutoff',requirements=[dict(scope='parameter',operator='filter',key='low',comparison='le',value=5.)])
+    value['priors'].append(opposite)
+    canonical, warnings = validate_recipe(recipe,value)
+    result = audit(canonical, ExplorationSpace.model_validate(value))
+    conflict, = result['conflict_sets']
+    variable, = conflict['parameter_conflicts']
+    assert variable['node_id']=='band' and variable['key']=='low'
+    assert conflict['resolution']=='diagnostic_or_explicit_challenge_required'
+    assert len(warnings)==2
+
+
+@pytest.mark.parametrize('clauses,expected', [
+    ([('ge',1),('le',1)],False), ([('gt',1),('le',1)],True),
+    ([('ge',1),('le',1),('ne',1)],True), ([('eq','iir'),('eq','fir')],True),
+    ([('in',[1,2]),('gt',2)],True), ([('in',[1,2]),('ge',2)],False),
+    ([('gt','unknown'),('le',1)],False),
+])
+def test_parameter_conflict_proof_handles_open_bounds_and_finite_choices(clauses, expected):
+    from app.search.rule_conflicts import impossible
+    assert impossible([dict(comparison=op,value=value) for op,value in clauses]) is expected

@@ -43,7 +43,7 @@ def audit(recipe, space, context=None):
             rule_sha256=digest(prior.model_dump(mode='json')), strength=prior.strength,
             evidence_ids=prior.evidence_ids, status='not_applicable',
             reason=prior.rationale, matched_nodes={}, condition_values=[], conflicts_with=[],
-            exceptions=[], required_edges=[], forbidden_pairs=[])
+            exceptions=[], required_edges=[], forbidden_pairs=[], requirement_constraints=[])
         rows.append(row)
         if prior.status == 'revoked':
             row.update(status='revoked', reason=prior.change_reason)
@@ -121,6 +121,9 @@ def audit(recipe, space, context=None):
                 row['forbidden_pairs'] = [sorted((a.id,b.id)) for a in matched[first] for b in matched[rest[0]]]
             violated = all(matched[k] for k in rest)
         else:
+            row['requirement_constraints'] = [dict(scope=p.scope, node_id=node_id, key=p.key,
+                comparison=p.comparison, value=p.value) for p in prior.requirements
+                for node_id in ([None] if p.scope=='context' else [n.id for n in matches(p.operator)])]
             required = [predicate(p) for p in prior.requirements]
             row['requirement_values'] = required
             if any(v is None for v in required) and not any(v is False for v in required):
@@ -139,13 +142,15 @@ def audit(recipe, space, context=None):
             other_forbidden = {tuple(pair) for pair in other['forbidden_pairs']}
             conflicting = (edges & {(b,a) for a,b in other_edges})
             excluded = ({tuple(sorted(e)) for e in edges} & other_forbidden) | ({tuple(sorted(e)) for e in other_edges} & forbidden)
-            if not conflicting and not excluded:
+            from .rule_conflicts import parameter_conflicts
+            parameters = parameter_conflicts(row, other)
+            if not conflicting and not excluded and not parameters:
                 continue
             row['conflicts_with'].append(other['prior_id'])
             other['conflicts_with'].append(row['prior_id'])
             hard = [r['prior_id'] for r in (row,other) if r['strength']=='hard']
             conflict_sets.append(dict(rule_ids=[row['prior_id'],other['prior_id']],
-                node_pairs=sorted([list(p) for p in conflicting | excluded]), hard_rule_ids=hard,
+                node_pairs=sorted([list(p) for p in conflicting | excluded]), parameter_conflicts=parameters, hard_rule_ids=hard,
                 resolution='hard_constraints_block' if len(hard)==2 else 'hard_constraint_precedence' if hard else 'diagnostic_or_explicit_challenge_required'))
     return dict(schema_version='rule-audit-1',
                 recipe_sha256=digest(recipe.model_dump(mode='json')),
