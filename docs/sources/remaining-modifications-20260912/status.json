@@ -902,7 +902,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "跨层产物的统一严格合同",
-      "current": "已有固定 JSON/TSV 模板和 v2 封闭 codec；底层异构诊断 payload 尚未全部形成各消费者共享的严格语义模型。",
+      "current": "artifact-codec-2 封闭字段/版本和共享 JSON Schema 已接入能力 API、生产者与解码器；验证完整对象/CSR/信号时间/通道/事件轴，兼容已知旧格式只读。77 项最终测试通过，13 个真实历史描述完整往返一致；异构诊断指标科学语义及全部消费者合同仍未统一。",
       "solution_and_acceptance": "按数据/模型/诊断/决定/评分输出定义版本化 schema，覆盖生产者、API、报告、前端与迁移；对未知字段、单位/轴失配、旧版本读取做一致性检查。",
       "dependencies": [
         "I02",
@@ -915,7 +915,8 @@
         "D11"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "partial",
+      "implementation": "docs/codec-contracts.md"
     },
     {
       "id": "I45",
@@ -1643,7 +1644,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十六批补齐 I42 记录/未定位对象证据并完成真实只读复核；科学筛除策略保持未完成。继续 I44 跨层严格合同。",
+  "active_step": "第二十七批完成 I44 底层产物严格合同与真实旧格式核查；更高层诊断语义仍保留缺口。继续 I37 实际 MATLAB/RELAX 取消和崩溃核查、I33 生命周期。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1936,6 +1937,11 @@
       "tests": "18 passed; combined artifacts/process/exclusions 27 passed, 2.12 s (overlap)",
       "real": "2 historical proposals, all source quotes found; 56 advisory record matches, 0 matches for unresolved scope; automatic exclusions 0; originals unchanged",
       "audit": "docs/sources/remaining-modifications-20260912/exclusion-objects-live-1-audit.json"
+    },
+    "codec_contract": {
+      "backend": "77 passed, 2 warnings, 65.64 s; first NamedInt rejection fixed and failure log retained",
+      "real": "13 complete historical descriptors; all roundtrip fingerprints identical; 12 separate saved signals maximum error 0 V; originals/code unchanged; 10.296 s",
+      "audit": "docs/sources/remaining-modifications-20260912/codec-legacy-live-1-audit.json"
     }
   }
 }

@@ -37,4 +37,7 @@ def capabilities(data=None):
             'unavailable_reasons':unavailable,'verification':receipt if valid else {'historical':receipt,'stale_implementation':True} if receipt else {},
             'availability_note':'Metadata can rule out some inputs; Planner and runtime validate the selected recipe, data, artifacts and dependencies.',
             'source_sha256':current,'source_fields':item['source']['source']['fields']})
-    return {'schema_version':'2','counts':{'units':len({r['unit_id'] for r in rows}),'operations':len({(r['unit_id'],r['op']) for r in rows}),'profiles':len(rows)},'rows':rows}
+    from .codec_contract import VERSION, schema
+    return {'schema_version':'2','counts':{'units':len({r['unit_id'] for r in rows}),'operations':len({(r['unit_id'],r['op']) for r in rows}),'profiles':len(rows)},'rows':rows,
+            'artifact_codec': {'version': VERSION, 'schema': schema(),
+                               'legacy': 'Unversioned known descriptors are read-only; unknown fields and versions are rejected.'}}

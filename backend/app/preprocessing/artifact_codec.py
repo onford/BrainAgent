@@ -8,6 +8,7 @@ import mne
 from scipy import sparse
 
 from .storage import file_hash, within, digest
+from .codec_contract import VERSION, validate_node
 
 ICA_EXACT=('unmixing_matrix_','mixing_matrix_','pca_components_','pca_mean_','pre_whitener_','fit_params','exclude','labels_','n_components_','n_samples_','pca_explained_variance_','info','current_fit','n_pca_components')
 
@@ -65,6 +66,13 @@ class Codec:
         return {'codec':kind,'file':path.name,'sha256':file_hash(path),**extra}
 
     def dump(self,value):
+        result = self._dump(value)
+        if isinstance(result, dict):
+            result['schema_version'] = VERSION
+        validate_node(result)
+        return result
+
+    def _dump(self,value):
         if sparse.issparse(value):
             a=value.tocsr();return {'codec':'sparse_csr','shape':list(a.shape),'data':self.dump(a.data),'indices':self.dump(a.indices),'indptr':self.dump(a.indptr)}
         if isinstance(value,np.ndarray):
@@ -78,7 +86,13 @@ class Codec:
             return self.file_ref(p,'bytes',size=len(value))
         if isinstance(value,complex):return {'codec':'complex','real':self.dump(value.real),'imag':self.dump(value.imag)}
         if isinstance(value,float) and not np.isfinite(value):return {'codec':'nonfinite','value':str(value)}
-        if value is None or isinstance(value,(str,int,float,bool)):return value
+        if value is None:return None
+        # MNE's NamedInt constants are JSON integers; preserve their numerical
+        # value without allowing arbitrary Python subclasses into descriptors.
+        if isinstance(value,bool):return bool(value)
+        if isinstance(value,int):return int(value)
+        if isinstance(value,float):return float(value)
+        if isinstance(value,str):return str(value)
         if isinstance(value,datetime):return {'codec':'datetime','value':value.isoformat()}
         if isinstance(value,mne.Annotations):
             return {'codec':'annotations','onset':self.dump(value.onset),'duration':self.dump(value.duration),'description':self.dump(value.description),'ch_names':self.dump(value.ch_names),'orig_time':self.dump(value.orig_time)}
@@ -117,9 +131,21 @@ class Codec:
         raise ValueError('unregistered artifact serializer: '+type(value).__module__+'.'+type(value).__name__)
 
     def load(self,value):
-        if not isinstance(value,dict):return value
-        kind=value['codec'];p=None
-        if kind=='sparse_csr':return sparse.csr_matrix((self.load(value['data']),self.load(value['indices']),self.load(value['indptr'])),shape=value['shape'])
+        kind=validate_node(value)
+        if kind is None:return value
+        p=None
+        if kind=='sparse_csr':
+            data,indices,indptr=(self.load(value[k]) for k in ('data','indices','indptr'))
+            rows,columns=value['shape']
+            if (any(not isinstance(a,np.ndarray) or a.ndim!=1 for a in (data,indices,indptr))
+                or indices.dtype.kind not in 'iu' or indptr.dtype.kind not in 'iu'
+                or len(data)!=len(indices) or len(indptr)!=rows+1
+                or indptr[0]!=0 or indptr[-1]!=len(data)
+                or np.any(indptr[1:]<indptr[:-1]) or np.any(indices<0) or np.any(indices>=columns)):
+                raise ValueError('CSR arrays do not match their declared axes and pointers')
+            result=sparse.csr_matrix((data,indices,indptr),shape=value['shape'])
+            result.check_format(full_check=True)
+            return result
         if kind=='complex':return complex(self.load(value['real']),self.load(value['imag']))
         if 'file' in value:
             p=within(self.root,value['file'])
@@ -139,7 +165,13 @@ class Codec:
         if kind=='nonfinite':return float(value['value'])
         if kind=='datetime':return datetime.fromisoformat(value['value'])
         if kind in ('dict','projection','info','forward'):
-            d={self.load(k):self.load(v) for k,v in value['items']}
+            d={}
+            for key,item in value['items']:
+                key=self.load(key)
+                try:
+                    if key in d:raise ValueError('duplicate artifact mapping key')
+                    d[key]=self.load(item)
+                except TypeError as exc:raise ValueError('unhashable artifact mapping key') from exc
             return mne.Forward(d) if kind=='forward' else mne.Info(d) if kind=='info' else mne.Projection(**d) if kind=='projection' else d
         if kind in ('list','tuple','source_spaces'):
             items=[self.load(v) for v in value['items']]
@@ -147,9 +179,21 @@ class Codec:
         if kind=='annotations':return mne.Annotations(**{k:self.load(value[k]) for k in ('onset','duration','description','ch_names','orig_time')})
         if kind in ('raw','epochs'):
             x=mne.io.read_raw_fif(p,preload=True,verbose='ERROR') if kind=='raw' else mne.read_epochs(p,preload=True,verbose='ERROR')
-            x._data=self.load(value['array'])
+            array=self.load(value['array'])
+            if not isinstance(array,np.ndarray) or array.shape!=x.get_data().shape:
+                raise ValueError('signal array axes differ from saved signal geometry')
+            x._data=array
             if 'info_exact' in value:x.info=self.load(value['info_exact'])
-            for ch,loc in zip(x.info['chs'],self.load(value['loc'])):ch['loc']=loc
+            locations=self.load(value['loc'])
+            if (len(locations)!=len(x.ch_names) or len(x.ch_names)!=array.shape[-2]
+                    or any(np.asarray(loc).shape!=(12,) for loc in locations)):
+                raise ValueError('signal channel/location axes differ')
+            if 'times' in value:
+                times=self.load(value['times'])
+                if (not isinstance(times,np.ndarray) or times.shape!=(array.shape[-1],)
+                        or not np.all(np.isfinite(times)) or not np.allclose(times,x.times,rtol=0,atol=1e-9)):
+                    raise ValueError('signal sample/time axes differ')
+            for ch,loc in zip(x.info['chs'],locations):ch['loc']=loc
             with x.info._unlock():
                 x.info['projs']=self.load(value['projs']);x.info['highpass']=value['highpass'];x.info['lowpass']=value['lowpass']
                 x.info['custom_ref_applied']=value['custom_ref_applied']
@@ -157,6 +201,9 @@ class Codec:
             else:
                 x.selection=self.load(value['selection']);x.baseline=self.load(value['baseline'])
                 x.events=self.load(value['events']);x.drop_log=self.load(value['drop_log'])
+                if (not isinstance(x.events,np.ndarray) or x.events.shape!=(array.shape[0],3)
+                        or x.events.dtype.kind not in 'iu' or np.asarray(x.selection).shape!=(array.shape[0],)):
+                    raise ValueError('epoch event/selection axes differ')
                 if 'times' in value:
                     x._set_times(self.load(value['times']));x._raw_times=x.times.copy()
             return x

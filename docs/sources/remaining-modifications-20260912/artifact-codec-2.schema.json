@@ -1,0 +1,775 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:brainagent:artifact-codec-2",
+  "$ref": "#/$defs/value",
+  "$defs": {
+    "value": {
+      "oneOf": [
+        {
+          "type": [
+            "null",
+            "string",
+            "number",
+            "boolean"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "shape": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "dtype": {
+              "type": "string",
+              "minLength": 1
+            },
+            "codec": {
+              "const": "ndarray"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "dtype",
+            "file",
+            "schema_version",
+            "sha256",
+            "shape"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "codec": {
+              "const": "bytes"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "file",
+            "schema_version",
+            "sha256",
+            "size"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "projs": {
+              "$ref": "#/$defs/value"
+            },
+            "array": {
+              "$ref": "#/$defs/value"
+            },
+            "times": {
+              "$ref": "#/$defs/value"
+            },
+            "events": {
+              "type": "null"
+            },
+            "drop_log": {
+              "type": "null"
+            },
+            "baseline": {
+              "type": "null"
+            },
+            "custom_ref_applied": {
+              "type": "integer"
+            },
+            "annotations": {
+              "$ref": "#/$defs/value"
+            },
+            "selection": {
+              "type": "null"
+            },
+            "highpass": {
+              "type": "number",
+              "minimum": 0
+            },
+            "info_exact": {
+              "$ref": "#/$defs/value"
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lowpass": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "loc": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "raw"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "annotations",
+            "array",
+            "baseline",
+            "codec",
+            "custom_ref_applied",
+            "drop_log",
+            "events",
+            "file",
+            "highpass",
+            "info_exact",
+            "loc",
+            "lowpass",
+            "projs",
+            "schema_version",
+            "selection",
+            "sha256",
+            "times"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "projs": {
+              "$ref": "#/$defs/value"
+            },
+            "array": {
+              "$ref": "#/$defs/value"
+            },
+            "times": {
+              "$ref": "#/$defs/value"
+            },
+            "events": {
+              "$ref": "#/$defs/value"
+            },
+            "drop_log": {
+              "$ref": "#/$defs/value"
+            },
+            "baseline": {
+              "$ref": "#/$defs/value"
+            },
+            "custom_ref_applied": {
+              "type": "integer"
+            },
+            "annotations": {
+              "type": "null"
+            },
+            "selection": {
+              "$ref": "#/$defs/value"
+            },
+            "highpass": {
+              "type": "number",
+              "minimum": 0
+            },
+            "info_exact": {
+              "$ref": "#/$defs/value"
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "lowpass": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "loc": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "epochs"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "annotations",
+            "array",
+            "baseline",
+            "codec",
+            "custom_ref_applied",
+            "drop_log",
+            "events",
+            "file",
+            "highpass",
+            "info_exact",
+            "loc",
+            "lowpass",
+            "projs",
+            "schema_version",
+            "selection",
+            "sha256",
+            "times"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "exact": {
+              "$ref": "#/$defs/value"
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "codec": {
+              "const": "ica"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "exact",
+            "file",
+            "schema_version",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "exact": {
+              "$ref": "#/$defs/value"
+            },
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "codec": {
+              "const": "eog"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "exact",
+            "file",
+            "schema_version",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "indptr": {
+              "$ref": "#/$defs/value"
+            },
+            "indices": {
+              "$ref": "#/$defs/value"
+            },
+            "shape": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "data": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "sparse_csr"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "data",
+            "indices",
+            "indptr",
+            "schema_version",
+            "shape"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "shape": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "codec": {
+              "const": "object_array"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version",
+            "shape"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "real": {
+              "$ref": "#/$defs/value"
+            },
+            "imag": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "complex"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "imag",
+            "real",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "enum": [
+                "nan",
+                "inf",
+                "-inf"
+              ]
+            },
+            "codec": {
+              "const": "nonfinite"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "schema_version",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "codec": {
+              "const": "datetime"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "schema_version",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "description": {
+              "$ref": "#/$defs/value"
+            },
+            "orig_time": {
+              "$ref": "#/$defs/value"
+            },
+            "duration": {
+              "$ref": "#/$defs/value"
+            },
+            "ch_names": {
+              "$ref": "#/$defs/value"
+            },
+            "onset": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "annotations"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "ch_names",
+            "codec",
+            "description",
+            "duration",
+            "onset",
+            "orig_time",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/value"
+                  },
+                  {
+                    "$ref": "#/$defs/value"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "codec": {
+              "const": "dict"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/value"
+                  },
+                  {
+                    "$ref": "#/$defs/value"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "codec": {
+              "const": "projection"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/value"
+                  },
+                  {
+                    "$ref": "#/$defs/value"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "codec": {
+              "const": "info"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "$ref": "#/$defs/value"
+                  },
+                  {
+                    "$ref": "#/$defs/value"
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "codec": {
+              "const": "forward"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "codec": {
+              "const": "list"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "codec": {
+              "const": "tuple"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value"
+              }
+            },
+            "codec": {
+              "const": "source_spaces"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "items",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "asr"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "schema_version",
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "autoreject_state"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "schema_version",
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "state": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "random_state"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "schema_version",
+            "state"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "folds": {
+              "$ref": "#/$defs/value"
+            },
+            "codec": {
+              "const": "cv_folds"
+            },
+            "schema_version": {
+              "const": "artifact-codec-2"
+            }
+          },
+          "required": [
+            "codec",
+            "folds",
+            "schema_version"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}
