@@ -232,7 +232,7 @@ def control(
     svc=Depends(service),
     user=Depends(get_current_user),
 ):
-    return checked(svc.store.control, user.owner_id, job_id, action)
+    return checked(svc.control, user.owner_id, job_id, action)
 
 
 @router.get("/jobs/{job_id}/artifacts/{key}/{name:path}")

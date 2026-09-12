@@ -40,6 +40,8 @@ def audit(recipe, space, context=None):
     for prior in space.priors:
         row = dict(prior_id=prior.id, revision=prior.revision,
             knowledge_rule_ids=prior.knowledge_rule_ids,
+            origin=prior.origin,
+            change_reason=prior.change_reason,
             rule_sha256=digest(prior.model_dump(mode='json')), strength=prior.strength,
             evidence_ids=prior.evidence_ids, status='not_applicable',
             reason=prior.rationale, matched_nodes={}, condition_values=[], conflicts_with=[],
@@ -67,6 +69,9 @@ def audit(recipe, space, context=None):
             continue
         first, *rest = prior.operators
         if not matched[first] or prior.relation == 'before' and not matched[rest[0]]:
+            continue
+        if prior.status=='suspended':
+            row.update(status='unknown',reason=prior.change_reason)
             continue
 
         def predicate(p):

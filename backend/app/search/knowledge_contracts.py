@@ -1,11 +1,28 @@
 """Citable research catalog; contextual claims are not automatically executable edges."""
 
 from typing import Any, Literal
+from datetime import datetime
 from pydantic import model_validator
-from app.preprocessing.schemas import Contract
+from app.preprocessing.schemas import Contract, Evidence
 
 
-class ResearchSource(Contract):
+class ResearchState(Contract):
+    status: Literal['active', 'suspended', 'withdrawn'] = 'active'
+    status_reason: str | None = None
+    status_observed_at: datetime | None = None
+    status_evidence: Evidence | None = None
+    binding_review_required: bool = False
+
+    @model_validator(mode='after')
+    def explained_state(self):
+        if self.status != 'active' and (not self.status_reason or not self.status_evidence or self.status_observed_at is None):
+            raise ValueError('inactive research entries require reason, evidence and observation date')
+        if self.status_observed_at is not None and self.status_observed_at.tzinfo is None:
+            raise ValueError('research status observation requires an explicit timezone')
+        return self
+
+
+class ResearchSource(ResearchState):
     id: str
     title: str
     url: str
@@ -15,6 +32,7 @@ class ResearchSource(Contract):
     accessed_at: str
     evidence_scope: str
     limitations: str
+    binding_original_url: str | None = None
 
 
 class ResearchOperator(Contract):
@@ -30,7 +48,7 @@ class ResearchRelation(Contract):
     relation: str
 
 
-class ResearchRule(Contract):
+class ResearchRule(ResearchState):
     id: str
     strength: Literal[
         "hard_math",

@@ -225,7 +225,15 @@ def _limits(root: Path, limits: dict) -> tuple[int, int]:
     return memory // MIB, remaining // MIB
 
 
-def _check_plan(plan, data, method_ref):
+def _check_plan(plan, data, method_ref, root=None):
+    if plan.knowledge_revision is not None:
+        from .knowledge_registry import verify_snapshot
+        verify_snapshot(plan.knowledge_revision)
+    if root is not None:
+        protocol = read_json(root / 'protocol.json')
+        expected_knowledge = protocol.get('knowledge_revision_hash')
+        if expected_knowledge and digest(plan.knowledge_revision) != expected_knowledge:
+            raise RuntimeError('saved plan knowledge differs from the frozen search revision')
     if plan.engine_sha256 != engine_hash() or plan.environment != environment():
         raise RuntimeError(
             "frozen execution environment/engine has changed; refusing to replan"
@@ -379,7 +387,7 @@ def _verify_candidate(root, store, entry, data, panel):
         or store.get(OWNER, plan_ref, "plan") != plan_value
     ):
         raise RuntimeError(f"{identity}: plan differs from the receipt/engine snapshot")
-    _check_plan(plan, data, method_ref)
+    _check_plan(plan, data, method_ref, root)
     input_hash = digest(data.model_dump(mode="json"))
     if plan.request.input_ref != Ref(id=input_hash, sha256=input_hash):
         raise RuntimeError(
@@ -573,7 +581,13 @@ def candidate(root: Path, candidate_id: str) -> dict:
         engine_root = root / "engine"
         if engine_root.resolve() != engine_root:
             raise RuntimeError("private engine root must not be redirected")
-        service = PreprocessingService(engine_root, allowed)
+        protocol=read_json(root/'protocol.json')
+        snapshot=None
+        if protocol.get('knowledge_revision_hash'):
+            snapshot=read_json(root/'knowledge-revision.json')
+            if digest(snapshot)!=protocol['knowledge_revision_hash']:
+                raise RuntimeError('frozen worker knowledge revision changed')
+        service = PreprocessingService(engine_root, allowed,knowledge_snapshot=snapshot)
         limits = read_json(root / "limits.json")
         try:
             policy = entries[candidate_id]
@@ -635,7 +649,7 @@ def candidate(root: Path, candidate_id: str) -> dict:
                 ),
             )
             write_json(plan_path, plan.model_dump(mode="json"))
-        _check_plan(plan, data, method_ref)
+        _check_plan(plan, data, method_ref, root)
         validate_input(plan.input_snapshot, allowed, engine_root)
         write_json(plan_path, plan.model_dump(mode="json"))
         if job_id is None:

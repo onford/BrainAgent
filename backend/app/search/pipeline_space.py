@@ -47,6 +47,8 @@ def validate_recipe(recipe, space, context=None):
         if node.operator not in operators:
             raise ValueError(f"unknown executable operator: {node.operator}")
         spec = operators[node.operator]
+        if spec.status=='blocked':
+            raise ValueError(f'{spec.id}: {spec.status_reason}')
         input_stage = stages.get(node.input_from, stage) if node.input_from else stage
         if node.input_from is not None:
             input_highpass = highpasses.get(node.input_from, 0.0)

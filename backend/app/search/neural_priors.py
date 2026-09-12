@@ -33,6 +33,7 @@ class NeuroBundle(Contract):
     rules: list[NeuroRule]
     research_coverage: list[dict[str, Any]]
     limitations: list[str]
+    inactive_rules: list[dict[str, Any]] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def links(self):
@@ -103,6 +104,17 @@ def freeze_bundle(data, space, research, guide):
             source_ids=["guide:" + s for s in cards[card]["source_ids"]], knowledge_rule_ids=refs,
             implication=implication, alternative=alternative, protection=protection,
         ))
+    from .knowledge_registry import inactive, normalized_url, unavailable as research_unavailable
+    _, inactive_research = inactive(research)
+    inactive_urls={normalized_url(url) for s in research['sources'] if research_unavailable(s)
+                   for url in (s['url'],s.get('binding_original_url')) if url}
+    inactive_guides={s['id'] for s in sources if normalized_url(s['url']) in inactive_urls}
+    def unavailable(rule):
+        return bool(inactive_research.intersection(rule.knowledge_rule_ids) or inactive_guides.intersection(rule.source_ids))
+    inactive_rules=[dict(id=r.id,knowledge_rule_ids=r.knowledge_rule_ids,
+        source_ids=r.source_ids,reason='Linked research rule/source is inactive in this frozen revision')
+        for r in rules if unavailable(r)]
+    rules=[r for r in rules if not unavailable(r)]
     # Include precise research anchors when a rule needs evidence beyond its interpretation card.
     referenced = {i for r in rules for i in r.knowledge_rule_ids}
     research_rules = {r["id"]: r for r in research["rules"]}
@@ -135,7 +147,7 @@ def freeze_bundle(data, space, research, guide):
     coverage = [{"topic": c["id"], "source_ids": ["guide:" + s for s in c["source_ids"]],
                  "status": "curated_interpretation_not_exhaustive_review", "next_checks": c["checks"],
                  "counter_explanations": c["alternatives"]} for c in guide["cards"]]
-    return NeuroBundle(task_profile=task, capabilities=capabilities, sources=sources, rules=rules,
+    return NeuroBundle(task_profile=task, capabilities=capabilities, sources=sources, rules=rules, inactive_rules=inactive_rules,
                        research_coverage=coverage, limitations=[
                            "Conditional suggestions, not validated physiological decision thresholds.",
                            "Source linkage is not evidence that every claim is empirically validated.",

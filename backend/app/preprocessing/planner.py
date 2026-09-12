@@ -292,7 +292,7 @@ def training_grid(config, record):
 
 
 def create_plan(
-    store: Storage, owner: str, request: PlanRequest, allowed_roots: list[Path]
+    store: Storage, owner: str, request: PlanRequest, allowed_roots: list[Path], knowledge_revision=None
 ):
     data = PreprocessInput.model_validate(store.get(owner, request.input_ref, "input"))
     validate_input(data, allowed_roots, store.root)
@@ -313,6 +313,9 @@ def create_plan(
         method = MethodSpec.model_validate(store.get(owner, ref, "method"))
         try:
             blockers = method.checks + [i.message for i in method.issues if i.severity == "blocking"]
+            if knowledge_revision:
+                from app.search.knowledge_registry import method_issues
+                blockers += [i['message'] for i in method_issues(method,knowledge_revision['catalog'])]
             if method.status == "retired" or blockers:
                 raise ValueError(
                     "retired method or unresolved checks: " + "; ".join(blockers)
@@ -496,6 +499,7 @@ def create_plan(
         records=records,
         environment=env,
         engine_sha256=engine_hash(),
+        knowledge_revision=knowledge_revision,
         estimated_disk_bytes=estimated_disk,
         resource_budget=resources,
     )

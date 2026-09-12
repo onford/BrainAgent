@@ -42,9 +42,9 @@ def input_context(data):
     }
 
 
-def build_space(context):
+def build_space(context, book=None):
     value = basic_space().model_dump(mode="json")
-    book = knowledge()
+    book = knowledge() if book is None else ScientificKnowledge.model_validate(book)
     sources = {s.id: s for s in book.sources}
     for key in ("S06", "S08", "S20", "S21"):
         source = sources[key]
@@ -402,4 +402,5 @@ def build_space(context):
                 "on_insufficient_calibration": "identity"
             }
             value["methods"].append(conditional)
-    return ExplorationSpace.model_validate(value)
+    from .knowledge_registry import apply_to_space
+    return ExplorationSpace.model_validate(apply_to_space(value,book.model_dump(mode='json')))

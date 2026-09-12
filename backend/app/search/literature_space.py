@@ -158,9 +158,9 @@ def shared_window_variant(method, data, output):
     return variant
 
 
-def build_workflow_space(data, output, methods=(), absence_reasons=()):
+def build_workflow_space(data, output, methods=(), absence_reasons=(), knowledge_book=None):
     context = input_context(data)
-    base = build_space(context).model_dump(mode="json")
+    base = build_space(context,knowledge_book).model_dump(mode="json")
     base["semantic_identity"] = "operation_contracts_v1"
     # Retain explicit project controls only. Curated literature presets are not
     # discoveries of this workflow and must not seed the production candidate pool.
@@ -172,6 +172,11 @@ def build_workflow_space(data, output, methods=(), absence_reasons=()):
     report = {"methods": [], "absence_reasons": list(absence_reasons)}
     expanded_methods = []
     for ref, method in methods:
+        if knowledge_book is not None:
+            from .knowledge_registry import method_issues
+            from app.preprocessing.schemas import MethodIssue
+            method=method.model_copy(deep=True)
+            method.issues.extend(MethodIssue.model_validate(i) for i in method_issues(method,knowledge_book))
         expanded_methods.append((ref, method))
         try:
             variant = shared_window_variant(method, data, output)

@@ -62,6 +62,10 @@ class SearchService:
         self.children = {}
         self.cancelled = set()
         self.verified = set()
+        from .knowledge_registry import KnowledgeRegistry
+        self.knowledge_registry=KnowledgeRegistry(self.root.parent/'knowledge-registry',knowledge())
+        if getattr(workflows,'preprocessing',None) is not None:
+            workflows.preprocessing.knowledge_registry=self.knowledge_registry
 
     def folder(self, identity):
         if not re.fullmatch(r"[a-f0-9]{32}", identity):
@@ -119,6 +123,7 @@ class SearchService:
             "probe-panel.json": "覆盖全部被试的固定重建探针与污染条件分配",
             "scientific-knowledge.json": "顺序、参数及适用条件的来源与证据缺口",
             "knowledge-coverage.json": "研究规则的有限执行绑定、条件建议和未解决议题队列",
+            "knowledge-revision.json": "本轮冻结知识修订、来源状态变更及影响范围",
             "evaluation-evidence.json": "质量评价设计和论文基准的可比性依据",
         }
         for path in sorted(root.rglob("*")):
@@ -200,6 +205,37 @@ class SearchService:
                 )
         return sorted(rows, key=lambda r: r["created_at"], reverse=True)
 
+    def knowledge_impact(self, owner):
+        from .knowledge_registry import impact, verify_snapshot
+        current = self.knowledge_registry.get(owner)
+        runs = []
+        for path in self.root.glob('*/search.json'):
+            state = read(path)
+            if state['owner'] != owner:
+                continue
+            row = dict(search_id=state['id'], status=state['status'], historical_artifacts_modified=False)
+            protocol = state.get('protocol', {})
+            snapshot_path = path.parent / 'knowledge-revision.json'
+            catalog_path = path.parent / 'scientific-knowledge.json'
+            try:
+                if protocol.get('knowledge_revision_hash'):
+                    snapshot = verify_snapshot(read(snapshot_path))
+                    if digest(snapshot) != protocol['knowledge_revision_hash']:
+                        raise ValueError('frozen knowledge hash differs from protocol')
+                    previous = snapshot['catalog']
+                    row['frozen_revision_sha256'] = snapshot['sha256']
+                else:
+                    previous = read(catalog_path)
+                    if digest(previous) != protocol.get('scientific_knowledge_hash'):
+                        raise ValueError('legacy knowledge hash differs from protocol')
+                    row['frozen_revision_sha256'] = None
+                row.update(review_status='compared', impact=impact(previous,current['catalog']))
+            except (KeyError, ValueError, OSError) as exc:
+                row.update(review_status='unverifiable', reason=str(exc))
+            runs.append(row)
+        return dict(current_revision_sha256=current['sha256'], runs=runs,
+                    policy='Read-only comparison; historical measurements and frozen execution are never rewritten.')
+
     def create(self, owner, request: SearchRequest, *, start=True):
         from .interpretation import interpretation_guide, evidence_document
         from .utility_evaluation import utility_protocol
@@ -272,8 +308,10 @@ class SearchService:
         from .source_evidence import freeze_evidence
         source_evidence = freeze_evidence(root, [m for _, m in registered], self.workflows.preprocessing.store, owner) if registered else {}
         output_contract = {k: panel_request[k] for k in ("sfreq", "tmin", "tmax")}
+        knowledge_revision=self.knowledge_registry.get(owner,require_current=True)
+        research=knowledge_revision['catalog']
         space, space_context, method_intake = build_workflow_space(
-            data, output_contract, registered, intake.get("absence_reasons", []))
+            data, output_contract, registered, intake.get("absence_reasons", []),knowledge_book=research)
         for row in method_intake["methods"]:
             if "compiled_method" in row:
                 compiled = row.pop("compiled_method")
@@ -288,15 +326,19 @@ class SearchService:
 
             controls = control_entries(space, space_context, request.seed, max_entries=256)
             registry = controls["registry"]
-        research = knowledge().model_dump(mode="json")
         research_text = "\n\n".join(
-            f"{r['id']} · {r['claim']}\n条件：{r['condition']}\n解释：{r['implication']}\n来源："
+            f"{r['id']} · {r['claim']}\n"
+            + (f"知识状态：{r['status']}；{r.get('status_reason') or ''}\n" if r.get('status','active')!='active' else '')
+            + f"条件：{r['condition']}\n解释：{r['implication']}\n来源："
             + ", ".join(r["source_ids"])
             for r in research["rules"]
         )
         research_text += "\n\n来源索引\n" + "\n".join(
-            f"{s['id']}: {s['title']} · {s['url']}" for s in research["sources"]
+            f"{s['id']}: {s['title']} · {s['url']}"
+            + (f" · 状态 {s['status']} · {s.get('status_reason') or ''}" if s.get('status','active')!='active' else '')
+            for s in research["sources"]
         )
+        research_text += '\n知识目录默认状态仅表示本修订启用；关联来源停用时其依赖规则不可作为新候选依据。'
         documents.append(
             {
                 "id": "scientific-priors",
@@ -372,6 +414,7 @@ class SearchService:
             "space_context": space_context,
             "scientific_knowledge_hash": digest(research),
             "knowledge_coverage_hash": digest(knowledge_audit),
+            "knowledge_revision_hash": digest(knowledge_revision),
             "evaluation_evidence_hash": digest(evaluation_evidence),
             "interpretation_guide_hash": digest(guide),
             "neural_priors": neural,
@@ -429,6 +472,7 @@ class SearchService:
             write(root / "control-design.json", controls)
         write(root / "scientific-knowledge.json", research)
         write(root / "knowledge-coverage.json", knowledge_audit)
+        write(root / "knowledge-revision.json", knowledge_revision)
         write(root / "evaluation-evidence.json", evaluation_evidence)
         write(root / "interpretation-guide.json", guide)
         write(root / "neural-priors.json", neural)
@@ -883,6 +927,8 @@ class SearchService:
         verify_registry(protocol, state["registry"])
         if protocol.get('knowledge_coverage_hash') and digest(read(root/'knowledge-coverage.json')) != protocol['knowledge_coverage_hash']:
             raise IntegrityFailure('冻结研究覆盖与未解决议题队列已改变')
+        if protocol.get('knowledge_revision_hash') and digest(read(root/'knowledge-revision.json')) != protocol['knowledge_revision_hash']:
+            raise IntegrityFailure('冻结知识修订已改变')
         if protocol.get("interpretation_guide_hash") and digest(read(root / "interpretation-guide.json")) != protocol["interpretation_guide_hash"]:
             raise IntegrityFailure("冻结图表解读知识库已改变")
         if protocol.get("neural_priors_hash") and (

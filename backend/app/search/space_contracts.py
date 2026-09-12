@@ -53,6 +53,8 @@ class InputHighpassRequirement(Contract):
 
 class OperatorDefinition(Contract):
     id: Identifier
+    status: Literal['active','blocked'] = 'active'
+    status_reason: str | None = None
     title: str
     unit_id: str
     op: str
@@ -74,6 +76,8 @@ class OperatorDefinition(Contract):
 
     @model_validator(mode="after")
     def valid_separations(self):
+        if self.status=='blocked' and not self.status_reason:
+            raise ValueError('blocked operators require a reason')
         if self.input_highpass is not None and self.input_highpass.window_parameter not in self.domains:
             raise ValueError("input highpass requirement must reference an operator window parameter")
         for rule in self.separations:
@@ -153,7 +157,7 @@ class ScientificPrior(Contract):
     id: Identifier
     knowledge_rule_ids: list[str] = Field(default_factory=list)
     revision: int = Field(default=1, ge=1)
-    status: Literal['active', 'revoked'] = 'active'
+    status: Literal['active', 'revoked', 'suspended'] = 'active'
     change_reason: str | None = None
     supersedes: list[str] = Field(default_factory=list)
     operator_match: Literal['registered_id', 'unit_operation'] = 'registered_id'
@@ -177,7 +181,7 @@ class ScientificPrior(Contract):
             raise ValueError('empirical exceptions cannot disable hard constraints; correct the hard rule scope explicitly')
         if len({e.id for e in self.exceptions}) != len(self.exceptions):
             raise ValueError('duplicate exception identifiers')
-        if (self.status == 'revoked' or self.revision > 1 or self.supersedes) and not (self.change_reason or '').strip():
+        if (self.status != 'active' or self.revision > 1 or self.supersedes) and not (self.change_reason or '').strip():
             raise ValueError('rule revisions/revocations require a change reason')
         if not self.implementation_versions or len(set(self.implementation_versions)) != len(self.implementation_versions):
             raise ValueError('rule implementation versions must be nonempty and unique')
@@ -272,6 +276,7 @@ class CandidateRecipe(Contract):
 
 
 class ExplorationSpace(Contract):
+    knowledge_effects: dict[str, Any] = Field(default_factory=dict)
     version: Literal["1"] = "1"
     semantic_identity: Literal["operator_ids_v1", "operation_contracts_v1"] = "operator_ids_v1"
     operators: list[OperatorDefinition]

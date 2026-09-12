@@ -5,6 +5,7 @@ from app.api.deps import get_current_user
 from app.api.routes.workflows import checked
 from app.search.contracts import SearchRequest
 from app.search.metric_reading import ReadingRequest
+from app.search.knowledge_registry import KnowledgeUpdate, KnowledgeRebase
 
 router = APIRouter(prefix="/searches", tags=["offline-search"])
 
@@ -30,6 +31,31 @@ def guide(user=Depends(get_current_user)):
     from app.search.interpretation import interpretation_guide
 
     return interpretation_guide()
+
+
+@router.get('/knowledge')
+def knowledge_head(request: Request, user=Depends(get_current_user)):
+    return checked(request.app.state.searches.knowledge_registry.get,user.owner_id)
+
+
+@router.get('/knowledge/revisions/{reference}')
+def knowledge_revision(reference: str, request: Request, user=Depends(get_current_user)):
+    return checked(request.app.state.searches.knowledge_registry.get,user.owner_id,reference)
+
+
+@router.get('/knowledge/impact')
+def knowledge_impact(request: Request, user=Depends(get_current_user)):
+    return checked(request.app.state.searches.knowledge_impact,user.owner_id)
+
+
+@router.post('/knowledge',status_code=201)
+def update_knowledge(body: KnowledgeUpdate, request: Request, user=Depends(get_current_user)):
+    return checked(request.app.state.searches.knowledge_registry.update,user.owner_id,body)
+
+
+@router.post('/knowledge/rebase',status_code=201)
+def rebase_knowledge(body: KnowledgeRebase, request: Request, user=Depends(get_current_user)):
+    return checked(request.app.state.searches.knowledge_registry.rebase,user.owner_id,body)
 
 
 @router.get("/{identity}")

@@ -333,6 +333,7 @@ class ExecutionPlan(Contract):
     records: list[RecordPlan]
     environment: dict[str, str]
     engine_sha256: str
+    knowledge_revision: dict[str, Any] | None = None
     estimated_disk_bytes: int = Field(default=0, ge=0)
     resource_budget: ResourceBudget | None = None
     required_outputs: list[str] = ["data", "events", "provenance", "delta"]

@@ -8,6 +8,8 @@ from .knowledge_contracts import ScientificKnowledge
 def coverage(book, space, neural, task):
     book = ScientificKnowledge.model_validate(book).model_dump(mode='json')
     known = {r['id'] for r in book['rules']}
+    from .knowledge_registry import inactive
+    _, inactive_rules = inactive(book)
     predicates, advisories = {}, {}
     for prior in space.priors:
         if not set(prior.knowledge_rule_ids) <= known:
@@ -27,6 +29,8 @@ def coverage(book, space, neural, task):
         advisory = advisories.get(rule['id'], [])
         status = ('partial_predicate_binding' if any(b['status']=='active' for b in bindings)
                   else 'conditional_advisory_binding' if advisory else 'catalog_only')
+        if rule['id'] in inactive_rules:
+            status='inactive_research'
         row = dict(rule_id=rule['id'], rule_sha256=digest(rule), strength=rule['strength'],
             source_ids=rule['source_ids'], scope=rule['scope'], conditions=rule['condition'],
             status=status, executable_bindings=bindings, advisory_bindings=advisory,
