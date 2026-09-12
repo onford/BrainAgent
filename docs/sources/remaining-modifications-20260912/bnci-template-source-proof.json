@@ -1,0 +1,31 @@
+{
+  "source_file": "E:\\dataset\\eeg\\BCICIV_2a\\A01T.mat",
+  "local_sha256": "054f02e70cf9c4ada1517e9b9864f45407939c1062c6793516585c6f511d0325",
+  "started_at": 1789235620.6776974,
+  "code": [
+    {
+      "path": "base.py",
+      "git_blob_sha": "ec85910d69892385b6d36418e28a6921f295888c",
+      "url": "https://github.com/NeuroTechX/moabb/blob/develop/moabb/datasets/bnci/base.py",
+      "sha256": "920e327b8131bd6f63a6991863b4b69eff67a18075ea13da916aa09712cf5f5d"
+    },
+    {
+      "path": "bnci_2014.py",
+      "git_blob_sha": "70b8118c3310a043911225423a5b2c281bae7941",
+      "url": "https://github.com/NeuroTechX/moabb/blob/develop/moabb/datasets/bnci/bnci_2014.py",
+      "sha256": "ec4b3ce868bb839f6cc070de6e4ad1896e2c441dc127d89c4081b187da005d91"
+    },
+    {
+      "path": "utils.py",
+      "git_blob_sha": "0a96a38a0751c92549c263ce378858e4f06a1deb",
+      "url": "https://github.com/NeuroTechX/moabb/blob/develop/moabb/datasets/bnci/utils.py",
+      "sha256": "0ed74bc5e6d866dcba6c91c87d3371a2a4e6f7af0d4c889ad9b00d73856f6fbd"
+    }
+  ],
+  "remote_url": "https://lampx.tugraz.at/~bci/database/001-2014/A01T.mat",
+  "remote_sha256": "054f02e70cf9c4ada1517e9b9864f45407939c1062c6793516585c6f511d0325",
+  "remote_bytes": 42806453,
+  "byte_identity_verified": true,
+  "local_unchanged": true,
+  "elapsed_seconds": 44.15946841239929
+}

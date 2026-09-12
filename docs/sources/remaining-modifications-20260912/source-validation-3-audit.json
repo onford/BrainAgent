@@ -1,0 +1,482 @@
+{
+  "status": "completed",
+  "n_runs": 84,
+  "n_conditions": 12,
+  "n_synthetic_cases": 4,
+  "elapsed_seconds": 7.7810000000026776,
+  "engine_sha256": "1b33ad44664f398c21508aa34957bd69a9669656e36f92860c381d54d171f2b8",
+  "search_engine_sha256": "f356e8f3ada2e624bcc4317f66f7b0b965b338de563d53de8a67227216c6442a",
+  "probe_sha256": "7c39b8e7df813aeb65a32a3d0fe436d8c305ba713de88c2cb8833e2edfd737f9",
+  "validation_sha256": "557859029a03b2819355ca1a877cd5162682add5747aa7e092b2781194d9800e",
+  "all_artifacts_verified": true,
+  "real_template_source_sha256": "054f02e70cf9c4ada1517e9b9864f45407939c1062c6793516585c6f511d0325",
+  "source_matches_provider": true,
+  "source_unchanged": true,
+  "template_unchanged": true,
+  "limitations": [
+    "Known simulated sources and a fixed spherical conductor are numerical ground truth only for this simulation.",
+    "Fixed standard electrode geometry is not an individual anatomy or a source estimate from observed EEG.",
+    "Oscillation frequencies, amplitudes and task changes are declared test cases, not mandatory human EEG patterns.",
+    "Injected artifact waveforms, even recorded EOG templates, are not pure physiological artifact ground truth.",
+    "Numerical success does not establish preservation on real EEG, independent generalization or clinical utility."
+  ],
+  "registered_filter_results": [
+    {
+      "condition": {
+        "kind": "eog",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501575,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.4842506766214502,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "eog",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208155,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.49549469588502776,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "eog",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501575,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.4842506766214497,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "eog",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208157,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.49549469588502904,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "emg",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.4684379964241431,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "emg",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208157,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.0004711486046656881,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "emg",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.4684379964241431,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "emg",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.00047114860466585516,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "drift",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.005771809146175779,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "drift",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208155,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.00574228561441471,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "drift",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501575,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.005771809146174594,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "drift",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208157,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.005742285614415562,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "line",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.18907496692269293,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "line",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.15275987614865164,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "line",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.18907496692268974,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "line",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.15275987614865003,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "pulse",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.5322948399146402,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "pulse",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.21921100354442097,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "pulse",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501575,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.5322948399146407,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "pulse",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.21921100354442133,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "recorded_eog_template",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.6539509626211767,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "recorded_eog_template",
+        "rms_ratio": 0.5
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.6531016825834338,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "recorded_eog_template",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_40",
+      "clean_retention_nrmse": {
+        "value": 0.22896575383501577,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.6539509626211716,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    },
+    {
+      "condition": {
+        "kind": "recorded_eog_template",
+        "rms_ratio": 1.0
+      },
+      "processor": "registered_filter_1_8",
+      "clean_retention_nrmse": {
+        "value": 0.9587979691208156,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      },
+      "artifact_residual_rms_ratio": {
+        "value": 0.6531016825834342,
+        "status": "ok",
+        "n_valid": 4,
+        "n_total": 4
+      }
+    }
+  ],
+  "scientific_scope": "Two fixed filter configurations and five analytic controls on a declared finite source/template matrix; not all registered methods and not real-human preservation or independent generalization."
+}
