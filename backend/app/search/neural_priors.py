@@ -201,4 +201,5 @@ def frozen_context(state):
             "research_coverage": bundle["research_coverage"],
             "diagnostics": [{k: v for k, v in d.items() if k != "subjects"} for d in diagnostics[-8:]],
             "limits": bundle["limitations"],
-            "available_diagnostics": ["signal_profile", "paired_comparison"]}
+            "available_diagnostics": state.get('protocol', {}).get('diagnostic_registry',
+                {'status': 'legacy_unregistered', 'kinds': ['signal_profile', 'paired_comparison']})}

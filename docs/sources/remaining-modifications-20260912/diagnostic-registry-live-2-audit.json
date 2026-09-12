@@ -1,0 +1,75 @@
+{
+  "purpose": "Numerical and controller integration review; not independent scientific validation.",
+  "status": "passed",
+  "diagnostic_id": "diagnostic-77a9f3e93da4b655a1e3",
+  "spectral_distribution": {
+    "status": "computed",
+    "scope": "equal mean over the saved PSD non-frequency axes; saved aggregate only",
+    "frequency_grid_hz": [
+      0.0,
+      79.75077881619937
+    ],
+    "frequency_bins": 161,
+    "maximum_bin_hz": 10.467289719626168,
+    "maximum_bin_psd": 7.80136854048527,
+    "psd_unit": "µV²/Hz",
+    "minimum_bin_psd": 1.5230038221987244e-05,
+    "maximum_bin_count": 1,
+    "maximum_bin_tie_policy": "first saved frequency; a maximum is not necessarily unique or a physiological oscillation",
+    "integral_on_saved_grid": 55.27415585321621,
+    "integration": "trapezoid on saved frequency grid",
+    "within_record_reduction": "not_recorded",
+    "limitations": "A sampled aggregate PSD maximum does not establish neural origin, temporal localization, or every subject having that maximum."
+  },
+  "decision_effect": {
+    "experiment": {
+      "hypothesis": "在已保存的 processed_task PSD 上，按非频率轴取均值后，最大 PSD 频点（spectral_distribution.maximum_bin_hz）高于 9 Hz。",
+      "competing_explanation": "该最大值也可能由残余肌电/高频伪迹、工频噪声、处理链或保存网格效应造成，而不代表特定神经振荡；也可能因低频峰主导而低于或等于 9 Hz。",
+      "metric": "spectral_distribution.maximum_bin_hz",
+      "comparison": "gt",
+      "threshold": 9.0,
+      "threshold_rationale": "9 Hz 是本次接口验证的预登记预测阈值，不是生理阈值；用于登记可证伪分支，不预先猜测实测值，也不用于证明神经机制。",
+      "branches": {
+        "condition_met": {
+          "next_action": "request_evidence",
+          "reason": "若已保存标量显示 maximum_bin_hz > 9 Hz，需补读同一已保存 PSD 的诊断收据/质量标量以确认数据完整性与可能的伪迹解释；不执行新预处理。"
+        },
+        "condition_not_met": {
+          "next_action": "finish",
+          "reason": "若已保存标量显示 maximum_bin_hz ≤ 9 Hz，本次预登记检验为未满足，可结束该接口验证诊断；不执行新预处理。"
+        },
+        "unavailable": {
+          "next_action": "request_evidence",
+          "reason": "若 maximum_bin_hz 因缺少、非有限或不完整已保存 PSD/频率轴而不可用，只能补读既有证据，不能执行新预处理或猜测数值。"
+        }
+      }
+    },
+    "value": 10.467289719626168,
+    "outcome": "condition_met",
+    "selected_branch": {
+      "next_action": "request_evidence",
+      "reason": "若已保存标量显示 maximum_bin_hz > 9 Hz，需补读同一已保存 PSD 的诊断收据/质量标量以确认数据完整性与可能的伪迹解释；不执行新预处理。"
+    },
+    "interpretation": "A numeric condition tests a prediction; it does not establish its proposed mechanism."
+  },
+  "response": {
+    "diagnostic_response": {
+      "diagnostic_id": "diagnostic-77a9f3e93da4b655a1e3",
+      "disposition": "follow",
+      "reason": "该诊断已评估：spectral_distribution.maximum_bin_hz = 10.467 Hz > 9 Hz，故预登记的 condition_met 分支被选中，其 next_action 为 request_evidence（补读同一已保存 PSD 的诊断收据/质量标量以核对数据完整性与可能的伪迹解释）。因此遵循该分支行动，只提出补读请求、不执行新预处理、不据此确认任何神经机制；最大值频点本身也可能由残余工频、肌电高频、处理链或保存网格效应造成。"
+    },
+    "decision": {
+      "action": "request_evidence",
+      "source_id": "protocol:method_extraction",
+      "question": "已保存 processed_task PSD 的频率网格与谱估计是如何生成的（滤波与重采样链、参考、窗长/重叠/频分辨率），以及同一已保存候选的质量标量（line_ratio_50/60hz、emg_hf_proxy、flat_fraction、numerical_rank、low_correlation_fraction）能否说明 10.467 Hz 处的最高频点是残余工频、肌电/高频伪迹或处理链网格效应，而非特定神经振荡？",
+      "query": "protocol:method_extraction 中记录的 processed_task PSD 生成方法（滤波链、重采样、参考、Welch 参数与频分辨率），以及 candidates/bp8-30-average/assessment/a1/quality/data-quality.json 中 /stages/processed_task 的质量与完整性标量及其分母可用性",
+      "affects_choice": "决定把该 10.467 Hz 最大值登记为待检验的谱特征，还是记录为处理链/伪迹效应；并据此决定后续是否提出候选编辑（如频带、滤波或参考相关步骤）。该补读不授权新预处理或通道/试次删除。",
+      "reason": "选中分支 condition_met 明确要求以 request_evidence 核对同一已保存 PSD 的数据完整性与伪迹解释，因此按分支行动。本条仅记录补读提案（引用 protocol:method_extraction），本次不实际执行补读；数值条件只检验预测，不证明神经机制。"
+    }
+  },
+  "decision_scope": "accepted next-action proposal only; no subsequent evidence read or preprocessing candidate was executed",
+  "input_bytes_observed": 1590596,
+  "original_artifacts_unchanged": true,
+  "review_code_unchanged": true,
+  "code_sha256": "9ff705ba5e28fbf512f289e0982920dd156ab2aa356fa21f5c7c3159901590ab"
+}

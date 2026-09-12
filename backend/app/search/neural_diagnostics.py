@@ -4,17 +4,12 @@ from copy import deepcopy
 import math
 from pathlib import Path
 
-from app.preprocessing.storage import digest, file_hash, within
-from .io import read
+from app.preprocessing.storage import digest, within
 from .neural_priors import evaluate_priors
+from .diagnostic_registry import DiagnosticInputBudget, validate_request, branch_result, METRICS
 
 
-METRICS = ("line_ratio_50hz", "line_ratio_60hz", "low_correlation_fraction", "flat_fraction",
-           "numerical_rank", "mu_mean_psd", "beta_mean_psd", "erds_mu", "erds_beta",
-           "emg_hf_proxy", "covariance_trace")
-
-
-def quality_input(root, state, candidate_id):
+def quality_input(root, state, candidate_id, budget=None):
     candidate = next((c for c in state["candidates"] if c["id"] == candidate_id and c["status"] == "evaluated"), None)
     if candidate is None:
         raise ValueError("诊断只能读取已完成候选")
@@ -24,9 +19,8 @@ def quality_input(root, state, candidate_id):
         raise ValueError("候选没有可核验的质量回执，不能合成观测")
     directory = within(Path(root), f"candidates/{candidate_id}/{receipt['assessment_path']}")
     path = within(directory, ref["path"])
-    if file_hash(path) != ref["sha256"]:
-        raise ValueError("质量回执哈希不一致")
-    q = read(path)
+    budget = budget or DiagnosticInputBudget(64 * 1024**2)
+    q = budget.read(path, ref['sha256'])
     entry = next(r for r in state["registry"] if r["id"] == candidate_id)
     if (q.get("candidate_id") != candidate_id or q.get("panel_hash") != state["panel"]["panel_hash"]
             or q.get("input_hash") != state["protocol"]["input_hash"]
@@ -53,24 +47,40 @@ def _number(row):
     return value if row.get("status") == "ok" and type(value) in (int, float) and math.isfinite(value) else None
 
 
-def explain_missing(root, quality, reference, stage_observations):
+def explain_missing(root, quality, reference, stage_observations, budget=None):
     """Resolve aggregate 'no_available_members' to hashed per-record causes."""
+    budget = budget or DiagnosticInputBudget(64 * 1024**2)
     wanted = {stage: {mid for mid, row in rows.items() if row["status"] != "ok"}
               for stage, rows in stage_observations.items()}
     counts = {stage: {mid: {} for mid in mids} for stage, mids in wanted.items()}
     examples = {stage: {mid: [] for mid in mids} for stage, mids in wanted.items()}
     refs = []
+    indexed = {record['record_id']: record for subject in quality.get('bysubject', {}).values()
+               for record in subject.get('records', []) if 'diagnostic_missing_index' in record}
+    inspected = 0
+    index_count = 0
     for artifact in quality.get("detail_artifacts", []):
         path = within(within(Path(root), reference["path"]).parent, artifact["path"])
-        if file_hash(path) != artifact["sha256"]:
-            raise ValueError("逐记录质量明细哈希不一致")
-        detail = read(path)
-        if detail.get("record_id") != artifact["record_id"]:
-            raise ValueError("逐记录质量明细身份不一致")
+        budget.check()
+        row = indexed.get(artifact['record_id'])
+        if row is not None:
+            if row.get('detail_artifact') != artifact:
+                raise ValueError('质量缺测索引与源明细引用不一致')
+            stage_metrics = row['diagnostic_missing_index']
+            index_count += 1
+        else:
+            detail = budget.read(path, artifact['sha256'])
+            if detail.get("record_id") != artifact["record_id"]:
+                raise ValueError("逐记录质量明细身份不一致")
+            stage_metrics = {stage: [{**metric, 'metric_index': i} for i, metric in enumerate(data.get('metrics', []))]
+                             for stage, data in detail.get('stages', {}).items()}
+        inspected += 1
         ref = {"path": path.relative_to(Path(root)).as_posix(), "sha256": artifact["sha256"]}
-        refs.append(ref)
+        if row is None:
+            refs.append(ref)
         for stage, mids in wanted.items():
-            for i, metric in enumerate(detail.get("stages", {}).get(stage, {}).get("metrics", [])):
+            for metric in stage_metrics.get(stage, []):
+                i = metric['metric_index']
                 mid = metric["metricID"]
                 if mid not in mids or metric.get("status") == "ok":
                     continue
@@ -83,7 +93,8 @@ def explain_missing(root, quality, reference, stage_observations):
         for mid in mids:
             stage_observations[stage][mid]["missing_detail"] = {
                 "record_reason_counts": counts[stage][mid], "examples": examples[stage][mid],
-                "records_inspected": len(refs), "examples_truncated": sum(counts[stage][mid].values()) > len(examples[stage][mid])}
+                "records_inspected": inspected, 'records_from_frozen_missing_index': index_count,
+                "examples_truncated": sum(counts[stage][mid].values()) > len(examples[stage][mid])}
     return refs
 
 
@@ -110,7 +121,8 @@ def comparison(left, right, left_entry, right_entry, stage):
             if (not records_a or records_a != records_b or sa.get("coverage") != sb.get("coverage")
                     or a.get("denominator") != b.get("denominator")):
                 missing[subject] = "record_or_trial_denominator_unverified_or_differs"
-            elif av is None or bv is None or a.get("unit") != b.get("unit") or a.get("axes") != b.get("axes"):
+            elif (av is None or bv is None or a.get("unit") != b.get("unit") or a.get("axes") != b.get("axes")
+                  or a.get('within_record_reduction') != b.get('within_record_reduction')):
                 missing[subject] = "unavailable_or_incompatible_measurement"
             elif not common_panel or not frame_checks[subject][0]:
                 missing[subject] = "physical_frame_or_panel_unverified_or_differs"
@@ -127,18 +139,21 @@ def comparison(left, right, left_entry, right_entry, stage):
         "interpretation": "Verified native-frame descriptive differences; complete executed-operation matching is conservative and does not establish neural preservation."}}
 
 
-def run_diagnostic(root, state, request):
+def run_diagnostic(root, state, request, budget=None):
+    definition = validate_request(state['protocol'], request)
+    budget = budget or DiagnosticInputBudget(64 * 1024**2)
     identity = request["candidate_id"]
     stage = request["stage"]
-    quality, ref = quality_input(root, state, identity)
+    quality, ref = quality_input(root, state, identity, budget)
     measured = {s: observations(quality, ref, s) for s in {stage, "source_raw", "source_task"}}
-    detail_refs = explain_missing(root, quality, ref, measured)
+    # Spectrum and native-frame comparisons do not consume unrelated waveform/TFR details.
+    detail_refs = explain_missing(root, quality, ref, measured, budget) if definition.kind == 'signal_profile' else []
     observed = measured[stage]
     bundle = state["protocol"]["neural_priors"]
     # Source-wide spectra and metadata are used for pollution hypotheses, not already narrow-band outputs.
     raw_observed = deepcopy(measured["source_raw"])
     raw_observed["erds_mu"] = measured["source_task"]["erds_mu"]
-    result = {"schema_version": "neural-diagnostic-1", "kind": request["kind"],
+    result = {"schema_version": "neural-diagnostic-2", "kind": request["kind"],
               "candidate_id": identity, "stage": stage, "question": request["question"],
               "status": "evaluated" if any(_number(v) is not None for v in observed.values()) else "unavailable",
               "observations": observed, "input_artifacts": [ref, *detail_refs],
@@ -146,16 +161,24 @@ def run_diagnostic(root, state, request):
               "limitations": ["Secondary analysis of saved numerical measurements, not a new EEG preprocessing run.",
                               "No class labels, no automatic channel/trial deletion, no new selection score.",
                               "Rule screens are engineering suggestions; false/unknown do not certify absence of artifacts."]}
-    if request["kind"] == "paired_comparison":
+    baseline = None
+    if definition.reference_required:
         other = request.get("reference_candidate_id")
         if not other or other == identity:
             raise ValueError("配对诊断需要不同的已完成参考候选")
-        baseline, base_ref = quality_input(root, state, other)
-        entries = {e["id"]: e for e in state["registry"]}
-        result.update(comparison(baseline, quality, entries[other], entries[identity], stage))
+        baseline, base_ref = quality_input(root, state, other, budget)
         result["reference_candidate_id"] = other
         result["input_artifacts"].append(base_ref)
-    result["request_sha256"] = digest({"request": {k: v for k, v in request.items() if k not in {"question", "reason"}},
-                                       "inputs": result["input_artifacts"], "bundle": digest(bundle)})
+    result.update(definition.handler(quality, ref, baseline, stage))
+    budget.check()
+    result['diagnostic_contract'] = {'kind': definition.kind, 'version': definition.version,
+        'registry_sha256': state['protocol'].get('diagnostic_registry_hash'),
+        'input_domain': definition.input_domain, 'label_permission': 'none',
+        'numeric_contract': definition.numeric_contract}
+    if request.get('experiment'):
+        result['decision_effect'] = branch_result(result, request['experiment'])
+    result["request_sha256"] = digest({"request": {k: v for k, v in request.items() if k not in {"question", "reason", "experiment"}},
+                                       "inputs": result["input_artifacts"], "bundle": digest(bundle),
+                                       "contract": result['diagnostic_contract']})
     result["id"] = "diagnostic-" + result["request_sha256"][:20]
     return deepcopy(result)

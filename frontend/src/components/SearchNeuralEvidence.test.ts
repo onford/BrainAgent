@@ -3,6 +3,17 @@ import { describe, expect, it } from 'vitest'
 import SearchNeuralEvidence from './SearchNeuralEvidence.vue'
 
 describe('neural evidence provenance', () => {
+  it('distinguishes unavailable measurements, planned branches and revised decisions', () => {
+    const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
+      diagnostics: [{ id: 'd', decision_effect: { experiment: { hypothesis: '频谱峰值较高', competing_explanation: '峰值较低', threshold_rationale: '待验证预测' },
+        outcome: 'unavailable', value: null, selected_branch: { next_action: 'request_diagnostic', reason: '需补充测量' } } }],
+      actions: [{ index: 2, action: 'model_decision', status: 'completed', result: { decision: { action: 'finish' },
+        diagnostic_response: { diagnostic_id: 'd', disposition: 'revise', reason: '没有剩余测量预算' } } }] } })
+    expect(wrapper.text()).toContain('测量不可用；观测值 不可用')
+    expect(wrapper.text()).toContain('预登记下一步：请求诊断')
+    expect(wrapper.text()).toContain('实际决定：结束搜索 · 修订计划 · 没有剩余测量预算')
+    expect(wrapper.text()).not.toContain('尚未记录后续决定')
+  })
   it('does not imply historical or unexecuted use', () => {
     const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: {} } })
     expect(wrapper.text()).toContain('未冻结神经先验包')

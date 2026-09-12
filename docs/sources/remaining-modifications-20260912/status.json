@@ -378,7 +378,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "动态诊断的能力范围",
-      "current": "request_diagnostic 已真实执行；主要分析已有测量/画像，尚非可按假设启动任意已注册新数值诊断的统一系统。",
+      "current": "冻结注册表包含输入域、标签权限、成本、数值合同和产物；三项内核含新增PSD频谱分布。竞争假设和三分支执行前登记，后续模型决定校验遵循或显式修订。质量缺测索引避免加载无关波形。真实12记录/180试次历史汇总复核先因输入预算失败，修复后沿用模型预算通过；实际只验证诊断与下一动作提案，科学推断及后续候选效用另行验证。",
       "solution_and_acceptance": "为新诊断注册输入域、标签权限、成本、数值合同和产物；让模型按竞争假设选择，有预算地执行并改变下一步动作。",
       "dependencies": [
         "I02",
@@ -391,7 +391,8 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "implemented_targeted_validation_passed",
+      "implementation": "docs/diagnostic-registry.md"
     },
     {
       "id": "I20",
@@ -1636,7 +1637,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第十六批完成单指标解释的角色/依据合同、PSD事实、归约说明与冻结来源过滤；80项最终回归、156项前端测试/构建通过。接着完成I19诊断注册与后续依赖。I03真实文献闭环仍未通过。",
+  "active_step": "第十七批诊断注册、输入预算、预测分支与后续决定校验完成；83项后端专项、157项前端及构建通过。真实复核修复无关大明细读取后通过，保留失败与累计预算。接着补清范围残留，按依赖完成I25/I20及I22。I03实质文献闭环未通过。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1691,10 +1692,10 @@
       "log": ".local/remaining-modifications-20260912/shared-tests.log"
     },
     "full_backend_regression": {
-      "result": "1159 passed, 109 warnings",
-      "seconds": 754.96,
-      "log": ".local/remaining-modifications-20260912/full-backend-sixth-2.log",
-      "scope": "sixth batch and all preceding integrated revisions"
+      "result": "1227 passed, 109 warnings",
+      "seconds": 829.53,
+      "log": ".local/remaining-modifications-20260912/full-backend-metric-contract.log",
+      "scope": "626d825; through batch 16, excludes diagnostic registry batch 17"
     },
     "backend_full": "1109 passed, 109 warnings; regression-4, 752.47s",
     "sites_proxy": "5 passed",
@@ -1866,6 +1867,11 @@
       "ligature_source_recovery": "16 passed, 2.74 seconds",
       "lexer_audit": "pdf-ligature-audit.json",
       "limitations": "No historical acceptance promoted; general parameter conflict/lifecycle work remains"
+    },
+    "diagnostic_registry": {
+      "backend": "83 passed, 85.33 s; final targeted batch",
+      "frontend": "157 passed; build passed",
+      "real_review": "failed input budget first, passed after required-input fix; inherited cumulative model budget and original deadline; subsequent action proposed only"
     }
   }
 }

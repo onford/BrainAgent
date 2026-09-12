@@ -29,6 +29,8 @@ from .knowledge_contracts import ScientificKnowledge
 from .exploration_coverage import coverage
 from .neural_priors import freeze_bundle
 from .neural_diagnostics import run_diagnostic
+from .diagnostic_registry import (catalog as diagnostic_catalog, validate_request as validate_diagnostic_request,
+    validate_response as validate_diagnostic_response, DiagnosticInputBudget)
 
 
 def now():
@@ -419,6 +421,8 @@ class SearchService:
             "interpretation_guide_hash": digest(guide),
             "neural_priors": neural,
             "neural_priors_hash": digest(neural),
+            "diagnostic_registry": diagnostic_catalog(),
+            "diagnostic_registry_hash": digest(diagnostic_catalog()),
             "environment": environment(),
             "numeric_engine_hash": engine_hash(),
             "search_engine_hash": search_engine_hash(),
@@ -476,6 +480,7 @@ class SearchService:
         write(root / "evaluation-evidence.json", evaluation_evidence)
         write(root / "interpretation-guide.json", guide)
         write(root / "neural-priors.json", neural)
+        write(root / 'diagnostic-registry.json', state['protocol']['diagnostic_registry'])
         write(root / "space.schema.json", ExplorationSpace.model_json_schema())
         write(
             root / "scientific-knowledge.schema.json",
@@ -681,6 +686,8 @@ class SearchService:
                     result = await decide(
                         self.llm, state, documents, one_shot=one_shot, capture=capture
                     )
+            if not one_shot:
+                validate_diagnostic_response(state, result)
             write(
                 folder / "response.json",
                 {"schema_version": "1", "status": "accepted", "result": result},
@@ -715,15 +722,30 @@ class SearchService:
         if state["usage"].get("diagnostics", 0) >= state["budget"].get("max_diagnostics", 0):
             raise ValueError("诊断预算已用尽")
         self.verify_runtime(state)
+        validate_diagnostic_request(state['protocol'], proposal)
+        per_call = diagnostic_catalog()['cost_contract']
+        reserved = state['usage'].get('diagnostic_input_bytes_reserved', 0)
+        limit = state['budget'].get('max_diagnostic_input_bytes', 512 * 1024**2)
+        allowance = min(per_call['max_input_bytes_per_call'], limit - reserved)
+        if allowance <= 0:
+            raise ValueError('诊断累计输入预算已用尽')
+        # Reservation survives a crash; uncertain work is never charged as zero.
+        state['usage']['diagnostic_input_bytes_reserved'] = reserved + allowance
+        inputs = DiagnosticInputBudget(allowance, min(per_call['max_seconds_per_call'], max(.001, state['deadline'] - time.time())))
         state["usage"]["diagnostics"] = state["usage"].get("diagnostics", 0) + 1
         action = self.action(state, "request_diagnostic", status="running", request=proposal, reason=proposal["reason"])
         started = time.monotonic()
         try:
-            result = await asyncio.to_thread(run_diagnostic, self.folder(state["id"]), state, proposal)
+            result = await asyncio.to_thread(run_diagnostic, self.folder(state["id"]), state, proposal, inputs)
             self.guard(state)
             if any(d["id"] == result["id"] for d in state.get("diagnostics", [])):
                 raise ValueError("相同输入和诊断已经计算，不能通过改写问题重复计为新证据")
             path = "diagnostics/" + result["id"] + ".json"
+            import json
+            result['cost'] = {'input_bytes_observed': inputs.bytes, 'input_files_observed': inputs.files,
+                'input_bytes_reserved': allowance, 'elapsed_seconds': time.monotonic() - started}
+            if len(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2).encode('utf-8')) + 1 > per_call['max_output_bytes_per_call']:
+                raise ValueError('诊断产物预算已用尽')
             write(self.folder(state["id"]) / path, result)
             result["artifact"] = {"path": path, "sha256": file_hash(self.folder(state["id"]) / path)}
             state.setdefault("diagnostics", []).append(result)
@@ -735,6 +757,9 @@ class SearchService:
         finally:
             action["cost_seconds"] = time.monotonic() - started
             state["usage"]["diagnostic_seconds"] = state["usage"].get("diagnostic_seconds", 0) + action["cost_seconds"]
+            state['usage']['diagnostic_input_bytes_observed'] = state['usage'].get('diagnostic_input_bytes_observed', 0) + inputs.bytes
+            action['diagnostic_input_bytes_reserved'] = allowance
+            action['diagnostic_input_bytes_observed'] = inputs.bytes
             self.save(state)
         return result
 
@@ -936,6 +961,12 @@ class SearchService:
             or digest(protocol["neural_priors"]) != protocol["neural_priors_hash"]
         ):
             raise IntegrityFailure("冻结神经先验已改变")
+        if protocol.get('diagnostic_registry_hash') and (
+            digest(read(root / 'diagnostic-registry.json')) != protocol['diagnostic_registry_hash']
+            or digest(protocol.get('diagnostic_registry')) != protocol['diagnostic_registry_hash']
+            or protocol['diagnostic_registry'] != diagnostic_catalog()
+        ):
+            raise IntegrityFailure('冻结诊断注册合同已改变')
         for diagnostic in state.get("diagnostics", []):
             ref = diagnostic["artifact"]
             path = within(root, ref["path"])

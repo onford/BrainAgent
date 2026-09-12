@@ -11,6 +11,9 @@ const ruleTitle = (r: any) => ({ 'eog-missing': '至少一条记录缺少真实 
 const reasonName = (s: string) => ({ condition_satisfied: '观测满足当前条件', condition_not_satisfied: '观测未满足当前条件', no_available_members: '汇总中没有可用测量，请查看原始回执的缺失原因', missing_or_partial_observation: '测量缺失或仅部分可用', nonfinite_observation: '测量不是有限数值', acquisition_filter_history_incomplete_for_residual_proxy: '采集滤波历史不完整，残余污染代理不满足解释条件' }[s] ?? s)
 const comparisonName = (s: string) => ({ gt: '大于', lt: '小于', eq: '等于', present: '存在有效观测' }[s] ?? s)
 const originName = (s: string) => ({ engineering_screen: '工程筛查值，未经生理阈值验证', metadata: '冻结的采集元数据', descriptive: '描述性观测，无合格方向' }[s] ?? s)
+const outcomeName = (s: string) => ({ condition_met: '条件成立', condition_not_met: '条件不成立', unavailable: '测量不可用' }[s] ?? s)
+const actionName = (s: string) => ({ propose_candidate: '提出候选', request_evidence: '补充证据', request_diagnostic: '请求诊断', finish: '结束搜索' }[s] ?? s)
+const responses = (id: string) => (props.actions ?? []).filter(a => a.status === 'completed' && a.action === 'model_decision' && a.result?.diagnostic_response?.diagnostic_id === id)
 </script>
 
 <template>
@@ -26,6 +29,16 @@ const originName = (s: string) => ({ engineering_screen: '工程筛查值，未�
       <article v-for="d in diagnostics" :key="d.id">
         <h4>{{ d.question }}</h4>
         <p>{{ d.candidate_id }} · {{ d.stage }} · {{ d.status }}</p>
+        <div v-if="d.decision_effect" class="diagnostic-effect">
+          <p>待验证假设：{{ d.decision_effect.experiment.hypothesis }}</p>
+          <p>竞争解释：{{ d.decision_effect.experiment.competing_explanation }}</p>
+          <p>实测条件：{{ outcomeName(d.decision_effect.outcome) }}；观测值 {{ d.decision_effect.value ?? '不可用' }}</p>
+          <p>阈值依据：{{ d.decision_effect.experiment.threshold_rationale }}</p>
+          <p>预登记下一步：{{ actionName(d.decision_effect.selected_branch.next_action) }} · {{ d.decision_effect.selected_branch.reason }}</p>
+          <p>数值条件成立不代表机制已被证明。</p>
+          <p v-if="!responses(d.id).length">尚未记录后续决定。</p>
+          <p v-for="a in responses(d.id)" :key="a.index">实际决定：{{ actionName(a.result.decision.action) }} · {{ a.result.diagnostic_response.disposition === 'revise' ? '修订计划' : '遵循分支' }} · {{ a.result.diagnostic_response.reason }}</p>
+        </div>
         <a v-if="d.artifact" :href="searchArtifactUrl(searchId, { name: d.artifact.path })" target="_blank" rel="noopener">完整诊断与测量定位</a>
         <details v-for="r in d.prior_evaluation?.rules" :key="r.id">
           <summary>{{ ruleTitle(r) }}：{{ stateName(r.condition_state) }}</summary>

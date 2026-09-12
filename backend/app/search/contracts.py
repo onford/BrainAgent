@@ -5,10 +5,12 @@ from pydantic import ConfigDict, Field, model_validator
 from app.preprocessing.schemas import Contract
 from .evaluation_contracts import EvaluationReceipt
 from .space_contracts import CandidateRecipe, PipelineEdit
+from .diagnostic_registry import DiagnosticExperiment, DiagnosticResponse
 
 
 class SearchBudget(Contract):
     max_diagnostics: int = Field(default=32, ge=0, le=256)
+    max_diagnostic_input_bytes: int = Field(default=512 * 1024**2, ge=0, le=8 * 1024**3)
     max_candidates: int = Field(default=48, ge=1, le=256)
     max_proposals: int = Field(default=128, ge=0, le=1024)
     max_evidence_reads: int = Field(default=32, ge=0, le=256)
@@ -136,21 +138,23 @@ class Finish(Contract):
 
 class RequestDiagnostic(Contract):
     action: Literal["request_diagnostic"]
-    kind: Literal["signal_profile", "paired_comparison"]
+    kind: str = Field(pattern=r'^[a-z][a-z0-9_]{0,63}$', description='Copy kind from the frozen diagnostic registry')
     candidate_id: str
     reference_candidate_id: str | None = None
     stage: Literal["source_raw", "source_task", "processed_task", "processed_continuous"] = "source_raw"
     question: str = Field(min_length=1)
     reason: str = Field(min_length=1)
+    experiment: DiagnosticExperiment | None = None
 
     @model_validator(mode="after")
     def paired(self):
-        if (self.kind == "paired_comparison") != (self.reference_candidate_id is not None):
-            raise ValueError("paired comparison requires a reference; signal profile does not")
+        from .diagnostic_registry import validate_request
+        validate_request(None, self.model_dump(mode='json'))
         return self
 
 
 class Decision(Contract):
+    diagnostic_response: DiagnosticResponse | None = None
     decision: Annotated[
         ProposeCandidate | RequestEvidence | RequestDiagnostic | Finish, Field(discriminator="action")
     ]
@@ -164,6 +168,8 @@ class InitialSchedule(Contract):
 class Usage(Contract):
     diagnostics: int = 0
     diagnostic_seconds: float = 0
+    diagnostic_input_bytes_reserved: int = 0
+    diagnostic_input_bytes_observed: int = 0
     candidates: int = 0
     proposals: int = 0
     evidence_reads: int = 0
@@ -191,6 +197,8 @@ class Candidate(Contract):
 
 
 class ActionRecord(Contract):
+    diagnostic_input_bytes_reserved: int = 0
+    diagnostic_input_bytes_observed: int = 0
     index: int
     action: str
     status: str = "reserved"

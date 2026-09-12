@@ -877,6 +877,11 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
             detail_artifacts.append(artifact)
             record_summary = {k: deepcopy(detail[k]) for k in ("record_id", "subject", "role", "coverage", "status", "errors")}
             record_summary["detail_artifact"] = artifact
+            record_summary['diagnostic_missing_index'] = {stage: [
+                {'metricID': metric['metricID'], 'status': metric['status'],
+                 'reason': metric.get('reason'), 'metric_index': index}
+                for index, metric in enumerate(report['metrics']) if metric['status'] != 'ok']
+                for stage, report in detail['stages'].items()}
             record_summary['measurement_frames']={s:{k:v for k,v in f.items() if k!='contract'}
                                                    for s,f in detail['measurement_frames'].items()}
             contrast=detail.get('physical_contrast',dict(status='not_comparable',reason='verified_processed_output_unavailable',paired_trials=0))

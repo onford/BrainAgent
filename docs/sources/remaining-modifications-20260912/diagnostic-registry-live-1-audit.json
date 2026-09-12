@@ -1,0 +1,8 @@
+{
+  "purpose": "Numerical and controller integration review; not independent scientific validation.",
+  "status": "failed",
+  "error": "ValueError: 诊断输入预算已用尽",
+  "original_artifacts_unchanged": true,
+  "review_code_unchanged": true,
+  "code_sha256": "ee20c26ae1c3d92afb5eb08eebfd88cdeb6f4fe5b0fd62c54109fb3a9036267a"
+}
