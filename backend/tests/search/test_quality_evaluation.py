@@ -77,7 +77,7 @@ def make_case(tmp_path, counts=(2, 4, 2), *, post_reference=True, task_duration=
         steps.append(Step(id="reference", unit_id="EEG-REREFERENCE", op="reference", input="epoch",
                           params={"ref_channels": "average"}, evidence_indices=[0]))
         nodes.append(dict(id="a", operator="average_reference", parameters={}))
-    entry = dict(id="fixture", recipe=dict(nodes=nodes, adaptation={"adaptation": "euclidean_alignment"}))
+    entry = dict(id="fixture", recipe=dict(nodes=nodes))
     plan = ExecutionPlan(request=PlanRequest(input_ref=Ref(id=panel["input_hash"], sha256=panel["input_hash"]),
                                            methods=[method], mode="validation"),
                          input_snapshot=data, screening=[], environment={}, engine_sha256="b"*64,
@@ -140,8 +140,18 @@ def test_real_bids_all_records_subject_equal_summary_and_read_only(tmp_path):
     assert s["metrics"]["oha"]["value"][0] != pytest.approx((6*a+2*b)/8)
     for rid in ("record-0", "record-1", "record-2"):
         d = detail(receipt, out, rid)
+        assert d['physical_contrast']['status']=='evaluated',d['physical_contrast']
+        contrast=d['physical_contrast']
+        arrays={a['view']:np.load(out/a['path'],allow_pickle=False) for a in contrast['artifacts']}
+        for a in contrast['artifacts']:
+            assert file_hash(out/a['path'])==a['sha256']
+        np.testing.assert_array_equal(arrays['difference'],arrays['source']-arrays['processed'])
+        assert arrays['source'].shape[0]==d['coverage']['eligible_trials']
         for stage in STAGES:
             assert {m["metricID"] for m in d["stages"][stage]["metrics"]} == set(METRIC_IDS)
+            frame=d['measurement_frames'][stage]
+            if frame['status']=='verified':
+                assert digest(frame['contract'])==frame['sha256']
         oha = metric(d, "processed_task", "oha")
         assert len(oha["details"]["window_curves"]) == d["coverage"]["eligible_trials"]
         assert len(oha["denominator"]["original_trial_ids"]) == d["coverage"]["eligible_trials"]

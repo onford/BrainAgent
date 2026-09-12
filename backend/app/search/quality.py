@@ -31,7 +31,7 @@ class SignalView:
     task/precue views. Samples across discontinuities must be separate calls.
     For dimensionless arrays, channel names identify transformed coordinates.
     processing_id identifies the same cleaning recipe/application; transform_id
-    identifies the exact fitted adaptation, not just its method name.
+    identifies an explicitly supplied coordinate transform, not just its name.
     """
 
     sfreq: float
@@ -421,8 +421,8 @@ def compute_paired_erds(task_power, baseline_power, *, task_view: SignalView,
     """Baseline-normalize *linear power*, preserving trial-level denominators.
 
     Arrays have trial x ... x time axes. The upstream source/precue worker must
-    provide the baseline with the SAME cleaning/adaptation and TFR measurement.
-    A raw precursor alone never authorizes pairing it with a cleaned/adapted grid.
+    provide the baseline with the SAME processing and TFR measurement.
+    A raw precursor alone never authorizes pairing it with a processed grid.
     baseline_valid_mask marks usable convolution support, not post-hoc good trials.
     """
     task = np.asarray(task_power, dtype=float)

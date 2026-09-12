@@ -9,6 +9,7 @@ import { electricalMatrix, epochSeries, fractionDomain } from '../utils/qualityF
 import AssessmentPlot from './AssessmentPlot.vue'
 import AssessmentHeatmap from './AssessmentHeatmap.vue'
 import MetricReading from './MetricReading.vue'
+import PhysicalContrast from './PhysicalContrast.vue'
 
 const props = defineProps<{ searchId: string; candidateId: string; basePath: string; receiptPath: string }>()
 const receipt = ref<any>(null), detail = ref<any>(null), error = ref(''), loading = ref(false)
@@ -117,6 +118,7 @@ const detailLink = computed(() => {
       <AssessmentPlot :comparison-key="`quality:${metric}:channels`" v-if="channelSeries.length && !uniform && (showChannelMeans || heatmap?.rows.length === 1)" :title="(names[metric] || metric) + t(' · Channel means')" categorical :series="channelSeries" :y-domain="metricLimits" :x-label="t('Channel / channel-pair index (see point labels)')" :y-label="row.unit" :caption="caption + t('Equal-weight mean over finite windows/segments in each column, for locating details. The heatmap shows all missing values.')" :provenance="provenance" />
       <MetricReading v-if="row && !recordId" :search-id="searchId" :candidate-id="candidateId" :stage="stage" :metric-id="metric" :row="row" />
       <details v-if="row"><summary>{{ t('Formula, parameters, and denominators') }}</summary><pre>{{ JSON.stringify({ formula: row.formula, axes: row.axes, denominator: row.denominator, details: row.details }, null, 2) }}</pre></details>
+      <PhysicalContrast v-if="recordId" :contrast="detail?.physical_contrast" :search-id="searchId" :folder="folder" :record-id="recordId" />
       <details v-if="recordId"><summary>{{ t('Waveform preview and electrode layout') }}</summary>
         <details><summary>{{ '感觉运动 ROI 时频与基线支持' }}</summary>
           <p v-if="!neural">{{ '此记录未保存时频诊断。' }}</p>

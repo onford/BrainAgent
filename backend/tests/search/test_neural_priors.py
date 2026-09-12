@@ -98,14 +98,20 @@ def test_verified_receipt_and_duplicate_diagnostic_identity(tmp_path, bundle):
 
 def test_paired_differences_refuse_mismatched_views_and_denominators():
     metric = {"value": 1, "unit": "u", "status": "ok", "axes": [], "denominator": {"n": 2}}
-    q = {"bysubject": {"s": {"records": [{"record_id": "r"}], "coverage": {"eligible": 2},
+    frame={'status':'verified','contract':{'unit':'V','actual_filter':{'l_freq':8}}}
+    frame['sha256']=digest(frame['contract'])
+    q = {"panel_hash":"panel","input_hash":"input","bysubject": {"s": {"records": [{"record_id": "r","measurement_frames":{'processed_task':frame}}], "coverage": {"eligible": 2},
                               "stages": {"processed_task": {"mu_mean_psd": metric}}}}}
     b = deepcopy(q); b["bysubject"]["s"]["stages"]["processed_task"]["mu_mean_psd"]["value"] = 3
     entry = {"recipe": {"nodes": [{"operator": "bandpass", "parameters": {"l_freq": 8}}]}}
     other = deepcopy(entry); other["recipe"]["nodes"][0]["parameters"]["l_freq"] = 4
     def result(e): return comparison(q, b, entry, e, "processed_task")["metrics"]["mu_mean_psd"]
     assert result(entry)["mean_subject_difference"] == 2
+    b['bysubject']['s']['records'][0]['measurement_frames']['processed_task']['contract']['actual_filter']['l_freq']=4
+    changed=b['bysubject']['s']['records'][0]['measurement_frames']['processed_task']
+    changed['sha256']=digest(changed['contract'])
     assert result(other)["status"] == "not_comparable"
+    b['bysubject']['s']['records']=deepcopy(q['bysubject']['s']['records'])
     b["bysubject"]["s"]["coverage"]["eligible"] = 1
     assert result(entry)["paired_subjects"] == 0
 

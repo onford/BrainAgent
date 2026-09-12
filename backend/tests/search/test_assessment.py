@@ -580,7 +580,7 @@ def test_real_compiler_cleaning_expansion_and_filter_history():
             assert not asr
         history = _history(SimpleNamespace(info=dict(highpass=0.0, lowpass=80.0)),
                            dict(SoftwareFilters={}, HardwareFilters={}), config, entry)
-        assert len(history["operations"]) == len(config.steps)
+        assert len(history["operations"]) == len(chain)
         assert history["nominal_band_hz"][0] > 0
         assert history["nominal_band_hz"][1] < 80
         for field, value in (("input", "incorrect"), ("decision_from", "incorrect"), ("params", {"max_fraction": 0.9})):

@@ -318,9 +318,13 @@ def _history(raw, metadata, config=None, entry=None):
                          for key in ("SoftwareFilters", "HardwareFilters"))
     notches, operations = [], []
     if config is not None:
+        signal_ids={s.id for s in _data_chain(config)}
         for node, step in _recipe_steps(config, entry):
+            if step.id not in signal_ids:
+                continue
             operations.append({"operator": node["operator"], "step_id": step.id,
                                "unit_id": step.unit_id, "op": step.op,
+                               "implementation_version":step.implementation_version,"profile":step.profile,
                                "frozen_parameters": deepcopy(step.params)})
             if step.op in {"filter", "butter"}:
                 if step.params.get("l_freq") is not None:
@@ -688,7 +692,7 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
     for item in result.records:
         result_groups.setdefault(item["record_id"], []).append(item)
     subjects = sorted({r["subject"] for r in panel["records"].values()})
-    bysubject, detail_artifacts = {}, []
+    bysubject, detail_artifacts, contrast_artifacts = {}, [], []
     record_summaries = []
     for subject in subjects:
         reduced = {stage: {} for stage in STAGES}
@@ -743,6 +747,19 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                     paths, provenance, delta, kept, shape, boundary = _artifacts(root, item, config, plan, panel, entry)
                     _check_signal_fiff(paths, kept, shape, panel, delta)
                     history = _history(raw, metadata, config, entry) if raw is not None and metadata is not None else None
+                    if history is not None:
+                        history['runtime_reference']=delta['after'].get('reference')
+                        history['runtime_custom_ref_applied']=delta['after'].get('custom_ref_applied')
+                        from app.preprocessing.units.operations_v2 import DEFINITIONS
+                        reference_ids={s.id for s in _data_chain(config) if s.unit_id=='EEG-REREFERENCE'
+                            or DEFINITIONS.get((s.unit_id,s.op),{}).get('effect') in {'reference','reference_model','reference_channels','native_pipeline'}}
+                        history['reference_bindings']=[{k:deepcopy(log.get(k)) for k in ('unit_id','op','parameters','model_binding')}
+                            for log in provenance['steps'] if log['branch']=='main' and log['step_id'] in reference_ids]
+                        after=delta['after']
+                        if after.get('highpass') is not None:
+                            history['nominal_band_hz'][0]=max(history['nominal_band_hz'][0],after['highpass'])
+                        if after.get('lowpass') is not None:
+                            history['nominal_band_hz'][1]=min(history['nominal_band_hz'][1],after['lowpass'])
                     ids = [r["event_id"] for r in kept]
                     detail["epoch_order_original_trial_ids"] = ids
                     baseline, audit = None, None
@@ -787,6 +804,31 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                         detail["stages"]["processed_task"] = report
                         detail["coverage"].update(_coverage(trials, available=len(kept)))
                         detail["coverage"]["finite_processed_trials"] = int(np.isfinite(values).all(axis=(1, 2)).sum())
+                        try:
+                            from .physical_contrast import check_sample_geometry,contrast_epochs
+                            _require(raw is not None and 'source' not in detail['errors'],'verified_source_unavailable')
+                            _require(raw.info['sfreq']==contract['sfreq'],'source_and_processed_sample_rates_differ')
+                            _require(len(kept)==sum(t['eligible'] for t in trials),'common_view_requires_complete_frozen_trial_denominator')
+                            check_sample_geometry(config,raw.info['sfreq'])
+                            source_epochs,_=_segments(raw,kept,channels,(contract['epoch_start_offset'],contract['epoch_end_offset']+1),sample_key='original_sample')
+                            arrays,contrast=contrast_epochs(source_epochs,values,sfreq=contract['sfreq'],channels=channels,
+                                source_trial_ids=[r['event_id'] for r in kept],processed_trial_ids=ids,
+                                source_history=_json(source_history),processed_history=_json(history),time_window=[contract['tmin'],contract['tmax']])
+                            refs=[]
+                            directory=output/'physical-contrast'/digest(rid)[:20]
+                            directory.mkdir(parents=True,exist_ok=True)
+                            for name,array in arrays.items():
+                                path=directory/(name+'.npy')
+                                np.save(path,array,allow_pickle=False)
+                                refs.append(dict(kind='physical_contrast_array',view=name,path=path.relative_to(output).as_posix(),
+                                    sha256=file_hash(path),bytes=path.stat().st_size,record_id=rid,unit='V',shape=list(array.shape)))
+                            contrast['artifacts']=refs
+                            detail['physical_contrast']=contrast
+                            contrast_artifacts.extend(refs)
+                            del arrays,source_epochs,array
+                        except (OSError,ValueError,KeyError,TypeError,RuntimeError) as exc:
+                            detail['physical_contrast']=dict(status='not_comparable',reason=str(exc),
+                                expected_trials=sum(t['eligible'] for t in trials),paired_trials=0)
                     detail["verified_artifacts"] = item["result"]["artifacts"]
                     del baseline
                 except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:
@@ -799,6 +841,8 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                     except (OSError, ValueError) as exc:
                         detail["errors"]["source_postcheck"] = str(exc)
                         detail["stages"] = {s: _empty("source_changed_during_quality", status="not_computable") for s in STAGES}
+                        detail['physical_contrast']=dict(status='not_comparable',reason='source_changed_during_quality',
+                            expected_trials=sum(t['eligible'] for t in trials),paired_trials=0)
                         detail["source_unchanged_verified"] = False
             finally:
                 if raw is not None:
@@ -809,6 +853,17 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                 report = detail["stages"][stage]
                 _require({m["metricID"] for m in report["metrics"]} == set(METRIC_IDS), "quality_metric_inventory_mismatch")
                 reduced[stage][rid] = _reduce(report)
+            from .physical_frames import measurement_frame
+            detail['measurement_frames']={}
+            for stage,report in detail['stages'].items():
+                source_stage=stage.startswith('source_')
+                task_ids=[t['event_id'] for t in trials if t['eligible']] if source_stage else detail.get('epoch_order_original_trial_ids',[])
+                identity=dict(trial_ids=task_ids if stage.endswith(('task','precue')) else [],
+                    event_origins=[(t['event_id'],t['source_sample']) for t in trials if t['event_id'] in task_ids],
+                    time_window=list(PRECUE_SECONDS) if stage.endswith('precue') else [contract['tmin'],contract['tmax']] if stage.endswith('task') else None)
+                detail['measurement_frames'][stage]=measurement_frame(_json(report),source_files=detail.get('source_files',{}),
+                    record_id=rid,stage=stage,sample_identity=identity,
+                    verified=detail['source_unchanged_verified'] and (source_stage or bool(detail.get('verified_artifacts'))))
             detail["status"] = "failed" if "processed" in detail["errors"] else "partial" if detail["errors"] else "evaluated"
             path = output / "quality-details" / (digest([subject, rid])[:20] + ".json")
             write_json(path, _json(detail))
@@ -818,6 +873,10 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
             detail_artifacts.append(artifact)
             record_summary = {k: deepcopy(detail[k]) for k in ("record_id", "subject", "role", "coverage", "status", "errors")}
             record_summary["detail_artifact"] = artifact
+            record_summary['measurement_frames']={s:{k:v for k,v in f.items() if k!='contract'}
+                                                   for s,f in detail['measurement_frames'].items()}
+            contrast=detail.get('physical_contrast',dict(status='not_comparable',reason='verified_processed_output_unavailable',paired_trials=0))
+            record_summary['physical_contrast']={k:v for k,v in contrast.items() if k not in {'views','contract','limitations'}}
             record_summaries.append(record_summary)
             subject_records.append(record_summary)
             del detail
@@ -843,8 +902,11 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                "metric_count": len(METRIC_IDS), "composite_score": None,
                "limitations": list(_LIMITATIONS), "precue_seconds": list(PRECUE_SECONDS),
                "detail_artifacts": detail_artifacts,
+               "physical_contrast":dict(records_evaluated=sum(r['physical_contrast']['status']=='evaluated' for r in record_summaries),
+                   records_expected=len(record_summaries),paired_trials=sum(r['physical_contrast'].get('paired_trials',0) for r in record_summaries),
+                   artifacts=contrast_artifacts,interpretation='common-projection signed signal difference; not isolated artifact or neural ground truth'),
                "memory_policy": "one_record_arrays; reduced_subject_metrics; no all_subject_signal_stack"}
     path = output / "data-quality.json"
     write_json(path, _json(summary))
     artifact = {"kind": "quality_summary", "path": path.name, "sha256": file_hash(path), "bytes": path.stat().st_size}
-    return {"summary": summary, "detail_artifacts": detail_artifacts, "artifacts": [artifact, *detail_artifacts]}
+    return {"summary": summary, "detail_artifacts": detail_artifacts, "artifacts": [artifact, *detail_artifacts,*contrast_artifacts]}

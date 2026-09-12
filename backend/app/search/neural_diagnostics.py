@@ -88,12 +88,14 @@ def explain_missing(root, quality, reference, stage_observations):
 
 
 def comparison(left, right, left_entry, right_entry, stage):
-    # Even equally named measures can refer to different physical passbands/references.
-    sensitive = {"bandpass", "highpass", "resample", "average_reference", "interpolate_bad_channels", "interpolate"}
-    def signature(entry):
-        return [{"operator": n["operator"], "parameters": n.get("parameters", {})}
-                for n in entry["recipe"]["nodes"] if n["operator"] in sensitive]
-    comparable = stage.startswith("source_") or signature(left_entry) == signature(right_entry)
+    from .physical_frames import paired_frames
+    # Registry names and matching array shapes do not establish physical frames.
+    common_panel=bool(left.get('panel_hash') and left.get('input_hash')
+        and left['panel_hash']==right.get('panel_hash') and left['input_hash']==right.get('input_hash'))
+    frame_checks={subject:paired_frames(left.get('bysubject',{}).get(subject,{}).get('records',[]),
+        right.get('bysubject',{}).get(subject,{}).get('records',[]),stage)
+        for subject in set(left.get('bysubject',{}))|set(right.get('bysubject',{}))}
+    comparable=common_panel and bool(frame_checks) and all(v[0] for v in frame_checks.values())
     expected = sorted(set(left.get("bysubject", {})) | set(right.get("bysubject", {})))
     rows = {}
     for mid in METRICS:
@@ -110,8 +112,8 @@ def comparison(left, right, left_entry, right_entry, stage):
                 missing[subject] = "record_or_trial_denominator_unverified_or_differs"
             elif av is None or bv is None or a.get("unit") != b.get("unit") or a.get("axes") != b.get("axes"):
                 missing[subject] = "unavailable_or_incompatible_measurement"
-            elif not comparable:
-                missing[subject] = "passband_reference_or_sampling_differs"
+            elif not common_panel or not frame_checks[subject][0]:
+                missing[subject] = "physical_frame_or_panel_unverified_or_differs"
             else:
                 diffs[subject] = bv - av
         rows[mid] = {"mean_subject_difference": sum(diffs.values()) / len(diffs) if diffs else None,
@@ -120,8 +122,9 @@ def comparison(left, right, left_entry, right_entry, stage):
                      "status": "ok" if diffs and not missing else "partial" if diffs else "not_comparable"}
     return {"metrics": rows, "comparison_contract": {
         "same_panel_required": True, "stage": stage, "passband_reference_sampling_match": comparable,
+        "record_frame_checks":{s:{'comparable':v[0],'reasons':v[1]} for s,v in frame_checks.items()},
         "difference": "candidate_minus_reference", "causal_claim": False,
-        "interpretation": "Native-view paired descriptive differences; matching nominal settings does not establish neural preservation."}}
+        "interpretation": "Verified native-frame descriptive differences; complete executed-operation matching is conservative and does not establish neural preservation."}}
 
 
 def run_diagnostic(root, state, request):

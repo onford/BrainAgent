@@ -8,12 +8,11 @@ def test_report_context_retains_measured_scope_without_large_file_payloads():
     selection = {
         "score": 0.63,
         "evaluation_scope": "development",
-        "selected_candidate_id": "bp8-30-original-ea",
+        "selected_candidate_id": "bp8-30-average",
         "representation": {
-            "unit": "dimensionless",
-            "policy": {"adaptation": "euclidean_alignment"},
+            "unit": "V",
+            "recipe_scope": "shared_all_records",
             "records": records,
-            "transductive": True,
         },
         "panel": {
             "records": records,
@@ -43,7 +42,7 @@ def test_report_context_retains_measured_scope_without_large_file_payloads():
     assert compact["panel"]["record_count"] == 2000
     assert compact["panel"]["development_subject_count"] == 109
     assert compact["panel"]["eligible_count"] == 4990
-    assert compact["representation"]["unit"] == "dimensionless"
+    assert compact["representation"]["unit"] == "V"
     assert compact["protocol"]["confirmation"] == "not_performed"
     text = json.dumps(compact)
     assert len(text) < 2500 and "private/" not in text
