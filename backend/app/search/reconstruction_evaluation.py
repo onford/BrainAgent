@@ -74,7 +74,7 @@ SUPPORTED = {
     "interpolate_bad_channels": "EEG-AUTO-BAD-CHANNEL",
     "asr_clean": "EEG-ASR-AUTO",
 }
-SCOPE = "physical_preprocessing_before_parent_EA_only"
+SCOPE = "shared_physical_preprocessing"
 
 
 class ProbeError(ValueError):

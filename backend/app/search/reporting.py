@@ -139,7 +139,7 @@ def _utility_section(assessment, native=None):
         result += _table(["模型", "实际输入表示", "状态", "原因"], [
             [LEARNER_LABELS[name], native["learners"][name]["input_representation"], native["learners"][name]["status"],
              native["learners"][name].get("error")] for name in suite])
-        result += "<p>candidate_representation 指候选实际评分表示；pre_adaptation_phys_V 指适配前物理电压。</p>"
+        result += "<p>candidate_representation 指共享流程实际输出并用于评分的物理电压。</p>" if v2 else "<p>历史协议：candidate_representation 指当时的候选评分表示；pre_adaptation_phys_V 指当时保存的适配前物理电压。</p>"
         if not v2:
             result += "<p>逐频带 EA-FBCSP 为独立物理输入对照，不代表候选上游 EA 的效果。</p>"
     rows = []

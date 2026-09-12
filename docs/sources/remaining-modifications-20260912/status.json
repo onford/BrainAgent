@@ -399,7 +399,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "强神经保护测量",
-      "current": "已有 ROI TFR、μ/β 与 Welch ERDS，尚缺完整个体峰频、周期/非周期分离、时序失真、侧化与移除信号保护证据。",
+      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；仍需周期/非周期分离、时序失真、侧化与移除信号保护的适用性和已知源验证。个体峰频拟合及据此选择个体预处理已从目标撤回，不列作待实现能力。",
       "solution_and_acceptance": "逐项实现适用性和有效时间支持，保留基线/分母/不确定性；先做已知信号验证，再做真实 EEG。不能以“典型 ERD”作为必须制造的形态。",
       "dependencies": [
         "I19",
@@ -1637,7 +1637,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第十七批诊断注册、输入预算、预测分支与后续决定校验完成；83项后端专项、157项前端及构建通过。真实复核修复无关大明细读取后通过，保留失败与累计预算。接着补清范围残留，按依赖完成I25/I20及I22。I03实质文献闭环未通过。",
+  "active_step": "第十八批补清现行评价指南和重建回执范围中的EA残留，95项相关回归通过；历史材料显式标记。接着按依赖先完成I25已知源验证，再推进I20神经保护测量和I22受约束局部回退。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1872,6 +1872,10 @@
       "backend": "83 passed, 85.33 s; final targeted batch",
       "frontend": "157 passed; build passed",
       "real_review": "failed input budget first, passed after required-input fix; inherited cumulative model budget and original deadline; subsequent action proposed only"
+    },
+    "scope_residue_cleanup": {
+      "result": "95 passed, 26.70 s",
+      "scope": "reconstruction evaluation, reporting and utility contracts; historical read-only representations retained"
     }
   }
 }

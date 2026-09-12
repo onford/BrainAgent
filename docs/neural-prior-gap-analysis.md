@@ -1,3 +1,5 @@
+> 历史审阅材料。逐被试拟合、个体预处理及前沿性能目标已撤回；本文保留当时的缺口与证据，现行目标和进展见 [实施状态](current-implementation-status.md)。
+
 **神经先验贯穿预处理决策：现状、全部已识别缺口与研究方向**
 
 2026-09-11。范围：当前 BrainAgent 工作树，首先面向 EEGMMIDB 左右手运动想象，并为后续任务扩展设计接口。配套：[实施路线](neural-prior-implementation-plan.md)、[能力与源码哈希快照](sources/neural-prior-capability-audit-2026-09-11.json)。
