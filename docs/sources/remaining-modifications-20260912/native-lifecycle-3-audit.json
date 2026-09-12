@@ -1,0 +1,98 @@
+{
+  "status": "completed",
+  "rows": [
+    {
+      "mode": "cancel",
+      "status": "passed",
+      "signal_processing_marker": true,
+      "action_seconds": 12.172000000005937,
+      "elapsed_seconds": 13.422000000005937,
+      "returncode": 1,
+      "kernel_process_identities_exited": {
+        "30972": true,
+        "23324": true,
+        "14872": true,
+        "25216": true,
+        "24484": true,
+        "28248": true,
+        "28028": true
+      },
+      "native_receipt_status": "cancelled",
+      "terminal": {
+        "status": "stopped",
+        "exception": "Cancelled",
+        "message": "cancelled during native algorithm"
+      },
+      "observed_native_pids": [
+        23324,
+        14872,
+        25216,
+        24484
+      ],
+      "supervisor_pid": 30972,
+      "native_dependencies_unchanged": true,
+      "limitation": "Supervisor death leaves the last running receipt incomplete; restart reconciliation is a separate lifecycle check."
+    },
+    {
+      "mode": "timeout",
+      "status": "passed",
+      "signal_processing_marker": true,
+      "action_seconds": 9.26600000000326,
+      "elapsed_seconds": 34.812999999994645,
+      "returncode": 1,
+      "kernel_process_identities_exited": {
+        "28740": true,
+        "11980": true,
+        "26320": true,
+        "31648": true,
+        "18120": true,
+        "29576": true
+      },
+      "native_receipt_status": "timed_out",
+      "terminal": {
+        "status": "stopped",
+        "exception": "TimeoutExpired",
+        "message": "Command '['C:/Program Files/MATLAB/R2025b/bin/matlab.exe', '-batch', \"run('C:/Users/10487/AppData/Local/Temp/ba-relax-rw5wwifv/driver.m')\"]' timed out after 30.0 seconds"
+      },
+      "observed_native_pids": [
+        11980,
+        26320,
+        31648,
+        18120
+      ],
+      "supervisor_pid": 28740,
+      "native_dependencies_unchanged": true,
+      "limitation": "Supervisor death leaves the last running receipt incomplete; restart reconciliation is a separate lifecycle check."
+    },
+    {
+      "mode": "supervisor_death",
+      "status": "passed",
+      "signal_processing_marker": true,
+      "action_seconds": 9.234000000011292,
+      "elapsed_seconds": 10.062000000005355,
+      "returncode": 97,
+      "kernel_process_identities_exited": {
+        "28464": true,
+        "26696": true,
+        "17736": true,
+        "3832": true,
+        "24944": true,
+        "28768": true
+      },
+      "native_receipt_status": "running",
+      "terminal": null,
+      "observed_native_pids": [
+        26696,
+        17736,
+        3832,
+        24944
+      ],
+      "supervisor_pid": 28464,
+      "native_dependencies_unchanged": true,
+      "limitation": "Supervisor death leaves the last running receipt incomplete; restart reconciliation is a separate lifecycle check."
+    }
+  ],
+  "code_sha256": "fb6814fc384363195ca89cfdaf0930d516537a4650f31ccb64cbc2f1e0351ad6",
+  "code_unchanged": true,
+  "scope": "Actual MATLAB R2025b running RELAX on the fixed real S001R04 native bridge input. Lifecycle failure tests only; no scientific or full workflow acceptance."
+}

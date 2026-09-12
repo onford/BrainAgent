@@ -118,7 +118,7 @@ def worker_files(store, owner, job_id, previous=()):
             number = int(attempt.name[1:])
             if number > record["attempt"] or (
                 number == record["attempt"]
-                and record["status"] not in {"completed", "failed", "cancelled"}
+                and record["status"] not in {"completed", "failed", "cancelled", "interrupted", "waiting_decision"}
             ):
                 continue
             for path in sorted(attempt.rglob("*")):

@@ -694,7 +694,8 @@
         "D8"
       ],
       "historical_status": "待系统验收",
-      "status": "pending"
+      "status": "partial",
+      "recovery_update": "已完成真实双记录共享 RELAX worker 强制退出/重启与完成记录保护；跨后端工作流缺少互斥、搜索远程取消依赖内存的缺口正在修复，尚未作完整服务联动验收。"
     },
     {
       "id": "I34",
@@ -757,7 +758,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "原生算法即时取消",
-      "current": "CleanLine、ZapLine-plus、MARA、ADJUST 和新经典适配层接入现有 ProcessTree。图取消回调每 100ms 检查；超时/取消回收整个原生进程树，保存日志和状态。Windows 真实子孙进程取消/超时及图回归 26 项通过；真实 Octave 取消及硬崩溃整合验收待完成。 MATLAB 原生链已验证可受 ProcessTree 管理；失败/取消会保留中间 MAT/QC 和 incomplete 清单。",
+      "current": "真实 MATLAB R2025b/RELAX 在实际滤波后取消、超时、执行器强制退出三路径均验证本次进程内核句柄退出，输入/依赖不变。实际共享两记录任务崩溃重启保留第一条 attempt1，第二条完成 attempt2；中断回执保留原生最后声明。Windows 上本配方/记录已验收，不代表全部 OS/原生方法。",
       "solution_and_acceptance": "隔离原生调用并接入任务取消/超时与后代回收，保存部分产物状态；验证不产生孤儿进程、不把中断写为完成。",
       "dependencies": [
         "I45"
@@ -768,8 +769,9 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "implemented_requires_native_acceptance",
-      "historical_current": "图取消在步骤边界生效，长时间作者调用仅靠自身 timeout；已有搜索进程树控制不等于每个 v2 原生调用可立即停止。"
+      "status": "implemented_targeted_native_lifecycle_passed",
+      "historical_current": "图取消在步骤边界生效，长时间作者调用仅靠自身 timeout；已有搜索进程树控制不等于每个 v2 原生调用可立即停止。",
+      "implementation": "docs/native-lifecycle-and-recovery.md"
     },
     {
       "id": "I38",
@@ -1644,7 +1646,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十七批完成 I44 底层产物严格合同与真实旧格式核查；更高层诊断语义仍保留缺口。继续 I37 实际 MATLAB/RELAX 取消和崩溃核查、I33 生命周期。",
+  "active_step": "第二十八批 I37 真实原生生命周期及 I33 worker 崩溃恢复完成专项。继续 I33 跨后端互斥/取消和完整服务生命周期，再开展 I32 全面板资源测量。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1942,6 +1944,16 @@
       "backend": "77 passed, 2 warnings, 65.64 s; first NamedInt rejection fixed and failure log retained",
       "real": "13 complete historical descriptors; all roundtrip fingerprints identical; 12 separate saved signals maximum error 0 V; originals/code unchanged; 10.296 s",
       "audit": "docs/sources/remaining-modifications-20260912/codec-legacy-live-1-audit.json"
+    },
+    "native_lifecycle": {
+      "tests": "44 passed, 2 warnings, 44.80 s",
+      "real_native": "cancel / timeout / supervisor death all process identities exited; inputs/dependencies unchanged",
+      "real_worker": "two real records, one shared native recipe; attempts 1/2; first completion and original native receipt unchanged; 171.172 s",
+      "audit": "docs/sources/remaining-modifications-20260912/worker-recovery-live-2-audit.json"
+    },
+    "full_backend_bids_and_exclusions": {
+      "commit": "2bb79cd",
+      "result": "1335 passed, 109 warnings, 872.51 s"
     }
   }
 }

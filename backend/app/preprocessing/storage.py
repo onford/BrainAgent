@@ -261,8 +261,36 @@ class Storage:
         # Caller MUST hold the OS worker lock. Its acquisition proves a prior
         # worker is no longer alive; elapsed heartbeats alone cannot prove that.
         with self.db() as db:
+            running = db.execute(
+                "SELECT r.job_id,r.key,r.attempt,j.owner,j.plan_id FROM records r "
+                "JOIN jobs j ON j.id=r.job_id WHERE r.status='running'"
+            ).fetchall()
+            for row in running:
+                if row['attempt'] < 1:
+                    continue
+                try:
+                    from .recovery import record_interruption
+                    # Read an immutable plan only to locate its attempt; no
+                    # execution, promotion or current-schema migration occurs.
+                    saved = db.execute("SELECT body FROM objects WHERE owner=? AND id=? AND kind='plan'",
+                                       (row['owner'],row['plan_id'])).fetchone()
+                    if saved is None:
+                        raise KeyError('recovery plan not found')
+                    plan = json.loads(saved['body'])
+                    if digest(plan) != row['plan_id']:
+                        raise ValueError('recovery plan checksum differs')
+                    index = next(i for i,c in enumerate(plan['records'])
+                                 if digest([c['method_ref']['id'],c['record_id']]) == row['key'])
+                    folder = within(self.root, f"runs/{row['job_id']}/r{index:04}/a{row['attempt']}")
+                    if folder.is_dir():
+                        record_interruption(folder, job_id=row['job_id'],record_key=row['key'],attempt=row['attempt'])
+                except (OSError, ValueError, TypeError, KeyError, StopIteration):
+                    # Invalid plans still become interrupted and fail normal
+                    # preflight; they cannot block recovery of unrelated jobs.
+                    import logging
+                    logging.getLogger(__name__).exception('Could not record interrupted attempt %s/%s', row['job_id'], row['key'])
             db.execute(
-                "UPDATE records SET status='interrupted',error='Worker interrupted; record will restart' WHERE status='running'"
+                "UPDATE records SET status='interrupted',result=NULL,error='Worker interrupted; record will restart' WHERE status='running'"
             )
             db.execute("UPDATE jobs SET status='interrupted' WHERE status='running'")
 
