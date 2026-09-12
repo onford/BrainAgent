@@ -144,6 +144,7 @@ class PriorCondition(Contract):
 
 class ScientificPrior(Contract):
     id: Identifier
+    knowledge_rule_ids: list[str] = Field(default_factory=list)
     revision: int = Field(default=1, ge=1)
     status: Literal['active', 'revoked'] = 'active'
     change_reason: str | None = None
@@ -162,6 +163,8 @@ class ScientificPrior(Contract):
 
     @model_validator(mode="after")
     def relation_shape(self):
+        if len(set(self.knowledge_rule_ids)) != len(self.knowledge_rule_ids):
+            raise ValueError('duplicate research rule links')
         if (self.status == 'revoked' or self.revision > 1 or self.supersedes) and not (self.change_reason or '').strip():
             raise ValueError('rule revisions/revocations require a change reason')
         if not self.implementation_versions or len(set(self.implementation_versions)) != len(self.implementation_versions):

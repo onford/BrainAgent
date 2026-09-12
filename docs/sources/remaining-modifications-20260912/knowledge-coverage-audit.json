@@ -1,0 +1,5583 @@
+{
+  "schema_version": "knowledge-coverage-1",
+  "knowledge_sha256": "fa01373e1ed94cc5d0620429ae587ea508c86c2891ce09270ab5be0fd3d51446",
+  "task": "left_right_motor_imagery",
+  "rules": [
+    {
+      "rule_id": "R01",
+      "rule_sha256": "aad9eab56a17ddda5e42e36ad48c50e88853a663cd2573bc0d88602b0de1d751",
+      "strength": "hard_math",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "fs_new<fs_old；LP指抗混叠功能时，而非任意分析低通。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R02",
+      "rule_sha256": "5a19cdcbb91e92b2cd3a1a0cf6739f74d2c65eb946249ab90fa509cf53b2d9c7",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "设计高/低/阻带及重采样滤波器时。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R03",
+      "rule_sha256": "492fe2ac81c6dda62c4dc62a5f867b06278bba7bd646028ac01ae37ddc76688c",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S01"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ERP潜伏期精度或短脉冲事件重要。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R04",
+      "rule_sha256": "73fe894cfec1aa0060ca61d30d557f596d4b0b3ccf8478437d7819540ee8a194",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S01",
+        "S04",
+        "S07"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "存在足够长连续数据；不能跨break、删段拼接或trial边界。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R05",
+      "rule_sha256": "c5aae505d81ca2e3e126d289335bc51ef3e487a74110bc205b92e33e66edde66",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S04",
+        "S03"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "极端非生理幅度或采集跳变；不是所有眨眼都预删。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R06",
+      "rule_sha256": "b96488a8a1cd8101b5574942f0e947d6690663dd431f4dc026e29743f176d9da",
+      "strength": "hard_math",
+      "source_ids": [
+        "S03",
+        "S08",
+        "S13"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "权重/坏道集合/IC mask均已冻结；同一时间算子、边界规则，且无中间阈值/重拟合/wICA。 IA仅在有效操作确为线性、没有未传播的加回均值/仿射偏置时适用；实际ICA.apply常含中心化与均值重建，需单独检查offset。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R07",
+      "rule_sha256": "8ce8a9a2e5b7281b151acc3bdc7b6d92fb77387450a7407defe3f493ec43f2c5",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S08",
+        "S07"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "选择PREP分支；漂移影响线噪估计；LN系数依数据而变。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R08",
+      "rule_sha256": "8bdbf7af03192d0370abf01966a9708505c53f354877675d6207becde1405e92",
+      "strength": "engineering",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S07"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "例如7–30Hz MI、50Hz工频；但transition泄漏或后续宽带支路仍可能需要处理。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R09",
+      "rule_sha256": "8999af7779c7d6e6232d1b0c6c77d006b76c6c45d014dca414e405c0ad004505",
+      "strength": "hard_math",
+      "source_ids": [
+        "S01",
+        "S06"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "下采样存在工频谐波；notch本身不等于完整AA。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R10",
+      "rule_sha256": "aecbe34ff6de28d547c7df6927e62a96061958a96be3713f78f980ad01c719f2",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S24",
+        "S07"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "关注gamma/SSVEP谐波、谱斜率或ICA频谱分类时尤其重要。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R11",
+      "rule_sha256": "4fd7ad03391ff738865a65188352c45854481be08982f7302491a8c22bf68e3c",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S10"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "普通平均参考或PREP稳健参考；永久坏道与瞬时伪影分开。",
+      "status": "partial_predicate_binding",
+      "executable_bindings": [
+        {
+          "prior_id": "repair-before-car",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "b257a5a17941305e5bcad5494bbd2e69f90772eab07373c86a80b95bee6e4409",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        }
+      ],
+      "advisory_bindings": [
+        "low-correlation"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R12",
+      "rule_sha256": "225f239449eb79e3532a61cf12446e3d711c0d729e4eab4095a9cd201acffac1",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S08",
+        "S31"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "空间插值或恢复标准montage时。",
+      "status": "partial_predicate_binding",
+      "executable_bindings": [
+        {
+          "prior_id": "repair-needs-detection",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "517162caac2ea9a321749370094dbc27717dc51107624632aa60768def470bef",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        },
+        {
+          "prior_id": "detect-before-repair",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "bfd1087970481b53daef801c6bec9cb1ccd666a0de23fbb016575ae162be8d09",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        }
+      ],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R13",
+      "rule_sha256": "00420baf793e9c94ef267ff0b630c7691491326111d62c6f234049bdf44ec613",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S14",
+        "S29",
+        "S30"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "全局ICA，充分样本与保留代表性伪影；排除并非重建。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R14",
+      "rule_sha256": "8e1860ef47f0b9826ad6ce20e9faaa06a44d3d79b6c69a978b4e132fd6bcce19",
+      "strength": "conflict",
+      "source_ids": [
+        "S12",
+        "S24"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ICA前插值增加冗余；RELAX论文为均衡参考临时插值，再去掉这些通道后拟合ICA。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R15",
+      "rule_sha256": "cd2374d8a56bd770e3c07dcb3bc7dfc4980b884833b16e8c3739c28d2c000cda",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "沿用原ICA权重而不做正确变换或重拟合。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R16",
+      "rule_sha256": "3b937de4ee1595988d47d271f3cb00c341675042a5ce3e98e5dbd8633629154e",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S11",
+        "S08"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "reference.mode为逐样本稳健估计；PREP最终固定坏道/插值后的均值不应混为此类。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R17",
+      "rule_sha256": "7d73768ecd3c8bb9fd8cd248269bca4d26a7ca7f13133ac30a312ec1b123873b",
+      "strength": "hard_math",
+      "source_ids": [
+        "S12",
+        "S39"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "非满秩线性空间处理；不是凭通道数推断满秩。",
+      "status": "conditional_advisory_binding",
+      "executable_bindings": [],
+      "advisory_bindings": [
+        "rank"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R18",
+      "rule_sha256": "50c59f5c8847b07bb1d9f03c216c14b9d711337ec2d744820bebfc06c8272fe6",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S12",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "慢漂移损害分离；研究任务/移动状态不同；低频源重要时需对照。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R19",
+      "rule_sha256": "30a3a4f28392d1ee8b91181346351fbc986469d1baddcf5bfa475988a5e4ed15",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S13",
+        "S14",
+        "S16"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "仅改变一致的时间滤波；没有改变通道、参考、单位、空间清理模型。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R20",
+      "rule_sha256": "ee38558cfa9785200c05cf87280adbbd093305e772dcc0ca6ff30d39e91217ff",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "这些变换位于IF和IA之间；feature级缩放在IA完成之后不在此限制内。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R21",
+      "rule_sha256": "5944d7400c3fc2833cdc073eab18255b0f0cbbb10005e351afeaba0483097ea4",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S12",
+        "S13"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "代表性样本足够，分段不引入额外不同通道变换；滤波在截段前处理。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R22",
+      "rule_sha256": "503ffd0f958565f4517c119379c0032ab41fc36da279201918fb96e3fbae19f2",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S12",
+        "S35"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "IF输入为epochs；DT若逐段拟合会改变统计。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R23",
+      "rule_sha256": "52e78d98056cf757b144f50255b10d5fb69784a24d40d6fc8dc1b34f02faaec4",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S13",
+        "S35"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ERP或明确需要均值基线的输出；AS/EAO次序是工程外推，非已证实最优。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R24",
+      "rule_sha256": "189c091522b51e084c76f31b3c644bc38c9b082bd51b53fbbe3a6a47a44d0dbf",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S35",
+        "S36"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "选择MNE内建detrend/baseline；连续去均值不是event baseline。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R25",
+      "rule_sha256": "35ea2dc952969984597954031ace69d75abdb666328c046a20268c7ed5fc9738",
+      "strength": "hard_math",
+      "source_ids": [
+        "S35",
+        "S29"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "仅检测指标ptp、同样窗口和mask；BL为每epoch每通道常数减法。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R26",
+      "rule_sha256": "54d6e092f7272d84552e6a0b54429108519ddbe3f9273ee96ce77338471e5d4e",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S08",
+        "S26"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "PREP HF-ratio或RELAX肌电谱斜率检测；检测专用副本可以与最终分析频带不同。",
+      "status": "partial_predicate_binding",
+      "executable_bindings": [
+        {
+          "prior_id": "diagnose-before-analysis-band",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "9667ecdbf26a422c130eb7bd18b6b2bfb5bfeed8033a0bbbd32b335dd0efd017",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        }
+      ],
+      "advisory_bindings": [
+        "low-correlation"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R27",
+      "rule_sha256": "b8333be781f9b61aaf712cbb2bcfe6188d561c9cffd7607ebd60245552e1b6d2",
+      "strength": "engineering",
+      "source_ids": [
+        "S08",
+        "S29",
+        "S31"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "通道只在部分时段失效、运动污染或缺失多。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R28",
+      "rule_sha256": "4c01e426f40647d8db7de9296a4f6b01e44210dfa9b2d216b65a7ac44ddc97af",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S18",
+        "S20",
+        "S21"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "asr_calibrate/asr_process；零均值和稳定校准。",
+      "status": "partial_predicate_binding",
+      "executable_bindings": [
+        {
+          "prior_id": "asr-before-analysis-band",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "dcb0e7c453645a74e70378853b6e51ae4e2cf6264b2039b01460ce87b63fed27",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        }
+      ],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R29",
+      "rule_sha256": "ba23ee1e3c251ce1639efae8315bfbd0a25eb415a8b9baada11ba1d2e1a3b9ed",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S19",
+        "S20"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "多通道ASR；校准与应用必须同通道空间。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R30",
+      "rule_sha256": "6ce8de7e5e65277680b9873e9862ebd84eb5cd7761d6392c87c06a3c8a7c62f4",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "复用ASR state；跨chunk延续状态。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R31",
+      "rule_sha256": "41833c75999941b2379f90010b4918b347da695a17db57abae3dc97f1db6a4a4",
+      "strength": "conflict",
+      "source_ids": [
+        "S22",
+        "S14",
+        "S18"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ASR重建模式，与仅拒绝坏段模式不同。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R32",
+      "rule_sha256": "1f79c40bab3dc7bbaa1e2f446d5b8dc13877321c0d59573724a6b995d24e8a6b",
+      "strength": "unknown",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S29"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "不同修复方法叠加且共享同一原始信号。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R33",
+      "rule_sha256": "34500cb03c02b2c39df336c8e38d8040cc444bd0b2716e6615660bc6e4146ca4",
+      "strength": "conflict",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S23"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "Mullen历史样例ASR后CAR；通用ASR可在给定参考上校准。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R34",
+      "rule_sha256": "04e87ea20c155ba15c6e76acb3d62d2e46c4eddad0afb6102994058b38b5cf3b",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "sample-based state和统计窗口依赖fs。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R35",
+      "rule_sha256": "66bc2e74e9de30a720d4562871f3aff9fbc1501fb3b040e7e8e907494c48107c",
+      "strength": "engineering",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "应用原连续/在线ASR到epochs。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R36",
+      "rule_sha256": "0681f3f33a0c2dc0b106b5cf357ca26e84f5335ae990200cadfd0acc0b1f093a",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S20",
+        "S19"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "强污染、短记录或非平稳状态。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R37",
+      "rule_sha256": "394971d7aadcc9499d0e1f89980d1f821343b4934c438c82006e73ee58a0ce74",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S30",
+        "S29"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "使用官方two-pass流程；两个AR实例/阶段分开。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R38",
+      "rule_sha256": "25dc1930b6106b7c9e3a26b37b8b0dd5c3bcdf5f1859f0a761e32639dd42aa4c",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S31",
+        "S29",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "autoreject.AutoReject.fit/transform。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R39",
+      "rule_sha256": "68c02381d124f4738fc16a536d947b426c846950eccee212865fb9573ff4ecc2",
+      "strength": "engineering",
+      "source_ids": [
+        "S29",
+        "S31",
+        "S08"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "AR局部修复或先全局IP。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R40",
+      "rule_sha256": "5302b75f8636783bcd21ba19e3961b86702a2731a767b31552e2cafb357ac5b4",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "使用MNE EOGRegression；有独立、可靠EOG预测变量。",
+      "status": "conditional_advisory_binding",
+      "executable_bindings": [],
+      "advisory_bindings": [
+        "eog-missing"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R41",
+      "rule_sha256": "749576afcc4d5741e070c9139b9172dcba0a340489805948c304b99525a9d3e6",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S32",
+        "S34"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "复用线性回归系数。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R42",
+      "rule_sha256": "bf1f284f61e83ed0ba5c4b7c5ff8a9ca5566fdce07ac59a1f1209c4c866c7516",
+      "strength": "engineering",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "EOG预测信号和EEG同步用同一H，B已固定。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R43",
+      "rule_sha256": "edbbd043c152834517204f83e81428acf00c60903ccf673a47b3bd34d171f8bb",
+      "strength": "unknown",
+      "source_ids": [
+        "S15",
+        "S33",
+        "S34"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "眼动与任务信号相关、EOG含脑信号或ICA眼动分离不完整。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R44",
+      "rule_sha256": "2ba19417bba80de6543d3c25843612f0c9141fdad2deef2146eb740851ee4b72",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S32",
+        "S33",
+        "S34"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "EOG方法与拟合信号明确。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R45",
+      "rule_sha256": "dfcaff1767a05056c5e8e224638c34c75a6b9fb1db4d69d9266b1af4f1557f1c",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S24",
+        "S25"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "选RELAX配方；MWF噪声/干净mask可靠。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R46",
+      "rule_sha256": "f05c43a1c12cb9749378d03fe35a8f9be6440be39243fb440e7da731febc23f5",
+      "strength": "conflict",
+      "source_ids": [
+        "S24",
+        "S26",
+        "S27"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "RELAX版本、是否MWF、采样率/延迟嵌入不同。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R47",
+      "rule_sha256": "386677991ddf9c01b21d947651d72f8ed8be42dbbf45f4b9c369dc6ef2236e2f",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S24",
+        "S27"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "配方内检测视图与输出视图不同。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R48",
+      "rule_sha256": "b73284a333857982dafff8b48a14dcf00f77a1c7f4c30ded57905ce9dc0199b1",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "严格归纳预测；离线整记录无监督清理可作为单独预声明的transductive recording protocol。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R49",
+      "rule_sha256": "0b48fa33d903403b6a2c6fef625cac2473e2a51874c5abb04cf9526c5f298cb5",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S39",
+        "S40",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "传感器级CSP解码。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R53",
+      "rule_sha256": "4521baa88fd8a75b83ca32ebf95724bd7060cb8e3229fb8d3cfb7a51be113758",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S39",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "SC作用轴不同；CSP fit与transform一致。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R54",
+      "rule_sha256": "00a8ef5375781cdfe1d9f2c04f05ad695288f1992ee89bb63aaee4bbfbc3f95e",
+      "strength": "engineering",
+      "source_ids": [
+        "S41",
+        "S08",
+        "S39"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "固定μV↔V单位变换、按训练统计标准化、按trial标准化。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R55",
+      "rule_sha256": "b3ac17f7d11c5f2018120de10e46ade6729ee23bd3b0e89f8b63328727cb3133",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "同一记录按时间block留出；在线预测/预刺激解码。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R56",
+      "rule_sha256": "4e937510955aaf9c9368b75438f671d3259d4bccf1bdd177969155ed8cc4bd7a",
+      "strength": "unknown",
+      "source_ids": [
+        "S24",
+        "S29"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "超出已核实官方配方。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R57",
+      "rule_sha256": "5771e9e6442ebf83481a9809baf73f5c5ba7676fb8e7d9dea12ff462ac618949",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S17",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ERP慢电位、长epoch、条件间prestimulus差异。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R58",
+      "rule_sha256": "a7796b58f663f8879df7f041fbdbc9ed31d673520515aea91d708ff26d3dd702",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S36",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "BL.mode=regression且包含condition或interaction。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R59",
+      "rule_sha256": "84084caaaa4db128fa3efcf700fffa40485656c06d5aaa1eb3574ceeddb8afdc",
+      "strength": "engineering",
+      "source_ids": [
+        "S29",
+        "S41"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "不同pipeline保留不同样本集合。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R60",
+      "rule_sha256": "40937221ae71aba2afbf9ccbc4f4b2aabb74ecaf496f14518cf5935d4113f11b",
+      "strength": "hard_math",
+      "source_ids": [
+        "S39",
+        "S12"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "常规full-space generalized eig或whitening实现。",
+      "status": "conditional_advisory_binding",
+      "executable_bindings": [],
+      "advisory_bindings": [
+        "rank"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R61",
+      "rule_sha256": "7293a9ad527e80c79c181321409c4c3939b1e9d9b01f9909fd3e6304976b5163",
+      "strength": "conditional_empirical",
+      "source_ids": [
+        "S39",
+        "S40"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "运动想象mu/beta；与ERP/高gamma任务区分。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R62",
+      "rule_sha256": "c42f2d71b428d936288318d78175efe608da92f182e20e9a20021545d4b85828",
+      "strength": "engineering",
+      "source_ids": [
+        "S08",
+        "S24"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "坏道分布不均或不同subjects需统一montage。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R63",
+      "rule_sha256": "04561ada99c36aae3517f74a010742bd62a086a5b36702127d5b8b596938b269",
+      "strength": "engineering",
+      "source_ids": [
+        "S03",
+        "S35"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "detrend的设计矩阵依当前时间窗。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R64",
+      "rule_sha256": "b0b15674752b3f62a8af8c226ca4a24d063b7783f89eaeb41978df574f1e1577",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S06",
+        "S07",
+        "S24"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "比较MNE notch/CleanLine/RELAX bandstop。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R65",
+      "rule_sha256": "3e61e5f9084a7695b40a41a7feceea23929372f272a68fc7f68fa5ffc2c8ddc7",
+      "strength": "engineering",
+      "source_ids": [
+        "S01",
+        "S12",
+        "S08"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "为了加速拟合而降采样或ICA decim。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R66",
+      "rule_sha256": "2b2de4263cd0fa304c4e61731e5195cbb7550966817be34a1da67fd429c4e7bf",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S30",
+        "S31"
+      ],
+      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序",
+      "conditions": "ICA/wICA、ASR reconstruction/rejection、Autoreject repair/reject。",
+      "status": "catalog_only",
+      "executable_bindings": [],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R68",
+      "rule_sha256": "f3a76a2a001fdbd4c09fc0625b6e41a162d41f9eb9ed69d8cb18518a63424f85",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S42",
+        "S43",
+        "S32"
+      ],
+      "scope": "EEGMMIDB及当前自动策略",
+      "conditions": "仅使用原EEGMMIDB通道；没有另行采集EOG；Nyquist=80Hz。",
+      "status": "conditional_advisory_binding",
+      "executable_bindings": [],
+      "advisory_bindings": [
+        "eog-missing",
+        "iclabel-domain"
+      ],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    },
+    {
+      "rule_id": "R69",
+      "rule_sha256": "ecc738afb1dca4029613d07e0c67aeaa55a903efbbd94aa734c40b70c51674ae",
+      "strength": "hard_contract",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S12"
+      ],
+      "scope": "当前可执行ASR算子的实现合同；不是所有ASR实现的普适顺序。",
+      "conditions": "EEG-ASR-AUTO的满秩校准合同。",
+      "status": "partial_predicate_binding",
+      "executable_bindings": [
+        {
+          "prior_id": "asr-before-car",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "a3f608ba1cd1fe6ada5b7c3542b9e75393c7e859f61069f2328179847a375003",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        },
+        {
+          "prior_id": "asr-before-interpolation",
+          "revision": 1,
+          "status": "active",
+          "rule_sha256": "a759c89158cbdcba06488bd0071bf431e1e705fb8327c9aa4f275cf79b9c6a92",
+          "implementation_versions": [
+            "1"
+          ],
+          "operator_match": "registered_id"
+        }
+      ],
+      "advisory_bindings": [],
+      "complete_claim_enforced": false,
+      "current_run_source_refresh": "not_performed_by_catalog_compiler"
+    }
+  ],
+  "agenda": [
+    {
+      "id": "rule:R01",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "operator_ids": [
+        "LP",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "降采样前必须使折叠频谱贡献满足预先声明的容许误差；AA可在resample内部完成。",
+      "required_context": "fs_new<fs_old；LP指抗混叠功能时，而非任意分析低通。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R02",
+      "kind": "rule_review",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06"
+      ],
+      "operator_ids": [
+        "HP",
+        "LP",
+        "NT",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "数字滤波参数须满足库的频率域和设计约束；Hz标签须包含边缘定义。",
+      "required_context": "设计高/低/阻带及重采样滤波器时。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R06",
+      "kind": "rule_review",
+      "source_ids": [
+        "S03",
+        "S08",
+        "S13"
+      ],
+      "operator_ids": [
+        "HP",
+        "IA",
+        "IP",
+        "LP",
+        "NT",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "固定线性空间变换与所有通道一致的线性时间变换可交换；固定LTI滤波器在适当边界假设下可交换。",
+      "required_context": "权重/坏道集合/IC mask均已冻结；同一时间算子、边界规则，且无中间阈值/重拟合/wICA。 IA仅在有效操作确为线性、没有未传播的加回均值/仿射偏置时适用；实际ICA.apply常含中心化与均值重建，需单独检查offset。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R09",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01",
+        "S06"
+      ],
+      "operator_ids": [
+        "LN",
+        "NT",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "高于新Nyquist的工频及谐波必须由AA抑制，不能降采样后才在原工频位置补notch来消除已折叠成分。",
+      "required_context": "下采样存在工频谐波；notch本身不等于完整AA。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R12",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S31"
+      ],
+      "operator_ids": [
+        "BC",
+        "DR",
+        "IP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "必须明确哪些通道需要插值、哪些好通道作为供体及几何位置；不能把已删通道的顺序猜回去。",
+      "required_context": "空间插值或恢复标准montage时。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R15",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "operator_ids": [
+        "IA",
+        "IF",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "ICA权重直接应用要求拟合与应用的参考、通道顺序/类型/单位、空间投影一致。",
+      "required_context": "沿用原ICA权重而不做正确变换或重拟合。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R17",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S39"
+      ],
+      "operator_ids": [
+        "CS",
+        "IA",
+        "IF",
+        "IP",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "平均参考/插值/空间成分删除可能使数据或协方差奇异，逆、白化与ICA维度必须匹配实际有效子空间。",
+      "required_context": "非满秩线性空间处理；不是凭通道数推断满秩。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R19",
+      "kind": "rule_review",
+      "source_ids": [
+        "S13",
+        "S14",
+        "S16"
+      ],
+      "operator_ids": [
+        "HP",
+        "IA",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "先拟合ICA再应用；高通拟合所得空间模型可以应用到较低高通数据，但空间与混合稳定性是前提。",
+      "required_context": "仅改变一致的时间滤波；没有改变通道、参考、单位、空间清理模型。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R20",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "operator_ids": [
+        "DR",
+        "IA",
+        "IP",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "ICA拟合后的传感器缩放、插值或重排会改变坐标；原模型不能无检查应用。",
+      "required_context": "这些变换位于IF和IA之间；feature级缩放在IA完成之后不在此限制内。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R24",
+      "kind": "rule_review",
+      "source_ids": [
+        "S35",
+        "S36"
+      ],
+      "operator_ids": [
+        "BL",
+        "DT",
+        "EP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "MNE Epochs先detrend再baseline；epoch基线窗口必须在已定义epoch内且含有效样本。",
+      "required_context": "选择MNE内建detrend/baseline；连续去均值不是event baseline。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R25",
+      "kind": "rule_review",
+      "source_ids": [
+        "S35",
+        "S29"
+      ],
+      "operator_ids": [
+        "AR",
+        "BC",
+        "BL",
+        "BS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "固定窗口内减常数不改变通道峰峰值；这不等于不影响所有拒绝指标或Autoreject整个优化过程。",
+      "required_context": "仅检测指标ptp、同样窗口和mask；BL为每epoch每通道常数减法。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R30",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "DR",
+        "RF",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "ASR先校准再应用；校准状态与数据的通道空间、参考、尺度、频谱处理及采样率必须相容。",
+      "required_context": "复用ASR state；跨chunk延续状态。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R34",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "若ASR是在目标采样率上运行，应先重采样再校准；校准后改变fs会改变窗口和内部频谱滤波含义。",
+      "required_context": "sample-based state和统计窗口依赖fs。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R38",
+      "kind": "rule_review",
+      "source_ids": [
+        "S31",
+        "S29",
+        "S41"
+      ],
+      "operator_ids": [
+        "AR",
+        "EP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "AutoReject API输入epochs；它的内部交叉验证不替代外部解码评估划分。",
+      "required_context": "autoreject.AutoReject.fit/transform。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R41",
+      "kind": "rule_review",
+      "source_ids": [
+        "S32",
+        "S34"
+      ],
+      "operator_ids": [
+        "DR",
+        "EAO",
+        "EF",
+        "RF",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "EOG回归先fit后apply；应用时EEG/EOG通道坐标、参考与单位需匹配拟合。",
+      "required_context": "复用线性回归系数。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R48",
+      "kind": "rule_review",
+      "source_ids": [
+        "S41"
+      ],
+      "operator_ids": [
+        "AC",
+        "AR",
+        "BC",
+        "CS",
+        "EF",
+        "IF",
+        "LN",
+        "MW",
+        "SC",
+        "SP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "先声明评估划分及可见数据，所有数据驱动fit限定于协议允许范围。",
+      "required_context": "严格归纳预测；离线整记录无监督清理可作为单独预声明的transductive recording protocol。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R49",
+      "kind": "rule_review",
+      "source_ids": [
+        "S39",
+        "S40",
+        "S41"
+      ],
+      "operator_ids": [
+        "CS",
+        "SP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "CSP只使用训练标签拟合，并作用于共享预处理输出的物理信号。",
+      "required_context": "传感器级CSP解码。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R53",
+      "kind": "rule_review",
+      "source_ids": [
+        "S39",
+        "S41"
+      ],
+      "operator_ids": [
+        "CS",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "特征标准化可在CSP功率/log功率后；传感器标准化在CSP前是另一算法选择，不能混称一个normalize。",
+      "required_context": "SC作用轴不同；CSP fit与transform一致。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R55",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S41"
+      ],
+      "operator_ids": [
+        "BL",
+        "DT",
+        "EP",
+        "HP",
+        "LP",
+        "NT",
+        "RS",
+        "SP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "时间域非因果预处理可跨训练/测试时间边界传递信息；固定参数本身不等于没有时间泄漏。",
+      "required_context": "同一记录按时间block留出；在线预测/预刺激解码。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R58",
+      "kind": "rule_review",
+      "source_ids": [
+        "S36",
+        "S41"
+      ],
+      "operator_ids": [
+        "BL",
+        "SP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "条件特异GLM baseline若用待预测标签构建设计矩阵，不允许作为未知标签解码输入。",
+      "required_context": "BL.mode=regression且包含condition或interaction。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R60",
+      "kind": "rule_review",
+      "source_ids": [
+        "S39",
+        "S12"
+      ],
+      "operator_ids": [
+        "CS",
+        "IP",
+        "RF",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "CSP广义特征分解要求协方差问题在有效空间可解；组件数/白化条件不能只依channel count。",
+      "required_context": "常规full-space generalized eig或whitening实现。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R64",
+      "kind": "rule_review",
+      "source_ids": [
+        "S06",
+        "S07",
+        "S24"
+      ],
+      "operator_ids": [
+        "LN",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "notch和自适应线噪方法的参数语义不同，不能把相同数值Hz作为等价设置。",
+      "required_context": "比较MNE notch/CleanLine/RELAX bandstop。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R66",
+      "kind": "rule_review",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S30",
+        "S31"
+      ],
+      "operator_ids": [
+        "AR",
+        "AS",
+        "BS",
+        "IA",
+        "IF",
+        "IP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "清理与剔除、fit mask与apply mask应是不同操作语义。",
+      "required_context": "ICA/wICA、ASR reconstruction/rejection、Autoreject repair/reject。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R68",
+      "kind": "rule_review",
+      "source_ids": [
+        "S42",
+        "S43",
+        "S32"
+      ],
+      "operator_ids": [
+        "EAO",
+        "EF",
+        "IA",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "EEGMMIDB没有真实EOG可用，EOG回归及依赖真实EOG的ICA自动眼动评估不适用；ICLabel在160Hz数据上偏离官方1–100Hz频带域。",
+      "required_context": "仅使用原EEGMMIDB通道；没有另行采集EOG；Nyquist=80Hz。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R69",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S12"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "IP",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 1,
+      "question": "ASRpy自动清理算子要求校准空间满秩；坏道标记后，在好道原参考上拟合与应用，随后恢复坏道并重参考。",
+      "required_context": "EEG-ASR-AUTO的满秩校准合同。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "parameter:P01",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP"
+      ],
+      "source_ids": [
+        "S17",
+        "S24",
+        "S25",
+        "S26"
+      ],
+      "priority": 2,
+      "question": "analysis_highpass_hz",
+      "required_context": "按目标成分和录制硬件高通选择；null不恢复硬件已丢失的低频",
+      "next_checks": [
+        "解析各库边缘含义；检查filter support、漂移和人工波形失真；ERP≥0.3Hz不硬禁但需敏感性证据"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P02",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP"
+      ],
+      "source_ids": [
+        "S12",
+        "S15",
+        "S16"
+      ],
+      "priority": 2,
+      "question": "ica_fit_highpass_hz",
+      "required_context": "只作用ICA拟合支路；允许投影回低HP分析支路",
+      "next_checks": [
+        "通道/参考/投影一致；高通数值需附passband或-3/-6dB定义"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P03",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP"
+      ],
+      "source_ids": [
+        "S40",
+        "S24",
+        "S26"
+      ],
+      "priority": 2,
+      "question": "analysis_lowpass_hz",
+      "required_context": "ERP候选集属工程探索；MI另可用4–40等任务带通；gamma/SSVEP按目标频率扩展",
+      "next_checks": [
+        "h_freq<fs/2；保留transition空间；诊断带宽与分析带宽分开"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P04",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP"
+      ],
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S28"
+      ],
+      "priority": 2,
+      "question": "filter_design_and_support",
+      "required_context": "倍数相对后端合法auto值；IIR阶数只是工程搜索集合",
+      "next_checks": [
+        "每候选验证响应；filtfilt响应平方、带通变换阶数必须记录；禁止极短epoch无边界诊断"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P05",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS"
+      ],
+      "source_ids": [
+        "S01",
+        "S26",
+        "S23"
+      ],
+      "priority": 2,
+      "question": "target_sfreq_hz",
+      "required_context": "候选由任务最高有效频率、时间精度、成本筛选",
+      "next_checks": [
+        "新Nyquist下残留混叠检查；不只看info.lowpass；保持events同步"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P06",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT"
+      ],
+      "source_ids": [
+        "S06",
+        "S24",
+        "S07"
+      ],
+      "priority": 2,
+      "question": "notch_width_hz",
+      "required_context": "其余宽度为工程敏感性网格；宽度不含transition",
+      "next_checks": [
+        "合法谐波低于Nyquist；不盲目删掉任务频率；保留邻频功率与line residual QC"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P07",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT"
+      ],
+      "source_ids": [
+        "S06",
+        "S03"
+      ],
+      "priority": 2,
+      "question": "transition_bandwidth_hz",
+      "required_context": "比较窄/宽过渡带引入的长度与邻频失真",
+      "next_checks": [
+        "分别检查上下transition；不与stopband width或IIR Q互换"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P08",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN"
+      ],
+      "source_ids": [
+        "S07"
+      ],
+      "priority": 2,
+      "question": "CleanLine_settings",
+      "required_context": "6s/4Hz/.05等为工程扩展；epoch要各自完整处理",
+      "next_checks": [
+        "窗口与步长不跨trial；方法版本固定；line-scan范围单列；每候选检验残留与邻频损伤"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P09",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC"
+      ],
+      "source_ids": [
+        "S19",
+        "S08"
+      ],
+      "priority": 2,
+      "question": "flatline_seconds",
+      "required_context": "保留持续时长，采样率换算明确",
+      "next_checks": [
+        "flat不等于所有低幅值生理信号；NaN/Inf单列结构错误"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P10",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC"
+      ],
+      "source_ids": [
+        "S08"
+      ],
+      "priority": 2,
+      "question": "PREP_deviation_robust_z",
+      "required_context": "robust z定义按后端IQR/MAD缩放；不得换成普通z仍沿用阈值",
+      "next_checks": [
+        "原幅度诊断视图；记录逐道指标而非只存最终bad list"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P11",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC"
+      ],
+      "source_ids": [
+        "S08",
+        "S09",
+        "S18",
+        "S19"
+      ],
+      "priority": 2,
+      "question": "correlation_threshold",
+      "required_context": "两个不同检测器的阈值不能合并为一个corr参数",
+      "next_checks": [
+        "存在/缺失位置时的fallback方法必须标明；保证数值∈[0,1]"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P12",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC"
+      ],
+      "source_ids": [
+        "S09",
+        "S08"
+      ],
+      "priority": 2,
+      "question": "PREP_RANSAC",
+      "required_context": "仅有足够可靠空间采样时；小头盔可关闭RANSAC作为对照",
+      "next_checks": [
+        "可用供体数量/几何检查，seed固定；实际版本为默认值最终依据"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P13",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RF"
+      ],
+      "source_ids": [
+        "S08",
+        "S10",
+        "S11"
+      ],
+      "priority": 2,
+      "question": "reference",
+      "required_context": "不默认平均参考总最好；reference channels可靠性与coverage需报告",
+      "next_checks": [
+        "EOG/stim不混入EEG平均；投影是否应用、原始reference记录；Huber阈值不在本次已核参数范围内"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P14",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP"
+      ],
+      "source_ids": [
+        "S24",
+        "S29",
+        "S12"
+      ],
+      "priority": 2,
+      "question": "interpolation_policy",
+      "required_context": "比例是工程门槛，非文献证明的安全上限；少通道尤其需谨慎",
+      "next_checks": [
+        "位置可用、供体可靠、rank与条件数检查；超过门槛标该候选不可比或abstain而非静默继续"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P15",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IF"
+      ],
+      "source_ids": [
+        "S12",
+        "S14"
+      ],
+      "priority": 2,
+      "question": "ICA_method_dimension_iterations",
+      "required_context": "迭代/seed网格为工程敏感性；不是稳定性保证",
+      "next_checks": [
+        "实际rank、收敛、样本量、重复seed分离稳定性；PCA降维与ICA删除分开记录"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P16",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA"
+      ],
+      "source_ids": [
+        "S13",
+        "S24"
+      ],
+      "priority": 2,
+      "question": "artifact_component_policy",
+      "required_context": "不把分类概率当校准可信度；本次未核实所有ICLabel/自动EOG阈值",
+      "next_checks": [
+        "保存每IC分数、类别、删除理由和残留；阈值范围留null待独立方法卡验证"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P17",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS"
+      ],
+      "source_ids": [
+        "S18",
+        "S19",
+        "S20",
+        "S22",
+        "S23"
+      ],
+      "priority": 2,
+      "question": "ASR_burst_cutoff",
+      "required_context": "stress为工程对照，5更激进；不是普通raw EEG SD或确定的坏道百分比",
+      "next_checks": [
+        "逐样本/窗口重建比例、保留率、秩/谱保真、校准质量；不能跨实现只凭k比较"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P18",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC"
+      ],
+      "source_ids": [
+        "S20",
+        "S21",
+        "S41"
+      ],
+      "priority": 2,
+      "question": "ASR_calibration",
+      "required_context": "时长候选不保证质量；全污染记录不得凑时长",
+      "next_checks": [
+        "scope许可，通道/参考/fs/HP兼容；记录clean selection criterion和每段ID"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P19",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS"
+      ],
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "priority": 2,
+      "question": "ASR_window_and_max_dimensions",
+      "required_context": "扩展网格属工程设计；calibration overlap不等于asr_process stepsize",
+      "next_checks": [
+        "stepsize与fs单位明确；在线延迟/状态一致；不手动混合不同后端实现"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P20",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AR"
+      ],
+      "source_ids": [
+        "S31",
+        "S30",
+        "S29"
+      ],
+      "priority": 2,
+      "question": "Autoreject_hyperparameters",
+      "required_context": "按实际好道数量裁剪；阈值数据驱动，不人为固定所有数据为100uV",
+      "next_checks": [
+        "至少满足训练fold样本数；rho应小于拒绝阈值对应坏道数，按实现处理非法网格；CV仅训练scope"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P21",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EF"
+      ],
+      "source_ids": [
+        "S32",
+        "S33",
+        "S34"
+      ],
+      "priority": 2,
+      "question": "EOG_regression_fit",
+      "required_context": "不默认有测量EOG；可检测共线性",
+      "next_checks": [
+        "EEG/EOG同参考/同步与单位；回归系数维度、奇异性与fit scope检查；ridge探索需另标变体"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P22",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BL"
+      ],
+      "source_ids": [
+        "S35",
+        "S36",
+        "S25"
+      ],
+      "priority": 2,
+      "question": "baseline",
+      "required_context": "静息/连续无事件不能硬塞ERP基线；运动准备可能污染baseline",
+      "next_checks": [
+        "区间存在且有效，不能含未来不可用样本；条件标签GLM权限；记录与高通组合"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P23",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT"
+      ],
+      "source_ids": [
+        "S35",
+        "S03"
+      ],
+      "priority": 2,
+      "question": "detrend",
+      "required_context": "两种domain独立候选；不视作高通等价替代",
+      "next_checks": [
+        "每窗口至少足够样本拟合；在线不借未来；baseline重复去均值需有目的"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P24",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW"
+      ],
+      "source_ids": [
+        "S24",
+        "S26",
+        "S27"
+      ],
+      "priority": 2,
+      "question": "MWF_recipe",
+      "required_context": "版本整套配方比较；不能随意拼接论文和新版本字段",
+      "next_checks": [
+        "噪声/干净mask、延迟增广维数、有效秩、时间支持与内存检查；采样率变化仍需AA"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P25",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW"
+      ],
+      "source_ids": [
+        "S26",
+        "S27"
+      ],
+      "priority": 2,
+      "question": "MWF_temporal_embedding",
+      "required_context": "除固定配置值外均为工程探索；samples而非ms",
+      "next_checks": [
+        "记录实际最大时间跨度与增广维数；注释例子混用span/sample-count，不以其文字算式代替代码定义；禁止满秩假设"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P27",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "CS"
+      ],
+      "source_ids": [
+        "S39",
+        "S40",
+        "S41"
+      ],
+      "priority": 2,
+      "question": "CSP",
+      "required_context": "网格为工程选择；n_components按rank筛；trace归一化不是必选",
+      "next_checks": [
+        "fit只用允许训练标签；嵌套CV选频带/时间/组件/正则；库版本核对支持字符串"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P28",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "SC"
+      ],
+      "source_ids": [
+        "S41",
+        "S39"
+      ],
+      "priority": 2,
+      "question": "normalization",
+      "required_context": "per_trial标准化可用当前完整trial但不代表在线逐sample因果；会改变幅度信息",
+      "next_checks": [
+        "零方差/epsilon显式，axis与scope显式；sensor缩放改变参考/ICA/ASR坐标；避免双重标准化"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P29",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS"
+      ],
+      "source_ids": [
+        "S04",
+        "S14",
+        "S29",
+        "S24"
+      ],
+      "priority": 2,
+      "question": "bad_segment_rejection",
+      "required_context": "原始时间轴与trial IDs持久化；饱和/断连和生理伪影分开",
+      "next_checks": [
+        "保留拒绝原因/分母/按类覆盖；不以测试表现反调阈值"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "parameter:P30",
+      "kind": "parameter_review",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "SP"
+      ],
+      "source_ids": [
+        "S41",
+        "S03"
+      ],
+      "priority": 2,
+      "question": "evaluation_protocol",
+      "required_context": "不同协议结果分别列；同一subject重叠epochs不得跨fold",
+      "next_checks": [
+        "label与signal访问审计；所有state列出fit_ids、fit_time_end、transform_ids、version和seed"
+      ],
+      "status": "review_required",
+      "stop_reason": "parameter_anchor_is_not_a_validated_search_range"
+    },
+    {
+      "id": "rule:R03",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01"
+      ],
+      "operator_ids": [
+        "EP",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "连续重采样减少逐epoch边缘处理，但会引入事件时间量化；先epoch再抽取也有适用场景。",
+      "required_context": "ERP潜伏期精度或短脉冲事件重要。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R04",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01",
+        "S04",
+        "S07"
+      ],
+      "operator_ids": [
+        "EP",
+        "HP",
+        "LN",
+        "LP",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "连续段内先滤波通常较短epoch逐个滤波更少边缘伪影。",
+      "required_context": "存在足够长连续数据；不能跨break、删段拼接或trial边界。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R05",
+      "kind": "rule_review",
+      "source_ids": [
+        "S04",
+        "S03"
+      ],
+      "operator_ids": [
+        "BS",
+        "HP",
+        "LN",
+        "LP",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "巨大尖峰/饱和区在滤波前识别，可避免滤波把伪影扩散到邻近好数据。",
+      "required_context": "极端非生理幅度或采集跳变；不是所有眨眼都预删。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R07",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S07"
+      ],
+      "operator_ids": [
+        "HP",
+        "LN",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "PREP用临时高通副本估计并移除线噪，再从原数据减去所估线噪以保留低频。",
+      "required_context": "选择PREP分支；漂移影响线噪估计；LN系数依数据而变。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R08",
+      "kind": "rule_review",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S07"
+      ],
+      "operator_ids": [
+        "LP",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "若分析带外线噪已被总响应充分衰减，额外notch可能无收益；频带重叠则会损失目标信号。",
+      "required_context": "例如7–30Hz MI、50Hz工频；但transition泄漏或后续宽带支路仍可能需要处理。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R10",
+      "kind": "rule_review",
+      "source_ids": [
+        "S03",
+        "S06",
+        "S24",
+        "S07"
+      ],
+      "operator_ids": [
+        "CS",
+        "IF",
+        "LN",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "宽notch可覆盖漂移线噪但删除更宽神经频带；窄notch保护邻频但可能漏掉展宽噪声。",
+      "required_context": "关注gamma/SSVEP谐波、谱斜率或ICA频谱分类时尤其重要。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R11",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S10"
+      ],
+      "operator_ids": [
+        "BC",
+        "DR",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "坏道和参考相互影响，未经处理的坏道参与普通均值会污染其他通道。",
+      "required_context": "普通平均参考或PREP稳健参考；永久坏道与瞬时伪影分开。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R13",
+      "kind": "rule_review",
+      "source_ids": [
+        "S14",
+        "S29",
+        "S30"
+      ],
+      "operator_ids": [
+        "BC",
+        "BS",
+        "DR",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "排除坏道和极端坏段有利于ICA拟合；不应把所有可由ICA识别的眼动先删除。",
+      "required_context": "全局ICA，充分样本与保留代表性伪影；排除并非重建。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R14",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S24"
+      ],
+      "operator_ids": [
+        "IA",
+        "IF",
+        "IP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "插值可置于ICA前并显式降维，也可在ICA清理后恢复通道；没有普适的唯一顺序。",
+      "required_context": "ICA前插值增加冗余；RELAX论文为均衡参考临时插值，再去掉这些通道后拟合ICA。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R16",
+      "kind": "rule_review",
+      "source_ids": [
+        "S11",
+        "S08"
+      ],
+      "operator_ids": [
+        "IA",
+        "IF",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "逐时Huber/median参考不同于固定权重线性参考，通常不宜在经典线性ICA前使用。",
+      "required_context": "reference.mode为逐样本稳健估计；PREP最终固定坏道/插值后的均值不应混为此类。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R18",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "operator_ids": [
+        "HP",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ICA拟合支路通常从1–2Hz高通起探索，不能将该值强制用于ERP最终数据。",
+      "required_context": "慢漂移损害分离；研究任务/移动状态不同；低频源重要时需对照。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R21",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S13"
+      ],
+      "operator_ids": [
+        "EP",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ICA可拟合连续数据或合并的未baseline epochs；epoch先后不是数学硬顺序。",
+      "required_context": "代表性样本足够，分段不引入额外不同通道变换；滤波在截段前处理。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R22",
+      "kind": "rule_review",
+      "source_ids": [
+        "S12",
+        "S35"
+      ],
+      "operator_ids": [
+        "BL",
+        "DT",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "逐epoch baseline产生不同偏移，官方建议ICA拟合前高通但不做baseline；去趋势不能当作等价高通替代。",
+      "required_context": "IF输入为epochs；DT若逐段拟合会改变统计。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R23",
+      "kind": "rule_review",
+      "source_ids": [
+        "S13",
+        "S35"
+      ],
+      "operator_ids": [
+        "AS",
+        "BL",
+        "EAO",
+        "IA"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ICA清理可能引入DC偏移，需要baseline时常放在ICA之后；其他修复后重查baseline。",
+      "required_context": "ERP或明确需要均值基线的输出；AS/EAO次序是工程外推，非已证实最优。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R26",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S26"
+      ],
+      "operator_ids": [
+        "BC",
+        "LP",
+        "MW",
+        "NT",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "高频噪声或异常幅度检测前过窄低通/标准化可能隐藏检测依据。",
+      "required_context": "PREP HF-ratio或RELAX肌电谱斜率检测；检测专用副本可以与最终分析频带不同。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R27",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S29",
+        "S31"
+      ],
+      "operator_ids": [
+        "BC",
+        "BS",
+        "IP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "暂态伪影不能自动等同整条坏道；删段和坏道判断相互改变统计。",
+      "required_context": "通道只在部分时段失效、运动污染或缺失多。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R28",
+      "kind": "rule_review",
+      "source_ids": [
+        "S18",
+        "S20",
+        "S21"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "HP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ASR校准与应用需相容的去漂移处理；0.5/1Hz是源码例子，GUI transition是另一参数语义。",
+      "required_context": "asr_calibrate/asr_process；零均值和稳定校准。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R29",
+      "kind": "rule_review",
+      "source_ids": [
+        "S19",
+        "S20"
+      ],
+      "operator_ids": [
+        "AC",
+        "BC",
+        "DR",
+        "IP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ASR校准前排除故障通道；插值的冗余会改变校准统计。",
+      "required_context": "多通道ASR；校准与应用必须同通道空间。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R31",
+      "kind": "rule_review",
+      "source_ids": [
+        "S22",
+        "S14",
+        "S18"
+      ],
+      "operator_ids": [
+        "AS",
+        "IA",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "适度ASR前处理可改善后续ICA，但激进重建可破坏可分离性、删除神经信号；不是越强越好。",
+      "required_context": "ASR重建模式，与仅拒绝坏段模式不同。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R32",
+      "kind": "rule_review",
+      "source_ids": [
+        "S18",
+        "S24",
+        "S29"
+      ],
+      "operator_ids": [
+        "AR",
+        "AS",
+        "EAO",
+        "IA",
+        "MW"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "未核实足以支持ICA后再ASR、MWF+ASR、Autoreject+ASR或EOG回归+ASR的通用优先顺序。",
+      "required_context": "不同修复方法叠加且共享同一原始信号。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R33",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S21",
+        "S23"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ASR前/后平均参考均见实现路线；关键是校准空间一致和rank，不能固定一条跨库顺序。",
+      "required_context": "Mullen历史样例ASR后CAR；通用ASR可在给定参考上校准。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R35",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S21"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "EP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "连续ASR需要窗口、lookahead及状态；逐epoch运行若随意重置会改变算法。",
+      "required_context": "应用原连续/在线ASR到epochs。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R36",
+      "kind": "rule_review",
+      "source_ids": [
+        "S20",
+        "S19"
+      ],
+      "operator_ids": [
+        "AC",
+        "AS",
+        "BS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "ASR的校准需相对干净而代表性的片段；没有足够校准数据时不能悄悄拿全程严重污染数据替代。",
+      "required_context": "强污染、短记录或非平稳状态。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R37",
+      "kind": "rule_review",
+      "source_ids": [
+        "S30",
+        "S29"
+      ],
+      "operator_ids": [
+        "AR",
+        "IA",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "Autoreject可先提供坏epoch掩码以拟合ICA，再在ICA清理后重新运行。",
+      "required_context": "使用官方two-pass流程；两个AR实例/阶段分开。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R39",
+      "kind": "rule_review",
+      "source_ids": [
+        "S29",
+        "S31",
+        "S08"
+      ],
+      "operator_ids": [
+        "AR",
+        "BC",
+        "CS",
+        "IP",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "永久坏道处理与逐epoch局部插值需分开；局部插值使每trial空间变换不同，影响参考/协方差/后续空间滤波。",
+      "required_context": "AR局部修复或先全局IP。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R40",
+      "kind": "rule_review",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "operator_ids": [
+        "BC",
+        "DR",
+        "EF",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "EOG回归拟合前使用目标EEG参考并排除故障EEG/EOG通道。",
+      "required_context": "使用MNE EOGRegression；有独立、可靠EOG预测变量。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R42",
+      "kind": "rule_review",
+      "source_ids": [
+        "S32",
+        "S33"
+      ],
+      "operator_ids": [
+        "EAO",
+        "EF",
+        "HP",
+        "LP",
+        "NT",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "同一固定时间滤波施于EEG/EOG时，固定回归减法可交换；滤波后重新拟合系数则不保证等价。",
+      "required_context": "EOG预测信号和EEG同步用同一H，B已固定。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R43",
+      "kind": "rule_review",
+      "source_ids": [
+        "S15",
+        "S33",
+        "S34"
+      ],
+      "operator_ids": [
+        "EAO",
+        "EF",
+        "IA",
+        "IF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "EOG回归和ICA是可替代或互补候选；没有已核实的普适叠加顺序。",
+      "required_context": "眼动与任务信号相关、EOG含脑信号或ICA眼动分离不完整。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R44",
+      "kind": "rule_review",
+      "source_ids": [
+        "S32",
+        "S33",
+        "S34"
+      ],
+      "operator_ids": [
+        "BL",
+        "BS",
+        "EF",
+        "EP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "回归系数可在连续数据或眨眼/扫视evoked上估计；baseline/截段会改变拟合分布。",
+      "required_context": "EOG方法与拟合信号明确。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R45",
+      "kind": "rule_review",
+      "source_ids": [
+        "S24",
+        "S25"
+      ],
+      "operator_ids": [
+        "BC",
+        "BS",
+        "DR",
+        "HP",
+        "IA",
+        "IF",
+        "MW"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "RELAX论文以极端坏段标记、MWF、稳健参考、ICA/wICA等步骤处理。",
+      "required_context": "选RELAX配方；MWF噪声/干净mask可靠。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R46",
+      "kind": "rule_review",
+      "source_ids": [
+        "S24",
+        "S26",
+        "S27"
+      ],
+      "operator_ids": [
+        "LP",
+        "MW",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "RELAX原论文先1–80Hz滤波；当前MWF实现建议把分析低通延后以减轻延迟嵌入矩阵秩问题。",
+      "required_context": "RELAX版本、是否MWF、采样率/延迟嵌入不同。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R47",
+      "kind": "rule_review",
+      "source_ids": [
+        "S24",
+        "S27"
+      ],
+      "operator_ids": [
+        "EP",
+        "IP",
+        "MW",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "RELAX可在临时参考副本检测drift，MWF清理后再最终参考；最终插值常在后续分析阶段。",
+      "required_context": "配方内检测视图与输出视图不同。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R54",
+      "kind": "rule_review",
+      "source_ids": [
+        "S41",
+        "S08",
+        "S39"
+      ],
+      "operator_ids": [
+        "AC",
+        "BC",
+        "EF",
+        "IF",
+        "IP",
+        "RF",
+        "SC"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "单位换算、固定逐道尺度与数据驱动zscore有不同权限和空间影响。",
+      "required_context": "固定μV↔V单位变换、按训练统计标准化、按trial标准化。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R56",
+      "kind": "rule_review",
+      "source_ids": [
+        "S24",
+        "S29"
+      ],
+      "operator_ids": [
+        "AR",
+        "CS",
+        "EF",
+        "LN",
+        "MW"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "这些自适应方法组合未获得覆盖各任务、噪声强度和评价目标的直接顺序证据。",
+      "required_context": "超出已核实官方配方。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R57",
+      "kind": "rule_review",
+      "source_ids": [
+        "S17",
+        "S35",
+        "S36",
+        "S37"
+      ],
+      "operator_ids": [
+        "BL",
+        "DT",
+        "HP",
+        "LP",
+        "NT"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "高通、去趋势、传统baseline、GLM baseline解决的问题和失真不同，不能机械全部叠加。",
+      "required_context": "ERP慢电位、长epoch、条件间prestimulus差异。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R59",
+      "kind": "rule_review",
+      "source_ids": [
+        "S29",
+        "S41"
+      ],
+      "operator_ids": [
+        "AR",
+        "BS",
+        "CS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "修复/拒绝可改变类别、被试和难度分布；仅对剩余容易trial计准确率可能误导。",
+      "required_context": "不同pipeline保留不同样本集合。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R61",
+      "kind": "rule_review",
+      "source_ids": [
+        "S39",
+        "S40"
+      ],
+      "operator_ids": [
+        "CS",
+        "EP",
+        "HP",
+        "LP"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "CSP分析频带与时窗选择会改变学习目标；7–30Hz仅为官方MI示例。",
+      "required_context": "运动想象mu/beta；与ERP/高gamma任务区分。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R62",
+      "kind": "rule_review",
+      "source_ids": [
+        "S08",
+        "S24"
+      ],
+      "operator_ids": [
+        "IP",
+        "RF"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "插值前后重参考通常不是同一操作，但恰当的固定线性矩阵可组合；参考覆盖偏差需关注。",
+      "required_context": "坏道分布不均或不同subjects需统一montage。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R63",
+      "kind": "rule_review",
+      "source_ids": [
+        "S03",
+        "S35"
+      ],
+      "operator_ids": [
+        "DT",
+        "HP",
+        "LP",
+        "NT",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "连续/逐epoch线性去趋势不是LTI；不能与滤波/截窗/重采样无条件换序。",
+      "required_context": "detrend的设计矩阵依当前时间窗。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "rule:R65",
+      "kind": "rule_review",
+      "source_ids": [
+        "S01",
+        "S12",
+        "S08"
+      ],
+      "operator_ids": [
+        "AR",
+        "BC",
+        "EF",
+        "IF",
+        "RS"
+      ],
+      "task": "left_right_motor_imagery",
+      "priority": 2,
+      "question": "降采样可减少计算但会改变可用频谱、检测特征、事件精度及统计样本数。",
+      "required_context": "为了加速拟合而降采样或ICA decim。",
+      "next_checks": [
+        "核对任务、污染、参数语义、失效条件和反证",
+        "区分可测谓词、原生合同与只能保留的解释；补齐作用域后再绑定"
+      ],
+      "status": "review_required",
+      "stop_reason": "catalog_snapshot_not_new_evidence"
+    },
+    {
+      "id": "pair:AC:AR",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:BL",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:CS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:EF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "AC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:IF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IF",
+        "AC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "AC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "AC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AC",
+        "MW"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AC:NT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "AC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:AS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R32"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:BS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:DR",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EAO",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:EF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EF",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R56"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:HP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R56"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R56"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:NT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "AR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AR:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AR",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:BC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "AS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:CS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R32"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:EF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "AS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R31",
+        "R32"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "AS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "AS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "MW"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R32"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:NT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "AS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:AS:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "AS",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:CS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:EP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:HP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP",
+        "BC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BC",
+        "IA"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BC:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "BC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:CS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BL",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:DR",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:IP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:RF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RF",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "BL"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BL:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BL",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:DR",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:EP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "未找到已登记关系证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "IA"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:RF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "RF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "BS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:BS:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "BS",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:DR",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EAO",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:EF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EF",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:IF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IF",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R56"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:CS:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "CS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:DT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:EP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:HP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:NT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:RF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "RF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "DR"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DR:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DR",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:EAO",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:EF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:IP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:RF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RF",
+        "DT"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:DT:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "DT",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:EP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EP",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R43"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:IF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IF",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R43"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:IP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "EAO"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EAO:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EAO",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EF:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R43"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EF:IF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IF",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [
+        "R43"
+      ],
+      "question": "G01：某些组合仍无直接比较证据",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EF:IP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EF:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EF:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "EF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EP:IA",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EP:IP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EP:RF",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RF",
+        "EP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:EP:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "EP",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:HP:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP",
+        "RS"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:HP:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "HP",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IA:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "IA"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IA:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "IA"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IA:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IA",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IF:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "IF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IP:LN",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "IP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IP:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "IP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:IP:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "IP",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:LN:LP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "LN"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:LN:MW",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "MW"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:LN:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LN",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:LP:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "LP",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:MW:NT",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "MW"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:MW:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "MW",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:NT:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "NT",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:RF:RS",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "RF"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:RF:SP",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RF",
+        "SP"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    },
+    {
+      "id": "pair:RS:SC",
+      "kind": "relation_gap",
+      "task": "left_right_motor_imagery",
+      "operator_ids": [
+        "RS",
+        "SC"
+      ],
+      "source_ids": [],
+      "priority": 3,
+      "related_rule_ids": [],
+      "question": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止",
+      "next_checks": [
+        "查找任务及污染条件相符的直接比较、顺序例外和损伤测量；无证据时保持未知"
+      ],
+      "status": "evidence_required",
+      "stop_reason": "unresolved_catalog_gap"
+    }
+  ],
+  "counts": {
+    "sources": 42,
+    "operators": 24,
+    "rules": 65,
+    "operator_pairs": 276,
+    "relation_gaps": 121,
+    "parameter_topics": 29,
+    "binding_status": {
+      "catalog_only": 56,
+      "partial_predicate_binding": 5,
+      "conditional_advisory_binding": 4
+    },
+    "complete_claims_enforced": 0
+  },
+  "stopping": {
+    "status": "open",
+    "reason": "finite_catalog_audit; no exhaustive research claim",
+    "unresolved_topics": 215,
+    "all_topics_resolved": false
+  },
+  "limitations": [
+    "关系有规则引用不等于条件充分或已被实测验证。",
+    "有限谓词和条件建议只覆盖原研究结论的一部分；执行回执仍须单独核验。",
+    "缺口队列没有在本步骤自动获得新证据，也不授权撤回目标。"
+  ],
+  "coverage_sha256": "f9eb49ecc8bdc32db50fe790b35c19d08489f2b3b3fcc1738c3a78febdf19e0e"
+}

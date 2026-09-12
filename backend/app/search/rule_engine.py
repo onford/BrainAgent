@@ -39,6 +39,7 @@ def audit(recipe, space, context=None):
     rows = []
     for prior in space.priors:
         row = dict(prior_id=prior.id, revision=prior.revision,
+            knowledge_rule_ids=prior.knowledge_rule_ids,
             rule_sha256=digest(prior.model_dump(mode='json')), strength=prior.strength,
             evidence_ids=prior.evidence_ids, status='not_applicable',
             reason=prior.rationale, matched_nodes={}, condition_values=[], conflicts_with=[])

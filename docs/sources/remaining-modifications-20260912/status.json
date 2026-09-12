@@ -300,7 +300,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "神经先验研究覆盖",
-      "current": "既有知识 43 来源、25 操作类、300 对关系中仍有 130 对 gap；11 解读议题和精选规则不代表穷尽先验。",
+      "current": "当前目录42来源/65规则/24算子类/276关系。新冻结覆盖清单保留121个关系缺口及全部参数/规则待核验议题，记录任务、条件、反证检查和停止理由；未补齐证据的议题保持开放。神经能力清单已改用91操作/310 profiles。",
       "solution_and_acceptance": "按任务、污染、算子、损伤与失效条件建立研究议题队列；补参数、反证和边界，允许不可解决 gap，发布覆盖与停止理由。",
       "dependencies": [
         "I10",
@@ -319,7 +319,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "研究规则统一编译和应用",
-      "current": "研究目录有 68 条规则，第一轮神经包落地 10 条条件规则；三态执行已具备，尚未覆盖所有可操作研究规则。",
+      "current": "每条研究规则记录有限执行谓词绑定、条件建议绑定或仅目录收录；执行规则回执保留研究规则ID、版本和哈希。已有有限绑定不计为整条研究结论被执行或验证；全部65条规则的可执行部分仍需逐条补足。覆盖产物与搜索协议绑定并核验。",
       "solution_and_acceptance": "统一规则类型、触发事实、作用域和结果回执；纯解释规则保持 advisory，不把全部文献意见硬化。核对每个可执行规则的命中/未命中/未知与真实动作。",
       "dependencies": [
         "I06",
@@ -1633,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第十批状态化分区重放完成专项验证；7401c8f固定快照全量回归及第7次真实闭环正在运行。接着处理研究议题覆盖与知识规则生命周期。",
+  "active_step": "第十一批知识覆盖和规则绑定审计完成；继续规则适用域/例外/冲突及知识生命周期。bacbb66全量回归与7401c8f第7次真实流程独立运行中。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1823,6 +1823,33 @@
       "integration": "Planner -> Worker -> output checksums; separate replay contexts, fitted models, decisions and main logs retained",
       "unsupported": "Manual decisions bound to another data context and different explicit fit partitions remain blocked",
       "live6": "live-integrated-6-result.json; completed workflow, failed literature gate, preserved read-only historical evidence"
+    },
+    "eleventh_batch": {
+      "catalog_rule_neural_controller": "56 passed, 59.32 seconds",
+      "final_coverage_neural_integrity": "19 passed, 2.15 seconds; overlaps previous suite",
+      "catalog_counts": {
+        "sources": 42,
+        "operators": 24,
+        "rules": 65,
+        "operator_pairs": 276,
+        "relation_gaps": 121,
+        "parameter_topics": 29,
+        "binding_status": {
+          "catalog_only": 56,
+          "partial_predicate_binding": 5,
+          "conditional_advisory_binding": 4
+        },
+        "complete_claims_enforced": 0
+      },
+      "audit": "knowledge-coverage-audit.json",
+      "native_relax": "native-relax-graph-4-verification.json; engine 1d7369f5833045488d7d404615829f858750b402df6d0043268941d56846c2ba; exact 0 V",
+      "limits": "This is a catalog/implementation binding audit; no new literature review or scientific completeness claim."
+    },
+    "ninth_full_regression": {
+      "result": "1184 passed, 1 failed, 109 warnings",
+      "seconds": 802.12,
+      "failure": "Deadline test incorrectly required all 3 requests to start within 0.2 seconds",
+      "followup": "Test fixed in bacbb66; 12 related tests passed; full regression in progress"
     }
   }
 }

@@ -118,6 +118,7 @@ class SearchService:
             "control-design.json": "有限对照邻域、参数与换序提案、排除原因和覆盖范围",
             "probe-panel.json": "覆盖全部被试的固定重建探针与污染条件分配",
             "scientific-knowledge.json": "顺序、参数及适用条件的来源与证据缺口",
+            "knowledge-coverage.json": "研究规则的有限执行绑定、条件建议和未解决议题队列",
             "evaluation-evidence.json": "质量评价设计和论文基准的可比性依据",
         }
         for path in sorted(root.rglob("*")):
@@ -308,6 +309,8 @@ class SearchService:
         evaluation_evidence = read(Path(__file__).parent / "resources/evaluation-evidence.json")
         guide = interpretation_guide()
         neural = freeze_bundle(data, space, research, guide)
+        from .knowledge_coverage import coverage as knowledge_coverage
+        knowledge_audit = knowledge_coverage(research, space, neural, data.survey.task)
         documents.append(evidence_document(guide))
         metric_text = evaluation_evidence["interpretation"] + "\n\n" + "\n\n".join(
             f"{m['id']} · {m['name']}\n定义：{m['formula']}\n边界：{m['overCleaningAndLeakageRisk']}\n选择角色：{m['selectionRole']}"
@@ -368,6 +371,7 @@ class SearchService:
             "space_hash": digest(space.model_dump(mode="json")),
             "space_context": space_context,
             "scientific_knowledge_hash": digest(research),
+            "knowledge_coverage_hash": digest(knowledge_audit),
             "evaluation_evidence_hash": digest(evaluation_evidence),
             "interpretation_guide_hash": digest(guide),
             "neural_priors": neural,
@@ -424,6 +428,7 @@ class SearchService:
         if controls is not None:
             write(root / "control-design.json", controls)
         write(root / "scientific-knowledge.json", research)
+        write(root / "knowledge-coverage.json", knowledge_audit)
         write(root / "evaluation-evidence.json", evaluation_evidence)
         write(root / "interpretation-guide.json", guide)
         write(root / "neural-priors.json", neural)
@@ -876,6 +881,8 @@ class SearchService:
         ):
             raise IntegrityFailure("冻结算子空间或科学依据目录已改变")
         verify_registry(protocol, state["registry"])
+        if protocol.get('knowledge_coverage_hash') and digest(read(root/'knowledge-coverage.json')) != protocol['knowledge_coverage_hash']:
+            raise IntegrityFailure('冻结研究覆盖与未解决议题队列已改变')
         if protocol.get("interpretation_guide_hash") and digest(read(root / "interpretation-guide.json")) != protocol["interpretation_guide_hash"]:
             raise IntegrityFailure("冻结图表解读知识库已改变")
         if protocol.get("neural_priors_hash") and (

@@ -28,6 +28,14 @@ def bundle():
     return freeze_bundle(data, build_space({}), knowledge().model_dump(mode="json"), interpretation_guide())
 
 
+def test_neural_capability_snapshot_uses_the_complete_registered_graph(bundle):
+    from app.preprocessing.units.operations_v2 import DEFINITIONS, inventory
+    cap = bundle['capabilities']
+    assert cap['enabled_operations'] == len(DEFINITIONS)
+    assert cap['registered_profiles'] == len(inventory())
+    assert {(row['id'], op) for row in cap['units'] for op in row['operations']} == set(DEFINITIONS)
+
+
 @pytest.mark.parametrize("value,status,expected", [(4, "ok", "true"), (1, "ok", "false"),
     (None, "ok", "unknown"), (5, "partial", "unknown"), (float("nan"), "ok", "unknown"), (True, "ok", "unknown")])
 def test_conditional_evidence_is_three_valued(bundle, value, status, expected):

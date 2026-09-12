@@ -331,6 +331,16 @@ def build_space(context):
             "engineering",
         ),
     ]
+    # These links identify the bounded part encoded by each predicate. They do
+    # not assert that the predicate implements every condition in a research claim.
+    research_links = {
+        'repair-needs-detection': ['R12'], 'detect-before-repair': ['R12'],
+        'asr-before-car': ['R69'], 'asr-before-interpolation': ['R69'],
+        'repair-before-car': ['R11'], 'diagnose-before-analysis-band': ['R26'],
+        'asr-before-analysis-band': ['R28'],
+    }
+    for rule in value['priors']:
+        rule['knowledge_rule_ids'] = research_links.get(rule['id'], [])
     if context.get("at_least_four_eeg") and context.get("electrode_positions"):
         nodes = [
             dict(id=k, operator=k)

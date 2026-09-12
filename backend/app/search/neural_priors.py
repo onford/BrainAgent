@@ -45,7 +45,8 @@ class NeuroBundle(Contract):
 
 
 def freeze_bundle(data, space, research, guide):
-    from app.preprocessing.units import catalog, OPERATIONS
+    from app.preprocessing.units import catalog
+    from app.preprocessing.units.operations_v2 import DEFINITIONS, inventory
 
     selected = [r for r in data.collection.records if r.id in data.collection.selected_record_ids]
     cards = {c["id"]: c for c in guide["cards"]}
@@ -124,9 +125,11 @@ def freeze_bundle(data, space, research, guide):
         "target_labels": "scoring_only", "independent_confirmation": False,
         "baseline": "verified_precue_same_processing_only", "unknown_facts": ["individual_peak_frequency", "true_neural_sources", "individual_head_model"],
     }
-    capabilities = {"catalog_units": len(units), "enabled_units": len({u for u, _ in OPERATIONS}),
-                    "enabled_operations": len(OPERATIONS), "search_operators": len(space.operators),
-                    "units": [{"id": u.id, "operations": sorted(o for unit, o in OPERATIONS if unit == u.id),
+    capabilities = {"catalog_units": len(units), "enabled_units": len({u for u, _ in DEFINITIONS}),
+                    "enabled_operations": len(DEFINITIONS), "registered_profiles":len(inventory()),
+                    "availability_policy":"Registered v2 contracts; actual dependencies and data compatibility must pass plan/runtime checks.",
+                    "search_operators": len(space.operators),
+                    "units": [{"id": u.id, "operations": sorted(o for unit, o in DEFINITIONS if unit == u.id),
                                "search_operators": [o.id for o in space.operators if o.unit_id == u.id],
                                "status": u.validation["integration"]} for u in units]}
     coverage = [{"topic": c["id"], "source_ids": ["guide:" + s for s in c["source_ids"]],
