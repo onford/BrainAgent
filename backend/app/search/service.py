@@ -50,7 +50,8 @@ class SearchService:
         workflows.searches = self
         self.llm = llm if llm is not None else workflows.llm
         from .metric_reading import MetricReader
-        self.metric_reader = MetricReader(self.llm)
+        self.metric_reader = MetricReader(self.llm,
+            budget_path=lambda state: self.workflows.folder(state['workflow_id']) / 'llm-budget.json')
         if isinstance(self.llm, OpenAICompatibleClient):
             # Every actual provider request is charged by the search ledger.
             self.llm = OpenAICompatibleClient(
@@ -625,7 +626,8 @@ class SearchService:
         try:
             async with asyncio.timeout(max(0.001, state["deadline"] - time.time())):
                 from app.llm.usage import usage_scope
-                with usage_scope(self.folder(state["id"]) / "llm-calls.json", action["action"]):
+                with usage_scope(self.folder(state["id"]) / "llm-calls.json", action["action"],
+                                 budget_path=self.workflows.folder(state['workflow_id']) / 'llm-budget.json'):
                     result = await decide(
                         self.llm, state, documents, one_shot=one_shot, capture=capture
                     )

@@ -306,7 +306,7 @@ async def test_six_agents_retry_delivery_alignment_training_and_api(
         assert described["status"] == "completed"
         names = {a["name"] for a in described["artifacts"]}
         expected_local = {
-            p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file()
+            p.relative_to(folder).as_posix() for p in folder.rglob("*") if p.is_file() and p.suffix not in {'.lock', '.db'}
         }
         assert expected_local <= names
         assert any(n.startswith("delivery/provenance/") for n in names)

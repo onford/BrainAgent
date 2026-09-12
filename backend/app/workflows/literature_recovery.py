@@ -17,6 +17,7 @@ from app.preprocessing.literature_verification import verify_extraction, verifie
 from app.preprocessing.research_budget import reserve
 from app.preprocessing.storage import digest
 from app.search.io import read
+from .recovery_reads import read_source
 
 
 class RecoveryAction(Contract):
@@ -93,6 +94,7 @@ async def recover(cognition, extraction, inputs, evidence, data, identity, root,
             write(root / "recovery.json", records)
             return current, evidence, records
         context.update(blockers=blocked, previous_extraction=current.model_dump(mode="json"),
+                       previous_recovery_actions=records,
                        allowed_source_urls=sorted(links), remaining_actions=budget["max_actions"] - budget["used"])
         reserve(budget, {'source': inputs['source']['url'], 'action': 'recovery_decision'})
         record = {"sequence": budget["used"], "status": "running", "blockers": blocked}
@@ -112,7 +114,7 @@ async def recover(cognition, extraction, inputs, evidence, data, identity, root,
                     if action.url not in links:
                         raise ValueError("recovery URL is absent from the read source's actual links")
                     kind = "code" if urlsplit(action.url).hostname in {"github.com", "api.github.com"} else "paper"
-                    document = await cognition.reader.read(action.url, kind)
+                    document = await read_source(cognition.reader, action.url, kind, root)
                     source = document.model_dump(mode="json")
                     write(root / f"supplement-{budget['used']}.json", source)
                     ref = cognition.service.preprocessing.store.put(cognition.owner, "evidence", {**source, "content": source["text"]})

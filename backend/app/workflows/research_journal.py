@@ -66,7 +66,7 @@ class ResearchJournal:
         with self.lock():
             return self._remaining(self.read(), purpose)
 
-    def reserve(self, actions):
+    def reserve(self, actions, *, reuse_failures=True):
         with self.lock():
             saved = self.read()
             for purpose in {a.purpose for a in actions} & saved["budgets"].keys():
@@ -77,12 +77,14 @@ class ResearchJournal:
             for action in actions:
                 sequence += 1
                 key = action_key(action)
-                previous = next((r for r in saved["actions"] if r["key"] == key), None)
+                previous = next((r for r in reversed(saved["actions"]) if r["key"] == key), None)
                 row = dict(sequence=sequence, key=key, action=action.model_dump(),
                     reserved_at=time(), status="reserved", result=None)
                 if previous:
+                    uncertain = previous["result"] is None or previous.get('uncertain', False)
                     result = previous["result"] or self.uncertain(previous).model_dump(mode="json")
-                    row.update(status="completed", result=result, reused_sequence=previous["sequence"])
+                    if uncertain or reuse_failures or result['observations'][0]['success']:
+                        row.update(status="completed", result=result, reused_sequence=previous["sequence"], uncertain=uncertain)
                 saved["actions"].append(row)
                 budget = saved["budgets"].get(action.purpose)
                 tickets.append({**row, "seconds_left": max(0, budget["expires_at"] - time()) if budget else None})

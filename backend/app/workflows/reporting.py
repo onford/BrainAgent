@@ -304,11 +304,13 @@ def render_report(folder):
             [
                 [
                     c.entry_id,
-                    ", ".join(c.reported_ids) or "未明确",
+                    {'exclusion': '报告排除', 'inclusion_scope': '入选范围',
+                     'held_out': '留出范围', 'unspecified': '性质未明'}[c.claim_type] + '：' + (", ".join(c.reported_ids) or "未明确"),
                     ", ".join(c.local_objects)
                     or {
                         "outside_selection": "不在本轮范围",
                         "unresolved": "尚不能定位",
+                        "scope_only": "仅记录来源研究范围",
                     }.get(c.match_status, ""),
                     c.action,
                     c.reason,

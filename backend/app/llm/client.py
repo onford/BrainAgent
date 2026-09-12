@@ -83,7 +83,7 @@ class OpenAICompatibleClient(LLMClient):
             return await self._chat(messages)
 
     async def _chat(self, messages: list[dict[str, str]]) -> str:
-        from .usage import record
+        from .usage import record, output_limit, reserve_attempt, complete_attempt
 
         started_at = perf_counter()
         endpoint = f"{self.config.base_url.rstrip('/')}/chat/completions"
@@ -105,6 +105,8 @@ class OpenAICompatibleClient(LLMClient):
             "messages": messages,
             "response_format": {"type": "json_object"},
         }
+        if output_limit() is not None:
+            payload['max_tokens'] = output_limit()
         timeout = httpx.Timeout(self.config.timeout_seconds, connect=10.0)
         if self.config.reasoning_effort is not None:
             payload["reasoning_effort"] = self.config.reasoning_effort
@@ -117,9 +119,11 @@ class OpenAICompatibleClient(LLMClient):
                     "POST", endpoint, headers=headers, json=payload
                 )
                 for attempt in range(1, self._max_retries + 2):
+                    ticket, seconds_left = reserve_attempt(len(request.content))
                     record(status="running", attempts=attempt)
                     try:
-                        response = await client.send(request)
+                        async with asyncio.timeout(seconds_left):
+                            response = await client.send(request)
                         response.raise_for_status()
                     except httpx.HTTPError as exc:
                         failed = (
@@ -128,6 +132,8 @@ class OpenAICompatibleClient(LLMClient):
                             else None
                         )
                         status = failed.status_code if failed is not None else "-"
+                        complete_attempt(ticket, status='failed', error_type=type(exc).__name__,
+                            http_status=failed.status_code if failed is not None else None)
                         request_id = (
                             failed.headers.get("x-request-id", "-")
                             if failed is not None
@@ -168,6 +174,13 @@ class OpenAICompatibleClient(LLMClient):
                         )
                         await asyncio.sleep(delay)
                     else:
+                        try:
+                            attempt_body = response.json()
+                            attempt_usage = attempt_body.get('usage') if isinstance(attempt_body, dict) else None
+                        except ValueError:
+                            attempt_usage = None
+                        complete_attempt(ticket, status='completed', http_status=response.status_code,
+                            usage=attempt_usage, request_id=response.headers.get('x-request-id'))
                         break
             details = (
                 f"model={self.config.model} provider={provider} "

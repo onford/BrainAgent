@@ -96,6 +96,10 @@ def collection_review_contract(finding_ids, runs, discussion=None):
         from .collection_contracts import ReportedExclusion
         variants = tuple(create_model(f"Exclusions_{i}", __base__=ReportedExclusion,
             entry_id=(Literal[e["id"]], ...),
+            claim_type=(Literal['exclusion', 'inclusion_scope', 'held_out', 'unspecified'], Field(
+                description='Classify what the source actually says. An included subset or held-out validation group is not an exclusion due to bad data.')),
+            object_quote=(str, Field(min_length=1, max_length=800,
+                description='Exact short contiguous span from a cited finding naming the objects and their disposition. Preserve the subject noun and any explicit exclusion verb.')),
             finding_ids=(list[Literal[tuple(f["id"] for f in e["findings"])]], Field(min_length=1,
                 description="Exact IDs from this literature entry; these are not source IDs or research-summary fact IDs.")))
             for i, e in enumerate(discussion) if e["findings"])

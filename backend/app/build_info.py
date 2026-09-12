@@ -10,6 +10,7 @@ from app.preprocessing.storage import digest, file_hash
 
 @lru_cache(maxsize=1)
 def snapshot():
+    from app.llm.budget import DEFAULT_LIMITS
     app_root = Path(__file__).parent
     source_files = {
         p.relative_to(app_root).as_posix(): file_hash(p)
@@ -39,4 +40,5 @@ def snapshot():
         "preprocessing_scope": "shared_recipe_all_records",
         "core_evaluator_version": 4,
         "selection": "eegnet_three_seed_subject_macro_ba",
+        "llm_operational_limits": DEFAULT_LIMITS,
     }

@@ -2089,9 +2089,9 @@
           "relation": "prefer_before"
         }
       ],
-      "claim": "CSP用训练标签拟合；EA若选用，应在CSP看到的数据空间确定之后拟合CSP。",
-      "condition": "传感器级EA+CSP解码。",
-      "implication": "每outer fold内fit EA/CS；n_components和reg在inner CV选择；禁止全数据先CSP再CV。",
+      "claim": "CSP只使用训练标签拟合，并作用于共享预处理输出的物理信号。",
+      "condition": "传感器级CSP解码。",
+      "implication": "每outer fold内只在训练记录上fit CSP；n_components和reg在inner CV选择；禁止全数据先CSP再CV。",
       "source_ids": [
         "S39",
         "S40",

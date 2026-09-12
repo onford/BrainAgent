@@ -1,4 +1,4 @@
-"""Dataset reconstruction probes of physical preprocessing, before parent EA.
+"""Dataset reconstruction probes of shared physical preprocessing.
 
 Public API: freeze_probe_panel(panel, *, design="balanced") -> dict;
 evaluate_dataset_reconstruction(...) -> {summary, details, artifacts}.
@@ -9,13 +9,13 @@ every subject receives one of ten conditions, balanced by hash-sorted rotation.
 Explicit design="full_factorial" assigns all ten conditions to every subject.
 Source Raw is read once, clean P is replayed once and verified against existing
 signal_V.npy before scoring. Each corrupted P is fitted independently through
-units.invoke; no runner/evaluator internals or EA representation are used.
+units.invoke; no runner/evaluator internals or learned representation are used.
 Explicit adjacent detect/mark branches bind the diagnostic to the original
 signal input; mark alone applies bads and its existing max_fraction cap.
 
 All comparison signals receive the SAME continuous CAR and 1--70 Hz projection
 before extracting every eligible frozen trial. These are cleanproxy fidelity
-measurements, not neural ground truth or evidence about EA fidelity.
+measurements, not neural ground truth.
 """
 
 from __future__ import annotations
@@ -676,7 +676,7 @@ def _comparison(raw, events, mapping, trials, probe):
             int(raw.info["chs"][raw.ch_names.index(n)]["unit"]) == 107 for n in channels
         ),
         "PHYSICAL_V_REQUIRED",
-        "EEG must be SI voltage before parent EA",
+        "EEG must be physical SI voltage",
     )
     positions = {row["event_id"]: i for i, row in enumerate(mapping)}
     if isinstance(raw,mne.BaseEpochs):
@@ -1201,7 +1201,7 @@ def evaluate_dataset_reconstruction(
             "Balanced partial stress test: each subject receives one condition only; each condition covers its assigned subset, not all subjects. Between-condition contrasts also involve different subjects."
             if probe["design"] == "balanced"
             else "Full-factorial stress test: every subject is assigned every condition; failed/undefined cases remain in the declared denominator.",
-            "Conclusions concern physical voltage preprocessing before parent EA, not EA neural fidelity.",
+            "Conclusions concern shared physical voltage preprocessing under the declared synthetic contamination cases.",
             "Engineering injection cases do not reproduce all natural artifacts.",
             "Whole-record independent unlabeled fitting is offline/transductive.",
             "Undefined and failed observations remain in the denominator; no weighted total score.",

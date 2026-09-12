@@ -12,7 +12,7 @@ STAGE_FOLDERS = {
     "data_report": "report",
     "data_delivery": "delivery",
 }
-LIVE_FILES = {"workflow.json", "process/index.json"}
+LIVE_FILES = {"workflow.json", "process/index.json", "llm-budget.json"}
 COGNITIVE_FILES = {
     "decisions.json",
     "sources.json",
@@ -56,7 +56,7 @@ def local_files(folder, state, previous=()):
         if (
             not path.is_file()
             or any(part.startswith(".") for part in relative.parts)
-            or path.suffix in {".tmp", ".bak", ".orig", ".rej", ".swp", ".swo"}
+            or path.suffix in {".tmp", ".bak", ".orig", ".rej", ".swp", ".swo", ".lock", ".db"}
             or path.name.endswith("~")
         ):
             continue

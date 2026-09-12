@@ -15,7 +15,7 @@ def test_model_contract_separates_research_facts_from_paper_exclusion_quotes():
         "conflicts": [], "limitations": [],
         "task_mappings": [{"run": 4, "status": "verified", "finding_ids": ["run-fact"]}],
         "literature_exclusions": [{"entry_id": "paper-discussion", "object_type": "unspecified", "reported_ids": [],
-            "finding_ids": ["paper-quote"], "reason": "The source does not identify the excluded objects"}]}
+            "finding_ids": ["paper-quote"], "claim_type": "unspecified", "object_quote": "excluded objects", "reason": "The source does not identify the excluded objects"}]}
     assert schema.model_validate(value).literature_exclusions[0].finding_ids == ["paper-quote"]
     for incorrect in ("run-fact", "other-quote", "invented"):
         wrong = deepcopy(value)

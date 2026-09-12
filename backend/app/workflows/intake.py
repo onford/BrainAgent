@@ -26,6 +26,11 @@ def table(folder, name, rows):
 def literature_matches(review, survey):
     records = []
     for item in review.literature_exclusions:
+        if item.claim_type != 'exclusion':
+            records.append({**item.model_dump(), 'local_objects': [],
+                'match_status': 'scope_only' if item.claim_type != 'unspecified' else 'unresolved',
+                'action': '不处理'})
+            continue
         matched, identified = [], []
         for identity in item.reported_ids:
             if item.object_type == "subject" and re.fullmatch(

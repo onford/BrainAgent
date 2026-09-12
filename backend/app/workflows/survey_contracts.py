@@ -194,7 +194,7 @@ class LiteratureEntry(Contract):
     quality: QualitySignals
     exclusions: list[str] = Field(
         default_factory=list,
-        description="Subject/run/channel exclusions reported by dataset discussion sources, not automatic local exclusion commands.",
+        description="Explicit subject/run/channel exclusions reported by dataset discussion sources. Included study subsets and held-out groups are scope facts, not exclusions; preserve them in findings instead. Never infer excluded IDs from an included subset.",
     )
 
 

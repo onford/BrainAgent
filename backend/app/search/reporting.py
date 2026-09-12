@@ -179,7 +179,7 @@ def _quality_section(part):
 
 def _reconstruction_section(part):
     result = f'<h3>半合成重建</h3><p>状态：{escape(part["status"])}；{escape(part.get("reason") or "")}</p>'
-    result += ("<p>真实 EEG cleanproxy 不是神经真值；结论仅针对声明的注入污染、配对窗口及物理预处理，不评价父层 EA 保真。"
+    result += ("<p>真实 EEG cleanproxy 不是神经真值；结论仅针对声明的注入污染、配对窗口及共享物理预处理。"
                "相关系数不能单独证明保留了神经信号。未分配、失败和未定义保持各自状态，不视为零，也不生成加权总分。</p>")
     summary = part.get("summary")
     if summary is None:

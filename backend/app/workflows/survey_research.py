@@ -532,7 +532,7 @@ async def research(agent, survey):
             "For usage_analysis and usage_algorithm, the work itself must actually use the target dataset: citing another work in related work is not sufficient; defer it and follow the primary work. "
             "Analysis means substantive analysis of data or signals, not merely a comparison of classifier accuracies. "
             "Keep coverage gaps explicit, never relabel unrelated papers to fill a category. A source may support multiple goals with distinct reasons/evidence. "
-            "Extract dataset-discussion subject/run exclusions as reported claims, not execution commands. related_urls may only copy URLs in that source links, its original read URL or its associated search result; omit inferred DOI URLs. "
+            "Extract explicit dataset-discussion subject/run exclusions as reported claims, not execution commands. Included subsets and held-out groups are study-scope findings, not exclusions. Never take a subset's complement to invent excluded subjects. related_urls may only copy URLs in that source links, its original read URL or its associated search result; omit inferred DOI URLs. "
             "Use the supplied observed_quality as context for screening; missing metrics remain unknown, and code preserves their provenance. "
             "Full_text requires full document access within the provided context; previews, abstracts and truncation are partial. Finding IDs must be unique across all entries and distinct from verification facts.",
             lambda value: validate_screening(

@@ -92,6 +92,10 @@ class IntakeAudit(Contract):
 
 class ReportedExclusion(Contract):
     entry_id: str
+    # Default reads legacy artifacts; the current model-facing schema requires
+    # an explicit classification and literal object span.
+    claim_type: Literal['exclusion', 'inclusion_scope', 'held_out', 'unspecified'] = 'exclusion'
+    object_quote: str | None = None
     object_type: Literal["subject", "recording", "channel", "trial", "unspecified"]
     reported_ids: list[str]
     finding_ids: list[str] = Field(min_length=1)
@@ -100,7 +104,7 @@ class ReportedExclusion(Contract):
 
 class MatchedExclusion(ReportedExclusion):
     local_objects: list[str]
-    match_status: Literal["selected", "outside_selection", "unresolved"]
+    match_status: Literal["selected", "outside_selection", "unresolved", "scope_only"]
     action: Literal["保留标记", "不处理"]
 
 

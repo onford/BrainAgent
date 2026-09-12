@@ -199,7 +199,8 @@ def bound_schema(ctx):
 
 
 class MetricReader:
-    def __init__(self, llm):
+    def __init__(self, llm, budget_path=None):
+        self.budget_path = budget_path
         self.llm = (OpenAICompatibleClient(llm.config, llm._transport, max_retries=0)
                     if isinstance(llm, OpenAICompatibleClient) else llm)
         config = getattr(llm, "config", None)
@@ -217,6 +218,12 @@ class MetricReader:
         return await asyncio.shield(self.pending[key])
 
     async def _generate(self, root, state, request):
+        from app.llm.usage import usage_scope
+        with usage_scope(root / 'metric-readings' / 'llm-calls.json', 'metric_reading',
+                         budget_path=self.budget_path(state) if self.budget_path else root / 'llm-budget.json'):
+            return await self._read(root, state, request)
+
+    async def _read(self, root, state, request):
         async with self.capacity:
             if self.llm is None:
                 raise RuntimeError("解读模型未配置")

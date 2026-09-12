@@ -98,7 +98,8 @@ class WorkflowCognition:
             result, error, status = None, None, "accepted"
             try:
                 from app.llm.usage import usage_scope
-                with usage_scope(self.folder / self.prefix / "llm-calls.json", operation):
+                with usage_scope(self.folder / self.prefix / "llm-calls.json", operation,
+                                 budget_path=self.folder / 'llm-budget.json'):
                     value = await self.llm.structured_output(messages, model)
                 result = value.model_dump(mode="json")
                 if validate:
@@ -406,23 +407,8 @@ class WorkflowCognition:
                         f"literature exclusions must cite findings of an included dataset-discussion entry; rejected entry={claim.entry_id}, findings={claim.finding_ids}; "
                         + str({key: [f['id'] for f in item['findings']] for key, item in entries.items()})
                     )
-                if claim.object_type == "subject":
-                    text = " ".join(
-                        f["quote"]
-                        for f in entry["findings"]
-                        if f["id"] in claim.finding_ids
-                    )
-                    numbers = {
-                        int(x) for x in re.findall(r"\b\d{1,3}\b|(?<=S)\d{3}\b", text)
-                    }
-                    for identity in claim.reported_ids:
-                        if (
-                            not re.fullmatch(r"(?:S|sub-)?\d{1,3}", identity)
-                            or int(re.sub(r"\D", "", identity)) not in numbers
-                        ):
-                            raise ValueError(
-                                f"subject exclusions must list explicit subject numbers present in their quoted evidence; rejected={identity}, entry={claim.entry_id}, quoted evidence={text!r}; keep ambiguous objects unspecified"
-                            )
+                from .exclusion_evidence import validate_claim
+                validate_claim(claim, entry)
             required = {e["id"] for e in discussion if e.get("exclusions")}
             if not required <= {c.entry_id for c in value.literature_exclusions}:
                 raise ValueError(
@@ -466,7 +452,8 @@ class WorkflowCognition:
                 "supporting_facts contains exact finding IDs from its enum, never sentences. Unknown mapping needs more evidence; known contradictory labels block conversion. "
                 "For each task_mappings row, verified requires quoted evidence naming that run and identifying left/right motor imagery; generic T0/T1/T2 definitions do not establish run identity. Unresolved mapping requires compatible=false, then supplemental research. MNE dataset documentation is valid technical evidence even when the official site lacks this table. "
                 "Unknown demographics/hardware metadata are limitations, not exclusions. Do not treat a general multi-task dataset description as a contradiction with a scoped adapter. "
-                "Extract literature_exclusions from included dataset-discussion entries: entry_id, explicit object type/IDs, finding_ids and reported reason. Do not infer subject numbers from other numeric parameters. "
+                "Record reported subject dispositions in literature_exclusions with claim_type: exclusion, inclusion_scope, held_out or unspecified. A study using subjects 1–10 names an INCLUDED subset; never mark those subjects as excluded or infer excluded IDs by taking the complement. "
+                "For each row provide entry_id, object_type/reported_ids, finding_ids, reason and object_quote (an exact short span from a cited finding naming the objects and disposition). Explicit bounded subject ranges may expand; sample counts and open-ended ranges such as 81+ cannot expand into IDs. Use unspecified with [] when unresolved. "
                 "Preserve ambiguous claims as unspecified with no IDs. Local matching and disposition are done by code; literature claims never directly authorize exclusions.",
                 validate_review,
             )
@@ -484,7 +471,17 @@ class WorkflowCognition:
                 return review
             if iteration == 2:
                 break
+            from .research_journal import ResearchJournal
+            journal = ResearchJournal(self.folder / self.prefix / 'research-journal.json', sources)
+            purpose = 'dataset_verification'
+            saved_budget = journal.read()['budgets'].get(purpose)
+            initial_count = sum(o.action.purpose == purpose for o in sources.observations)
+            journal.bind_budget(purpose, saved_budget['max_actions'] if saved_budget else initial_count+6,
+                {'request': self.state['request'], 'operation': 'collection_supplement'}, 540)
+            journal.restore(sources, include_uncertain=True)
             for _ in range(3):
+                if journal.remaining(purpose) <= 0:
+                    break
                 action = await self.ask(
                     "为接入核对补充依据",
                     ResearchAction,
@@ -504,7 +501,8 @@ class WorkflowCognition:
                 )
                 if action.action == "finish":
                     break
-                await self.research_tool(action, sources, available)
+                action = action.model_copy(update={'purpose': purpose})
+                await self.research_batch([action], sources, available)
                 self.save("collection/sources.json", sources)
                 if action.action == "read" and sources.observations[-1].success:
                     break
