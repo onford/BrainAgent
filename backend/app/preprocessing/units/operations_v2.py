@@ -120,6 +120,10 @@ for _native_op in ('prep_native', 'automagic_native'):
         'source_root eeglab_root matlab_path line_freq seed timeout_seconds adaptation_scope' + (' prep_root ica_random_policy' if _native_op == 'automagic_native' else ''),
         effect='reference', assets=('source_root','eeglab_root','matlab_path') + (('prep_root',) if _native_op == 'automagic_native' else ()),
         variants={'ica_random_policy':['author_clock','fixed_loop_seed_zero']} if _native_op == 'automagic_native' else {})
+define('EEG-RELAX-NATIVE', 'relax_native',
+       'source_root eeglab_root prep_root picard_root fieldtrip_root mwf_root matlab_path line_freq h_freq seed timeout_seconds adaptation_scope compatibility_policy events',
+       effect='native_pipeline', assets=['source_root','eeglab_root','prep_root','picard_root','fieldtrip_root','mwf_root','matlab_path'],
+       variants={'compatibility_policy':['eegrej_scalar_row_bound']})
 
 
 def _initial_profiles(spec):

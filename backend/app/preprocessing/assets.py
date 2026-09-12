@@ -42,9 +42,14 @@ def load(root,snapshot):
 def freeze_native(steps):
     files={}
     for step in steps:
-        if step.implementation_version=='2' and step.op in ('prep_native','automagic_native'):
-            from .units.source.eeg_classic_native import native_roots
-            for _,root in native_roots(step.op,step.params):
+        if step.implementation_version=='2' and step.op in ('prep_native','automagic_native','relax_native'):
+            if step.op == 'relax_native':
+                from .units.source.eeg_relax_native import native_roots
+                roots = native_roots(step.params)
+            else:
+                from .units.source.eeg_classic_native import native_roots
+                roots = native_roots(step.op,step.params)
+            for _,root in roots:
                 candidates=[p for p in root.rglob('*') if p.is_file() and '.git' not in p.parts]
                 if len(candidates)>50000:raise ValueError('native dependency root exceeds bounded bundle size')
                 files.update({str(p.resolve()):file_hash(p) for p in candidates})

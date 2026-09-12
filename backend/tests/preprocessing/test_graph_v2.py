@@ -35,7 +35,7 @@ def raw_fixture():
 
 
 def test_complete_closed_registry():
-    assert len(DEFINITIONS)==90
+    assert len(DEFINITIONS)==91
     assert len({r['identity'] for r in inventory()})==len(inventory())
     for spec in DEFINITIONS.values():assert parameter_schema(spec)['additionalProperties'] is False
     with pytest.raises(ValueError):validate_parameters('EEG-CROP','crop',{'tmin':0,'tmax':1,'events':'$events','arbitrary':1})
@@ -43,7 +43,7 @@ def test_complete_closed_registry():
     assert validate_parameters('EEG-ASR','asr_fit',dict(scope='$scope',reference_id='$reference_id',start=0,stop='$n_samples'))['stop']=='$n_samples'
     from app.preprocessing.methods import extraction_contracts
     extracted=extraction_contracts('2')
-    assert len(extracted)==90 and sum(len(op['profiles']) for op in extracted)==len(inventory())
+    assert len(extracted)==91 and sum(len(op['profiles']) for op in extracted)==len(inventory())
     assert {(op['unit_id'],op['op'],p['profile']) for op in extracted for p in op['profiles']}=={(r['unit_id'],r['op'],r['profile']) for r in inventory()}
 
 
@@ -67,6 +67,15 @@ def test_codec_exact_signal_arrays_annotations_and_tuple(tmp_path):
     assert fingerprint(payload)==fingerprint(codec.load(encoded))
     next(tmp_path.glob('*.npy')).write_bytes(b'corrupt')
     with pytest.raises((ValueError,OSError)):codec.load(encoded)
+
+
+def test_native_matlab_bytes_roundtrip_and_integrity(tmp_path):
+    payload={'matlab_value': b'\x00\xffnative\x80', 'nested': (np.bytes_(b'opaque'),)}
+    codec=Codec(tmp_path); encoded=codec.verified_dump(payload)
+    assert fingerprint(codec.load(encoded)) == fingerprint(payload)
+    next(tmp_path.glob('*.bin')).write_bytes(b'altered')
+    with pytest.raises(ValueError,match='checksum'):
+        codec.load(encoded)
 
 
 def test_crop_join_epoch_reject_maps_and_original_readonly(tmp_path):
@@ -257,7 +266,7 @@ def test_v2_api_capabilities_search_run_and_owned_download(tmp_path):
     data=make_dataset(tmp_path/'bids');settings=Settings(database_url_override=f"sqlite+aiosqlite:///{tmp_path/'chat.db'}",brain_agent_credential_encryption_key=KEY,preprocessing_root=str(tmp_path/'out'),preprocessing_input_roots=[data.collection.root])
     app=create_app(settings,ScriptedLLMClient([]));headers={'X-Brain-Agent-Owner-ID':'owner'}
     with TestClient(app) as client:
-        c=client.get('/api/preprocessing/capabilities').json();assert c['counts']=={'units':53,'operations':90,'profiles':len(inventory())}
+        c=client.get('/api/preprocessing/capabilities').json();assert c['counts']=={'units':54,'operations':91,'profiles':len(inventory())}
         inp=client.post('/api/preprocessing/inputs',headers=headers,json=data.model_dump(mode='json')).json()
         assert client.post('/api/preprocessing/capabilities/input',headers={'X-Brain-Agent-Owner-ID':'other'},json=inp).status_code==404
         assert client.post('/api/preprocessing/capabilities/input',headers=headers,json=inp).status_code==200

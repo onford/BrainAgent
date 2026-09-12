@@ -282,6 +282,7 @@ def render(root: Path, state):
         "interrupted": "已中断",
     }
     reasons = {
+        "model_budget_exhausted": "模型调用预算耗尽，保留完整测量后停止",
         "candidate_budget_exhausted": "候选预算耗尽",
         "proposal_budget_exhausted": "提案预算耗尽",
         "time_budget_exhausted": "时间预算耗尽",

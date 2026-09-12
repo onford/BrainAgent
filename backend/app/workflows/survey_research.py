@@ -172,6 +172,7 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
                         "repository reads require kind=code; paper reads require kind=paper"
                     )
 
+        from .retrieval_context import navigation_context
         batch = await agent.ask(
             "核对数据来源：安排阅读"
             if purpose == "dataset_verification"
@@ -182,8 +183,7 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
                 "purpose": purpose,
                 "goals": [g.model_dump() for g in goals],
                 "tool_catalog": catalog,
-                "sources": agent.source_context(sources),
-                "observations": [o.model_dump() for o in sources.observations],
+                **navigation_context(sources),
                 "missing_requirements": missing,
                 "required_next_attempts": pending,
                 "remaining_actions": remaining,

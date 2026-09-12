@@ -836,6 +836,17 @@ async def test_model_timeout_stops_without_retry_or_budget_reset(factory):
 
 
 @pytest.mark.asyncio
+async def test_model_budget_exhaustion_stops_with_measured_winner(factory):
+    from app.llm.budget import BudgetExceeded
+    service, llm, state = factory(actions=[BudgetExceeded('Persistent LLM budget exhausted: cumulative input bytes')])
+    result = await run(service, state)
+    assert result['status'] == 'stopped' and result['stop_reason'] == 'model_budget_exhausted'
+    assert result['selected_candidate_id'] == BASELINE_ID
+    assert len(llm.contexts) == 1 and result['usage']['retries'] == 0
+    assert 'cumulative input bytes' in result['unresolved'][-1]
+
+
+@pytest.mark.asyncio
 async def test_cancel_interrupts_model_and_preserves_reserved_call_cost(factory):
     service, _, state = factory()
     entered = asyncio.Event()

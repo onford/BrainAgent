@@ -407,7 +407,13 @@ class WorkflowService:
             )
             value = await asyncio.to_thread(outputs.choose, search, plan, store)
         elif name == "data_report":
-            await cognition.narrative()
+            from app.llm.budget import BudgetExceeded
+            try:
+                await cognition.narrative()
+            except BudgetExceeded:
+                # The report's measured tables and claim limits are deterministic.
+                # Exhausting narrative budget does not invalidate saved evidence.
+                cognition.progress('模型预算已用尽；报告使用已核验测量与固定结论，不生成额外叙述')
             value = await asyncio.to_thread(
                 outputs.report, state, folder / "report", self.preprocessing.store
             )

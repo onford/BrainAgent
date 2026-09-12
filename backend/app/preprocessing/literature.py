@@ -80,6 +80,7 @@ Do not treat document reading completeness as method completeness. If no preproc
 
 def extraction_inputs(source, evidence, data, shared_output):
     from .literature_verification import observed_preparation
+    from .operation_context import factor
     profiles, records = [], []
     for record in data.collection.records:
         if record.id not in data.collection.selected_record_ids:
@@ -101,7 +102,7 @@ def extraction_inputs(source, evidence, data, shared_output):
             "observed_preparation": observed_preparation(data),
         },
         "shared_output": shared_output,
-        "enabled_operations": extraction_contracts("2"),
+        **factor(extraction_contracts("2")),
     }
 
 

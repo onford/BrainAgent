@@ -56,9 +56,9 @@ def compile_graph(method,record,data,parameters):
         if step.op=='ecg_assess' and p['method']=='ctps' and kind!='raw':raise ValueError('CTPS requires Raw ECG peak detection before heartbeat epoching')
         missing_dependencies=dependency_status(spec,p)
         if missing_dependencies:raise ValueError('dependency_missing: '+str(missing_dependencies))
-        if step.op in ('detect_bad_channels','asr_clean','prep_native','automagic_native'):
+        if step.op in ('detect_bad_channels','asr_clean','prep_native','automagic_native','relax_native'):
             if step.adaptation_scope!=p['adaptation_scope']:raise ValueError('engineering adaptation scope must also be declared on the graph step')
-            if step.op in ('prep_native','automagic_native') and p['adaptation_scope']!='record_unlabeled':raise ValueError('complete native pipelines require explicit record-local fitting permission')
+            if step.op in ('prep_native','automagic_native','relax_native') and p['adaptation_scope']!='record_unlabeled':raise ValueError('complete native pipelines require explicit record-local fitting permission')
         for field in ('picks','picks_artifact','donors','targets','ref_chs','reref_chs'):
             selected=p.get(field)
             if isinstance(selected,list) and (len(selected)!=len(set(selected)) or not set(selected)<=set(source['channels'])):raise ValueError('invalid/duplicate channels: '+field)
@@ -110,8 +110,9 @@ def compile_graph(method,record,data,parameters):
             else:state['channels']=[n for n in source['channels'] if n not in removed]
             if not state['channels']:raise ValueError('cannot drop all channels')
         if spec['effect']=='resample':state['sfreq']=p['sfreq']
+        if spec['effect']=='native_pipeline':state['dynamic_channels']=True
         if spec['effect']=='decimate':state['sfreq']/=p['decim']
-        if spec['effect'] in ('reference','reference_model','reference_channels'):
+        if spec['effect'] in ('reference','reference_model','reference_channels','native_pipeline'):
             target=p.get('reference_id', 'average' if p.get('ref_channels')=='average' else step.op)
             if step.op=='reference_apply':
                 producer=next(s for s in steps if s.id==step.model_from)

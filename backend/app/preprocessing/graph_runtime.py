@@ -65,9 +65,14 @@ def transition(packet,y,artifacts,spec,params,node_id=None):
     if effect=='crop':
         keep=np.asarray(artifacts['event_keep'],bool)
         out.events=np.asarray(artifacts['events']);out.event_indices=packet.event_indices[keep]
-    elif effect=='crop_join':
+    elif effect in ('crop_join','native_pipeline'):
         keep=np.asarray(artifacts['kept_event_indices'],int)
         out.events=np.asarray(artifacts['events']);out.event_indices=packet.event_indices[keep]
+        if effect == 'native_pipeline':
+            if (out.events.shape != (len(keep), 3) or len(set(keep.tolist())) != len(keep)
+                or np.any(keep < 0) or np.any(keep >= len(packet.events))
+                or not np.array_equal(out.events[:, 1:], packet.events[keep, 1:])):
+                raise ValueError('native pipeline changed retained event identities')
     elif effect=='resample':
         if isinstance(y,mne.BaseEpochs):
             synchronized=y.events.copy()
@@ -89,7 +94,7 @@ def transition(packet,y,artifacts,spec,params,node_id=None):
         if effect not in ('decimate','channels','reference_channels') and values(y).shape!=values(x).shape:raise ValueError('operation violated declared shape effect')
         if effect=='decimate' and (len(y)!=len(x) or y.ch_names!=x.ch_names or not np.array_equal(y.events,x.events)):raise ValueError('decimation changed trial/channel identity')
         if effect in ('channels','reference_channels') and (values(y).shape[-1]!=values(x).shape[-1] or (isinstance(x,mne.BaseEpochs) and not np.array_equal(x.events,y.events))):raise ValueError('channel removal changed time/trial identity')
-    if effect in ('reference','reference_model','reference_channels'):
+    if effect in ('reference','reference_model','reference_channels','native_pipeline'):
         out.reference=artifacts.get('reference_id',params.get('reference_id','average' if params.get('ref_channels')=='average' else spec['op']))
         if node_id is not None:out.reference=node_id+':'+out.reference
     if effect=='csd':out.unit='V/m^2'

@@ -20,6 +20,7 @@ def fingerprint(value):
             if v.dtype.hasobject:return ['object-array',v.shape,[encode(x) for x in v.flat]]
             return ['ndarray',v.dtype.str,list(v.shape),hashlib.sha256(np.ascontiguousarray(v).tobytes()).hexdigest()]
         if isinstance(v,np.generic):return encode(v.item())
+        if isinstance(v,bytes):return ['bytes',len(v),hashlib.sha256(v).hexdigest()]
         if isinstance(v,complex):return ['complex',encode(v.real),encode(v.imag)]
         if isinstance(v,float) and not np.isfinite(v):return ['float',str(v)]
         if v is None or isinstance(v,(str,int,float,bool)):return v
@@ -72,6 +73,9 @@ class Codec:
             p=self.file('.npy');np.save(p,value,allow_pickle=False)
             return self.file_ref(p,'ndarray',shape=list(value.shape),dtype=value.dtype.str)
         if isinstance(value,np.generic):return self.dump(value.item())
+        if isinstance(value,bytes):
+            p=self.file('.bin');p.write_bytes(value)
+            return self.file_ref(p,'bytes',size=len(value))
         if isinstance(value,complex):return {'codec':'complex','real':self.dump(value.real),'imag':self.dump(value.imag)}
         if isinstance(value,float) and not np.isfinite(value):return {'codec':'nonfinite','value':str(value)}
         if value is None or isinstance(value,(str,int,float,bool)):return value
@@ -124,6 +128,10 @@ class Codec:
             a=np.load(p,allow_pickle=False)
             if a.dtype.str!=value['dtype'] or list(a.shape)!=value['shape']:raise ValueError('array metadata mismatch')
             return a
+        if kind=='bytes':
+            result=p.read_bytes()
+            if len(result)!=value['size']:raise ValueError('byte artifact size mismatch')
+            return result
         if kind=='object_array':
             out=np.empty(value['shape'],dtype=object)
             for i,v in enumerate(value['items']):out.flat[i]=self.load(v)

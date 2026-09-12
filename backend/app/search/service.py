@@ -10,6 +10,7 @@ from uuid import uuid4
 
 
 from app.llm.client import OpenAICompatibleClient
+from app.llm.budget import BudgetExceeded
 from app.preprocessing.resources import budget as resource_budget
 from app.preprocessing.schemas import PreprocessInput, MethodSpec, Ref
 from app.preprocessing.storage import digest, file_hash, within
@@ -837,6 +838,9 @@ class SearchService:
             self.save(state)
         except BudgetStop as exc:
             await self.stop(state, "stopped", str(exc))
+        except BudgetExceeded as exc:
+            state['unresolved'].append(str(exc))
+            await self.stop(state, 'stopped', 'model_budget_exhausted')
         except IntegrityFailure as exc:
             for candidate in state["candidates"]:
                 if candidate["status"] == "evaluated":
@@ -931,7 +935,7 @@ class SearchService:
                 try:
                     plan = await self.model_action(state, documents, one_shot=True)
                     break
-                except (BudgetStop, IntegrityFailure):
+                except (BudgetStop, BudgetExceeded, IntegrityFailure):
                     raise
                 except RuntimeError:
                     if state["usage"]["retries"] >= state["budget"]["max_retries"]:
@@ -1038,7 +1042,7 @@ class SearchService:
                         error=str(exc)[:2000],
                     )
                     continue
-                except (BudgetStop, IntegrityFailure):
+                except (BudgetStop, BudgetExceeded, IntegrityFailure):
                     raise
                 except RuntimeError:
                     if state["usage"]["retries"] >= state["budget"]["max_retries"]:

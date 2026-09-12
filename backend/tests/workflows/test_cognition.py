@@ -118,6 +118,27 @@ async def test_no_llm_fails_instead_of_using_fixed_presets(source, tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_narrative_budget_exhaustion_preserves_verified_report_and_delivery(source, tmp_path):
+    from app.llm.budget import BudgetExceeded
+    class Limited(WorkflowLLM):
+        async def structured_output(self, messages, model):
+            if model.__name__ == 'ReportNarrative':
+                raise BudgetExceeded('Persistent LLM budget exhausted: cumulative input bytes')
+            return await super().structured_output(messages, model)
+    prep = PreprocessingService(tmp_path / 'prep')
+    service = workflow_service(tmp_path / 'runs', [source], prep, llm=Limited())
+    service.registry = build_agent_registry(preprocessing=prep, workflow=service)
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source), search_budget={'max_candidates':1}))
+    result = await finish(service, state['id'])
+    assert result['status'] == 'completed', result['error']
+    folder = service.folder(state['id'])
+    assert (folder/'report/report.html').is_file()
+    assert not (folder/'report/narrative.json').exists()
+    assert result['outputs']['data_delivery']['source_unchanged'] is True
+    assert any('不生成额外叙述' in e['message'] for e in result['events'])
+
+
+@pytest.mark.asyncio
 async def test_research_retry_cannot_mix_changed_local_bytes_with_saved_observations(
     source, tmp_path
 ):

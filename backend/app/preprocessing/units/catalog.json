@@ -1578,5 +1578,40 @@
       "integration": "requires_current_native_verification",
       "source_syntax": "passed"
     }
+  },
+  {
+    "id": "EEG-RELAX-NATIVE",
+    "source": {
+      "version": "brainagent-relax-native-1",
+      "code_sha256": "0f8ad67ede436db70b8bcf4e5335a3ba6e19dca858e641265b89008e4e6732c7",
+      "references": [
+        {
+          "directURL": "https://raw.githubusercontent.com/NeilwBailey/RELAX/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_Wrapper.m",
+          "locator": "dd25438353c3d53b88c93167d8e9c6d13255a42a",
+          "reliability": "pinned complete author entrypoint"
+        }
+      ],
+      "fields": {
+        "描述": "Complete RELAX native wrapper with a shared record-local configuration.",
+        "输入合同": "Finite continuous EEG in V, electrode geometry and uniquely bound input event rows.",
+        "输出合同": "Native retained channels and joined time grid; explicit original event-index map, native QC, excision intervals and full MAT object.",
+        "验证": "Requires current native and graph validation; changed trial/channel denominators cannot silently enter a fixed comparison panel."
+      }
+    },
+    "implementation": {
+      "module": "eeg_relax_native",
+      "entry": "eeg_relax_native",
+      "constraints": {
+        "units": "V",
+        "sample_grid": "native excision with explicit event map",
+        "channel_grid": "native retained subset",
+        "events": "retained source identities mapped to native samples",
+        "fit_permissions": "record_unlabeled"
+      }
+    },
+    "validation": {
+      "integration": "requires_current_native_verification",
+      "source_syntax": "passed"
+    }
   }
 ]

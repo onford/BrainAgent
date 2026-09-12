@@ -1,0 +1,40 @@
+{
+  "schema_version": "1",
+  "workflow_id": "893e028f964f4d67b42849a18304c2f2",
+  "source_commit": "e7590f4",
+  "review_basis": ".local/remaining-modifications-20260912/live-integrated-5",
+  "findings": [
+    {
+      "kind": "withdrawn_scope",
+      "source": "s-3a79ee476cf79dd1",
+      "finding": "This source branch requires pooling runs by subject and subject/channel z-score. Do not implement it or repair it into a shared method by silently omitting required stages."
+    },
+    {
+      "kind": "numeric_lexical_false_negative",
+      "source": "s-76257324a6ccf610",
+      "claim": "src_rg_bpf_epoch_whole_scalp/bpf_8_30_butter.prototype_order",
+      "quote": "a fifth-order Butterworth band-pass filter (BwBPF) (8–30 Hz)",
+      "finding": "Independent semantic review reports source order 5, but numeric parser only accepts Arabic tokens; engineering repair pending."
+    },
+    {
+      "kind": "relative_origin_not_literal_number",
+      "source": "s-76257324a6ccf610",
+      "claim": "src_rg_bpf_epoch_whole_scalp/epoch_cue_0_4s.tmin",
+      "finding": "Source defines the start at onset. Need an explicit event-relative origin rule and trace, not arbitrary acceptance of an absent zero."
+    },
+    {
+      "kind": "event_code_representation",
+      "source": "s-c7ccebaa69f92623",
+      "finding": "Source left/right event codes 2/3 differ from Collection left_hand/right_hand 1/2. Requires explicit semantics-preserving mapping; never copy source integers blindly."
+    },
+    {
+      "kind": "unresolved_source",
+      "source": "s-57ca7767d2d5c526",
+      "finding": "Unknown excluded ICA indices/proxy-EOG decisions must remain unknown, not guessed to obtain an executable candidate."
+    },
+    {
+      "kind": "budget",
+      "finding": "Full baseline assessment completed; no substantive literature candidates evaluated before persistent input budget exhaustion. This is failed formal acceptance."
+    }
+  ]
+}

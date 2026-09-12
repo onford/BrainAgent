@@ -1,0 +1,38 @@
+{
+  "engine_sha256": "fb841140626a80355cd39ed6ea47eb7028949b729e679a518ca33bf55a5e814d",
+  "exact": true,
+  "input_target_events": 15,
+  "kept_event_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "max_abs_difference_V": 0.0,
+  "native_dependencies_unchanged": true,
+  "original_unchanged": true,
+  "retained_target_events": 13,
+  "scope": "One record, complete native / graph / Codec agreement; changed denominator not admitted as fixed-panel utility",
+  "shape": [
+    62,
+    18240
+  ],
+  "source_sample_count": 18240,
+  "status": "passed",
+  "wall_seconds": 71.0,
+  "artifact_directory": ".local\\remaining-modifications-20260912\\relax-graph-2",
+  "evidence_limits": [
+    "One real record, one explicit engineering-derived RELAX configuration.",
+    "Native event/channel excision changes the panel denominator; no fixed-panel utility claim.",
+    "No independent scientific validation or full profile matrix claim."
+  ]
+}

@@ -13,8 +13,9 @@ from app.search.neural_priors import freeze_bundle, evaluate_priors
 from app.search.neural_signal import task_tfr
 from app.search.scientific_space import build_space, knowledge
 from app.search.service import SearchService
-from app.search.pipeline_space import _predicate
-from app.search.space_contracts import PriorCondition
+from app.search.rule_engine import audit
+from app.search.space_contracts import ExplorationSpace, PipelineRecipe
+from tests.search.test_pipeline_space import space, recipe  # noqa: F401
 from app.search.reasoning import numeric_metric_index
 from app.search.contracts import MechanismHypothesis
 
@@ -39,10 +40,15 @@ def test_conditional_evidence_is_three_valued(bundle, value, status, expected):
     assert bundle["task_profile"]["individual_pattern_required"] is False
 
 
-def test_unknown_applicability_is_not_false():
-    p = PriorCondition(scope="context", key="known", comparison="eq", value=True)
-    assert _predicate(p, SimpleNamespace(nodes=[]), {}) is None
-    assert _predicate(p, SimpleNamespace(nodes=[]), {"known": False}) is False
+def test_unknown_applicability_is_not_false(space, recipe):
+    value = space.model_dump(mode='json')
+    value['priors'] = [dict(id='known-order', strength='hard', relation='before',
+        operators=['reference', 'filter'], condition='known input', rationale='fixture',
+        origin='implementation', when=[dict(scope='context', key='known', comparison='eq', value=True)])]
+    frozen = ExplorationSpace.model_validate(value)
+    candidate = PipelineRecipe.model_validate(recipe)
+    assert audit(candidate, frozen, {})['decisions'][0]['status'] == 'unknown'
+    assert audit(candidate, frozen, {'known': False})['decisions'][0]['status'] == 'not_applicable'
 
 
 def test_diagnostic_and_rule_ids_cannot_be_invented(bundle):

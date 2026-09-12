@@ -12,6 +12,7 @@ LISTS = set('axes background_bands_Hz bad_channels bads baseline blink_channels 
 DICTS = set('criteria event_id external_assessments frame reference_evidence review scope'.split())
 LISTS.add('channels')
 STRINGS.update(('eeglab_root', 'matlab_path', 'prep_root', 'ica_random_policy'))
+STRINGS.update(('picard_root', 'fieldtrip_root', 'mwf_root', 'compatibility_policy'))
 BOOLS = set('adaptive_sigma channel_wise correlation do_detrend extended matlab_strict ortho ransac reset_bads singlesided'.split())
 INTS = set('bad_limit bins blocksize chunk_filter_order decim delay delay_spacing fixed_remove lags max_chunk_size max_iterations mem_splits min_windows n_fft n_legendre_terms n_neighbors offset padlen prototype_order seed smoothing start stepsize stop terms window_samples'.split())
 UNIONS = {

@@ -236,7 +236,7 @@ def environment() -> dict[str, str]:
 
 def engine_hash() -> str:
     root = ROOT.parent
-    files = [*root.rglob("*.py"), ROOT / "catalog.json", root / "classic_pipelines.json", root / "classic_source_pins.json"]
+    files = [*root.rglob("*.py"), ROOT / "catalog.json", root / "classic_pipelines.json", root / "classic_source_pins.json", root / "relax_source_pins.json"]
     hashes = {p.relative_to(root).as_posix(): file_hash(p) for p in sorted(files)}
     hashes["../file_publish.py"] = file_hash(root.parent / "file_publish.py")
     hashes["../search/processes.py"] = file_hash(root.parent / "search/processes.py")
