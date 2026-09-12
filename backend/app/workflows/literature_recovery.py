@@ -18,6 +18,7 @@ from app.preprocessing.research_budget import reserve
 from app.preprocessing.storage import digest
 from app.search.io import read
 from .recovery_reads import read_source
+from app.preprocessing.research_scope import INSTRUCTION as RESEARCH_SCOPE
 
 
 class RecoveryAction(Contract):
@@ -69,6 +70,8 @@ async def recover(cognition, extraction, inputs, evidence, data, identity, root,
     dependencies = dependency_links(inputs["source"], evidence)
     links.update(d["url"] for d in dependencies)
     context["dependency_references"] = dependencies
+    context["indexed_evidence"] = [{"index": i, **e.model_dump(mode="json")} for i, e in enumerate(evidence)]
+    context["allowed_evidence_indices"] = list(range(len(evidence)))
     links.add(inputs["source"]["url"])
     while True:
         remaining = budget['deadline'] - monotonic()
@@ -102,7 +105,7 @@ async def recover(cognition, extraction, inputs, evidence, data, identity, root,
         try:
             async with asyncio.timeout(remaining):
                 action = await cognition.ask("决定文献方法定向修复", RecoveryAction, context,
-                    "Select a concrete repair for the reported compiler/evidence blockers. Read only a supplied URL. "
+                    RESEARCH_SCOPE + "Select a concrete repair for the reported compiler/evidence blockers. Read only a supplied URL. "
                     "Do not discard required source steps, invent scientific parameters or weaken output contracts. "
                     "Use retain_blocked if no supported repair remains; reextract only when existing evidence resolves the blocker.")
                 record["decision"] = action.model_dump(mode="json")
@@ -125,6 +128,7 @@ async def recover(cognition, extraction, inputs, evidence, data, identity, root,
                             artifact_ref=ref, locator=f"supplement-{budget['used']}; text offsets {offset}:{offset + len(quote)}; truncated={source['truncated']}", text=quote))
                     record["read_source"] = {k: v for k, v in source.items() if k != "text"}
                 context["indexed_evidence"] = [{"index": i, **e.model_dump(mode="json")} for i, e in enumerate(evidence)]
+                context["allowed_evidence_indices"] = list(range(len(evidence)))
                 revised = await cognition.ask("依据证据修订被阻塞的方法", LiteratureExtraction, context,
                     INSTRUCTION + "\nResolve the recorded blockers using the indexed evidence. Preserve unsupported branches as blocked; "
                     "never drop them to report success. Record engineering changes explicitly. Do not change a source window to evade the shared output check.",

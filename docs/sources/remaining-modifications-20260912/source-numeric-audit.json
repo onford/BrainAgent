@@ -1,0 +1,32 @@
+{
+  "scope": "Only deterministic parser replay on frozen failed-run claims; no rerun or promotion of independent semantic/scientific review.",
+  "claims": [
+    {
+      "claim_id": "src_rg_bpf_epoch_whole_scalp/bpf_8_30_butter.prototype_order",
+      "historical_status": "unsupported",
+      "new_numeric_check": [
+        {
+          "value": 5,
+          "supported": true,
+          "basis": "written_filter_order",
+          "source_token": "fifth-order",
+          "source_value": 5
+        }
+      ],
+      "historical_evidence_unchanged": true
+    },
+    {
+      "claim_id": "src_rg_bpf_epoch_whole_scalp/epoch_cue_0_4s.tmin",
+      "historical_status": "unsupported",
+      "new_numeric_check": [
+        {
+          "value": 0,
+          "supported": true,
+          "basis": "event_relative_onset",
+          "definition": "The explicitly named epoch start is the event origin; its relative coordinate is zero seconds."
+        }
+      ],
+      "historical_evidence_unchanged": true
+    }
+  ]
+}

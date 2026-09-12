@@ -7,6 +7,7 @@ from pydantic import Field, create_model
 from .source_reader import abstract_only
 from .planning_contracts import survey_plan_contract
 from .screening import ScreeningSelection, urls
+from app.preprocessing.research_scope import INSTRUCTION as RESEARCH_SCOPE
 
 from .cognition_contracts import (
     ResearchAction,
@@ -181,6 +182,7 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
             {
                 **inputs,
                 "purpose": purpose,
+                "active_research_scope": RESEARCH_SCOPE,
                 "goals": [g.model_dump() for g in goals],
                 "tool_catalog": catalog,
                 **navigation_context(sources),
@@ -541,7 +543,7 @@ async def research(agent, survey):
                 "source_passages": selection.context,
                 "retrieval_gaps": missing,
             },
-            "Screen the actual read sources separately as usage_analysis, usage_algorithm, dataset_discussion and preprocessing_methods, for papers and repositories. "
+            RESEARCH_SCOPE + "Screen the actual read sources separately as usage_analysis, usage_algorithm, dataset_discussion and preprocessing_methods, for papers and repositories. Dataset usage/discussion evidence may describe historical methods outside the active preprocessing objective without making them implementation goals. "
             "Include/exclude/defer each relevant candidate with a concrete reason. Every entry must select its source_id. Findings select passage_id from that source's schema enum; choose substantive passages supporting the statement. Finding source IDs, verbatim quotations and observed metrics are filled by code. Do not output quote, finding.source_id or quality fields. Abstract-only material is deferred. "
             "For usage_analysis and usage_algorithm, the work itself must actually use the target dataset: citing another work in related work is not sufficient; defer it and follow the primary work. "
             "Analysis means substantive analysis of data or signals, not merely a comparison of classifier accuracies. "

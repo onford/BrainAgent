@@ -1,0 +1,32 @@
+{
+  "engine_sha256": "718458cfc37b338219798f0e1394385cbf54549f2dfa2116c319505661bf5170",
+  "exact": true,
+  "input_target_events": 15,
+  "kept_event_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+  ],
+  "max_abs_difference_V": 0.0,
+  "native_dependencies_unchanged": true,
+  "original_unchanged": true,
+  "retained_target_events": 13,
+  "scope": "One record, complete native / graph / Codec agreement; changed denominator not admitted as fixed-panel utility",
+  "shape": [
+    62,
+    18240
+  ],
+  "source_sample_count": 18240,
+  "status": "passed",
+  "wall_seconds": 72.53099999998813
+}

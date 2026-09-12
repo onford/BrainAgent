@@ -8,7 +8,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一两种文献提取入口",
-      "current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。",
+      "current": "工作流与独立方法库共用完整 v2 方法提取输入（91 操作/310 profiles），源合同重复内容无损合并；全量回归通过，fresh真实闭环待完成。",
       "solution_and_acceptance": "共享分支提取服务、目标合同和能力注册；两入口对同一来源输出一致的分支、参数出处、端口与阻塞原因，再通过真实模型实测。",
       "dependencies": [
         "I45"
@@ -21,14 +21,15 @@
         "C2"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression"
+      "status": "previously_verified_requires_regression",
+      "historical_current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。"
     },
     {
       "id": "I02",
       "priority": "P0",
       "scope": "正式版",
       "title": "v2 图进入统一 EEGNet 评价",
-      "current": "literature_space 拒绝非 v1；recipe_compiler 明确拒绝把 unit_graph_v2 送入冻结面板。图可以执行，却不能参加正式三轴评价与统一选优。",
+      "current": "普通配方和来源 v2 图均可进入统一物理 V、Trial/通道/采样合同和三轴评价；不兼容输出显式阻塞或保留声明的评分适配。真实数值回归通过，最新fresh文献闭环待完成。",
       "solution_and_acceptance": "建立显式评价适配层：Trial/通道/时间/单位/参考/拟合域逐项对齐。只让符合当前协议的输出进入同一面板；CSD、删 Trial 等不兼容输出保留原因或另立协议。验证图到预测、分数和交付全链。",
       "dependencies": [
         "I01",
@@ -41,7 +42,8 @@
         "C4"
       ],
       "historical_status": "未实现",
-      "status": "previously_verified_requires_regression"
+      "status": "previously_verified_requires_regression",
+      "historical_current": "literature_space 拒绝非 v1；recipe_compiler 明确拒绝把 unit_graph_v2 送入冻结面板。图可以执行，却不能参加正式三轴评价与统一选优。"
     },
     {
       "id": "I03",
@@ -93,7 +95,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "参数和引文的语义核验",
-      "current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。",
+      "current": "原文跨度/分支/单位与独立模型复核共同约束参数；新增可追踪的英文滤波阶数、千位数字和明确事件相对起点解析，失败分解到索引/跨度/单位/数值。仍不等同独立专家或算法科学验证。",
       "solution_and_acceptance": "建立参数值/单位/适用分支到原文跨度的校验记录；确定性规则检查可判定部分，独立复核处理语义；证据不足保持 unknown。错误单位、借用分支数值、默认值冒充原文必须被阻断或降为未证实假设。",
       "dependencies": [
         "I01"
@@ -105,14 +107,15 @@
         "D1"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression"
+      "status": "partial",
+      "historical_current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。"
     },
     {
       "id": "I06",
       "priority": "P0",
       "scope": "正式版",
       "title": "前置条件由真实目标事实判定",
-      "current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。",
+      "current": "通道类型/集合、事件、分区、时长、参考、几何及具名蒙太奇采用结构谓词和实际Collection文件核验；未知不视为满足。全量回归通过，复杂来源前提仍保留未知。",
       "solution_and_acceptance": "为通道类型、坐标、事件、参考、分区、记录长度建立可执行谓词；数据不足为 unknown。构造虚假“有 EOG/有校准”时必须拒绝，不能仅信模型字符串。",
       "dependencies": [
         "I01"
@@ -123,14 +126,15 @@
         "D1"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression"
+      "status": "previously_verified_requires_regression",
+      "historical_current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。"
     },
     {
       "id": "I07",
       "priority": "P1",
       "scope": "正式版",
       "title": "缺口恢复真正解决来源和依赖",
-      "current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。",
+      "current": "工作流和独立入口有持久补读日志、绝对预算、已知结果恢复与依赖文件链接；恢复后的索引与补充证据同步。未知科学参数及撤回的逐被试方法不作补齐目标。真实闭环待完成。",
       "solution_and_acceptance": "按具体缺口选择可审计动作，共享动作/时间账本；跟踪配置和依赖的固定版本。优先解决证据，仍未知则阻塞；记录有效修复率及失败原因，不猜科学参数。",
       "dependencies": [
         "I05",
@@ -145,7 +149,8 @@
         "D1"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression"
+      "status": "previously_verified_requires_regression",
+      "historical_current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。"
     },
     {
       "id": "I08",
@@ -413,7 +418,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "物理输出与移除信号对照",
-      "current": "已区分 EA 前后阶段并做配对可比性检查；通用图的原生视图/共同视图/被移除成分尚未贯通全部比较。",
+      "current": "当前使用共享流程的物理输出，已移除个体适配视图。原生/共同物理视图与同片段残差信号尚未形成通用诊断；不同参考、频带、分母不能直接相减。",
       "solution_and_acceptance": "统一比较物理输出与同片段残差信号的合同、来源、单位、参考和频带；不再建立个体适配视图。不可比时不生成配对差。",
       "dependencies": [
         "I02",
@@ -428,7 +433,8 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "pending",
+      "historical_current": "已区分 EA 前后阶段并做配对可比性检查；通用图的原生视图/共同视图/被移除成分尚未贯通全部比较。"
     },
     {
       "id": "I22",
@@ -1627,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第六批后端全量1159项通过，RELAX接入与预算修订提交；继续修复live5暴露的来源数字解析及调研目标约束，再fresh验收。",
+  "active_step": "第七批来源解析与调研目标约束回归通过；冻结新版本fresh正式验收，然后继续供应商共享冷却/缓存与后续未完成项。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1782,6 +1788,15 @@
         ".local\\remaining-modifications-20260912\\native-context-budget-tests.log",
         ".local\\remaining-modifications-20260912\\budget-stop-tests.log"
       ]
-    }
+    },
+    "seventh_batch": {
+      "result": "58 passed, 2 warnings; supplement index synchronization separately 5 passed",
+      "log": ".local\\remaining-modifications-20260912\\source-scope-tests.log",
+      "recovery_log": ".local\\remaining-modifications-20260912\\source-scope-recovery-tests.log",
+      "native_relax": "passed, exact; engine 718458cfc37b338219798f0e1394385cbf54549f2dfa2116c319505661bf5170",
+      "parser_replay": "source-numeric-audit.json; no historical scientific review promoted"
+    },
+    "sixth_commit": "83a23cb",
+    "sixth_push_attempt": "failed connecting to GitHub after 21s; retry pending with seventh commit"
   }
 }

@@ -107,6 +107,46 @@ def test_prerequisites_use_actual_partition_roles_and_channels(tmp_path):
     assert m.lineage['prerequisites'][0]['computed_status']=='missing'
 
 
+def test_written_filter_order_and_grouped_digits_have_explicit_numeric_basis():
+    from app.preprocessing.literature_verification import numeric_evidence
+    review = ClaimReview(claim_id='order', status='supported',
+        quote='a fifth-order Butterworth band-pass filter (8–30 Hz)', reason='order')
+    row, = numeric_evidence(5, review, parameter='prototype_order', operation='butterworth')
+    assert row['supported'] and row['basis'] == 'written_filter_order'
+    assert not _numeric_supported(5, review, parameter='l_freq')
+    for text in ['a twenty fifth-order filter', 'a forty-fifth-order filter', 'a sixth-order filter']:
+        assert not _numeric_supported(5, review.model_copy(update={'quote': text}), parameter='order')
+    review = review.model_copy(update={'quote':'sampled at 5,000 Hz', 'source_unit':'Hz','target_unit':'Hz'})
+    assert _numeric_supported(5000, review)
+    assert not _numeric_supported(5, review) and not _numeric_supported(0, review)
+
+
+def test_event_onset_zero_requires_explicit_epoch_origin_and_semantic_value():
+    from app.preprocessing.literature_verification import numeric_evidence
+    review = ClaimReview(claim_id='start', status='supported',
+        quote='the trials from each run were epoched from the onset to 4.0 s',
+        source_value=0.0, source_unit='s', target_unit='s', reason='event-relative origin')
+    row, = numeric_evidence(0, review, parameter='tmin', operation='epoch')
+    assert row['supported'] and row['basis'] == 'event_relative_onset'
+    assert not _numeric_supported(0, review, parameter='tmax', operation='epoch')
+    assert not _numeric_supported(0, review, parameter='tmin', operation='crop')
+    assert not _numeric_supported(0, review.model_copy(update={'source_value':False}), parameter='tmin', operation='epoch')
+    for text in ['epoched from 0.2 s after the onset to 4.0 s', 'epoched before the onset', 'event onset was observed']:
+        assert not _numeric_supported(0, review.model_copy(update={'quote': text}), parameter='tmin', operation='epoch')
+
+
+def test_semantic_refusal_is_not_overridden_by_successful_numeric_checks():
+    extraction = LiteratureExtraction.model_validate({'branches':[branch()]})
+    async def ask(op, model, context, instruction):
+        result = review_double(model, context)
+        next(r for r in result.claims if r.claim_id.endswith('.l_freq')).status = 'unknown'
+        return result
+    review = asyncio.run(verify_extraction(ask, extraction, EVIDENCE))
+    row = next(r for r in review['claims'] if r['claim_id'].endswith('.l_freq'))
+    assert row['status'] == 'unknown'
+    assert row['deterministic_checks']['numeric_evidence'][0]['supported'] is True
+
+
 def test_action_reservations_and_deadline_survive_restarts(tmp_path):
     path=tmp_path/'budget.json';limits={'max_seconds':60,'max_recovery_actions':1}
     first=open_budget(path,limits,{'source':'test'})

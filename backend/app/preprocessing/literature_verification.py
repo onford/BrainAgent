@@ -150,20 +150,54 @@ def parameter_unit(key):
     return None
 
 
-def _numeric_supported(value, review):
+def numeric_evidence(value, review, *, parameter='', operation=''):
+    """Audit lexical numbers and the narrowly defined relative event origin.
+
+    These checks never replace branch-specific semantic review. The returned
+    basis distinguishes literal digits, written filter orders and event origin.
+    """
     if type(value) not in (float, int):
         if isinstance(value, list):
-            return all(_numeric_supported(v, review) for v in value)
-        return True
+            return [r for v in value for r in numeric_evidence(v, review, parameter=parameter, operation=operation)]
+        return []
     numeric_text = re.sub(r'(?<=\d)[-–](?=\d)', ' ', review.quote).replace('−', '-')
+    # Grouped thousands are one token, not unrelated 5 and 000 tokens. Do not
+    # reinterpret decimal commas or ambiguous lists such as 3,7.
+    numeric_text = re.sub(r'(?<![\w.,])[-+]?\d{1,3}(?:,\d{3})+(?:\.\d+)?(?![\d,])',
+                          lambda m: m[0].replace(',', ''), numeric_text)
     numbers = [float(n) for n in re.findall(r'(?<![\w.])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?', numeric_text)]
     su, tu = _unit(review.source_unit), _unit(review.target_unit)
     ratio = 1.
     if su != tu:
         if su not in _UNITS or tu not in _UNITS or _UNITS[su][0] != _UNITS[tu][0]:
-            return False
+            return [dict(value=value, supported=False, basis='incompatible_units')]
         ratio = _UNITS[su][1] / _UNITS[tu][1]
-    return any(math.isclose(value, n*ratio, rel_tol=1e-9, abs_tol=1e-15) for n in numbers)
+    matching = [n for n in numbers if math.isclose(value, n*ratio, rel_tol=1e-9, abs_tol=1e-15)]
+    if matching:
+        return [dict(value=value, supported=True, basis='literal_numeric_token', source_values=matching, unit_ratio=ratio)]
+    if parameter in {'order', 'prototype_order', 'filter_order'} and not su and not tu:
+        words = 'first second third fourth fifth sixth seventh eighth ninth tenth'.split()
+        for match in re.finditer(r'\b(' + '|'.join(words) + r')[-\s]+order\b', review.quote.lower()):
+            prefix = review.quote[:match.start()].lower().rstrip()
+            # Do not read twenty fifth / forty-fifth as a fifth-order filter.
+            previous = re.search(r'([\w-]+)$', prefix)
+            if previous and (previous[1].endswith('-') or previous[1] in
+                    {'one','two','three','four','five','six','seven','eight','nine','ten',
+                     'twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety','hundred'}):
+                continue
+            n = words.index(match[1]) + 1
+            if value == n:
+                return [dict(value=value, supported=True, basis='written_filter_order', source_token=match[0], source_value=n)]
+    if (value == 0 and parameter == 'tmin' and operation in {'epoch', 'epoch_with_nonfinite'}
+            and su == tu == 's' and type(review.source_value) in (int, float) and review.source_value == 0
+            and re.search(r'\b(?:epoched|segmented)\s+from\s+(?:the\s+)?(?:(?:cue|event|trial)\s+)?onset\s+to\s+', review.quote, re.I)):
+        return [dict(value=value, supported=True, basis='event_relative_onset',
+                     definition='The explicitly named epoch start is the event origin; its relative coordinate is zero seconds.')]
+    return [dict(value=value, supported=False, basis='value_not_lexically_established')]
+
+
+def _numeric_supported(value, review, **context):
+    return all(r['supported'] for r in numeric_evidence(value, review, **context))
 
 
 def source_span(text, quote):
@@ -243,10 +277,17 @@ async def verify_extraction(ask, extraction, evidence, data=None):
         valid_index = (r.evidence_index in claim['evidence_indices'] and type(r.evidence_index) is int
                        and 0 <= r.evidence_index < len(evidence))
         span = source_span(evidence[r.evidence_index].text, r.quote) if valid_index else None
-        valid = bool(span) and unit_valid and _numeric_supported(claim['value'], r)
+        numeric = numeric_evidence(claim['value'], r, parameter=claim.get('parameter', ''), operation=claim.get('operation', ''))
+        numeric_valid = all(v['supported'] for v in numeric)
+        valid = bool(span) and unit_valid and numeric_valid
         row = r.model_dump(mode='json')
+        checks = dict(evidence_index_valid=valid_index, source_span_found=bool(span),
+                      target_unit_valid=unit_valid, numeric_evidence=numeric)
+        row['deterministic_checks'] = checks
         if r.status == 'supported' and not valid:
-            row.update(status='unsupported', reason='Source span/value/unit verification failed: ' + r.reason)
+            failures = [name for name, passed in [('evidence_index', valid_index), ('source_span', bool(span)),
+                                                ('target_unit', unit_valid), ('numeric_value', numeric_valid)] if not passed]
+            row.update(status='unsupported', reason='Source span/value/unit verification failed [' + ', '.join(failures) + ']: ' + r.reason)
         if valid:
             start, end = span
             row['quote'] = evidence[r.evidence_index].text[start:end]

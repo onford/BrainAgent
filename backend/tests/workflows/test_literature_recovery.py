@@ -50,6 +50,7 @@ async def test_targeted_read_repairs_parameter_and_keeps_located_supplement(tmp_
             return review_double(model, context)
         if model.__name__ == "RecoveryAction":
             return model(action="read_source", reason="Resolve the missing cutoff", question="What is the low cutoff?", url=source["links"][0])
+        assert context['allowed_evidence_indices'] == [row['index'] for row in context['indexed_evidence']] == [0, 1, 2]
         fixed = branch()
         fixed["evidence_indices"].append(2)
         fixed["method"]["recipe"][0]["parameter_sources"]["l_freq"]["evidence_indices"] = [2]
