@@ -142,6 +142,13 @@ class PriorCondition(Contract):
         return self
 
 
+class PriorException(Contract):
+    id: Identifier
+    when: list[PriorCondition] = Field(min_length=1)
+    reason: str = Field(min_length=1)
+    evidence_ids: list[str] = Field(min_length=1)
+
+
 class ScientificPrior(Contract):
     id: Identifier
     knowledge_rule_ids: list[str] = Field(default_factory=list)
@@ -160,11 +167,16 @@ class ScientificPrior(Contract):
     origin: Literal["mathematical", "implementation", "literature", "engineering"]
     when: list[PriorCondition] = Field(default_factory=list)
     requirements: list[PriorCondition] = Field(default_factory=list)
+    exceptions: list[PriorException] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def relation_shape(self):
         if len(set(self.knowledge_rule_ids)) != len(self.knowledge_rule_ids):
             raise ValueError('duplicate research rule links')
+        if self.exceptions and self.strength == 'hard':
+            raise ValueError('empirical exceptions cannot disable hard constraints; correct the hard rule scope explicitly')
+        if len({e.id for e in self.exceptions}) != len(self.exceptions):
+            raise ValueError('duplicate exception identifiers')
         if (self.status == 'revoked' or self.revision > 1 or self.supersedes) and not (self.change_reason or '').strip():
             raise ValueError('rule revisions/revocations require a change reason')
         if not self.implementation_versions or len(set(self.implementation_versions)) != len(self.implementation_versions):
@@ -299,10 +311,13 @@ class ExplorationSpace(Contract):
                     raise ValueError('replacement must reference a retained revoked rule with lower revision')
             if not set(prior.operators) <= operators.keys():
                 raise ValueError("prior references an unknown operator")
-            for predicate in prior.when + prior.requirements:
+            for exception in prior.exceptions:
+                if not set(exception.evidence_ids) <= self.evidence.keys():
+                    raise ValueError('exception evidence reference does not exist')
+            for predicate in prior.when + prior.requirements + [p for e in prior.exceptions for p in e.when]:
                 if predicate.scope == "parameter" and (
                     predicate.operator not in operators
-                    or predicate.key not in operators[predicate.operator].domains
+                    or predicate.key not in (operators[predicate.operator].domains.keys() | operators[predicate.operator].bindings.keys())
                 ):
                     raise ValueError("prior references an unknown operator parameter")
         return self

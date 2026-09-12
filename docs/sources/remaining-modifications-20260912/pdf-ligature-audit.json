@@ -1,0 +1,42 @@
+{
+  "scope": "read-only numeric lexer regression; not a fresh semantic or workflow acceptance",
+  "source_artifact": ".local\\remaining-modifications-20260912\\live-integrated-7\\workflows\\52ced03caa984f25a860669d1bbc953d\\preprocessing\\literature-methods\\bc3f70907a2a3142c078\\semantic-verification.json",
+  "source_sha256": "7651f96ed9c10f39be00323e33b55d2079c15a70b26e1bf3ab9f48d602484966",
+  "original_claim": {
+    "claim_id": "jin2022_shared_bandpass_epoch/bandpass_8_30.prototype_order",
+    "status": "unsupported",
+    "evidence_index": 8,
+    "quote": "All EEG data used in the four datasets were band-pass\nﬁltered using a ﬁfth-order Butterworth ﬁlter from 8Hz to\n30Hz.",
+    "source_value": 5,
+    "source_unit": null,
+    "target_unit": null,
+    "reason": "Source span/value/unit verification failed [numeric_value]: 源文 'ﬁfth-order Butterworth ﬁlter' 以序数词字面给出滤波器阶数为 5，属无量纲整数，故 source_unit/target_unit 为 null；序数→整数的映射在此为字面直读，非推断实现或库默认值。滤波器阶数含义与 butter 的 prototype_order 契约一致。",
+    "deterministic_checks": {
+      "evidence_index_valid": true,
+      "source_span_found": true,
+      "target_unit_valid": true,
+      "numeric_evidence": [
+        {
+          "value": 5,
+          "supported": false,
+          "basis": "value_not_lexically_established"
+        }
+      ]
+    }
+  },
+  "requested_value": 5,
+  "updated_numeric_check": [
+    {
+      "value": 5,
+      "supported": true,
+      "basis": "written_filter_order",
+      "source_token": "ﬁfth-order",
+      "normalized_token": "fifth-order",
+      "normalization": "latin_pdf_ligatures_only",
+      "source_value": 5
+    }
+  ],
+  "historical_status_unchanged": "unsupported",
+  "historical_artifact_unchanged": true,
+  "acceptance_passed": false
+}

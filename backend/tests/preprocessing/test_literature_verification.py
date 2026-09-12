@@ -135,6 +135,20 @@ def test_event_onset_zero_requires_explicit_epoch_origin_and_semantic_value():
         assert not _numeric_supported(0, review.model_copy(update={'quote': text}), parameter='tmin', operation='epoch')
 
 
+def test_pdf_filter_order_ligatures_preserve_original_token_without_rewriting_numbers():
+    from app.preprocessing.literature_verification import numeric_evidence
+    quote = 'The ﬁlter was a ﬁfth-order Butterworth ﬁlter.'
+    review = ClaimReview(claim_id='order', status='supported', quote=quote, reason='Synthetic literal order review')
+    row, = numeric_evidence(5, review, parameter='prototype_order', operation='butterworth')
+    assert row['supported']
+    assert row['source_token'] == 'ﬁfth-order'
+    assert row['normalized_token'] == 'fifth-order'
+    assert review.quote == quote
+    for text in ('twenty ﬁfth-order', 'forty-ﬁfth-order', '²-order', 'the order is ²'):
+        assert not _numeric_supported(5 if 'ﬁfth' in text else 2,
+            review.model_copy(update={'quote':text}), parameter='order')
+
+
 def test_semantic_refusal_is_not_overridden_by_successful_numeric_checks():
     extraction = LiteratureExtraction.model_validate({'branches':[branch()]})
     async def ask(op, model, context, instruction):

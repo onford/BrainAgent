@@ -177,8 +177,17 @@ def numeric_evidence(value, review, *, parameter='', operation=''):
         return [dict(value=value, supported=True, basis='literal_numeric_token', source_values=matching, unit_ratio=ratio)]
     if parameter in {'order', 'prototype_order', 'filter_order'} and not su and not tu:
         words = 'first second third fourth fifth sixth seventh eighth ninth tenth'.split()
-        for match in re.finditer(r'\b(' + '|'.join(words) + r')[-\s]+order\b', review.quote.lower()):
-            prefix = review.quote[:match.start()].lower().rstrip()
+        # PDF Latin ligatures may spell “fifth” as “ﬁfth”. Expand only these
+        # letters, not compatibility digits or mathematical superscripts. Keep
+        # original quote coordinates for the audit token.
+        letters, offsets = [], []
+        for index, char in enumerate(review.quote):
+            expanded = unicodedata.normalize('NFKC', char) if '\ufb00' <= char <= '\ufb06' else char
+            letters.extend(expanded.lower())
+            offsets.extend([index] * len(expanded))
+        word_quote = ''.join(letters)
+        for match in re.finditer(r'\b(' + '|'.join(words) + r')[-\s]+order\b', word_quote):
+            prefix = word_quote[:match.start()].rstrip()
             # Do not read twenty fifth / forty-fifth as a fifth-order filter.
             previous = re.search(r'([\w-]+)$', prefix)
             if previous and (previous[1].endswith('-') or previous[1] in
@@ -187,7 +196,9 @@ def numeric_evidence(value, review, *, parameter='', operation=''):
                 continue
             n = words.index(match[1]) + 1
             if value == n:
-                return [dict(value=value, supported=True, basis='written_filter_order', source_token=match[0], source_value=n)]
+                return [dict(value=value, supported=True, basis='written_filter_order',
+                    source_token=review.quote[offsets[match.start()]:offsets[match.end()-1]+1],
+                    normalized_token=match[0], normalization='latin_pdf_ligatures_only', source_value=n)]
     if (value == 0 and parameter == 'tmin' and operation in {'epoch', 'epoch_with_nonfinite'}
             and su == tu == 's' and type(review.source_value) in (int, float) and review.source_value == 0
             and re.search(r'\b(?:epoched|segmented)\s+from\s+(?:the\s+)?(?:(?:cue|event|trial)\s+)?onset\s+to\s+', review.quote, re.I)):

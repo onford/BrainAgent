@@ -28,6 +28,10 @@ def input_context(data):
     except metadata.PackageNotFoundError:
         asr = False
     return {
+        'dataset_id': data.survey.dataset_id,
+        'task': data.survey.task,
+        'representation': 'physical_voltage',
+        'recipe_scope': 'shared_all_records',
         "at_least_four_eeg": all(
             sum(t == "eeg" for t in r.channels.values()) >= 4 for r in selected
         ),

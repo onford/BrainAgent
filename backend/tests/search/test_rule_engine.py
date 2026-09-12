@@ -95,3 +95,65 @@ def test_direct_source_graph_cannot_bypass_explicit_shared_order_rule():
     value['priors'][0]['operators'].reverse()
     with pytest.raises(ValueError, match='continuous-before-epoch'):
         compile_recipe(entry, value, None)
+
+
+def test_soft_exception_requires_known_condition_and_preserves_evidence(space, recipe):
+    value = configured(space)
+    source = 'fixture-source'
+    value['evidence'][source] = dict(source_url='fixture://exception', source_version='1',
+        locator='Synthetic test', text='A test of conditional control, not scientific evidence.')
+    value['priors'][0].update(strength='soft', exceptions=[dict(id='erp-context',
+        when=[dict(scope='context', key='task', comparison='eq', value='erp')],
+        reason='Synthetic conditional exception', evidence_ids=[source])])
+    frozen = ExplorationSpace.model_validate(value)
+    canonical, warnings = validate_recipe(recipe, frozen, {'task':'erp'})
+    assert not warnings
+    row = audit(canonical, frozen, {'task':'erp'})['decisions'][0]
+    assert row['status']=='exception_applies' and row['exceptions'][0]['evidence_ids']==[source]
+    _, warnings = validate_recipe(recipe, frozen, {})
+    assert warnings and audit(canonical, frozen, {})['decisions'][0]['exceptions'][0]['applies'] is None
+    value['priors'][0]['strength']='hard'
+    with pytest.raises(ValueError, match='cannot disable hard constraints'):
+        ExplorationSpace.model_validate(value)
+
+
+def test_requires_incompatible_conflict_keeps_hard_precedence(space, recipe):
+    value = configured(space)
+    value['priors'][0].update(relation='requires', operators=['reference','filter'])
+    opposite = deepcopy(value['priors'][0])
+    opposite.update(id='avoid-filter', strength='soft', relation='incompatible')
+    value['priors'].append(opposite)
+    canonical, warnings = validate_recipe(recipe, value)
+    result = audit(canonical, ExplorationSpace.model_validate(value))
+    assert result['conflict_sets'][0]['resolution']=='hard_constraint_precedence'
+    assert result['conflict_sets'][0]['hard_rule_ids']==['order']
+    assert [w['prior_id'] for w in warnings]==['avoid-filter']
+    value['priors'][1]['strength']='hard'
+    with pytest.raises(ValueError, match='avoid-filter'):
+        validate_recipe(recipe, value)
+
+
+def test_absent_trigger_does_not_turn_unknown_condition_into_a_blocker(space, recipe):
+    value = configured(space)
+    value['priors'][0]['when']=[dict(scope='context',key='unobserved',comparison='eq',value=True)]
+    # Epoch exists, but this rule's trigger reference is absent.
+    recipe['nodes'] = [n for n in recipe['nodes'] if n['operator']!='reference']
+    canonical, warnings = validate_recipe(recipe, value)
+    assert not warnings
+    assert audit(canonical, ExplorationSpace.model_validate(value))['decisions'][0]['status']=='not_applicable'
+
+
+def test_fixed_bindings_distinguish_declared_null_from_unresolved_runtime_tokens(space, recipe):
+    value = configured(space)
+    value['operators'][0]['bindings'] = {'h_freq':None}
+    value['priors'][0].update(relation='parameter_condition', operators=['filter'],
+        requirements=[dict(scope='parameter',operator='filter',key='h_freq',comparison='eq',value=None)])
+    canonical, warnings = validate_recipe(recipe, value)
+    assert not warnings
+    assert audit(canonical, ExplorationSpace.model_validate(value))['decisions'][0]['status']=='satisfied'
+    value['operators'][0]['bindings']['h_freq']='$unknown_cutoff'
+    with pytest.raises(ValueError, match='必要参数条件'):
+        validate_recipe(recipe, value)
+    value['operators'][0]['bindings']['h_freq']=30.
+    with pytest.raises(ValueError, match='order'):
+        validate_recipe(recipe, value)

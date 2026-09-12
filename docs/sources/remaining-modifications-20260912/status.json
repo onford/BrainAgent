@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "as_of": "2026-09-12",
+  "as_of": "2026-09-13",
   "purpose": "当前实施台账；取代原审计中的已撤回目标",
   "issues": [
     {
@@ -134,7 +134,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "缺口恢复真正解决来源和依赖",
-      "current": "工作流和独立入口有持久补读日志、绝对预算、已知结果恢复与依赖文件链接；恢复后的索引与补充证据同步。未知科学参数及撤回的逐被试方法不作补齐目标。真实闭环待完成。",
+      "current": "工作流和独立入口有持久补读日志、绝对预算、已知结果恢复与依赖文件链接；恢复后的索引与补充证据同步。未知科学参数及撤回的逐被试方法不作补齐目标。真实闭环待完成。 PDF拉丁连字（如ﬁfth-order）现在仅作字母展开，保留原文token和坐标；不归一化数学上标或替代单位。16项语义/恢复回归通过；第7次旧快照的拒绝记录保留，新fresh验证待完成。",
       "solution_and_acceptance": "按具体缺口选择可审计动作，共享动作/时间账本；跟踪配置和依赖的固定版本。优先解决证据，仍未知则阻塞；记录有效修复率及失败原因，不猜科学参数。",
       "dependencies": [
         "I05",
@@ -339,7 +339,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "规则冲突与例外",
-      "current": "已有硬软区分、冲突文本和挑战记录，缺跨规则优先适用、例外及冲突集的完整处理。",
+      "current": "规则获得真实任务/表示/共享配方作用域事实；经验例外须绑定条件与证据，未知不跳过，硬规则不接受经验例外。已支持相反次序和无歧义 requires/incompatible 冲突集，硬约束优先，软冲突保留诊断/挑战要求。多候选依赖与多方禁配不擅自缩成两两冲突；复杂参数冲突及知识失效联动仍待补齐。71项回归通过，另31项包含图数值重放的测试通过（重叠）。",
       "solution_and_acceptance": "以任务/单位/阶段/数据权限确定适用域；硬条件优先，经验冲突触发诊断或明确保留。针对互相矛盾的规则验证结果和用户说明。",
       "dependencies": [
         "I16"
@@ -1633,7 +1633,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第十一批知识覆盖和规则绑定审计完成；继续规则适用域/例外/冲突及知识生命周期。bacbb66全量回归与7401c8f第7次真实流程独立运行中。",
+  "active_step": "第十二批规则作用域/例外/冲突及PDF连字核验完成；接着完成知识生命周期和剩余参数冲突。第7次真实流程仍在旧固定快照运行；最新全量回归覆盖至bacbb66。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1850,6 +1850,19 @@
       "seconds": 802.12,
       "failure": "Deadline test incorrectly required all 3 requests to start within 0.2 seconds",
       "followup": "Test fixed in bacbb66; 12 related tests passed; full regression in progress"
+    },
+    "partition_full_regression": {
+      "commit": "bacbb66",
+      "result": "1190 passed, 109 warnings",
+      "seconds": 799.38,
+      "log": ".local/remaining-modifications-20260912/full-backend-partition.log"
+    },
+    "twelfth_batch": {
+      "rule_neural_controller": "71 passed, 61.14 seconds",
+      "graph_rule_integration": "31 passed, 9 warnings, 40.45 seconds; overlaps other batch",
+      "ligature_source_recovery": "16 passed, 2.74 seconds",
+      "lexer_audit": "pdf-ligature-audit.json",
+      "limitations": "No historical acceptance promoted; general parameter conflict/lifecycle work remains"
     }
   }
 }

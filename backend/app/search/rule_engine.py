@@ -42,7 +42,8 @@ def audit(recipe, space, context=None):
             knowledge_rule_ids=prior.knowledge_rule_ids,
             rule_sha256=digest(prior.model_dump(mode='json')), strength=prior.strength,
             evidence_ids=prior.evidence_ids, status='not_applicable',
-            reason=prior.rationale, matched_nodes={}, condition_values=[], conflicts_with=[])
+            reason=prior.rationale, matched_nodes={}, condition_values=[], conflicts_with=[],
+            exceptions=[], required_edges=[], forbidden_pairs=[])
         rows.append(row)
         if prior.status == 'revoked':
             row.update(status='revoked', reason=prior.change_reason)
@@ -64,11 +65,23 @@ def audit(recipe, space, context=None):
             if any(operators[n.operator].unit_id in units for n in recipe.nodes):
                 row.update(status='unbound_variant', reason='相关实现未绑定此规则的版本/算子选择器；不能声称已校验。' + prior.rationale)
             continue
+        first, *rest = prior.operators
+        if not matched[first] or prior.relation == 'before' and not matched[rest[0]]:
+            continue
 
         def predicate(p):
-            values = ([context[p.key]] if p.key in context else []) if p.scope == 'context' else [
-                {**operators[n.operator].bindings, **n.parameters}.get(p.key) for n in matches(p.operator)]
-            if not values or any(v is None for v in values):
+            missing = object()
+            def unresolved(value):
+                if value is missing or isinstance(value, str) and value.startswith('$'):
+                    return True
+                if isinstance(value, (list, tuple)):
+                    return any(unresolved(v) for v in value)
+                if isinstance(value, dict):
+                    return any(unresolved(v) for v in value.values())
+                return False
+            values = ([context[p.key]] if p.key in context and context[p.key] is not None else []) if p.scope == 'context' else [
+                {**operators[n.operator].bindings, **n.parameters}.get(p.key, missing) for n in matches(p.operator)]
+            if not values or any(unresolved(v) for v in values):
                 return None
             try:
                 return all(COMPARE[p.comparison](value, p.value) for value in values)
@@ -82,19 +95,30 @@ def audit(recipe, space, context=None):
         if any(v is None for v in conditions):
             row.update(status='unknown', reason='适用条件未知，不能视为不适用：' + prior.rationale)
             continue
-        first, *rest = prior.operators
-        if not matched[first]:
+        for exception in prior.exceptions:
+            values = [predicate(p) for p in exception.when]
+            applies = False if any(v is False for v in values) else None if any(v is None for v in values) else True
+            row['exceptions'].append(dict(id=exception.id, condition_values=values,
+                applies=applies, reason=exception.reason, evidence_ids=exception.evidence_ids))
+        if any(e['applies'] is True for e in row['exceptions']):
+            row.update(status='exception_applies', reason='有已满足条件及证据绑定的经验规则例外；硬约束仍独立检查。')
             continue
         if prior.relation == 'before':
             pairs = [(a, b) for a in matched[first] for b in matched[rest[0]]
                      if a.id in signal[b.id] or b.id in signal[a.id]]
             if not pairs:
                 continue
+            row['required_edges'] = [[a.id, b.id] for a, b in pairs]
             violated = any(a.id not in signal[b.id] for a, b in pairs)
         elif prior.relation == 'requires':
+            # A multi-instance requires clause offers alternatives; it does not
+            # require every matching node. Only singleton obligations form edges.
+            row['required_edges'] = [[matched[key][0].id, a.id] for a in matched[first] for key in rest if len(matched[key])==1]
             violated = any(not all(any(b.id in dependencies[a.id] for b in matched[k]) for k in rest)
                            for a in matched[first])
         elif prior.relation == 'incompatible':
+            if len(prior.operators)==2:
+                row['forbidden_pairs'] = [sorted((a.id,b.id)) for a in matched[first] for b in matched[rest[0]]]
             violated = all(matched[k] for k in rest)
         else:
             required = [predicate(p) for p in prior.requirements]
@@ -105,18 +129,28 @@ def audit(recipe, space, context=None):
             violated = not all(required)
         row['status'] = 'violated' if violated else 'satisfied'
 
-    by_id = {p.id: p for p in space.priors}
     applicable = [r for r in rows if r['status'] in {'satisfied', 'violated'}]
-    for row in applicable:
-        rule = by_id[row['prior_id']]
-        if rule.relation == 'before':
-            row['conflicts_with'] = [other['prior_id'] for other in applicable
-                if by_id[other['prior_id']].relation == 'before'
-                and by_id[other['prior_id']].operators == list(reversed(rule.operators))]
+    conflict_sets = []
+    for i, row in enumerate(applicable):
+        edges = {tuple(edge) for edge in row['required_edges']}
+        forbidden = {tuple(pair) for pair in row['forbidden_pairs']}
+        for other in applicable[i+1:]:
+            other_edges = {tuple(edge) for edge in other['required_edges']}
+            other_forbidden = {tuple(pair) for pair in other['forbidden_pairs']}
+            conflicting = (edges & {(b,a) for a,b in other_edges})
+            excluded = ({tuple(sorted(e)) for e in edges} & other_forbidden) | ({tuple(sorted(e)) for e in other_edges} & forbidden)
+            if not conflicting and not excluded:
+                continue
+            row['conflicts_with'].append(other['prior_id'])
+            other['conflicts_with'].append(row['prior_id'])
+            hard = [r['prior_id'] for r in (row,other) if r['strength']=='hard']
+            conflict_sets.append(dict(rule_ids=[row['prior_id'],other['prior_id']],
+                node_pairs=sorted([list(p) for p in conflicting | excluded]), hard_rule_ids=hard,
+                resolution='hard_constraints_block' if len(hard)==2 else 'hard_constraint_precedence' if hard else 'diagnostic_or_explicit_challenge_required'))
     return dict(schema_version='rule-audit-1',
                 recipe_sha256=digest(recipe.model_dump(mode='json')),
                 rules_sha256=digest([p.model_dump(mode='json') for p in space.priors]),
-                decisions=rows)
+                decisions=rows, conflict_sets=conflict_sets)
 
 
 def enforce(result):
