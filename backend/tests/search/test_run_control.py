@@ -127,6 +127,27 @@ def test_unauthorized_cancel_does_not_create_control_files(factory):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize('version', ['1', '2', None])
+async def test_retired_protocol_controls_and_auto_resume_are_read_only(factory, version):
+    from app.search.io import write
+    service, _, state = factory()
+    identity = state['id']
+    state['protocol']['version'] = version
+    root = service.folder(identity)
+    write(root / 'search.json', state)
+    before = {p.relative_to(root): p.read_bytes() for p in root.rglob('*') if p.is_file()}
+    for action in (service.cancel, service.retry, service.start):
+        with pytest.raises(ValueError, match='只读'):
+            action('owner', identity)
+    with pytest.raises(ValueError, match='只读'):
+        await service.run('owner', identity)
+    await service.resume()
+    service.describe('owner', identity)
+    assert not service.tasks
+    assert {p.relative_to(root): p.read_bytes() for p in root.rglob('*') if p.is_file()} == before
+
+
+@pytest.mark.asyncio
 async def test_terminal_search_is_not_reexecuted_or_republished(factory):
     service, _, initial = factory(strategy='exhaustive', max_candidates=1)
     identity = initial['id']

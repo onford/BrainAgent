@@ -502,7 +502,9 @@ class SearchService:
         return self.describe(owner, identity)
 
     def start(self, owner, identity):
-        self.verify_runtime(self.get(owner, identity))
+        state = self.get(owner, identity)
+        self.require_current(state)
+        self.verify_runtime(state)
         if identity not in self.tasks or self.tasks[identity].done():
             self.tasks[identity] = asyncio.create_task(self.run(owner, identity))
 
@@ -512,8 +514,13 @@ class SearchService:
             if state["status"] in {"preparing", "running", "interrupted"}:
                 try:
                     self.start(state["owner"], state["id"])
-                except (IntegrityFailure, OSError, KeyError):
+                except (IntegrityFailure, OSError, KeyError, ValueError):
                     continue
+
+    @staticmethod
+    def require_current(state):
+        if state.get('protocol', {}).get('version') != '3':
+            raise ValueError('历史搜索协议仅供只读查看；请创建当前共享预处理协议的新搜索')
 
     async def close(self):
         active = [t for t in self.tasks.values() if not t.done()]
@@ -524,7 +531,7 @@ class SearchService:
     def cancel(self, owner, identity):
         import portalocker
         from .run_control import Controls
-        self.get(owner, identity)
+        self.require_current(self.get(owner, identity))
         controls = Controls(self.folder(identity))
         with controls.transaction() as control:
             state = self.get(owner, identity)
@@ -550,7 +557,7 @@ class SearchService:
     def retry(self, owner, identity):
         import portalocker
         from .run_control import Controls
-        self.get(owner, identity)
+        self.require_current(self.get(owner, identity))
         try:
             with portalocker.Lock(self.folder(identity) / 'search.lock', timeout=0):
                 with Controls(self.folder(identity)).transaction() as control:
@@ -921,7 +928,7 @@ class SearchService:
         import portalocker
 
         root = self.folder(identity)
-        self.get(owner, identity)
+        self.require_current(self.get(owner, identity))
         lock = portalocker.Lock(root / 'search.lock', timeout=0)
         try:
             lock.acquire()

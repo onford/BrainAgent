@@ -1646,7 +1646,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十九批 I33 跨后端互斥/持久取消/线程排空专项通过。继续 I32 全面板完整候选成本测量，再 I27 实质文献完整链。",
+  "active_step": "I33 跨后端与旧协议只读保护专项通过。I32 全集基础候选 109 人/327 记录/五折三种子成本实测运行中，随后测等价 v2 图存储；未宣称最终 agent 验收。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1963,13 +1963,22 @@
       "frontend_build": "passed",
       "independent_process_seconds": 7.75,
       "audit": "multi-backend-live-audit.json",
-      "status": "targeted_passed"
+      "status": "targeted_passed",
+      "retired_protocol_controls": {
+        "tests_passed": 10,
+        "seconds": 8.85,
+        "legacy_files_unchanged": true
+      }
     },
     "full_backend_codec": {
       "commit": "399e152",
       "passed": 1351,
       "warnings": 109,
       "seconds": 910.3
+    },
+    "remote_sync": {
+      "verified_commit": "2ff9b599ffdf7dc760ce229c9a2bb8f56b192d66",
+      "branch": "dev-xx"
     }
   }
 }
