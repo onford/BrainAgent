@@ -894,6 +894,13 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
             record_summary['measurement_frames']={s:{k:v for k,v in f.items() if k!='contract'}
                                                    for s,f in detail['measurement_frames'].items()}
             record_summary['diagnostic_windows'] = deepcopy(detail.get('diagnostic_windows', {}))
+            from .sensor_lateralization import extract_record
+            record_summary['sensor_lateralization'] = {}
+            for stage in ('source_task', 'processed_task'):
+                task_ids = [t['event_id'] for t in trials if t['eligible']] if stage == 'source_task' else detail.get('epoch_order_original_trial_ids', [])
+                lateral = extract_record(_json(detail['stages'][stage]), task_ids)
+                lateral['measurement_frame_sha256'] = detail['measurement_frames'][stage].get('sha256')
+                record_summary['sensor_lateralization'][stage] = lateral
             for stage, window in record_summary['diagnostic_windows'].items():
                 window['measurement_frame_sha256'] = detail['measurement_frames'][stage].get('sha256')
                 if detail['measurement_frames'][stage]['status'] != 'verified':

@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest'
 import SearchNeuralEvidence from './SearchNeuralEvidence.vue'
 
 describe('neural evidence provenance', () => {
+  it('does not label delete-one sensor sensitivity as a confidence interval', () => {
+    const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
+      diagnostics: [{ id: 'd', sensor_lateralization: { summary: { mu: { value: null, available_records: 1, expected_records: 2, delete_one_subject_sensitivity: { status: 'unavailable' } } }, records: [] } }] } })
+    expect(wrapper.text()).toContain('C3 − C4')
+    expect(wrapper.text()).toContain('完整记录')
+    expect(wrapper.get('table').text()).toContain('不可用1 / 2')
+    expect(wrapper.text()).toContain('不是置信区间')
+    expect(wrapper.text()).toContain('不要求出现特定方向')
+  })
   it('keeps limited spectral windows and missing full-band results explicit', () => {
     const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
       diagnostics: [{ id: 'd', spectral_components: { signed_periodic_fraction: { value: null, available_records: 0, expected_records: 2 },

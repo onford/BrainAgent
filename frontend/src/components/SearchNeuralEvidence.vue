@@ -61,6 +61,15 @@ const numericValue = (v: unknown) => typeof v === 'number' && Number.isFinite(v)
             <p>各重采样因子的分位数仅描述估计敏感性，不是置信区间。完整数值见诊断附件。</p>
           </details>
         </div>
+        <div v-if="d.sensor_lateralization" class="sensor-lateralization">
+          <h5>C3 − C4 配对 ERDS 差值</h5>
+          <p>固定传感器差值，单位为百分点；没有按任务类别判断对侧，不要求出现特定方向。基线为同一处理下的提示前 −2.5 至 −0.5 秒。</p>
+          <table><thead><tr><th>频带</th><th>差值</th><th>完整记录</th><th>留一人均值范围</th></tr></thead>
+            <tbody><tr v-for="(m, band) in d.sensor_lateralization.summary" :key="band"><td>{{ String(band) === 'mu' ? 'μ 8–12 Hz' : 'β 13–30 Hz' }}</td><td>{{ numericValue(m.value) }}</td><td>{{ m.available_records }} / {{ m.expected_records }}</td><td>{{ numericValue(m.delete_one_subject_sensitivity?.minimum) }} 至 {{ numericValue(m.delete_one_subject_sensitivity?.maximum) }}</td></tr></tbody>
+          </table>
+          <p>每次去掉一名参与者得到的均值范围只描述敏感性，不是置信区间；试次不被当作独立参与者。逐试次基线功率、差值及留一试次敏感性保存在完整诊断中。</p>
+          <p v-for="r in d.sensor_lateralization.records" :key="r.record_id">{{ r.record_id }}：{{ r.status }}<span v-for="(b, band) in r.measurement?.bands" :key="band"> · {{ band }} {{ b.available_trials }} / {{ b.expected_trials }} 试次 {{ b.reason ?? '' }}</span></p>
+        </div>
         <details v-for="r in d.prior_evaluation?.rules" :key="r.id">
           <summary>{{ ruleTitle(r) }}：{{ stateName(r.condition_state) }}</summary>
           <p>观测：{{ r.observed?.value ?? '缺失' }} {{ r.observed?.unit }}；{{ reasonName(r.reason) }}</p>

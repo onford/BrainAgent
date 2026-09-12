@@ -92,6 +92,11 @@ def _components(quality, reference, baseline, stage, context):
     return spectral_components_diagnostic(quality, stage, context)
 
 
+def _lateralization(quality, reference, baseline, stage, context):
+    from .sensor_lateralization import lateralization_diagnostic
+    return lateralization_diagnostic(quality, stage, context)
+
+
 METRICS = ('line_ratio_50hz', 'line_ratio_60hz', 'low_correlation_fraction', 'flat_fraction',
             'numerical_rank', 'mu_mean_psd', 'beta_mean_psd', 'erds_mu', 'erds_beta',
             'emg_hf_proxy', 'covariance_trace')
@@ -114,6 +119,10 @@ register(DiagnosticDefinition('spectral_components', '1', 'verified_fixed_contin
     'IRASA-style reciprocal resampling with fixed Welch parameters and passband guard; signed periodic/aperiodic descriptions on first up to 16 seconds per record. Complete 2–30 Hz support required for aggregate. No peak/slope fitting or neural-origin inference.',
     ('spectral_components.signed_periodic_fraction.value',), _components,
     stages=('source_raw', 'processed_continuous')))
+register(DiagnosticDefinition('sensor_lateralization', '1', 'verified_paired_C3_C4_task_precue_ERDS',
+    'C3 minus C4 ERDS percentage-point contrast for fixed mu/beta bands; complete original trials, positive paired baseline power and verified physical frame required. Equal trials/records/subjects; delete-one sensitivity is not a confidence interval or a contralateral/source inference.',
+    ('sensor_lateralization.summary.mu.value', 'sensor_lateralization.summary.beta.value'), _lateralization,
+    stages=('source_task', 'processed_task')))
 
 
 def catalog():

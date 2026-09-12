@@ -1,0 +1,547 @@
+{
+  "status": "completed",
+  "diagnostics": [
+    {
+      "stage": "source_task",
+      "status": "evaluated",
+      "summary": {
+        "mu": {
+          "status": "ok",
+          "value": -7.657196429569389,
+          "unit": "percentage_points",
+          "expected_records": 12,
+          "available_records": 12,
+          "expected_subjects": 4,
+          "available_subjects": 4,
+          "subject_means": {
+            "S001": 7.451609688612378,
+            "S002": -7.367171342628033,
+            "S003": -19.604954758827496,
+            "S004": -11.108269305434405
+          },
+          "delete_one_subject_sensitivity": {
+            "status": "evaluated",
+            "minimum": -12.693465135629978,
+            "maximum": -3.6746103198166864,
+            "member_count": 4,
+            "interpretation": "delete_one_member_mean_range; sensitivity, not a confidence interval"
+          }
+        },
+        "beta": {
+          "status": "ok",
+          "value": -5.3167970780981575,
+          "unit": "percentage_points",
+          "expected_records": 12,
+          "available_records": 12,
+          "expected_subjects": 4,
+          "available_subjects": 4,
+          "subject_means": {
+            "S001": -4.177557340173983,
+            "S002": 10.157740150042653,
+            "S003": 1.302663589374973,
+            "S004": -28.550034711636272
+          },
+          "delete_one_subject_sensitivity": {
+            "status": "evaluated",
+            "minimum": -10.474976154145095,
+            "maximum": 2.4276154664145473,
+            "member_count": 4,
+            "interpretation": "delete_one_member_mean_range; sensitivity, not a confidence interval"
+          }
+        }
+      },
+      "input_bytes": 3844298,
+      "input_files": 1,
+      "elapsed_seconds": 0.0629999999946449,
+      "reasons": [
+        {
+          "record_id": "S001R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S001R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S001R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        }
+      ],
+      "diagnostic_sha256": "0fafd084777f32777f80572108849f5d167a6008b6440af51d0f5e177ca9eeb1"
+    },
+    {
+      "stage": "processed_task",
+      "status": "evaluated",
+      "summary": {
+        "mu": {
+          "status": "ok",
+          "value": -32.3899453019359,
+          "unit": "percentage_points",
+          "expected_records": 12,
+          "available_records": 12,
+          "expected_subjects": 4,
+          "available_subjects": 4,
+          "subject_means": {
+            "S001": -7.869753436179642,
+            "S002": -66.00284855215831,
+            "S003": -31.648215139277355,
+            "S004": -24.0389640801283
+          },
+          "delete_one_subject_sensitivity": {
+            "status": "evaluated",
+            "minimum": -40.56334259052132,
+            "maximum": -21.185644218528434,
+            "member_count": 4,
+            "interpretation": "delete_one_member_mean_range; sensitivity, not a confidence interval"
+          }
+        },
+        "beta": {
+          "status": "ok",
+          "value": -1.8800047783603253,
+          "unit": "percentage_points",
+          "expected_records": 12,
+          "available_records": 12,
+          "expected_subjects": 4,
+          "available_subjects": 4,
+          "subject_means": {
+            "S001": -4.941641014430114,
+            "S002": 21.429210256535583,
+            "S003": 14.42432538909757,
+            "S004": -38.43191374464434
+          },
+          "delete_one_subject_sensitivity": {
+            "status": "evaluated",
+            "minimum": -9.649743123325628,
+            "maximum": 10.30396487706768,
+            "member_count": 4,
+            "interpretation": "delete_one_member_mean_range; sensitivity, not a confidence interval"
+          }
+        }
+      },
+      "input_bytes": 3844298,
+      "input_files": 1,
+      "elapsed_seconds": 0.09399999999732245,
+      "reasons": [
+        {
+          "record_id": "S001R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S001R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S001R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S002R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S003R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R04",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R08",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        },
+        {
+          "record_id": "S004R12",
+          "bands": {
+            "mu": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            },
+            "beta": {
+              "status": "ok",
+              "reason": null,
+              "expected_trials": 15,
+              "available_trials": 15
+            }
+          }
+        }
+      ],
+      "diagnostic_sha256": "a7774911ac753b3c2e84083afe3ca28a8473067fc7ba9f110bb4f0231da5af61"
+    }
+  ],
+  "elapsed_seconds": 3.4219999999913853,
+  "preparation_input_bytes": 220140677,
+  "preparation_inputs": {
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\data-quality.json": "2d0d6b38b75655d7df1df04a7f4cd796e9b8ae1338512940c0e25af8a90f40dc",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-7\\offline-search\\fe66927f417a4d61b3868f194786464e\\search.json": "b39d6399be8827c5d99ff3ac211b7ed4617b554c308d4c663fa36519e7fa7f26",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\d056777f84cf03e13255.json": "534445df333be03cdfa42dd5c73ed560aa88bcb93064f42635b200849c8404c7",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\002ff2d433bb20e0ca1b.json": "7789130dd87bfaf69c091427bebed4b0f677d4518ef717cd31e17793c74ee069",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\debb8551a35230637bbb.json": "3b9bb8ffdbe25334e083f6ceccbebd469c2da9b0ecf6365960e3585adbbcb312",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\5fb1f5e5ad200b1d1b88.json": "2c87e136eacd959fd4b948152b0a2685d40e3aa460d7f7bb67a9dfca7c4b8817",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\2003b9c316a2e6d388ef.json": "c0bc70236c94656d898abc0ad3026132d672908d19d1a752f909837d8eb77794",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\30ba42f2b8ab51fb70f4.json": "00f588ff5f79b6f3a65f056ab09341013ca25426b608e862c09ec7e722ba5464",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\71f8c8aac4d81bbe63ad.json": "5a94a91acc25de18c9df2ebe10d18dbc784315102dbb32aa1553869f080f8a55",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\9c62a8815b10e47ea1f6.json": "2e27f3ebd772fd05b476f39543e8da244efb839c6b5aaa0ae77ceef0776d2ca2",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\8dca73c3772a381c68aa.json": "73eea425da21af44b0a61b99a870a5539ddc1929a1157d8d583bdf37e40e7446",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\ab07fff0a29365943456.json": "8dc00a70d1485a29581d3354bf8fb4663c33f11ee00e0470c0a1c4bb95760667",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\59a8bb06867d1ce298a1.json": "0caed8f8d080285776b4612644b29ac6dcb98ff63ac6b4953d76ab66a82cfb7f",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\spectral-live-2\\candidates\\bp8-30-average\\assessment\\a1\\quality\\quality-details\\c58da1c87776e9391967.json": "eaeaa1f7714d17304a099c763beeb1a01cba871de37eb9d574ad3afa7d5bc719"
+  },
+  "originals_unchanged": true,
+  "code_unchanged": true,
+  "code_sha256": "9d3c60e3dfd3df7fc101284cc052bdb0af617b2eb651cc5aa19a14384bb6ccae",
+  "scope": "Descriptions of existing paired measurements; no formal uncertainty interval, neural preservation, contralateral inference or workflow acceptance."
+}

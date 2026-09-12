@@ -147,6 +147,14 @@ def test_real_bids_all_records_subject_equal_summary_and_read_only(tmp_path):
             artifact = contract['artifact']
             assert file_hash(out/artifact['path']) == artifact['sha256']
             assert artifact in receipt['artifacts']
+    from app.search.sensor_lateralization import lateralization_diagnostic
+    lateral = lateralization_diagnostic(s, 'processed_task', context)
+    assert lateral['status'] == 'evaluated'
+    assert lateral['sensor_lateralization']['summary']['mu']['available_records'] == 3
+    for r in lateral['sensor_lateralization']['records']:
+        band = r['measurement']['bands']['mu']
+        assert band['available_trials'] == r['expected_trials']
+        assert band['baseline_interval_seconds'] == [-2.5,-.5]
     a, b = (s["bysubject"][key]["metrics"]["oha"]["value"][0] for key in ("subject-01", "subject-02"))
     assert a != b
     assert s["metrics"]["oha"]["value"][0] == pytest.approx((a+b)/2)

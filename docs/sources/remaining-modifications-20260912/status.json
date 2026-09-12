@@ -399,7 +399,7 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "强神经保护测量",
-      "current": "已有ROI TFR、μ/β、Welch ERDS及共同物理对照；新增注册的未对齐误差/增益/相关峰偏移/能量时间重心诊断，周期歧义和边界峰保持不可辨识，完整记录/试次/通道分母验签。95项回归及真实12记录只读复核通过。周期/非周期、侧化、更多已知源与独立真实保护验证仍未完成；个体峰频拟合及个体预处理已撤回。 已新增固定连续窗口IRASA式分解，频带/样本支持不足保留不可用；12真实记录只读验证通过。",
+      "current": "已实现ROI TFR、固定μ/β ERDS、共同视图时序、有限连续窗口周期/非周期分解、固定C3−C4配对差值及基线/留一敏感性；均有数值与真实只读复核。正式不确定性与独立神经保护验证仍未完成。个体峰频、逐被试拟合/预处理和近前沿性能目标撤回。",
       "solution_and_acceptance": "逐项实现适用性和有效时间支持，保留基线/分母/不确定性；先做已知信号验证，再做真实 EEG。不能以“典型 ERD”作为必须制造的形态。",
       "dependencies": [
         "I19",
@@ -414,7 +414,7 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation": "docs/temporal-preservation.md"
+      "implementation": "docs/sensor-lateralization.md"
     },
     {
       "id": "I21",
@@ -1639,7 +1639,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第二十一批有界连续窗口周期/非周期诊断完成专项与真实只读验证；继续侧化/基线不确定性及I22。",
+  "active_step": "第二十二批C3/C4配对ERDS及基线/留一敏感性完成专项和真实只读复核，继续I22运行复核与局部替代分支。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1900,6 +1900,12 @@
     "full_backend_temporal": {
       "commit": "651c01c",
       "result": "1263 passed, 109 warnings, 821.01 s"
+    },
+    "sensor_lateralization": {
+      "backend": "74 passed, 24.06 s",
+      "frontend": "160 passed; 7 component retest after template type fix; build passed",
+      "real": "4 subjects, 12 records, 180 trials; 3844298 bytes per diagnostic; originals unchanged",
+      "audit": "docs/sources/remaining-modifications-20260912/lateralization-live-1-audit.json"
     }
   }
 }
