@@ -41,13 +41,14 @@ def selection_score(receipt):
     return assessment.get("selection_score") if assessment is not None else receipt.get("macro_ba")
 
 
-def select(candidates):
+def select(candidates, *, require_complete_assessment=False):
     eligible = [
         c
         for c in candidates
         if (c.get("receipt") or {}).get("status") == "evaluated"
         and c.get("status", "evaluated") == "evaluated"
         and selection_score(c.get("receipt")) is not None
+        and (not require_complete_assessment or (c["receipt"].get("assessment") or {}).get("status") == "complete")
     ]
     if not eligible:
         return None
@@ -56,8 +57,7 @@ def select(candidates):
         key=lambda c: (
             -selection_score(c["receipt"]),
             c["id"] != BASELINE_ID,
-            len(c.get("parameters", {}).get("operators", []))
-            + (c.get("parameters", {}).get("adaptation", "none") != "none"),
+            len(c.get("parameters", {}).get("operators", [])),
             c["id"],
         ),
     )["id"]

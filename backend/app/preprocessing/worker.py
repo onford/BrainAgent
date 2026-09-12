@@ -16,7 +16,7 @@ from .resources import ResourceError, budget, require_capacity
 from .runner import Cancelled, run_record, verify_result
 from .parallel import ParallelExecutionError, RecordProcessPool
 from .schemas import ExecutionPlan, Ref
-from .storage import Storage, digest, write_json
+from .storage import Storage, digest, write_json, file_hash
 from .units import environment, engine_hash
 
 logger = logging.getLogger(__name__)
@@ -85,7 +85,7 @@ class Worker:
             )
             source_records = {r.id: r for r in plan.input_snapshot.collection.records}
             records = list(enumerate(plan.records))
-            if self.max_record_workers > 1:
+            if self.max_record_workers > 1 and not any(s.implementation_version == "2" for c in plan.records for s in c.steps):
                 self._parallel_records(
                     plan, root, owner, job_id, verified_completed, remaining
                 )
@@ -130,6 +130,16 @@ class Worker:
                 except Cancelled as exc:
                     self.store.record_finish(job_id, key, "cancelled", error=str(exc))
                 except Exception as exc:
+                    from .graph_runtime import PendingDecision
+                    if isinstance(exc, PendingDecision):
+                        artifacts = [{"name": p.relative_to(output).as_posix(),
+                                      "path": p.relative_to(self.store.root).as_posix(),
+                                      "sha256": file_hash(p), "bytes": p.stat().st_size,
+                                      "kind": "pending_decision"}
+                                     for p in output.rglob('*') if p.is_file() and not p.is_relative_to(output/'input')]
+                        self.store.record_finish(job_id, key, "waiting_decision",
+                                                 result={"artifacts": artifacts}, error=str(exc))
+                        continue
                     logger.exception(
                         "preprocessing_record_failed job=%s record=%s", job_id, key
                     )

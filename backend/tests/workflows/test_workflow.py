@@ -34,7 +34,13 @@ OWNER = "workflow-test"
 
 @pytest.fixture
 def source(tmp_path, monkeypatch):
-    """Only EDF decoding is substituted; BIDS, numeric worker and exports are real."""
+    """Simulated EDF; real BIDS/workers/exports with short frozen learner training."""
+    from app.search import utility_parallel
+
+    normalize_execution = utility_parallel.utility_execution
+    monkeypatch.setattr(utility_parallel, "utility_execution", lambda value=None:
+        normalize_execution({**(value or {}), "eegnet_training": {
+            "max_epochs": 2, "patience": 1, "batch_size": 8}}))
     root = tmp_path / "source"
     for subject in ["S001", "S002", "S003"]:
         path = root / subject / f"{subject}R04.edf"

@@ -43,8 +43,9 @@ const evidenceLabels: Record<string, string> = {
       <p v-if="!cards.length" class="note" role="status">{{ t('No matching topics. Try a metric name or parameter keyword.') }}</p>
       <div class="guide-cards">
         <details v-for="card in cards" :key="card.id" class="knowledge-card">
-          <summary><strong>{{ card.title }}</strong><p>{{ card.reading }}</p></summary>
+          <summary><strong>{{ card.title }}</strong></summary>
           <div class="card-body">
+            <p>{{ card.reading }}</p>
             <p class="conditions"><strong>{{ t('Applicability') }}</strong>{{ card.conditions.join('；') }}</p>
             <div class="reading-columns">
               <section><h4>{{ t('Alternative explanations') }}</h4><ul><li v-for="item in card.alternatives" :key="item">{{ item }}</li></ul></section>

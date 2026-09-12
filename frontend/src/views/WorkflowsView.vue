@@ -54,7 +54,7 @@ const reports = computed(() => {
 const stageDescriptions: Record<string,string> = {
   get data_survey() { return t('Cross-check local files, official sources, and papers; gather statistics and references for subsequent steps.') },
   get data_collection() { return t('Check ingestion requirements and task labels, then create a standardized data copy.') },
-  get data_preprocessing() { return t('Run a diagnosis-driven budgeted search comparing frequency bands, references, and unlabeled per-subject alignment.') },
+  get data_preprocessing() { return t('Run a diagnosis-driven budgeted search comparing shared preprocessing recipes.') },
   get data_evaluation() { return t('Select preprocessing using this run\'s fixed primary metric. See the linked search for the protocol, completeness, and selection rationale.') },
   get data_report() { return t('Organize verified process records into a readable report.') },
   get data_delivery() { return t('Export training arrays, labels, subject groups, and reproducibility records.') },

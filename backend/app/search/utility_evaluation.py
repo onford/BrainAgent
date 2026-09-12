@@ -211,11 +211,8 @@ def _assemble(plan, result, store_root, panel, core, output, *, cancel_check=Non
         _require(index == n and observed == set(frozen) and len({r["event_id"] for r in identities}) == n, "eligible array assembly is incomplete/duplicate")
         for values in arrays.values():
             values.flush()
-    for subject, transform in rep["subjects"].items():
-        if transform["transform_path"]:
-            _require(file_hash(Path(transform["transform_path"])) == transform["transform_sha256"], f"upstream transform checksum mismatch: {subject}")
     manifest = {"trials": identities, "arrays": {k: _artifact(v) for k, v in paths.items()}, "sources": source_audit,
-                "representation_policy": rep["policy"], "channels": rep["channels"], "sfreq": panel["output_contract"]["sfreq"],
+                "representation_version": rep["version"], "channels": rep["channels"], "sfreq": panel["output_contract"]["sfreq"],
                 "core_receipt": core, "plan": plan.model_dump(mode="json"), "folds": panel["folds"]}
     return identities, paths, _save(output / "inputs.json", manifest)
 
@@ -394,9 +391,6 @@ def evaluate_dataset_utility(plan, result, store_root, panel, candidate_entry, c
             subjects[subject] = {"eligible_trials": len(eligible), "mean_ba": None, "learner_ba": {name: None for name in LEARNER_SUITE}}
         if core.get("candidate_id") is not None:
             _require(core["candidate_id"] == candidate_entry["id"], "core candidate identity mismatch")
-        declared_adaptation = candidate_entry.get("parameters", {}).get("adaptation")
-        if declared_adaptation is not None:
-            _require(declared_adaptation == core["representation"]["policy"]["adaptation"], "candidate/core adaptation mismatch")
         trials, paths, inputs = _assemble(plan, result, store_root, panel, core, output, cancel_check=cancel_check, execution=config)
         band = None
         payload = {"trials": trials, "paths": {k: str(v.resolve()) for k, v in paths.items()}, "panel": panel,

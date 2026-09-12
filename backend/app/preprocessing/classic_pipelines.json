@@ -1,0 +1,567 @@
+{
+  "schema_version": "1",
+  "evidence_date": "2026-09-12",
+  "pipelines": [
+    {
+      "id": "prep",
+      "repository": "VisLab/EEG-Clean-Tools",
+      "commit": "0914132081ea7d534ee19f96973791fd81825755",
+      "entrypoint": "PrepPipeline/prepPipeline.m",
+      "url": "https://raw.githubusercontent.com/VisLab/EEG-Clean-Tools/0914132081ea7d534ee19f96973791fd81825755/PrepPipeline/prepPipeline.m",
+      "sha256": "140d5285e2381be3dec9ea37e071ed0bf897f66621ff5d9ea7db2d1fa837c3a1",
+      "bytes": 8109,
+      "identity_kind": "upstream_configured",
+      "status": "source_locked",
+      "numerical_validation": [],
+      "required_toolboxes": [
+        "Signal Processing Toolbox",
+        "Statistics and Machine Learning Toolbox"
+      ],
+      "configuration_fields_observed": [
+        "errorMsgs",
+        "name"
+      ],
+      "author_control_flow": [
+        {
+          "line": 40,
+          "title": "Setup the output structures and set the input parameters"
+        },
+        {
+          "line": 67,
+          "title": "Check for the general defaults"
+        },
+        {
+          "line": 80,
+          "title": "Check for boundary events"
+        },
+        {
+          "line": 111,
+          "title": "Part II:  HP the signal for detecting bad channels"
+        },
+        {
+          "line": 133,
+          "title": "Part III: Remove line noise"
+        },
+        {
+          "line": 156,
+          "title": "Part IV: Find reference"
+        },
+        {
+          "line": 180,
+          "title": "Report that there were no errors in the prep running"
+        },
+        {
+          "line": 184,
+          "title": "Cleanup callback"
+        }
+      ],
+      "scope": "PREP preparation scope; does not imply eye/muscle ICA cleaning. Preserve trend restoration, robust-reference iterations and noisy-channel diagnostics.",
+      "required_receipts": [
+        "source_tree_and_dependency_hashes",
+        "expanded_native_configuration",
+        "input_units_channels_events_reference",
+        "all_mandatory_native_stages",
+        "native_vs_adapter_numerical_comparison",
+        "real_record_outputs_and_QC"
+      ],
+      "blockers": [
+        "complete_native_adapter_and_selected_configuration_not_validated"
+      ]
+    },
+    {
+      "id": "happe",
+      "repository": "PINE-Lab/HAPPE",
+      "commit": "217e646aec2fe9a5159eed43f1131af34d6d39fc",
+      "entrypoint": "1. pre-process/HAPPE_v4.m",
+      "url": "https://raw.githubusercontent.com/PINE-Lab/HAPPE/217e646aec2fe9a5159eed43f1131af34d6d39fc/1.%20pre-process/HAPPE_v4.m",
+      "sha256": "f7f66fcfb0cb7639e3dbd57c70511dba3cd21dde38a038ba2432bb5c8b1c5b05",
+      "bytes": 65727,
+      "identity_kind": "upstream_configured",
+      "status": "source_locked",
+      "numerical_validation": [],
+      "required_toolboxes": [
+        "Signal Processing Toolbox",
+        "Statistics and Machine Learning Toolbox",
+        "Wavelet Toolbox",
+        "Optimization Toolbox"
+      ],
+      "configuration_fields_observed": [
+        "HAPPEver",
+        "QCfreqs",
+        "badChans.order",
+        "badChans.rej",
+        "baseCorr.end",
+        "baseCorr.on",
+        "baseCorr.start",
+        "chans.IDs",
+        "chans.subset",
+        "downsample",
+        "ecgone",
+        "ecgone.on",
+        "filt.butter",
+        "filt.highpass",
+        "filt.lowpass",
+        "filt.on",
+        "lineNoise",
+        "lineNoise.harms.freqs",
+        "lineNoise.neighbors",
+        "loadInfo.NSformat",
+        "loadInfo.NSvarNames",
+        "loadInfo.chanlocs.expected",
+        "loadInfo.chanlocs.file",
+        "loadInfo.chanlocs.inc",
+        "loadInfo.chanlocs.locs",
+        "loadInfo.chanlocs.locs.labels",
+        "loadInfo.correctEGI",
+        "loadInfo.eventLoc",
+        "loadInfo.inputFormat",
+        "loadInfo.layout",
+        "loadInfo.srate.file",
+        "loadInfo.srate.same",
+        "loadInfo.srate.val",
+        "loadInfo.sys",
+        "loadInfo.typeFields",
+        "muscIL",
+        "outputFormat",
+        "paradigm.ERP.on",
+        "paradigm.conds.groups",
+        "paradigm.conds.on",
+        "paradigm.onsetTags",
+        "paradigm.task",
+        "reref.chan",
+        "reref.flat",
+        "reref.method",
+        "reref.on",
+        "reref.rest",
+        "reref.rest.chanL",
+        "reref.rest.chanR",
+        "reref.rest.chanlist",
+        "reref.rest.ref",
+        "reref.subset",
+        "segRej.on",
+        "segment.interp",
+        "segment.on",
+        "vis.enabled",
+        "vis.max",
+        "vis.min",
+        "vis.toPlot"
+      ],
+      "author_control_flow": [
+        {
+          "line": 96,
+          "title": "CLEAR THE WORKSPACE"
+        },
+        {
+          "line": 99,
+          "title": "SET PATH TO INCLUDE NECESSARY FOLDERS"
+        },
+        {
+          "line": 131,
+          "title": "ENSURE TOOLBOXES ARE INSTALLED"
+        },
+        {
+          "line": 149,
+          "title": "DETERMINE AND SET PATH TO DATA"
+        },
+        {
+          "line": 161,
+          "title": "DETERMINE IF REPROCESSING DATA"
+        },
+        {
+          "line": 164,
+          "title": "DETERMINE IF USING PRESET PARAMETERS"
+        },
+        {
+          "line": 168,
+          "title": "SET PARAMETERS"
+        },
+        {
+          "line": 171,
+          "title": "SAVE INPUT PARAMETERS"
+        },
+        {
+          "line": 208,
+          "title": "CREATE OUTPUT FOLDERS"
+        },
+        {
+          "line": 260,
+          "title": "COLLECT DATA TO RUN"
+        },
+        {
+          "line": 286,
+          "title": "INITIALIZE QUALITY REPORT METRICS"
+        },
+        {
+          "line": 338,
+          "title": "RUN THE PROCESSING PIPELINE OVER EACH FILE"
+        },
+        {
+          "line": 343,
+          "title": "LOAD AND VALIDATE RAW FILE"
+        },
+        {
+          "line": 455,
+          "title": "CORRECT CHANNELS, IF NEEDED"
+        },
+        {
+          "line": 495,
+          "title": "SET THE FLATLINE REFERENCE CHANNEL"
+        },
+        {
+          "line": 526,
+          "title": "UPDATE CHANNEL IDS AND FILTER TO THE CHANNELS OF INTEREST"
+        },
+        {
+          "line": 562,
+          "title": "REDUCE LINE NOISE"
+        },
+        {
+          "line": 579,
+          "title": "RESAMPLE DATA"
+        },
+        {
+          "line": 588,
+          "title": "FILTER AND SAVE INTERMEDIATE FILE"
+        },
+        {
+          "line": 600,
+          "title": "DETECT BAD CHANNELS PT.1"
+        },
+        {
+          "line": 633,
+          "title": "ECGONE"
+        },
+        {
+          "line": 646,
+          "title": "WAVELET THRESHOLDING"
+        },
+        {
+          "line": 668,
+          "title": "DETECT BAD CHANNELS PT.2"
+        },
+        {
+          "line": 681,
+          "title": "LOAD AND VALIDATE PROCESSED FILE"
+        },
+        {
+          "line": 731,
+          "title": "MUSCIL"
+        },
+        {
+          "line": 743,
+          "title": "FILTER USING ERP CUTOFFS AND SAVE"
+        },
+        {
+          "line": 779,
+          "title": "RE-ADD FLATLINE RE-REFERENCE"
+        },
+        {
+          "line": 796,
+          "title": "SEGMENT DATA"
+        },
+        {
+          "line": 844,
+          "title": "BASELINE CORRECT AND SAVE (ERPs)"
+        },
+        {
+          "line": 863,
+          "title": "INTERPOLATE BAD DATA USING CHANNELS"
+        },
+        {
+          "line": 884,
+          "title": "REJECT SEGMENTS"
+        },
+        {
+          "line": 949,
+          "title": "INTERPOLATE BAD CHANNELS"
+        },
+        {
+          "line": 963,
+          "title": "RE-REFERENCE DATA"
+        },
+        {
+          "line": 989,
+          "title": "SPLIT EEG BY EVENT TAGS AND CONDITIONS"
+        },
+        {
+          "line": 1028,
+          "title": "GENERATE VISUALIZATIONS"
+        },
+        {
+          "line": 1048,
+          "title": "SAVE PRE-PROCESSED DATASET(S)"
+        },
+        {
+          "line": 1137,
+          "title": "ERRORS"
+        },
+        {
+          "line": 1184,
+          "title": "GENERATE OUTPUT TABLES"
+        },
+        {
+          "line": 1263,
+          "title": "SAVE ERROR LOG"
+        }
+      ],
+      "scope": "HAPPE v4.1 at this author snapshot; do not call it HAPPE 2018, HAPPE+ER or HAPPILEE. Preserve source parameter file, interaction decisions, segment rejection and all native QC.",
+      "required_receipts": [
+        "source_tree_and_dependency_hashes",
+        "expanded_native_configuration",
+        "input_units_channels_events_reference",
+        "all_mandatory_native_stages",
+        "native_vs_adapter_numerical_comparison",
+        "real_record_outputs_and_QC"
+      ],
+      "blockers": [
+        "complete_native_adapter_and_selected_configuration_not_validated"
+      ]
+    },
+    {
+      "id": "automagic",
+      "repository": "methlabUZH/automagic",
+      "commit": "1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f",
+      "entrypoint": "preprocessing/preprocess.m",
+      "url": "https://raw.githubusercontent.com/methlabUZH/automagic/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/preprocessing/preprocess.m",
+      "sha256": "948f7f4797d6ebd28911eb6cdd901da68152cddc59defdf2f8bc2db16b97e8d9",
+      "bytes": 29262,
+      "identity_kind": "upstream_configured",
+      "status": "source_locked",
+      "numerical_validation": [],
+      "required_toolboxes": [
+        "Signal Processing Toolbox",
+        "Statistics and Machine Learning Toolbox"
+      ],
+      "configuration_fields_observed": [],
+      "author_control_flow": [
+        {
+          "line": 225,
+          "title": "Preprocessing"
+        },
+        {
+          "line": 474,
+          "title": "Creating the final figure to save"
+        },
+        {
+          "line": 476,
+          "title": "Find the colormap selected"
+        },
+        {
+          "line": 483,
+          "title": ""
+        }
+      ],
+      "scope": "Author framework plus a fully expanded configuration. Missing, empty struct and empty struct array are distinct; optional PREP/RPCA/MARA branches must not be conflated.",
+      "required_receipts": [
+        "source_tree_and_dependency_hashes",
+        "expanded_native_configuration",
+        "input_units_channels_events_reference",
+        "all_mandatory_native_stages",
+        "native_vs_adapter_numerical_comparison",
+        "real_record_outputs_and_QC"
+      ],
+      "blockers": [
+        "complete_native_adapter_and_selected_configuration_not_validated"
+      ]
+    },
+    {
+      "id": "relax",
+      "repository": "NeilwBailey/RELAX",
+      "commit": "dd25438353c3d53b88c93167d8e9c6d13255a42a",
+      "entrypoint": "RELAX_Wrapper.m",
+      "url": "https://raw.githubusercontent.com/NeilwBailey/RELAX/dd25438353c3d53b88c93167d8e9c6d13255a42a/RELAX_Wrapper.m",
+      "sha256": "35a99386d69d79952b7c2a2b18ab853ecc017173f1a1945a28d93999f3a7b0c1",
+      "bytes": 52465,
+      "identity_kind": "upstream_configured",
+      "status": "source_locked",
+      "numerical_validation": [],
+      "required_toolboxes": [
+        "Signal Processing Toolbox",
+        "Statistics and Machine Learning Toolbox",
+        "Wavelet Toolbox"
+      ],
+      "configuration_fields_observed": [
+        "Clean_other_comps",
+        "Do_MWF_Once",
+        "Do_MWF_Thrice",
+        "Do_MWF_Twice",
+        "DownSample",
+        "DownSample_to_X_Hz",
+        "ElectrodesToDelete",
+        "FilesToProcess",
+        "FilterType",
+        "HighPassFilter",
+        "HighPassFilter_aux_elecs",
+        "ICA_method",
+        "ICLabel_thresholds",
+        "InterpolateRejectedElectrodesAfterCleaning",
+        "KeepAllInfo",
+        "LineNoiseFrequency",
+        "LowPassFilter",
+        "LowPassFilterBeforeMWF",
+        "LowPassFilter_aux_elecs",
+        "MWFDelayPeriod",
+        "MWFDelayPeriod_for_eye_movements",
+        "MWFDelayPeriod_for_muscle_artifacts",
+        "MWFRoundToCleanBlinks",
+        "MWF_delay_spacing",
+        "MWF_delay_spacing_for_eye_movements",
+        "MWF_delay_spacing_for_muscle_artifacts",
+        "MaxProportionOfElectrodesThatCanBeDeleted",
+        "MinimumArtifactDuration",
+        "MuscleSlopeThreshold",
+        "NotchFilterType",
+        "OutputPath",
+        "Perform_ICA_subtract",
+        "Perform_targeted_wICA",
+        "Perform_wICA_on_ICLabel",
+        "ProbabilityDataHasNoBlinks",
+        "Report_all_ICA_info",
+        "Report_all_wICA_info",
+        "SingleFile",
+        "all_data_in_1_folder_or_BIDS_format",
+        "caploc",
+        "causal_or_acausal_filter",
+        "computecleanedmetrics",
+        "computerawmetrics",
+        "electrodes_2_keep_but_not_clean",
+        "filename",
+        "files",
+        "foldername",
+        "folders",
+        "ms_per_sample",
+        "myPath",
+        "saveextremesrejected",
+        "saveround1",
+        "saveround2",
+        "saveround3"
+      ],
+      "author_control_flow": [
+        {
+          "line": 1,
+          "title": "RELAX EEG CLEANING PIPELINE, Copyright (C) (2022) Neil Bailey"
+        },
+        {
+          "line": 16,
+          "title": "RELAX_Wrapper:"
+        },
+        {
+          "line": 91,
+          "title": "Loop selected files in the directory list:"
+        },
+        {
+          "line": 106,
+          "title": "Load data (assuming the data is in EEGLAB .set format):"
+        },
+        {
+          "line": 136,
+          "title": "Select channels"
+        },
+        {
+          "line": 146,
+          "title": "extract non-EEG electrodes to preserve for later analysis, and filter them using different settings:"
+        },
+        {
+          "line": 151,
+          "title": "Delete channels that are not relevant if present"
+        },
+        {
+          "line": 156,
+          "title": "Notch filter data:"
+        },
+        {
+          "line": 174,
+          "title": "Band Pass filter data:"
+        },
+        {
+          "line": 241,
+          "title": "Clean flat channels and bad channels showing improbable data:"
+        },
+        {
+          "line": 277,
+          "title": "Mark artifacts for calculating SER and ARR, regardless of whether MWF is performed (RELAX v1.1.3 update):"
+        },
+        {
+          "line": 303,
+          "title": "THIS SECTION CONTAINS FUNCTIONS WHICH MARK AND CLEAN MUSCLE ARTIFACTS"
+        },
+        {
+          "line": 337,
+          "title": "RUN MWF TO CLEAN DATA BASED ON MASKS CREATED ABOVE:"
+        },
+        {
+          "line": 367,
+          "title": "PERFORM A SECOND ROUND OF MWF. THIS IS HELPFUL IF THE FIRST ROUND DOESN'T SUFFICIENTLY CLEAN ARTIFACTS."
+        },
+        {
+          "line": 420,
+          "title": "RUN MWF TO CLEAN DATA BASED ON MASKS CREATED ABOVE:"
+        },
+        {
+          "line": 448,
+          "title": "PERFORM A THIRD ROUND OF MWF."
+        },
+        {
+          "line": 476,
+          "title": "THIS SECTION CONTAINS FUNCTIONS WHICH MARK ARTIFACTS"
+        },
+        {
+          "line": 493,
+          "title": "Return to the \"EEG\" variable for MWF processing:"
+        },
+        {
+          "line": 516,
+          "title": "RUN MWF TO CLEAN DATA BASED ON MASKS CREATED ABOVE:"
+        },
+        {
+          "line": 549,
+          "title": "Perform robust average re-referencing of the data, reject periods marked as extreme outliers"
+        },
+        {
+          "line": 580,
+          "title": "Perform wICA on ICLabel identified artifacts that remain:"
+        },
+        {
+          "line": 596,
+          "title": "Perform wICA on ICLabel identified artifacts that remain:"
+        },
+        {
+          "line": 609,
+          "title": "Perform ICA subtract on ICLabel identified artifacts that remain:"
+        },
+        {
+          "line": 623,
+          "title": "COMPUTE CLEANED METRICS:"
+        },
+        {
+          "line": 662,
+          "title": "Record warnings about potential issues:"
+        },
+        {
+          "line": 720,
+          "title": "SAVE FILE:"
+        },
+        {
+          "line": 737,
+          "title": "Save statistics for each participant and across participants, graph cleaning metrics:"
+        },
+        {
+          "line": 862,
+          "title": "POTENTIAL IMPROVEMENTS THAT COULD BE MADE:"
+        }
+      ],
+      "scope": "Author v2.0.1 snapshot. MWF+wICA, ordinary/targeted wICA and oscillation/ERP configurations are separate methods. Keep masks, excluded intervals/channels, fit decisions and native metrics.",
+      "required_receipts": [
+        "source_tree_and_dependency_hashes",
+        "expanded_native_configuration",
+        "input_units_channels_events_reference",
+        "all_mandatory_native_stages",
+        "native_vs_adapter_numerical_comparison",
+        "real_record_outputs_and_QC"
+      ],
+      "blockers": [
+        "complete_native_adapter_and_selected_configuration_not_validated"
+      ]
+    }
+  ]
+}

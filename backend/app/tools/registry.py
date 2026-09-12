@@ -109,8 +109,12 @@ class ToolRegistry:
         if name in self._tools:
             result = await self._tools[name].execute(**kwargs)
             if result.success:
-                result.metadata.update(self._save_evidence(context, name, result.output))
-                result.output = normalize_tool_output(name, sanitize_evidence(result.output))
+                result.metadata.update(
+                    self._save_evidence(context, name, result.output)
+                )
+                result.output = normalize_tool_output(
+                    name, sanitize_evidence(result.output)
+                )
             else:
                 logger.warning(
                     "local_tool_call_failed error=%s",
@@ -138,14 +142,20 @@ class ToolRegistry:
             )
             return result
         try:
+            query = kwargs.pop("query")
+            if not isinstance(query, str) or not query.strip():
+                raise ValueError("query must be a non-empty string")
+            limit = max(1, min(int(kwargs.get("limit", 10)), 100))
+            kwargs["limit"] = limit
             client = await self.get_client(name, context)
-            query = str(kwargs.pop("query"))
             output = await client.search(query, **kwargs)
             normalized_output = normalize_tool_output(
                 name,
                 sanitize_evidence(output),
-                limit=max(1, min(int(kwargs.get("limit", 5)), 5)),
+                limit=limit,
             )
+            if isinstance(normalized_output, dict) and normalized_output.get("warning"):
+                raise ExternalToolUnavailableError("Malformed search response")
             result_count = (
                 normalized_output.get("result_count", "-")
                 if isinstance(normalized_output, dict)
@@ -214,6 +224,11 @@ class ToolRegistry:
             return "service_unavailable", "外部服务暂时不可用，请稍后重试。"
         if isinstance(exc, KeyError) and exc.args == ("query",):
             return "invalid_arguments", "工具参数不完整：缺少 query。"
+        if isinstance(exc, (ValueError, TypeError)):
+            return (
+                "invalid_arguments",
+                "工具参数无效：query 须为非空字符串，limit 须为整数。",
+            )
         return "unexpected_error", "工具调用失败，请查看后端日志。"
 
     async def get_client(

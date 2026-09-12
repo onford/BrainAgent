@@ -62,6 +62,12 @@ class WorkflowLLM(LLMClient):
 
         self.calls.append(model.__name__)
         data = json.loads(messages[1]["content"])
+        if model.__name__ == "LiteratureExtraction":
+            return model(branches=[], excluded_branches=[],
+                         absence_reason="模拟来源没有可复原的具体预处理参数；此测试仅验证基础流程。")
+        if model.__name__ == "RecoveryAction":
+            return model(action="retain_blocked", reason="Test source has no scientific parameter evidence",
+                         question="Can the fixture support a source method?", url=None)
         categories = [
             "dataset",
             "papers_using_dataset",
@@ -352,19 +358,18 @@ class WorkflowLLM(LLMClient):
             if self.invalid_design and not getattr(self, "invalid_sent", False):
                 self.invalid_sent = True
                 raise ValueError("hypothesis is required")
-            identity = "bp8-30-original-ea"
-            if identity in {r["id"] for r in data["results"]}:
+            if any(r["id"] != data["reference_candidate"] for r in data["results"]):
                 value = {
                     "decision": {
                         "action": "finish",
                         "reason": "已比较公共与个体适配",
                         "unresolved": ["独立确认尚未进行"],
+                        "untried_candidate_reasons": {identity: "此夹具只验证一次实测派生及交付" for identity in data["untried"]},
                     }
                 }
             else:
-                from tests.search.test_controller import propose
-
-                value = propose(identity)
+                from tests.workflows.test_cognition import filter_proposal
+                value = filter_proposal(data)
         elif model.__name__ == "ReportNarrative":
             value = {
                 "overview": "完成资料调研与真实数据处理。",

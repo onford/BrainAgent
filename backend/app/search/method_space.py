@@ -169,9 +169,30 @@ def seed_entries(space, context=None):
                 seed.deviations,
                 warnings,
                 len(entries),
+                lineage=seed.lineage,
+                issues=seed.issues,
+                space=space,
             )
         )
-    return entries
+    unique = {}
+    for entry in entries:
+        existing = unique.get(entry["recipe_hash"])
+        if existing is None:
+            entry["order"] = len(unique)
+            unique[entry["recipe_hash"]] = entry
+            continue
+        if not existing["lineage"] and not entry["lineage"]:
+            raise ValueError("duplicate seed semantics lack source lineage for deduplication")
+        for field in ("lineage", "issues", "evidence_ids", "deviations"):
+            for value in entry[field]:
+                if value not in existing[field]:
+                    existing[field].append(value)
+        for target, source in zip(existing["recipe"]["nodes"], entry["recipe"]["nodes"], strict=True):
+            for trace in source.get("trace", []):
+                if trace not in target["trace"]:
+                    target["trace"].append(trace)
+            target["optional"] = target.get("optional", True) and source.get("optional", True)
+    return list(unique.values())
 
 
 def _entry(
@@ -187,13 +208,17 @@ def _entry(
     parent_id=None,
     edits=None,
     prior_challenges=None,
+    lineage=None,
+    parent_ids=None,
+    issues=None,
+    space=None,
 ):
     return CandidateRecipe.model_validate(
         dict(
             id=identity,
             title=title,
             recipe=recipe.model_dump(mode="json"),
-            recipe_hash=recipe_hash(recipe),
+            recipe_hash=recipe_hash(recipe, space),
             origin=origin,
             seed_id=seed_id,
             evidence_ids=evidence,
@@ -203,39 +228,50 @@ def _entry(
             parent_id=parent_id,
             edits=edits or [],
             parameters={
-                **recipe.adaptation.model_dump(mode="json"),
                 "operators": [n.operator for n in recipe.nodes],
             },
-            operator_count=len(recipe.nodes) + (recipe.adaptation.adaptation != "none"),
+            operator_count=len(recipe.nodes),
             order=order,
+            lineage=lineage or [], parent_ids=parent_ids or [], issues=issues or [],
         )
     ).model_dump(mode="json")
 
 
 def edited_entry(
-    parent, edits, space, *, title, order, context=None, prior_challenges=None
+    parent, edits, space, *, title, order, context=None, prior_challenges=None, donors=None
 ):
-    recipe, warnings = apply_edits(parent["recipe"], edits, space, context)
+    recipe, warnings = apply_edits(parent["recipe"], edits, space, context, donors)
+    parents = [parent] + [(donors or {})[e["donor_id"]] for e in edits if e["action"] == "combine_fragment"]
+    evidence = list(dict.fromkeys(e for p in parents for e in p["evidence_ids"]))
+    lineage = []
+    for p in parents:
+        for trace in p.get("lineage", []):
+            if trace not in lineage:
+                lineage.append(deepcopy(trace))
     challenges = prior_challenges or {}
     required = {w["prior_id"] for w in warnings}
     if required != challenges.keys() or any(
         not isinstance(v, str) or not v.strip() for v in challenges.values()
     ):
         raise ValueError("每条偏离的软先验必须对应一条可检验的挑战理由")
-    identity = "candidate-" + recipe_hash(recipe)[:24]
+    identity = "candidate-" + recipe_hash(recipe, space)[:24]
     return _entry(
         identity,
         title,
         recipe,
-        "literature_adaptation" if parent["evidence_ids"] else "basic",
+        "derived",
         parent["seed_id"],
-        parent["evidence_ids"],
-        parent["deviations"],
+        evidence,
+        list(dict.fromkeys(d for p in parents for d in p["deviations"])),
         warnings,
         order,
         parent["id"],
         deepcopy(edits),
         deepcopy(challenges),
+        lineage=lineage,
+        parent_ids=list(dict.fromkeys(p["id"] for p in parents)),
+        issues=[i for p in parents for i in p.get("issues", [])],
+        space=space,
     )
 
 
@@ -257,6 +293,7 @@ def verify_entry(entry, space, previous, context=None):
             order=entry["order"],
             context=context,
             prior_challenges=entry["prior_challenges"],
+            donors=previous,
         )
     if expected is None or digest(entry) != digest(expected):
         raise ValueError(

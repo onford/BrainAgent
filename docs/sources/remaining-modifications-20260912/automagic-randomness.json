@@ -1,0 +1,53 @@
+{
+  "observation": "Outer rng(321) does not freeze author default runica training-loop randomness.",
+  "source_evidence": {
+    "automagic_call": {
+      "path": ".local\\section-a-20260912\\native\\automagic\\preprocessing\\performICLabel.m",
+      "sha256": "cd3a69affacbed3aa136878c719866feaaa7ba82020b694602cc59add8a4a1f6"
+    },
+    "runica": {
+      "path": ".local\\section-a-20260912\\native\\happe\\Packages\\eeglab2024.0\\functions\\sigprocfunc\\runica.m",
+      "sha256": "7c42f7513342ac46ea68ed7b980e28f9027f2303673c81bf33788607c66ed20a"
+    },
+    "pop_runica": {
+      "path": ".local\\section-a-20260912\\native\\happe\\Packages\\eeglab2024.0\\functions\\popfunc\\pop_runica.m",
+      "sha256": "608d0ca5f3258badce18117e25a0e5a910f2ad2dc06ce022ac7aa4cc7381c261"
+    }
+  },
+  "locators": {
+    "automagic_call": "line 135: pop_runica without rndreset argument",
+    "runica": "line 203: DEFAULT_RESETRANDOMSEED=true; lines 800-804: clock reset or fixed state zero",
+    "pop_runica": "line 113: default options include rndreset=yes"
+  },
+  "comparison": {
+    "reference": "am-project-4",
+    "adapter": "native-am-2",
+    "original_max_difference_uV": 0,
+    "prep_max_difference_uV": 0,
+    "filtered_max_difference_uV": 0,
+    "post_ica_max_difference_uV": 93.48735338554594,
+    "reference_rejected_components": [
+      1,
+      2,
+      6,
+      17,
+      38,
+      42,
+      48
+    ],
+    "adapter_rejected_components": [
+      1,
+      2,
+      5,
+      14,
+      32,
+      40,
+      51,
+      58
+    ],
+    "native_bad_channels_both": [
+      44
+    ]
+  },
+  "decision": "Keep author_clock distinct. fixed_loop_seed_zero passes explicit supported runica rndreset=no through a copied Automagic call site; classify as project_derived and retain source/derived hashes. Never claim repeatability for author_clock."
+}

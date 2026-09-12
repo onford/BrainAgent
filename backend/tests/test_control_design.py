@@ -228,21 +228,10 @@ def test_soft_challenges_are_explicit_falsifiable_and_hard_priors_not_overridden
     assert hard_rejected
 
 
-def test_label_free_adaptation_has_explicit_finite_threshold_grid():
+def test_controls_only_edit_shared_operation_recipes():
     frozen = control_entries(basic_space(), {}, 42)
-    policies = [e["recipe"]["adaptation"] for e in frozen["registry"]]
-    assert {p["adaptation"] for p in policies} == {
-        "none",
-        "subject_scale",
-        "euclidean_alignment",
-        "conditional_alignment",
-    }
-    assert {
-        p["alignment_threshold"]
-        for p in policies
-        if p["adaptation"] == "conditional_alignment"
-    } == {2, 5, 10, 20}
-    assert "engineering" in frozen["design"]["conditional_threshold_provenance"]
+    assert all("adaptation" not in e["recipe"] for e in frozen["registry"])
+    assert all(e["edit"]["action"] != "set_adaptation" for e in frozen["proposals"])
 
 
 def test_tiny_cap_preserves_seeds_and_reports_omitted_legal_swaps():
@@ -258,7 +247,7 @@ def test_tiny_cap_preserves_seeds_and_reports_omitted_legal_swaps():
 def test_unavailable_operators_are_rejected_with_reasons():
     facts = {key: False for key in FACTS}
     frozen = control_entries(build_space(facts), facts, 42)
-    assert len(frozen["seeds"]) == 4
+    assert len(frozen["seeds"]) == 3
     assert not any(
         n["operator"] in {"asr", "detect_bad_channels", "interpolate_bad_channels"}
         for e in frozen["registry"]

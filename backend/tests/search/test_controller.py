@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.preprocessing.schemas import PreprocessInput
-from app.preprocessing.storage import digest
+from app.preprocessing.storage import digest, Storage
 from app.search.catalog import BASELINE_ID, catalog, select
 from app.search.contracts import Decision, SearchBudget, SearchRequest
 from app.search.evaluation_contracts import EvaluationReceipt, LearnerMetadata
@@ -290,7 +290,7 @@ def factory(tmp_path):
     workflows = SimpleNamespace(
         get=lambda *args: source_state,
         folder=lambda _: source,
-        preprocessing=SimpleNamespace(allowed_roots=[tmp_path]),
+        preprocessing=SimpleNamespace(allowed_roots=[tmp_path], store=Storage(tmp_path / 'evidence-store')),
         llm=None,
     )
     count = 0
@@ -820,7 +820,9 @@ async def test_one_shot_can_include_reference_without_running_or_charging_it_twi
 
 @pytest.mark.asyncio
 async def test_model_timeout_stops_without_retry_or_budget_reset(factory):
-    service, _, state = factory(max_seconds=1)
+    # Leave time for real protocol publication and the simulated reference;
+    # this test targets timeout inside the model call, not setup exhaustion.
+    service, _, state = factory(max_seconds=5)
 
     class Slow:
         async def structured_output(self, *args):

@@ -11,7 +11,7 @@ from uuid import uuid4
 
 from app.llm.client import OpenAICompatibleClient
 from app.preprocessing.resources import budget as resource_budget
-from app.preprocessing.schemas import PreprocessInput
+from app.preprocessing.schemas import PreprocessInput, MethodSpec, Ref
 from app.preprocessing.storage import digest, file_hash, within
 from app.preprocessing.units import engine_hash, environment
 from .catalog import BASELINE_ID, method, search_engine_hash, select
@@ -26,6 +26,8 @@ from .scientific_space import build_space, input_context, knowledge
 from .space_contracts import ExplorationSpace
 from .knowledge_contracts import ScientificKnowledge
 from .exploration_coverage import coverage
+from .neural_priors import freeze_bundle
+from .neural_diagnostics import run_diagnostic
 
 
 def now():
@@ -47,6 +49,8 @@ class SearchService:
         self.workflows = workflows
         workflows.searches = self
         self.llm = llm if llm is not None else workflows.llm
+        from .metric_reading import MetricReader
+        self.metric_reader = MetricReader(self.llm)
         if isinstance(self.llm, OpenAICompatibleClient):
             # Every actual provider request is charged by the search ledger.
             self.llm = OpenAICompatibleClient(
@@ -78,9 +82,15 @@ class SearchService:
         write(self.folder(state["id"]) / "search.json", value)
         write(self.folder(state["id"]) / "registry.json", value["registry"])
         write(self.folder(state["id"]) / "coverage.json", coverage(value))
+        from .method_provenance import method_status
+        write(self.folder(state["id"]) / "method-status.json", method_status(value))
 
     def describe(self, owner, identity, include_artifacts=True):
         state = self.get(owner, identity)
+        from .method_provenance import participation
+        state["literature_participation"] = participation(state)
+        from .recipe_contrast import contrasts_to_reference
+        state["candidate_contrasts_to_reference"] = contrasts_to_reference(state)
         if not include_artifacts:
             state["artifacts"] = []
             return state
@@ -99,6 +109,9 @@ class SearchService:
             "limits.json": "冻结资源预算",
             "space.json": "算子、参数域、方法起点及可检查的科学先验",
             "registry.json": "候选完整配方、方法来源与算子编辑谱系",
+            "method-intake.json": "本轮文献方法的可执行性检查、原始草案及编译结果",
+            "method-extraction.json": "本轮来源到多分支方法的拆解清单",
+            "method-status.json": "基础、文献、派生方法的来源关系与执行或预算状态",
             "coverage.json": "方法家族、算子与编辑类型的探索覆盖情况",
             "control-design.json": "有限对照邻域、参数与换序提案、排除原因和覆盖范围",
             "probe-panel.json": "覆盖全部被试的固定重建探针与污染条件分配",
@@ -241,7 +254,29 @@ class SearchService:
                     if doc["id"] not in {d["id"] for d in documents}:
                         documents.append(doc)
         space_context = input_context(data)
-        space = build_space(space_context)
+        from .literature_space import build_workflow_space
+
+        intake_path = folder / "preprocessing/literature-methods/manifest.json"
+        review_path = folder / "survey/literature.json"
+        if not intake_path.exists() and review_path.exists() and any(
+            e["decision"] == "included" for e in read(review_path).get("entries", [])
+        ):
+            raise ValueError("本轮纳入文献尚未完成方法拆解；先运行 preprocessing 的文献拆解子阶段。")
+        intake = read(intake_path) if intake_path.exists() else {
+            "methods": [], "absence_reasons": ["本轮没有已注册的文献拆解产物。"]}
+        registered = [(ref, MethodSpec.model_validate(self.workflows.preprocessing.store.get(
+            owner, Ref.model_validate(ref), "method"))) for ref in intake["methods"]]
+        from .source_evidence import freeze_evidence
+        source_evidence = freeze_evidence(root, [m for _, m in registered], self.workflows.preprocessing.store, owner) if registered else {}
+        output_contract = {k: panel_request[k] for k in ("sfreq", "tmin", "tmax")}
+        space, space_context, method_intake = build_workflow_space(
+            data, output_contract, registered, intake.get("absence_reasons", []))
+        for row in method_intake["methods"]:
+            if "compiled_method" in row:
+                compiled = row.pop("compiled_method")
+                row["compiled_method_path"] = f"method-compilation/{digest(compiled)[:24]}.json"
+                row["compiled_method_hash"] = digest(compiled)
+                write(root / row["compiled_method_path"], compiled)
         seeds = seed_entries(space, space_context)
         controls = None
         registry = seeds
@@ -270,6 +305,7 @@ class SearchService:
         )
         evaluation_evidence = read(Path(__file__).parent / "resources/evaluation-evidence.json")
         guide = interpretation_guide()
+        neural = freeze_bundle(data, space, research, guide)
         documents.append(evidence_document(guide))
         metric_text = evaluation_evidence["interpretation"] + "\n\n" + "\n\n".join(
             f"{m['id']} · {m['name']}\n定义：{m['formula']}\n边界：{m['overCleaningAndLeakageRisk']}\n选择角色：{m['selectionRole']}"
@@ -278,6 +314,11 @@ class SearchService:
         documents.append({"id": "evaluation-evidence", "title": "评价指标定义与解释边界（研究目录）",
                           "url": "brainagent:evaluation-evidence:1", "text": metric_text, "sha256": digest(metric_text)})
         protocol = {
+            "source_evidence": source_evidence,
+            "business_version": "research-execution-2026-09-12.3",
+            "literature_adaptation_policy": "shared-final-epoch-window-v1",
+            "selection_requires_complete_assessment": True,
+            "scheduling_policy": "measured_information_and_cost; baseline_required; no preset ordering or edit quotas",
             "version": "3",
             "request": request.model_dump(mode="json"),
             "deadline": started + request.budget.max_seconds,
@@ -313,6 +354,8 @@ class SearchService:
             "utility_protocol": utility_protocol(execution=utility_config),
             "baseline_id": BASELINE_ID,
             "catalog": seeds,
+            "method_intake": method_intake,
+            "method_extraction": intake,
             "catalog_hash": digest(seeds),
             "control_design_hash": digest(controls) if controls else None,
             "control_comparison": (
@@ -325,6 +368,8 @@ class SearchService:
             "scientific_knowledge_hash": digest(research),
             "evaluation_evidence_hash": digest(evaluation_evidence),
             "interpretation_guide_hash": digest(guide),
+            "neural_priors": neural,
+            "neural_priors_hash": digest(neural),
             "environment": environment(),
             "numeric_engine_hash": engine_hash(),
             "search_engine_hash": search_engine_hash(),
@@ -333,17 +378,15 @@ class SearchService:
             "limits": limits.model_dump(),
             "numeric_threads": 1,
             "record_workers": min(4, max(1, (os.cpu_count() or 1) // 2)),
-            "adaptation": "shared_policy_with_label_free_subject_batch_fitting",
+            "preprocessing_scope": "shared_recipe_all_records",
             "information_permissions": {
-                "target_signals": "whole_unlabelled_subject_batch",
+                "target_signals": "record_local_algorithm_input",
                 "target_labels": "scoring_only",
                 "policy_selection": "development_feedback",
                 "independent_confirmation": False,
             },
             "parameter_provenance": {
                 "domains": "operator-specific bounded domains with source or engineering provenance in space.json",
-                "alignment": "He & Wu, arXiv:1808.05464",
-                "conditional_thresholds": "bounded engineering hypotheses, not validated physiological cutoffs",
             },
             "confirmation": "not_performed; these data are development data previously available to the workflow",
             "failure_denominator": "candidate must predict every predeclared eligible development trial",
@@ -367,11 +410,21 @@ class SearchService:
         write(root / "sources.json", documents)
         write(root / "protocol.json", protocol)
         write(root / "space.json", protocol["space"])
+        write(root / "method-intake.json", method_intake)
+        write(root / "method-extraction.json", intake)
+        for ref, registered_method in registered:
+            write(root / "source-methods" / (ref["id"][:24] + ".json"), registered_method.model_dump(mode="json"))
+        # Include the exact model inputs and original branch responses in search exports.
+        extraction_root = folder / "preprocessing/literature-methods"
+        if extraction_root.exists():
+            for path in extraction_root.rglob("*.json"):
+                write(root / "literature-methods" / path.relative_to(extraction_root), read(path))
         if controls is not None:
             write(root / "control-design.json", controls)
         write(root / "scientific-knowledge.json", research)
         write(root / "evaluation-evidence.json", evaluation_evidence)
         write(root / "interpretation-guide.json", guide)
+        write(root / "neural-priors.json", neural)
         write(root / "space.schema.json", ExplorationSpace.model_json_schema())
         write(
             root / "scientific-knowledge.schema.json",
@@ -571,9 +624,11 @@ class SearchService:
         started = time.monotonic()
         try:
             async with asyncio.timeout(max(0.001, state["deadline"] - time.time())):
-                result = await decide(
-                    self.llm, state, documents, one_shot=one_shot, capture=capture
-                )
+                from app.llm.usage import usage_scope
+                with usage_scope(self.folder(state["id"]) / "llm-calls.json", action["action"]):
+                    result = await decide(
+                        self.llm, state, documents, one_shot=one_shot, capture=capture
+                    )
             write(
                 folder / "response.json",
                 {"schema_version": "1", "status": "accepted", "result": result},
@@ -600,6 +655,58 @@ class SearchService:
             action["cost_seconds"] = duration
             state["usage"]["llm_seconds"] += duration
             self.save(state)
+
+    async def diagnostic_action(self, state, proposal):
+        self.guard(state)
+        if not state["protocol"].get("neural_priors"):
+            raise ValueError("历史运行未冻结神经先验，不能回填诊断协议")
+        if state["usage"].get("diagnostics", 0) >= state["budget"].get("max_diagnostics", 0):
+            raise ValueError("诊断预算已用尽")
+        self.verify_runtime(state)
+        state["usage"]["diagnostics"] = state["usage"].get("diagnostics", 0) + 1
+        action = self.action(state, "request_diagnostic", status="running", request=proposal, reason=proposal["reason"])
+        started = time.monotonic()
+        try:
+            result = await asyncio.to_thread(run_diagnostic, self.folder(state["id"]), state, proposal)
+            self.guard(state)
+            if any(d["id"] == result["id"] for d in state.get("diagnostics", [])):
+                raise ValueError("相同输入和诊断已经计算，不能通过改写问题重复计为新证据")
+            path = "diagnostics/" + result["id"] + ".json"
+            write(self.folder(state["id"]) / path, result)
+            result["artifact"] = {"path": path, "sha256": file_hash(self.folder(state["id"]) / path)}
+            state.setdefault("diagnostics", []).append(result)
+            action.update(status="completed", result={"diagnostic_id": result["id"], "artifact": result["artifact"],
+                                                        "status": result["status"], "prior_counts": result["prior_evaluation"]["counts"]})
+        except Exception as exc:
+            action.update(status="rejected", error=str(exc))
+            raise
+        finally:
+            action["cost_seconds"] = time.monotonic() - started
+            state["usage"]["diagnostic_seconds"] = state["usage"].get("diagnostic_seconds", 0) + action["cost_seconds"]
+            self.save(state)
+        return result
+
+    @staticmethod
+    def validate_prior_evidence(state, proposal):
+        refs = proposal.get("diagnostic_ids", [])
+        rules = proposal.get("prior_rule_ids", [])
+        diagnostics = {d["id"]: d for d in state.get("diagnostics", [])}
+        known = {r["id"] for r in state["protocol"].get("neural_priors", {}).get("rules", [])}
+        if len(set(refs)) != len(refs) or len(set(rules)) != len(rules) or not set(refs) <= diagnostics.keys() or not set(rules) <= known:
+            raise ValueError("诊断或先验引用未知、重复，不能编造证据")
+        if rules and not refs:
+            raise ValueError("采用条件先验须引用实际诊断回执")
+        evaluated = [{"diagnostic_id": d, "rule_id": r["id"], "condition_state": r["condition_state"],
+                      "reason": r["reason"], "observed": r["observed"]}
+                     for d in refs for r in diagnostics[d]["prior_evaluation"]["rules"] if r["id"] in rules]
+        if set(rules) - {r["rule_id"] for r in evaluated}:
+            raise ValueError("引用的诊断没有包含所声明的规则求值")
+        claims = proposal.get("prior_claims", {})
+        if set(claims) != set(rules) or any(claims[r["rule_id"]] != r["condition_state"] for r in evaluated):
+            raise ValueError("prior_claims 须逐条复制所引用诊断的 condition_state；未知不能声明为成立/不成立，冲突证据须分别处理")
+        return {"diagnostic_ids": refs, "prior_rule_ids": rules, "condition_evidence": evaluated,
+                "status": "cited_by_agent" if refs and rules else "not_cited_by_agent",
+                "interpretation": "引用存在不等于机制被证实；实测预测及反例需继续核验。"}
 
     async def candidate(self, state, identity):
         root = self.folder(state["id"])
@@ -765,6 +872,16 @@ class SearchService:
         verify_registry(protocol, state["registry"])
         if protocol.get("interpretation_guide_hash") and digest(read(root / "interpretation-guide.json")) != protocol["interpretation_guide_hash"]:
             raise IntegrityFailure("冻结图表解读知识库已改变")
+        if protocol.get("neural_priors_hash") and (
+            digest(read(root / "neural-priors.json")) != protocol["neural_priors_hash"]
+            or digest(protocol["neural_priors"]) != protocol["neural_priors_hash"]
+        ):
+            raise IntegrityFailure("冻结神经先验已改变")
+        for diagnostic in state.get("diagnostics", []):
+            ref = diagnostic["artifact"]
+            path = within(root, ref["path"])
+            if file_hash(path) != ref["sha256"] or read(path) != {k: v for k, v in diagnostic.items() if k != "artifact"}:
+                raise IntegrityFailure("诊断回执与冻结记录不一致")
         if protocol.get("control_design_hash"):
             controls = read(root / "control-design.json")
             if digest(controls) != protocol["control_design_hash"] or controls["registry"] != state["registry"]:
@@ -867,12 +984,14 @@ class SearchService:
                 await self.candidate(state, pending["id"])
         while True:
             self.guard(state)
-            state["selected_candidate_id"] = select(state["candidates"])
+            state["selected_candidate_id"] = select(state["candidates"], require_complete_assessment=bool(state["protocol"].get("selection_requires_complete_assessment") and state["protocol"].get("assessment")))
             attempted = {c["id"] for c in state["candidates"]}
             remaining = [c["id"] for c in state["registry"] if c["id"] not in attempted]
             if not remaining and strategy != "adaptive":
                 await self.stop(state, "completed", "catalog_exhausted")
                 return
+            # Guarantee actual opportunity for both source classes before free search.
+            # Keep a third of a sufficient budget for feedback-driven derivations.
             if state["usage"]["candidates"] >= state["budget"]["max_candidates"]:
                 await self.stop(state, "stopped", "candidate_budget_exhausted")
                 return
@@ -926,45 +1045,12 @@ class SearchService:
                     self.save(state)
                     continue
             if proposal["action"] == "finish":
-                missing_seeds = [
-                    s["id"] for s in protocol["catalog"] if s["id"] not in attempted
-                ]
-                if missing_seeds:
+                from .method_provenance import validate_stop
+                try:
+                    validate_stop(state, proposal)
+                except ValueError as exc:
                     state["usage"]["proposals"] += 1
-                    self.action(
-                        state,
-                        "finish",
-                        status="rejected",
-                        reason=proposal["reason"],
-                        request=proposal,
-                        error="仍有未探索的方法起点：" + ", ".join(missing_seeds),
-                    )
-                    continue
-                exploration = coverage(state)
-                explanations = proposal.get("unexplored_edit_reasons", {})
-                missing = [
-                    name
-                    for name in exploration["unexplored_edit_families"]
-                    if not explanations.get(name, "").strip()
-                ]
-                n_edits = sum(
-                    bool(e["edits"]) and e["id"] in attempted for e in state["registry"]
-                )
-                minimum_edits = min(
-                    8,
-                    max(
-                        0, state["budget"]["max_candidates"] - len(protocol["catalog"])
-                    ),
-                )
-                if missing or n_edits < minimum_edits:
-                    state["usage"]["proposals"] += 1
-                    self.action(
-                        state,
-                        "finish",
-                        status="rejected",
-                        request=proposal,
-                        error=f"提前结束需至少尝试 {minimum_edits} 个不同编辑方案（当前 {n_edits}），并逐项解释未覆盖编辑类型：{', '.join(missing)}",
-                    )
+                    self.action(state, "finish", status="rejected", request=proposal, error=str(exc))
                     continue
                 self.action(
                     state,
@@ -976,6 +1062,13 @@ class SearchService:
                 state["unresolved"] = proposal["unresolved"]
                 await self.stop(state, "completed", "model_finished")
                 return
+            if proposal["action"] == "request_diagnostic":
+                state["usage"]["proposals"] += 1
+                try:
+                    await self.diagnostic_action(state, proposal)
+                except ValueError as exc:
+                    self.action(state, "invalid_diagnostic", status="rejected", request=proposal, error=str(exc))
+                continue
             if proposal["action"] == "request_evidence":
                 if (
                     state["usage"]["evidence_reads"]
@@ -1030,6 +1123,9 @@ class SearchService:
                     raise ValueError("父候选没有有效评价")
                 if strategy == "adaptive":
                     validate_hypothesis(proposal, state["candidates"])
+                    prior_trace = self.validate_prior_evidence(state, proposal)
+                else:
+                    prior_trace = {"status": "control_strategy"}
                 if proposal.get("edits"):
                     entries = verify_registry(protocol, state["registry"])
                     entry = edited_entry(
@@ -1040,23 +1136,29 @@ class SearchService:
                         order=len(entries),
                         context=protocol.get("space_context"),
                         prior_challenges=proposal.get("prior_challenges"),
+                        donors=entries,
                     )
                     if entry["recipe_hash"] in {
                         e["recipe_hash"] for e in entries.values()
                     }:
                         raise ValueError("该执行配方已经存在，请选择未试方法或不同编辑")
                     # Compile before reservation so structural failures do not consume a numerical trial.
-                    method(
+                    compiled_method = method(
                         entry,
                         state["panel"],
                         protocol["space"],
                         protocol.get("space_context"),
                     )
+                    from .literature_space import check_execution
+                    check_execution(compiled_method, PreprocessInput.model_validate(read(self.folder(state["id"]) / "input.json")),
+                                    state["panel"]["output_contract"])
                     proposal["candidate_id"] = entry["id"]
                     state["registry"].append(entry)
                     remaining.append(entry["id"])
                 elif proposal["candidate_id"] not in remaining:
                     raise ValueError("方法起点重复或不存在")
+                elif strategy == "adaptive":
+                    entries = {e["id"]: e for e in state["registry"]}
             except (ValueError, KeyError) as exc:
                 self.action(
                     state,
@@ -1071,6 +1173,7 @@ class SearchService:
                 "propose_candidate",
                 status="reserved",
                 request=proposal,
+                result={"prior_evidence": prior_trace},
                 **{
                     k: proposal[k]
                     for k in (
@@ -1204,7 +1307,7 @@ class SearchService:
             status=status,
             phase="finished",
             stop_reason=reason,
-            selected_candidate_id=select(state["candidates"]) if verified else None,
+            selected_candidate_id=select(state["candidates"], require_complete_assessment=bool(state["protocol"].get("selection_requires_complete_assessment") and state["protocol"].get("assessment"))) if verified else None,
         )
         state["message"] = "搜索结束，开发候选与完整记录已保存"
         from .reporting import render

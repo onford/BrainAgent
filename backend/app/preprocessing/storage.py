@@ -220,7 +220,7 @@ class Storage:
                 "SELECT * FROM jobs WHERE id=? AND owner=?", (job_id, owner)
             ).fetchone()
             if action == "cancel":
-                if job["status"] in ("queued", "running", "interrupted"):
+                if job["status"] in ("queued", "running", "interrupted", "waiting_decision"):
                     db.execute("UPDATE jobs SET cancel=1 WHERE id=?", (job_id,))
                     if job["status"] != "running":
                         db.execute(
@@ -309,6 +309,8 @@ class Storage:
         state = (
             "cancelled"
             if result.cancel_requested
+            else "waiting_decision"
+            if any(r["status"] == "waiting_decision" for r in result.records)
             else "completed"
             if result.completed == result.total
             else "partial"
@@ -325,7 +327,7 @@ class Storage:
             (
                 r
                 for r in result.records
-                if r["key"] == key and r["status"] == "completed"
+                if r["key"] == key and r["status"] in ("completed", "waiting_decision")
             ),
             None,
         )

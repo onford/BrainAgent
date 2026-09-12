@@ -12,6 +12,7 @@ from app.preprocessing.schemas import (
     SurveyLiteratureBundle,
 )
 from app.preprocessing.service import PreprocessingService
+from app.preprocessing.assets import AssetRegistration
 from app.preprocessing.units import catalog
 from app.runtime.context import AgentContext
 
@@ -56,6 +57,46 @@ def units():
     return catalog()
 
 
+@router.post('/assets',status_code=201)
+def register_scientific_asset(body:AssetRegistration,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.assets import register
+    return checked(register,svc,user.owner_id,body)
+
+
+@router.get("/capabilities")
+def unit_capabilities():
+    from app.preprocessing.capabilities import capabilities
+    return capabilities()
+
+
+@router.get("/graph-search/space")
+def graph_search_space():
+    from app.search.unit_graph_space import operation_space
+    return operation_space()
+
+
+from app.search.unit_graph_space import GraphSweep
+
+
+@router.post("/graph-search/plans",status_code=201)
+def graph_search_plans(body:GraphSweep,svc=Depends(service),user=Depends(get_current_user)):
+    from app.search.unit_graph_space import plan_sweep
+    return checked(plan_sweep,svc,user.owner_id,body)
+
+
+@router.post("/capabilities/check")
+def check_unit_capabilities(body: PreprocessInput):
+    from app.preprocessing.capabilities import capabilities
+    return capabilities(body)
+
+
+@router.post('/capabilities/input')
+def check_registered_capabilities(body:Ref,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.capabilities import capabilities
+    data=checked(svc.store.get,user.owner_id,body,'input')
+    return capabilities(PreprocessInput.model_validate(data))
+
+
 @router.post("/inputs", status_code=201)
 def register_input(
     body: PreprocessInput, svc=Depends(service), user=Depends(get_current_user)
@@ -78,6 +119,21 @@ def register_evidence(
 def methods(svc=Depends(service), user=Depends(get_current_user)):
     svc.methods.seed(user.owner_id)
     return svc.store.list_objects(user.owner_id, "method")
+
+
+@router.get('/classic-pipelines')
+def classic_pipeline_contracts():
+    from app.preprocessing.classic_pipelines import catalog as pipeline_catalog
+    return pipeline_catalog()
+
+
+from app.preprocessing.classic_pipelines import PipelineConfiguration
+
+
+@router.post('/classic-pipelines/configurations',status_code=201)
+def classic_pipeline_configuration(body:PipelineConfiguration,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.classic_pipelines import register_configuration
+    return checked(register_configuration,svc.store,user.owner_id,body)
 
 
 @router.post("/methods", status_code=201)
@@ -152,6 +208,21 @@ def plan_job(identity: str, svc=Depends(service), user=Depends(get_current_user)
 @router.get("/jobs/{job_id}")
 def job(job_id: str, svc=Depends(service), user=Depends(get_current_user)):
     return checked(svc.store.status, user.owner_id, job_id)
+
+
+from app.preprocessing.decisions import Confirmations
+
+
+@router.get('/jobs/{job_id}/decisions')
+def pending_decisions(job_id:str,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.decisions import pending
+    return checked(pending,svc,user.owner_id,job_id)
+
+
+@router.post('/jobs/{job_id}/decisions',status_code=201)
+def confirm_decisions(job_id:str,body:Confirmations,svc=Depends(service),user=Depends(get_current_user)):
+    from app.preprocessing.decisions import confirm
+    return checked(confirm,svc,user.owner_id,job_id,body)
 
 
 @router.post("/jobs/{job_id}/{action}")

@@ -19,7 +19,6 @@ from .space_contracts import ExplorationSpace
 
 VERSION = "finite-control-v1"
 QUANTILES = (0.25, 0.5, 0.75)
-GATE_THRESHOLDS = (2.0, 5.0, 10.0, 20.0)
 
 
 def _values(domain):
@@ -81,18 +80,6 @@ def _edits(parent, space):
                     after_node_id=after,
                     node=dict(id=identity, operator=spec.id, parameters=parameters),
                 )
-    for mode in (
-        "none",
-        "subject_scale",
-        "euclidean_alignment",
-        "conditional_alignment",
-    ):
-        thresholds = GATE_THRESHOLDS if mode == "conditional_alignment" else (10.0,)
-        for threshold in thresholds:
-            yield dict(
-                action="set_adaptation",
-                policy=dict(adaptation=mode, alignment_threshold=threshold),
-            )
 
 
 def _balanced(rows, seed):
@@ -195,7 +182,7 @@ def control_entries(space, context, seed, max_entries=256):
                 row.update(
                     status="eligible",
                     reason=None,
-                    recipe_hash=recipe_hash(recipe),
+                    recipe_hash=recipe_hash(recipe, space),
                     candidate_id=None,
                     prior_challenges=_challenges(parent, edit, warnings),
                 )
@@ -278,14 +265,6 @@ def control_entries(space, context, seed, max_entries=256):
         quantiles=list(QUANTILES),
         numeric_grid="linear domain quartiles; integers rounded half-up within integer bounds",
         insertion_grid="default plus one parameter at a time; all legal insertion slots",
-        adaptation_modes=[
-            "none",
-            "subject_scale",
-            "euclidean_alignment",
-            "conditional_alignment",
-        ],
-        conditional_thresholds=list(GATE_THRESHOLDS),
-        conditional_threshold_provenance="finite engineering sensitivity grid; not physiological cutoffs",
         ordering="original seeds; edit-type/seed-family round robin; seeded hash ties",
         selection_priority="all legal adjacent seed swaps, then balanced other edits, within cap",
         context=facts,

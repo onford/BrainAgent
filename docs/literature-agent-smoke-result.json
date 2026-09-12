@@ -1,0 +1,86 @@
+{
+  "mode": "real configured LLM and public APIs",
+  "missing": [],
+  "actions": [
+    {
+      "action": "search",
+      "tool": "europe_pmc",
+      "query": "(\"EEGMMIDB\" OR \"EEG Motor Movement/Imagery Dataset\" OR \"EEG Motor Movement Imagery Dataset\") AND (motor imagery OR classification)",
+      "url": null,
+      "success": true,
+      "result_count": 10,
+      "error": null
+    },
+    {
+      "action": "search",
+      "tool": "crossref",
+      "query": "EEG Motor Movement Imagery Dataset motor imagery classification",
+      "url": null,
+      "success": true,
+      "result_count": 10,
+      "error": null
+    },
+    {
+      "action": "read",
+      "tool": "europe_pmc",
+      "query": null,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10998040/fullTextXML",
+      "success": true,
+      "result_count": null,
+      "error": null
+    },
+    {
+      "action": "read",
+      "tool": "europe_pmc",
+      "query": null,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13511235/fullTextXML",
+      "success": true,
+      "result_count": null,
+      "error": null
+    },
+    {
+      "action": "read",
+      "tool": "europe_pmc",
+      "query": null,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12297340/fullTextXML",
+      "success": true,
+      "result_count": null,
+      "error": null
+    },
+    {
+      "action": "read",
+      "tool": "europe_pmc",
+      "query": null,
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13319054/fullTextXML",
+      "success": true,
+      "result_count": null,
+      "error": null
+    }
+  ],
+  "documents": [
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13319054/fullTextXML",
+      "title": "MsGCN: a multi-stream graph convolutional network for multiband PLV graph fusion in EEG-based biometric identification",
+      "characters": 58533,
+      "truncated": false
+    },
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC10998040/fullTextXML",
+      "title": "Increasing accessibility to a large brain\u2013computer interface dataset: Curation of physionet EEG motor movement/imagery dataset for decoding and classification",
+      "characters": 23021,
+      "truncated": false
+    },
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC12297340/fullTextXML",
+      "title": "Enhanced EEG signal classification in brain computer interfaces using hybrid deep learning models",
+      "characters": 77199,
+      "truncated": false
+    },
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13511235/fullTextXML",
+      "title": "Evaluating Validation Strategies in Motor Imagery EEG: A Full-Cohort GAF\u2013PLV Analysis and Matched Sensitivity Study",
+      "characters": 57169,
+      "truncated": false
+    }
+  ]
+}

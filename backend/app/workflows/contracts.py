@@ -206,6 +206,7 @@ class PreprocessingOutput(Contract):
 
 
 class EvaluationOutput(Contract):
+    literature_participation: dict | None = None
     selection_policy: Literal["development_score"]
     quality_evaluated: Literal[True]
     search_id: str = Field(pattern=r"^[a-f0-9]{32}$")

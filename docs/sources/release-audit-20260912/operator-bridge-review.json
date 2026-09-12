@@ -1,0 +1,117 @@
+{
+  "main_workflow_extractor_legacy_operations": [
+    [
+      "EEG-AUTO-BAD-CHANNEL",
+      "detect_bad_channels"
+    ],
+    [
+      "EEG-AUTO-BAD-CHANNEL",
+      "interpolate_bad_channels"
+    ],
+    [
+      "EEG-ASR-AUTO",
+      "asr_clean"
+    ],
+    [
+      "EEG-DETREND",
+      "detrend"
+    ],
+    [
+      "EEG-FILTER",
+      "filter"
+    ],
+    [
+      "EEG-FILTER",
+      "notch"
+    ],
+    [
+      "EEG-RESAMPLE",
+      "resample"
+    ],
+    [
+      "EEG-REREFERENCE",
+      "reference"
+    ],
+    [
+      "EEG-EPOCH",
+      "epoch"
+    ],
+    [
+      "EEG-BASELINE",
+      "baseline"
+    ],
+    [
+      "EEG-EOG-REGRESSION",
+      "eog_fit"
+    ],
+    [
+      "EEG-EOG-REGRESSION",
+      "eog_apply"
+    ],
+    [
+      "EEG-AMPLITUDE-THRESHOLD",
+      "amplitude_windows"
+    ],
+    [
+      "EEG-BAD-CHANNEL-MARK",
+      "mark_channels"
+    ]
+  ],
+  "legacy_operation_count": 14,
+  "v2_catalog_units": 52,
+  "v2_catalog_operations": 88,
+  "v2_catalog_profiles": 261,
+  "d_frozen_search_operators": [
+    {
+      "id": "resample",
+      "unit_id": "EEG-RESAMPLE",
+      "op": "resample"
+    },
+    {
+      "id": "bandpass",
+      "unit_id": "EEG-FILTER",
+      "op": "filter"
+    },
+    {
+      "id": "average_reference",
+      "unit_id": "EEG-REREFERENCE",
+      "op": "reference"
+    },
+    {
+      "id": "detrend",
+      "unit_id": "EEG-DETREND",
+      "op": "detrend"
+    },
+    {
+      "id": "epoch",
+      "unit_id": "EEG-EPOCH",
+      "op": "epoch"
+    },
+    {
+      "id": "notch",
+      "unit_id": "EEG-FILTER",
+      "op": "notch"
+    },
+    {
+      "id": "highpass",
+      "unit_id": "EEG-FILTER",
+      "op": "filter"
+    },
+    {
+      "id": "detect_bad_channels",
+      "unit_id": "EEG-AUTO-BAD-CHANNEL",
+      "op": "detect_bad_channels"
+    },
+    {
+      "id": "interpolate_bad_channels",
+      "unit_id": "EEG-AUTO-BAD-CHANNEL",
+      "op": "interpolate_bad_channels"
+    },
+    {
+      "id": "asr",
+      "unit_id": "EEG-ASR-AUTO",
+      "op": "asr_clean"
+    }
+  ],
+  "note": "Catalog/adapter presence is not proof of current workflow compilation or real execution. Current literature_space rejects implementation_version != 1; v2 graph sweep is a separate entry."
+}

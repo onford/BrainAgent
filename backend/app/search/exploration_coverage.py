@@ -8,8 +8,8 @@ EDIT_FAMILIES = (
     "swap_adjacent",
     "insert_operator",
     "remove_operator",
-    "set_adaptation",
 )
+ADAPTIVE_EDIT_FAMILIES = (*EDIT_FAMILIES, "combine_fragment")
 
 
 def coverage(state):
@@ -45,10 +45,10 @@ def coverage(state):
         ],
         "edit_families": {
             name: {"attempted": edits[name], "evaluated": measured_edits[name]}
-            for name in EDIT_FAMILIES
+            for name in ADAPTIVE_EDIT_FAMILIES
         },
         "operators": dict(operators),
         "unexplored_methods": [s["id"] for s in seeds if s["id"] not in attempted],
-        "unexplored_edit_families": [name for name in EDIT_FAMILIES if not edits[name]],
+        "unexplored_edit_families": [name for name in ADAPTIVE_EDIT_FAMILIES if not edits[name]],
         "interpretation": "覆盖范围与实测效用分开；未尝试或执行失败不等于无效。参数域连续，不能宣称穷尽全部组合。",
     }

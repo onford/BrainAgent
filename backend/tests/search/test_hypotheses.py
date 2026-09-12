@@ -63,7 +63,7 @@ def test_failure_never_counts_as_disconfirming_score():
 def test_signal_prediction_cannot_relabel_accuracy(metric):
     proposal = propose("bp1-40-average")["decision"]
     proposal["hypothesis"]["predictions"][0]["metric"] = metric
-    with pytest.raises(ValueError, match="必须分开"):
+    with pytest.raises(ValueError, match="numeric_metric_index"):
         ProposeCandidate.model_validate(proposal)
 
 

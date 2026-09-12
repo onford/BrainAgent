@@ -184,14 +184,22 @@ def test_real_bids_replay_all_cases_source_once_and_no_arrays_written(
     monkeypatch.setattr(units, "invoke", observed_invoke)
     out = tmp_path / "evaluation"
     result = run(completed, out)
-    assert result["summary"]["status"] == "evaluated", result["summary"][
+    assert result["summary"]["status"] == "incomplete", result["summary"][
         "status_counts"
     ]
-    assert result["summary"]["status_counts"] == {"evaluated": 20}
+    # v4 compares completed epochs. Short 0.7 s windows can miss an injected
+    # pulse entirely; continuous filter tails must not fabricate contamination.
+    assert result["summary"]["status_counts"] == {"evaluated": 14, 'not_applicable':6}
+    for subject, details in result['details']['subjects'].items():
+        for case in details['cases']:
+            if case['status']=='not_applicable':
+                detail=json.loads((out/case['path']).read_text(encoding='utf-8'))
+                assert detail['reason_code']=='NO_APPLICABLE_CONTAMINATION'
+                assert detail['inapplicable_trials']
     assert reads == ["sub-01", "sub-02"]
-    assert calls.count("filter") == calls.count("epoch") == 22
+    assert calls.count("filter") == calls.count("epoch") == 16
     assert result["summary"]["resources"]["clean_replays"] == 2
-    assert result["summary"]["resources"]["corrupted_replays"] == 20
+    assert result["summary"]["resources"]["corrupted_replays"] == 14
     assert result["summary"]["scope"] == reval.SCOPE
     assert result["summary"]["trial_cases_expected"] == 10 * sum(
         t["eligible"] for t in panel["trials"]
@@ -220,7 +228,10 @@ def test_real_bids_replay_all_cases_source_once_and_no_arrays_written(
     envelope = {"assessment": {"reconstruction": result}}
     for condition_id, row in result["summary"]["by_case"].items():
         path = f"assessment.reconstruction.summary.by_case.{condition_id}.metrics.input_nrmse.value"
-        assert resolve_metric(envelope, path) == row["metrics"]["input_nrmse"]["value"]
+        if row['metrics']['input_nrmse']['value'] is None:
+            with pytest.raises(ValueError):resolve_metric(envelope,path)
+        else:
+            assert resolve_metric(envelope, path) == row["metrics"]["input_nrmse"]["value"]
     with pytest.raises(ValueError):
         resolve_metric(
             envelope,
@@ -326,8 +337,8 @@ def test_clean_replay_mismatch_keeps_failed_subject_denominator(
     )
     out = tmp_path / "out"
     value = run(completed, out, result=result)
-    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 10}
-    assert value["summary"]["resources"]["corrupted_replays"] == 10
+    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 8, 'not_applicable':2}
+    assert value["summary"]["resources"]["corrupted_replays"] == 8
     detail = case_file(value, out)
     assert detail["reason_code"] == "CLEAN_REPLAY_MISMATCH"
     metric = value["summary"]["by_case"]["line-r05"]["metrics"]["clean_retention_nrmse"]
@@ -348,7 +359,7 @@ def test_unsupported_dag_is_not_identity_cleaning(completed, tmp_path, damage):
         step["op"] = "not_implemented"
     result = rebind(plan, completed[1].model_dump(mode="json"))
     value = run(completed, tmp_path / "out", plan=plan, result=result)
-    assert value["summary"]["status_counts"] == {"not_applicable": 10, "evaluated": 10}
+    assert value["summary"]["status_counts"] == {"not_applicable": 12, "evaluated": 8}
     assert value["summary"]["resources"]["source_records_read"] == 1
     assert case_file(value, tmp_path / "out")["reason_code"] == "UNSUPPORTED_RECIPE"
 
@@ -357,7 +368,7 @@ def test_failed_existing_record_does_not_fall_back_or_drop_subject(completed, tm
     result = completed[1].model_dump(mode="json")
     result["records"][0].update(status="failed", result=None)
     value = run(completed, tmp_path / "out", result=result)
-    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 10}
+    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 8, 'not_applicable':2}
     assert (
         case_file(value, tmp_path / "out")["reason_code"] == "CANDIDATE_RECORD_FAILED"
     )
@@ -689,8 +700,10 @@ def test_one_corrupted_replay_failure_keeps_controls_and_other_cases(
 
     monkeypatch.setattr(reval, "_replay", fail_once)
     result = run(completed, tmp_path / "out")
-    assert result["summary"]["status_counts"] == {"failed": 1, "evaluated": 19}
-    detail = case_file(result, tmp_path / "out", case="eog-r05")
+    assert result["summary"]["status_counts"] == {"failed": 1, "evaluated": 13, "not_applicable": 6}
+    failed=[c for d in result['details']['subjects'].values() for c in d['cases'] if c['status']=='failed']
+    assert len(failed)==1
+    detail=json.loads((tmp_path/'out'/failed[0]['path']).read_text(encoding='utf-8'))
     assert detail["reason_code"] == "ASR_CALIBRATION_TOO_SHORT"
     assert detail["negative_controls_verified"] is True
     assert detail["metrics"]["reconstruction_nrmse"]["value"] is None
@@ -726,10 +739,10 @@ def test_default_balanced_execution_reuses_assignment_across_candidate_scores(
         assert summary["design"] == "balanced"
         assert summary["subjects_expected"] == summary["cases_expected"] == 2
         assert summary["trial_cases_expected"] == 14
-        assert summary["status_counts"] == {"evaluated": 2}
+        assert summary["status_counts"] == {"evaluated": 1, "not_applicable": 1}
         assert summary["resources"]["source_records_read"] == 2
         assert summary["resources"]["clean_replays"] == 2
-        assert summary["resources"]["corrupted_replays"] == 2
+        assert summary["resources"]["corrupted_replays"] == 1
         assert summary["primary_evaluation_record_count"] == 2
         assert summary["primary_evaluation_subject_count"] == 2
         assert any(
@@ -758,7 +771,8 @@ def test_default_balanced_execution_reuses_assignment_across_candidate_scores(
         b = case_file(second, tmp_path / "second", subject=subject, case=case_id)
         assert a["case"] == b["case"]
         assert a["injection"] == b["injection"]
-        assert a["array_hashes"] == b["array_hashes"]
+        assert a.get("array_hashes") == b.get("array_hashes")
+        assert a["status"] == b["status"]
     print("balanced_resources", first["summary"]["resources"])
 
 
@@ -835,7 +849,7 @@ def test_unknown_design_is_not_silently_defaulted(completed):
 @pytest.mark.parametrize("design", ["balanced", "full_factorial"])
 def test_probe_condition_ids_are_safe_metric_path_segments(completed, design):
     probe = reval.freeze_probe_panel(completed[3], design=design)
-    assert probe["schema_version"] == "dataset-reconstruction-v3"
+    assert probe["schema_version"] == "dataset-reconstruction-v4"
     expected = {
         f"{kind}-{suffix}": ratio
         for kind in reval.KINDS
@@ -1009,7 +1023,7 @@ def test_runner_mark_branch_matches_reconstruction_and_lists_all_artifacts(
 ):
     out = tmp_path / "assessment" / "reconstruction"
     output = run(marked_completed, out, design="balanced")
-    assert output["summary"]["status_counts"] == {"evaluated": 2}
+    assert output["summary"]["status_counts"] == {"evaluated": 1, "not_applicable": 1}
     assert output["summary"]["resources"]["clean_replays"] == 2
     probe = reval.freeze_probe_panel(marked_completed[3])
     for subject, selection in probe["subjects"].items():

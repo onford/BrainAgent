@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 from enum import StrEnum
@@ -71,27 +70,17 @@ class DataSurveyAgent(BaseAgent):
         if task.inputs.get("literature_bundle") and self.preprocessing:
             bundle = SurveyLiteratureBundle.model_validate(task.inputs["literature_bundle"])
             ref = self.preprocessing.register_bundle(context.owner_id, bundle)
-            return AgentResult(agent_name=self.name, success=True, output={"literature_ref": ref.model_dump(), "survey_run_id": bundle.survey_run_id}, observations=["已发布完整文献证据包供 Preprocess 接入。"])
+            return AgentResult(agent_name=self.name, success=True, output={"literature_ref": ref.model_dump(), "survey_run_id": bundle.survey_run_id}, observations=["已登记文献证据包；完整性与方法可执行性仍须接入审查。"])
         if self.llm is not None and self.tools is not None:
             return await self._run_with_tools(task, context)
 
-        await asyncio.sleep(0.15)
-        survey = {
-            "mode": "placeholder",
-            "dataset_identity": "awaiting dataset name or URL",
-            "information_sources": ["official_page", "local_files", "repository", "papers"],
-            "statistics": ["subjects", "sessions", "runs", "channels", "sampling_rate", "events"],
-            "literature_buckets": [
-                "papers_using_dataset", "papers_discussing_dataset", "preprocessing_papers"
-            ],
-            "evidence_policy": "每项事实保留可核查来源，不把文献参数写成已执行参数。",
-        }
         return AgentResult(
             agent_name=self.name,
             success=True,
-            output=survey,
-            artifacts=[Artifact(name="survey_outline", kind="manifest", data=survey)],
-            observations=["未提供具体数据集，本轮只生成调研框架。"],
+            output={"execution_status": "needs_input", "missing_dependencies": [
+                name for name, value in (("model_client", self.llm), ("tool_registry", self.tools)) if value is None]},
+            observations=["真实调研未完成：缺少模型或工具配置。"],
+            metadata={"execution_status": "needs_input", "evidence_status": "not_collected"},
         )
 
     async def _run_with_tools(
@@ -157,6 +146,8 @@ class DataSurveyAgent(BaseAgent):
                 if decision.literature_bundle and self.preprocessing:
                     ref = self.preprocessing.register_bundle(context.owner_id, decision.literature_bundle)
                     output["literature_ref"] = ref.model_dump()
+                collected = bool(output.get("literature_ref")) or any(c.get("success") and self._has_evidence(c.get("output")) for c in tool_calls)
+                output["evidence_status"] = "tool_results_collected" if collected else "not_collected"
                 result = AgentResult(
                     agent_name=self.name,
                     success=True,
@@ -164,8 +155,8 @@ class DataSurveyAgent(BaseAgent):
                     artifacts=[
                         Artifact(name="data_survey", kind="manifest", data=output)
                     ],
-                    observations=observations or ["调研完成，未调用外部工具。"],
-                    metadata={"tool_call_count": len(tool_calls)},
+                    observations=observations or ["尚未取得外部调研证据；模型文字不构成调研完成。"],
+                    metadata={"tool_call_count": len(tool_calls), **({"execution_status": "partial"} if not collected else {})},
                 )
                 logger.info(
                     "survey_tool_loop_completed tool_calls=%d",
@@ -244,8 +235,16 @@ class DataSurveyAgent(BaseAgent):
             output=output,
             artifacts=[Artifact(name="data_survey", kind="manifest", data=output)],
             observations=observations,
-            metadata={"tool_call_count": len(tool_calls), "tool_limit_reached": True},
+            metadata={"tool_call_count": len(tool_calls), "tool_limit_reached": True, "execution_status": "partial"},
         )
+
+    @staticmethod
+    def _has_evidence(value):
+        if isinstance(value, dict):
+            return bool(value["items"]) if "items" in value else bool(value)
+        if isinstance(value, (str, list)):
+            return bool(value)
+        return value is not None  # A measured scalar zero is still a result.
 
     @staticmethod
     def _public_arguments(arguments: dict[str, Any]) -> dict[str, Any]:

@@ -42,7 +42,7 @@ def build_space(context):
     value = basic_space().model_dump(mode="json")
     book = knowledge()
     sources = {s.id: s for s in book.sources}
-    for key in ("S06", "S08", "S20", "S21", "S38"):
+    for key in ("S06", "S08", "S20", "S21"):
         source = sources[key]
         value["evidence"][key] = Evidence(
             source_url=source.url,
@@ -53,7 +53,6 @@ def build_space(context):
                 "S08": "PREP提出结合幅度、相关性等诊断检测坏道，并处理坏道与参考之间的相互影响。这里采用有明确差异的检测及插值适配，不宣称完整复现PREP。",
                 "S20": "ASR校准从适合的片段估计稳健统计；校准空间、采样率和频谱处理必须与应用相容。具体Python实现由ASRpy固定版本合同约束。",
                 "S21": "ASR应用利用已校准统计修复异常子空间；连续窗口和状态有明确参数，不能等同于逐试次任意删样本。",
-                "S38": "EA从各域未标注样本的平均协方差构造对齐变换；本项目采用逐被试完整批次及正则化适配。",
             }[key],
         ).model_dump(mode="json")
 
@@ -332,21 +331,6 @@ def build_space(context):
             "engineering",
         ),
     ]
-    original = deepcopy(value["methods"][2]["recipe"])
-    original["nodes"][1]["parameters"] = {"l_freq": 4.0, "h_freq": 40.0}
-    original["adaptation"] = {"adaptation": "euclidean_alignment"}
-    value["methods"].append(
-        dict(
-            id="literature-ea",
-            title="宽频带 · 个体无标签EA",
-            origin="literature_adaptation",
-            recipe=original,
-            evidence_ids=["S38"],
-            deviations=[
-                "4–40 Hz与0.1协方差正则为工程适配；逐被试整批无标签拟合，非在线归纳条件。 "
-            ],
-        )
-    )
     if context.get("at_least_four_eeg") and context.get("electrode_positions"):
         nodes = [
             dict(id=k, operator=k)

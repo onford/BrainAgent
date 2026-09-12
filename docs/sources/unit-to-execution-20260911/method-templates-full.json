@@ -1,0 +1,545 @@
+[
+  {
+    "id": "mne-project-baseline",
+    "version": "1",
+    "title": "MNE 项目基础流程",
+    "source": "classic",
+    "status": "draft",
+    "mechanism": "filter-reference-epoch",
+    "recipe": [
+      {
+        "id": "filter",
+        "unit_id": "EEG-FILTER",
+        "op": "filter",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "raw",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "l_freq": "$profile.l_freq",
+          "h_freq": "$profile.h_freq",
+          "method": "iir",
+          "phase": "zero",
+          "picks": "$eeg_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "reference",
+        "unit_id": "EEG-REREFERENCE",
+        "op": "reference",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "filter",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "ref_channels": "average"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "epochs",
+        "unit_id": "EEG-EPOCH",
+        "op": "epoch",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "reference",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "events": "$events",
+          "event_id": "$event_id",
+          "tmin": "$profile.tmin",
+          "tmax": "$profile.tmax",
+          "picks": "$all_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "baseline",
+        "unit_id": "EEG-BASELINE",
+        "op": "baseline",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "epochs",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "baseline": "$profile.baseline"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      }
+    ],
+    "output": "baseline",
+    "applicability": {},
+    "adaptations": [
+      "BrainAgent project recipe, not an exact author pipeline or MNE default",
+      "4th-order Butterworth zero-phase EEG filtering; caller supplies scientific frequency/time parameters",
+      "Epoch auxiliary channels are retained; baseline follows MNE channel-type semantics"
+    ],
+    "checks": [],
+    "validation": [],
+    "validated_profiles": [],
+    "evidence": [
+      {
+        "source_url": "https://mne.tools/1.10/auto_tutorials/preprocessing/30_filtering_resampling.html",
+        "locator": "Filtering",
+        "text": "MNE supports configurable filtering of continuous EEG before epoch extraction.",
+        "artifact_ref": null,
+        "source_version": "MNE 1.10.2"
+      }
+    ]
+  },
+  {
+    "id": "mne-project-eog-regression",
+    "version": "1",
+    "title": "MNE EOG 回归项目流程",
+    "source": "classic",
+    "status": "draft",
+    "mechanism": "eog-regression",
+    "recipe": [
+      {
+        "id": "filter",
+        "unit_id": "EEG-FILTER",
+        "op": "filter",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "raw",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "l_freq": "$profile.l_freq",
+          "h_freq": "$profile.h_freq",
+          "method": "iir",
+          "phase": "zero",
+          "picks": "$eeg_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "reference",
+        "unit_id": "EEG-REREFERENCE",
+        "op": "reference",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "filter",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "ref_channels": "average"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "fit",
+        "unit_id": "EEG-EOG-REGRESSION",
+        "op": "eog_fit",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "reference",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "picks": "$eeg_channels",
+          "picks_artifact": "$eog_channels",
+          "reference_id": "average"
+        },
+        "fit_scope": {
+          "role": "calibration",
+          "ids": [
+            "calibration"
+          ]
+        },
+        "evidence_indices": [
+          1
+        ]
+      },
+      {
+        "id": "correct",
+        "unit_id": "EEG-EOG-REGRESSION",
+        "op": "eog_apply",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "reference",
+        "model_from": "fit",
+        "decision_from": null,
+        "params": {
+          "reference_id": "average"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          1
+        ]
+      },
+      {
+        "id": "epochs",
+        "unit_id": "EEG-EPOCH",
+        "op": "epoch",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "correct",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "events": "$events",
+          "event_id": "$event_id",
+          "tmin": "$profile.tmin",
+          "tmax": "$profile.tmax",
+          "picks": "$all_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "baseline",
+        "unit_id": "EEG-BASELINE",
+        "op": "baseline",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "epochs",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "baseline": "$profile.baseline"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      }
+    ],
+    "output": "baseline",
+    "applicability": {},
+    "adaptations": [
+      "BrainAgent project recipe, not an exact author pipeline or MNE default",
+      "4th-order Butterworth zero-phase EEG filtering; caller supplies scientific frequency/time parameters",
+      "Epoch auxiliary channels are retained; baseline follows MNE channel-type semantics",
+      "Fit branch replays transforms after selecting a single calibration interval; calibration id must be explicit in Collection"
+    ],
+    "checks": [],
+    "validation": [],
+    "validated_profiles": [],
+    "evidence": [
+      {
+        "source_url": "https://mne.tools/1.10/auto_tutorials/preprocessing/30_filtering_resampling.html",
+        "locator": "Filtering",
+        "text": "MNE supports configurable filtering of continuous EEG before epoch extraction.",
+        "artifact_ref": null,
+        "source_version": "MNE 1.10.2"
+      },
+      {
+        "source_url": "https://mne.tools/1.10/auto_tutorials/preprocessing/35_artifact_correction_regression.html",
+        "locator": "EOG regression",
+        "text": "Fit a regression model from EOG channels and apply it to EEG channels. BrainAgent restricts fitting to the declared calibration partition.",
+        "artifact_ref": null,
+        "source_version": "MNE 1.10.2"
+      }
+    ]
+  },
+  {
+    "id": "auto-clean-spatial",
+    "version": "1",
+    "title": "无标签坏道修复",
+    "source": "classic",
+    "status": "draft",
+    "mechanism": "detect-interpolate-car",
+    "recipe": [
+      {
+        "id": "highpass",
+        "unit_id": "EEG-FILTER",
+        "op": "filter",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "raw",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "l_freq": 1.0,
+          "h_freq": null,
+          "method": "iir",
+          "phase": "zero",
+          "picks": "$eeg_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          2
+        ]
+      },
+      {
+        "id": "detect",
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "detect_bad_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "highpass",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "adaptation_scope": "record_unlabeled"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "mark",
+        "unit_id": "EEG-BAD-CHANNEL-MARK",
+        "op": "mark_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "highpass",
+        "model_from": null,
+        "decision_from": "detect",
+        "params": {
+          "max_fraction": 0.1
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "interpolate",
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "interpolate_bad_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "mark",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "max_fraction": 0.1
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          1
+        ]
+      },
+      {
+        "id": "car",
+        "unit_id": "EEG-REREFERENCE",
+        "op": "reference",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "interpolate",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "ref_channels": "average"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      }
+    ],
+    "output": "car",
+    "applicability": {},
+    "adaptations": [
+      "Project engineering recipe, not full PREP/clean_rawdata reproduction.",
+      "Explicit whole-record unlabeled transductive adaptation; not train-only/online.",
+      "No real EOG dependency, ICA classification or trial rejection.",
+      "Append a common analysis band/epoch grid; high-pass and thresholds are search priors, not guaranteed optimal."
+    ],
+    "checks": [],
+    "validation": [],
+    "validated_profiles": [],
+    "evidence": [
+      {
+        "source_url": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+        "locator": "Detection of Noisy Channels",
+        "text": "PREP motivates amplitude and correlation diagnostics; this project uses a simplified MAD/max-peer engineering detector, not PREP reproduction.",
+        "artifact_ref": null,
+        "source_version": "PREP 2015"
+      },
+      {
+        "source_url": "https://mne.tools/1.10/generated/mne.io.Raw.html#mne.io.Raw.interpolate_bads",
+        "locator": "interpolate_bads",
+        "text": "MNE provides EEG spherical-spline interpolation from channel geometry.",
+        "artifact_ref": null,
+        "source_version": "MNE 1.10.2"
+      },
+      {
+        "source_url": "https://pypi.org/project/asrpy/0.0.8/",
+        "locator": "ASR.fit/transform source",
+        "text": "Euclidean ASR fits thresholds from calibration EEG and corrects the original signal. This adapter guards rank and calibration duration before application.",
+        "artifact_ref": null,
+        "source_version": "ASRpy 0.0.8"
+      }
+    ]
+  },
+  {
+    "id": "auto-clean-asr",
+    "version": "1",
+    "title": "无标签坏道修复与 ASR",
+    "source": "classic",
+    "status": "draft",
+    "mechanism": "detect-asr-interpolate-car",
+    "recipe": [
+      {
+        "id": "highpass",
+        "unit_id": "EEG-FILTER",
+        "op": "filter",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "raw",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "l_freq": 1.0,
+          "h_freq": null,
+          "method": "iir",
+          "phase": "zero",
+          "picks": "$eeg_channels"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          2
+        ]
+      },
+      {
+        "id": "detect",
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "detect_bad_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "highpass",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "adaptation_scope": "record_unlabeled"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "mark",
+        "unit_id": "EEG-BAD-CHANNEL-MARK",
+        "op": "mark_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "highpass",
+        "model_from": null,
+        "decision_from": "detect",
+        "params": {
+          "max_fraction": 0.1
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      },
+      {
+        "id": "asr",
+        "unit_id": "EEG-ASR-AUTO",
+        "op": "asr_clean",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "mark",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "adaptation_scope": "record_unlabeled",
+          "cutoff": 20
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          2
+        ]
+      },
+      {
+        "id": "interpolate",
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "interpolate_bad_channels",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "asr",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "max_fraction": 0.1
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          1
+        ]
+      },
+      {
+        "id": "car",
+        "unit_id": "EEG-REREFERENCE",
+        "op": "reference",
+        "profile": "source",
+        "implementation_version": "1",
+        "input": "interpolate",
+        "model_from": null,
+        "decision_from": null,
+        "params": {
+          "ref_channels": "average"
+        },
+        "fit_scope": null,
+        "evidence_indices": [
+          0
+        ]
+      }
+    ],
+    "output": "car",
+    "applicability": {},
+    "adaptations": [
+      "Project engineering recipe, not full PREP/clean_rawdata reproduction.",
+      "Explicit whole-record unlabeled transductive adaptation; not train-only/online.",
+      "No real EOG dependency, ICA classification or trial rejection.",
+      "Append a common analysis band/epoch grid; high-pass and thresholds are search priors, not guaranteed optimal."
+    ],
+    "checks": [],
+    "validation": [],
+    "validated_profiles": [],
+    "evidence": [
+      {
+        "source_url": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+        "locator": "Detection of Noisy Channels",
+        "text": "PREP motivates amplitude and correlation diagnostics; this project uses a simplified MAD/max-peer engineering detector, not PREP reproduction.",
+        "artifact_ref": null,
+        "source_version": "PREP 2015"
+      },
+      {
+        "source_url": "https://mne.tools/1.10/generated/mne.io.Raw.html#mne.io.Raw.interpolate_bads",
+        "locator": "interpolate_bads",
+        "text": "MNE provides EEG spherical-spline interpolation from channel geometry.",
+        "artifact_ref": null,
+        "source_version": "MNE 1.10.2"
+      },
+      {
+        "source_url": "https://pypi.org/project/asrpy/0.0.8/",
+        "locator": "ASR.fit/transform source",
+        "text": "Euclidean ASR fits thresholds from calibration EEG and corrects the original signal. This adapter guards rank and calibration duration before application.",
+        "artifact_ref": null,
+        "source_version": "ASRpy 0.0.8"
+      }
+    ]
+  }
+]

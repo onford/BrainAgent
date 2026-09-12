@@ -29,14 +29,16 @@ SCREENING_OPERATION = "筛选方法文献与仓库，注明下游用途"
 
 
 def available_tools(catalog, medium):
-    category = "code" if medium == "repository" else "literature"
+    categories = {'code', 'literature'} if medium == 'official' else {'code' if medium == 'repository' else 'literature'}
     return {
-        t["name"] for t in catalog if t["available"] and t.get("category") == category
+        t["name"] for t in catalog if t["available"] and t.get("category") in categories
     }
 
 
-def missing_tasks(sources, goals, catalog, purpose):
+def missing_tasks(sources, goals, catalog, purpose, *, actionable_only=False):
+    """Keep evidence gaps distinct from the bounded attempts required before finish."""
     missing = []
+    documents = {d.id: d for d in sources.documents}
     for goal in goals:
         observations = [
             o
@@ -49,31 +51,79 @@ def missing_tasks(sources, goals, catalog, purpose):
             if not any(o.success and o.action.action == "read" for o in observations):
                 missing.append(f"{goal.target}: read the official dataset source")
             continue
-        if not available_tools(catalog, goal.medium):
-            continue  # Explicit gap in the final coverage table, not fabricated results.
+        tools = available_tools(catalog, goal.medium)
+        if not tools:
+            if not actionable_only:
+                missing.append(
+                    f"{goal.target}/{goal.medium}: no available search provider"
+                )
+            continue
         searches = [o for o in observations if o.action.action == "search"]
+        hits = [o for o in searches if o.success and o.output and o.output.get("items")]
         if not searches:
             missing.append(f"{goal.target}/{goal.medium}: search")
-        elif any(
-            o.success and o.output and o.output.get("items") for o in searches
-        ) and not any(o.action.action == "read" for o in observations):
+        elif not hits:
+            attempts = {
+                (o.action.tool, " ".join((o.action.query or "").lower().split()))
+                for o in searches
+            }
+            # Try each configured provider, and at least two distinct queries if
+            # only one is available. Repeating the same request is not a fallback.
+            retry = bool(tools - {tool for tool, _ in attempts}) or len(attempts) < 2
+            if not actionable_only or retry:
+                reason = (
+                    "no results"
+                    if any(o.success for o in searches)
+                    else "all searches failed"
+                )
+                missing.append(
+                    f"{goal.target}/{goal.medium}: {reason}; try another provider or broader alias query; retain gap if exhausted"
+                )
+        else:
+            reads = [o for o in observations if o.action.action == "read"]
+            usable = any(
+                o.success
+                and (doc := documents.get((o.output or {}).get("source_id")))
+                is not None
+                and (goal.medium != "paper" or not abstract_only(doc))
+                for o in reads
+            )
+            if usable:
+                continue
+            read_urls = {o.action.url for o in reads}
+            candidates = urls([o.output for o in hits])
+            candidates.update(
+                link
+                for o in reads
+                if (doc := documents.get((o.output or {}).get("source_id"))) is not None
+                for link in doc.links
+            )
+            retry = not reads or (len(read_urls) < 2 and bool(candidates - read_urls))
+            if actionable_only and not retry:
+                continue
             missing.append(
-                f"{goal.target}/{goal.medium}: read a relevant returned source; record failure if inaccessible"
+                f"{goal.target}/{goal.medium}: read a relevant returned source; no substantive text read yet; try full text or another candidate, retain access gaps"
             )
     return missing
 
 
 async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
+    from .research_journal import ResearchJournal
+
     goals = plan.verification if purpose == "dataset_verification" else plan.literature
     valid_pairs = {(g.target, g.medium) for g in goals}
-    remaining = budget
+    journal = ResearchJournal(agent.folder / agent.prefix / "research-journal.json", sources)
+    journal.bind_budget(purpose, budget, {"inputs": inputs, "goals": [g.model_dump() for g in goals]}, budget * 90)
+    journal.restore(sources, include_uncertain=True)
+    agent.save(agent.prefix + "/sources.json", sources)
     available = {
         t["name"]
         for t in catalog
         if t["available"] and t.get("category") in {"literature", "code"}
     }
-    while remaining:
+    while (remaining := journal.remaining(purpose)):
         missing = missing_tasks(sources, goals, catalog, purpose)
+        pending = missing_tasks(sources, goals, catalog, purpose, actionable_only=True)
         action_schema = create_model(
             "SurveyAction",
             __base__=ResearchAction,
@@ -93,9 +143,9 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
         def validate(batch):
             for a in batch.actions:
                 if a.action == "finish":
-                    if missing:
+                    if pending:
                         raise ValueError(
-                            "Required research tasks remain: " + "; ".join(missing)
+                            "Required research tasks remain: " + "; ".join(pending)
                         )
                     continue
                 if (a.target, a.medium) not in valid_pairs:
@@ -106,7 +156,8 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
                     catalog, a.medium
                 ):
                     raise ValueError(
-                        "Use a literature search tool for papers and a code search tool for repositories"
+                        f"Search medium={a.medium} must use one of {sorted(available_tools(catalog, a.medium))}; received {a.tool}. "
+                        "Paper searches use literature providers; repository searches use code providers; official-source discovery allows both."
                     )
                 if a.action == "read" and (
                     (a.medium == "repository" and a.kind != "code")
@@ -129,6 +180,7 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
                 "sources": agent.source_context(sources),
                 "observations": [o.model_dump() for o in sources.observations],
                 "missing_requirements": missing,
+                "required_next_attempts": pending,
                 "remaining_actions": remaining,
                 "selection_criteria": SELECTION_CRITERIA,
             },
@@ -139,13 +191,16 @@ async def retrieve(agent, plan, inputs, sources, catalog, purpose, budget):
             "For literature_review, cover analysis AND algorithm uses, dataset issues/discussion, and preprocessing of this data type; search papers AND repositories for each. "
             "Prefer reputable venues, high citations and high-star repos where observed; no invented metrics or arbitrary hard cutoff. "
             "Read useful fulltext/PDF and repository README/code, not just search titles. Discover associated PDF/repo links. "
+            "For preprocessing, a data-loader API page, repository directory listing, or README linking an unread implementation does not establish a method. "
+            "Follow discovered implementation/configuration dependencies until the whole preprocessing sequence and its parameter evidence are readable, "
+            "or explicitly retain that gap. Select sources for scientific relevance and evidence completeness, without a fixed paper quota or preferred recipe. "
             "GitHub repository roots and blob file URLs are read through the public file API; retry failed HTML reads using these URLs and follow README links to substantive code. "
             "Usage literature must itself use the target dataset; a related-work citation alone is insufficient. Follow the cited primary work. "
-            "Use read.query for excerpts beyond source previews. Provider failure is a recorded gap; try another available provider. Do not repeat successful actions. "
+            "Use read.query for excerpts beyond source previews. Failed/empty searches do not establish absence: satisfy required_next_attempts by changing provider or broadening the query with dataset aliases and English topic keywords. "
+            "Read failures and abstract-only reads leave evidence gaps; try a returned full-text link or another candidate. After bounded attempts, retain missing_requirements as gaps even when finishing. Do not repeat successful actions. "
             "Finish once required searches/reading attempts are done and sufficient evidence exists, or retain explicit gaps if no useful source remains.",
             validate,
         )
-        remaining -= len(batch.actions)
         if batch.actions[0].action == "finish":
             break
         await agent.research_batch(batch.actions, sources, available)
@@ -435,6 +490,10 @@ async def research(agent, survey):
             "Each official-site/repository or official-paper statement requires cited exact quotes. Missing statements are null with no findings. "
             "Identify the official DATASET paper via official citation evidence. A related acquisition-system paper is role=acquisition_system and cannot fill the official dataset-paper column. "
             "When identity cannot be confirmed use not_identified; do not substitute a usage/method paper. "
+            'If official_publication.role is not dataset_paper, EVERY official_paper cell must be '
+            '{"statement":null,"finding_ids":[]}. Do not write an absence explanation in statement, '
+            'nor fill it with website, API documentation or third-party paper findings. Put missing-source '
+            'explanations in conclusion/gaps. A row with this missing side cannot be consistent. '
             "consistent means all three sides were actually verified; partial/unverifiable retain absent sides or scope mismatches. Cite version and subset differences explicitly. "
             "Metadata values need cited facts, or null. Facts use unique IDs and exact contiguous source quotes.",
             lambda value: validate_verification(agent, value, sources, local),

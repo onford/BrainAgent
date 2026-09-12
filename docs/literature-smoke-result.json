@@ -1,0 +1,90 @@
+{
+  "checked_at": "2026-09-11T03:00:28.692282+00:00",
+  "query": "EEGMMIDB motor imagery",
+  "credentials": "anonymous public access",
+  "providers": [
+    {
+      "provider": "europe_pmc",
+      "success": true,
+      "result_count": 10,
+      "total_results": 84,
+      "with_abstract": 10,
+      "with_full_text_url": 6,
+      "examples": [
+        {
+          "title": "Severity-Adapted Decoding for Neurorehabilitation BCI: Comparing Cascade and Flat Classifiers for Motor Imagery and the Value of Decomposing Activity Into Levels",
+          "url": "https://europepmc.org/article/PPR/PPR1297286",
+          "full_text_url": null
+        },
+        {
+          "title": "An intelligent EEG-based ensemble framework for communication assistance in Locked-In Syndrome patients.",
+          "url": "https://europepmc.org/article/MED/42002556",
+          "full_text_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13254361/fullTextXML"
+        }
+      ],
+      "error_code": null
+    },
+    {
+      "provider": "crossref",
+      "success": true,
+      "result_count": 10,
+      "total_results": 418418,
+      "with_abstract": 1,
+      "with_full_text_url": 0,
+      "examples": [
+        {
+          "title": "Subject 6: ERD/ERS organization during Motor Imagery",
+          "url": "https://doi.org/10.4016/17864.01",
+          "full_text_url": null
+        },
+        {
+          "title": "Subject 8: ERD/ERS organization during Motor Imagery",
+          "url": "https://doi.org/10.4016/17886.01",
+          "full_text_url": null
+        }
+      ],
+      "error_code": null
+    },
+    {
+      "provider": "openalex",
+      "success": false,
+      "result_count": 0,
+      "total_results": null,
+      "with_abstract": 0,
+      "with_full_text_url": 0,
+      "examples": [],
+      "error_code": "rate_limited"
+    },
+    {
+      "provider": "arxiv",
+      "success": false,
+      "result_count": 0,
+      "total_results": null,
+      "with_abstract": 0,
+      "with_full_text_url": 0,
+      "examples": [],
+      "error_code": "rate_limited"
+    },
+    {
+      "provider": "semantic_scholar",
+      "success": false,
+      "result_count": 0,
+      "total_results": null,
+      "with_abstract": 0,
+      "with_full_text_url": 0,
+      "examples": [],
+      "error_code": "rate_limited"
+    }
+  ],
+  "reads": [
+    {
+      "url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13254361/fullTextXML",
+      "resolved_url": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC13254361/fullTextXML",
+      "success": true,
+      "characters": 76152,
+      "truncated": false,
+      "sha256": "2b2a936cf5c993e85c677cb6bea4bb60b61506ea89ab08e06651b31e977daceb"
+    }
+  ],
+  "passed": true
+}

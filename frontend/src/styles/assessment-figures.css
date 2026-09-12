@@ -1,0 +1,21 @@
+/* Figure surfaces are self-contained in the application and standalone readers.
+   SVG uses explicit attributes and contains its own title, legend and metadata. */
+.eeg-figure {
+  margin: 20px 0; padding: 20px; border: 1px solid #e0e6eb; border-radius: 10px;
+  background: #fff; color: #243746; font: 13px Arial, 'Microsoft YaHei', sans-serif;
+  min-width: 0; max-width: 100%;
+}
+.eeg-figure .heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+.eeg-figure .heading strong { font-size: 14px; font-weight: 600; }
+.eeg-figure .heading > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.eeg-figure button { padding: 7px 11px; border: 1px solid #d4dce3; border-radius: 5px; background: #fff; color: #445967; font: inherit; font-size: 12px; cursor: pointer; }
+.eeg-figure button:hover:not(:disabled) { background: #f2f6fa; border-color: #8caec4; }
+.eeg-figure button:disabled { opacity: .4; cursor: default; }
+.eeg-figure :is(button, summary):focus-visible { outline: 2px solid #0072b2; outline-offset: 3px; }
+.eeg-figure figcaption { margin-top: 12px; padding-top: 12px; border-top: 1px solid #edf0f3; color: #52616b; font-size: 12px; line-height: 1.8; }
+.eeg-figure summary { margin-top: 12px; color: #346680; cursor: pointer; font-size: 12px; }
+.eeg-figure .table-scroll { max-height: 260px; overflow: auto; }
+.eeg-figure table { min-width: 440px; width: 100%; font-size: 12px; border-collapse: collapse; }
+.eeg-figure :is(td, th) { text-align: left; padding: 9px 12px; border-bottom: 1px solid #edf0f3; }
+.eeg-figure svg { animation: none !important; transition: none !important; }
+@media(max-width:640px) { .eeg-figure { padding: 12px; } }

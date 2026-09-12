@@ -23,7 +23,13 @@ STAGE_LABELS = (
 )
 
 
+class MethodResearchBudget(Contract):
+    max_recovery_actions: int = Field(default=6, ge=0, le=64)
+    max_seconds: float = Field(default=900, gt=0, le=86400)
+
+
 class WorkflowRequest(Contract):
+    method_research_budget: MethodResearchBudget = Field(default_factory=MethodResearchBudget)
     source_root: str
     adapter: Literal["eegmmidb"] = "eegmmidb"
     subjects: list[str] = Field(default_factory=list)

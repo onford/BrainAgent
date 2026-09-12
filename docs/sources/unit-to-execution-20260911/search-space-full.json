@@ -1,0 +1,1033 @@
+{
+  "version": "1",
+  "operators": [
+    {
+      "id": "resample",
+      "title": "输出采样网格",
+      "unit_id": "EEG-RESAMPLE",
+      "op": "resample",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {},
+      "defaults": {},
+      "bindings": {
+        "sfreq": "$output.sfreq",
+        "events": "$events"
+      },
+      "required": true,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "bandpass",
+      "title": "带通滤波",
+      "unit_id": "EEG-FILTER",
+      "op": "filter",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {
+        "l_freq": {
+          "kind": "number",
+          "minimum": 0.5,
+          "maximum": 15.0,
+          "choices": [],
+          "unit": "Hz",
+          "rationale": "覆盖慢活动至运动节律的比较范围；不是最优频带声明",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "h_freq": {
+          "kind": "number",
+          "minimum": 20.0,
+          "maximum": 60.0,
+          "choices": [],
+          "unit": "Hz",
+          "rationale": "低于160 Hz输出网格的奈奎斯特频率并留出过渡区域",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "l_freq": 8.0,
+        "h_freq": 30.0
+      },
+      "bindings": {
+        "method": "iir",
+        "phase": "zero",
+        "picks": "$eeg_channels"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "average_reference",
+      "title": "全脑平均参考",
+      "unit_id": "EEG-REREFERENCE",
+      "op": "reference",
+      "input_stage": "either",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {},
+      "defaults": {},
+      "bindings": {
+        "ref_channels": "average"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "detrend",
+      "title": "去常数或线性趋势",
+      "unit_id": "EEG-DETREND",
+      "op": "detrend",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {
+        "type": {
+          "kind": "choice",
+          "minimum": null,
+          "maximum": null,
+          "choices": [
+            "constant",
+            "linear"
+          ],
+          "unit": "category",
+          "rationale": "比较常数偏移与线性趋势去除",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "type": "linear"
+      },
+      "bindings": {
+        "picks": "$eeg_channels"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "epoch",
+      "title": "共同任务切窗",
+      "unit_id": "EEG-EPOCH",
+      "op": "epoch",
+      "input_stage": "continuous",
+      "output_stage": "epochs",
+      "fit_scope": "none",
+      "domains": {},
+      "defaults": {},
+      "bindings": {
+        "events": "$events",
+        "event_id": "$event_id",
+        "picks": "$eeg_channels",
+        "tmin": "$output.tmin",
+        "tmax": "$output.tmax"
+      },
+      "required": true,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "notch",
+      "title": "工频陷波",
+      "unit_id": "EEG-FILTER",
+      "op": "notch",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {
+        "freqs": {
+          "kind": "choice",
+          "minimum": null,
+          "maximum": null,
+          "choices": [
+            [
+              50.0
+            ],
+            [
+              60.0
+            ],
+            [
+              50.0,
+              60.0
+            ]
+          ],
+          "unit": "Hz",
+          "rationale": "线噪频率的显式候选；由实测频谱支持，不将国家地区推测当作观测。",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "freqs": [
+          60.0
+        ]
+      },
+      "bindings": {
+        "picks": "$eeg_channels"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [
+        "S06"
+      ],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "highpass",
+      "title": "宽带去漂移",
+      "unit_id": "EEG-FILTER",
+      "op": "filter",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {
+        "l_freq": {
+          "kind": "number",
+          "minimum": 1.0,
+          "maximum": 2.0,
+          "choices": [],
+          "unit": "Hz",
+          "rationale": "ASR拟合视图的工程范围；保证最短0.5秒窗口至少跨半个高通周期",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "l_freq": 1.0
+      },
+      "bindings": {
+        "h_freq": null,
+        "method": "iir",
+        "phase": "zero",
+        "picks": "$eeg_channels"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [],
+      "evidence_ids": [
+        "S20"
+      ],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "detect_bad_channels",
+      "title": "坏道诊断与标记",
+      "unit_id": "EEG-AUTO-BAD-CHANNEL",
+      "op": "detect_bad_channels",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "record_unlabelled",
+      "domains": {
+        "deviation_z": {
+          "kind": "number",
+          "minimum": 3.0,
+          "maximum": 10.0,
+          "choices": [],
+          "unit": "robust z",
+          "rationale": "围绕来源检测原则探索灵敏度，不能解释为标准正态概率",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "correlation_threshold": {
+          "kind": "number",
+          "minimum": 0.1,
+          "maximum": 0.8,
+          "choices": [],
+          "unit": "correlation",
+          "rationale": "当前实现的相关性诊断范围，不套用其他检测器阈值",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "bad_window_fraction": {
+          "kind": "number",
+          "minimum": 0.01,
+          "maximum": 0.5,
+          "choices": [],
+          "unit": "fraction",
+          "rationale": "异常窗口比例的工程敏感性分析",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "flat_duration_s": {
+          "kind": "number",
+          "minimum": 1.0,
+          "maximum": 10.0,
+          "choices": [],
+          "unit": "s",
+          "rationale": "持续平坦检测时间尺度",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "persistent_low_corr_fraction": {
+          "kind": "number",
+          "minimum": 0.3,
+          "maximum": 0.8,
+          "choices": [],
+          "unit": "fraction",
+          "rationale": "持续低相关的窗口覆盖；工程联合诊断，非PREP原始规则",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "persistent_low_corr_seconds": {
+          "kind": "number",
+          "minimum": 3.0,
+          "maximum": 10.0,
+          "choices": [],
+          "unit": "s",
+          "rationale": "持续低相关须满足的连续时长",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "shared_correlation_threshold": {
+          "kind": "number",
+          "minimum": 0.6,
+          "maximum": 0.9,
+          "choices": [],
+          "unit": "correlation",
+          "rationale": "高幅且相关的共同活动仅作伪迹候选，避免直接当坏电极插值",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "deviation_z": 5.0,
+        "correlation_threshold": 0.4,
+        "bad_window_fraction": 0.1,
+        "flat_duration_s": 5.0,
+        "persistent_low_corr_fraction": 0.5,
+        "persistent_low_corr_seconds": 5.0,
+        "shared_correlation_threshold": 0.7
+      },
+      "bindings": {
+        "adaptation_scope": "record_unlabeled",
+        "window_s": 1.0,
+        "flat_ptp_V": 1e-07,
+        "selection_policy": "consensus_v2"
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [
+        "at_least_four_eeg"
+      ],
+      "evidence_ids": [
+        "S08"
+      ],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "interpolate_bad_channels",
+      "title": "坏道空间插值",
+      "unit_id": "EEG-AUTO-BAD-CHANNEL",
+      "op": "interpolate_bad_channels",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "none",
+      "domains": {
+        "max_fraction": {
+          "kind": "number",
+          "minimum": 0.05,
+          "maximum": 0.25,
+          "choices": [],
+          "unit": "fraction",
+          "rationale": "允许修复的最大通道比例；超过上限须失败，不能只修复最容易的通道",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "max_fraction": 0.1
+      },
+      "bindings": {},
+      "required": false,
+      "max_instances": 1,
+      "requires": [
+        "at_least_four_eeg",
+        "electrode_positions"
+      ],
+      "evidence_ids": [
+        "S08"
+      ],
+      "separations": [],
+      "input_highpass": null
+    },
+    {
+      "id": "asr",
+      "title": "ASR异常子空间重建",
+      "unit_id": "EEG-ASR-AUTO",
+      "op": "asr_clean",
+      "input_stage": "continuous",
+      "output_stage": "same",
+      "fit_scope": "record_unlabelled",
+      "domains": {
+        "cutoff": {
+          "kind": "number",
+          "minimum": 10.0,
+          "maximum": 100.0,
+          "choices": [],
+          "unit": "ASR cutoff",
+          "rationale": "来源实现支持的阈值范围；阈值更低不代表方法更好",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "win_len": {
+          "kind": "choice",
+          "minimum": null,
+          "maximum": null,
+          "choices": [
+            0.5,
+            1.0,
+            2.0
+          ],
+          "unit": "s",
+          "rationale": "保持校准窗口有效并允许比较时间尺度",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "lookahead": {
+          "kind": "choice",
+          "minimum": null,
+          "maximum": null,
+          "choices": [
+            0.125,
+            0.25
+          ],
+          "unit": "s",
+          "rationale": "在128/160 Hz均为整数采样点，且不超过最短窗口一半",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "maxdims": {
+          "kind": "number",
+          "minimum": 0.1,
+          "maximum": 0.8,
+          "choices": [],
+          "unit": "fraction",
+          "rationale": "可重建子空间比例的工程探索上限",
+          "origin": "engineering",
+          "evidence_ids": []
+        },
+        "on_insufficient_calibration": {
+          "kind": "choice",
+          "minimum": null,
+          "maximum": null,
+          "choices": [
+            "error",
+            "identity"
+          ],
+          "unit": "policy",
+          "rationale": "校准不足时严格失败或显式保留ASR输入；只针对校准时长不足，数值错误仍失败。",
+          "origin": "engineering",
+          "evidence_ids": []
+        }
+      },
+      "defaults": {
+        "cutoff": 20.0,
+        "win_len": 0.5,
+        "lookahead": 0.25,
+        "maxdims": 0.66,
+        "on_insufficient_calibration": "error"
+      },
+      "bindings": {
+        "adaptation_scope": "record_unlabeled",
+        "win_overlap": 0.66,
+        "min_clean_seconds": 30.0,
+        "stepsize": 32,
+        "mem_splits": 3
+      },
+      "required": false,
+      "max_instances": 1,
+      "requires": [
+        "at_least_four_eeg",
+        "asr_dependency"
+      ],
+      "evidence_ids": [
+        "S20",
+        "S21"
+      ],
+      "separations": [],
+      "input_highpass": {
+        "minimum_hz": 0.5,
+        "window_parameter": "win_len",
+        "minimum_cycles": 0.5,
+        "rationale": "ASR输入须已高通至少0.5 Hz，且高通频率乘窗口秒数至少0.5；可由之前的高通或带通满足，无须重复滤波。"
+      }
+    }
+  ],
+  "methods": [
+    {
+      "id": "bp8-30-average",
+      "title": "基本运动频带 · 平均参考",
+      "origin": "basic",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {}
+          },
+          {
+            "id": "reference",
+            "operator": "average_reference",
+            "parameters": {}
+          },
+          {
+            "id": "epochs",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [],
+      "applicability": [
+        "左右手运动想象"
+      ],
+      "deviations": [
+        "工程参考配方；8–30 Hz不是文献最优结论。"
+      ]
+    },
+    {
+      "id": "basic-broadband",
+      "title": "基本宽频带 · 平均参考",
+      "origin": "basic",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {
+              "l_freq": 1.0,
+              "h_freq": 40.0
+            }
+          },
+          {
+            "id": "reference",
+            "operator": "average_reference",
+            "parameters": {}
+          },
+          {
+            "id": "epochs",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [],
+      "applicability": [
+        "左右手运动想象"
+      ],
+      "deviations": [
+        "较宽频率内容的竞争起点；1–40 Hz为工程比较参数。 "
+      ]
+    },
+    {
+      "id": "basic-acquisition-reference",
+      "title": "基本运动频带 · 采集参考",
+      "origin": "basic",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {}
+          },
+          {
+            "id": "epochs",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [],
+      "applicability": [],
+      "deviations": []
+    },
+    {
+      "id": "literature-ea",
+      "title": "宽频带 · 个体无标签EA",
+      "origin": "literature_adaptation",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {
+              "l_freq": 4.0,
+              "h_freq": 40.0
+            }
+          },
+          {
+            "id": "epochs",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "euclidean_alignment",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [
+        "S38"
+      ],
+      "applicability": [],
+      "deviations": [
+        "4–40 Hz与0.1协方差正则为工程适配；逐被试整批无标签拟合，非在线归纳条件。 "
+      ]
+    },
+    {
+      "id": "literature-channel-repair",
+      "title": "坏道诊断 · 插值 · 宽频带",
+      "origin": "literature_adaptation",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "highpass",
+            "operator": "highpass",
+            "parameters": {}
+          },
+          {
+            "id": "detect_bad_channels",
+            "operator": "detect_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "interpolate_bad_channels",
+            "operator": "interpolate_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "average_reference",
+            "operator": "average_reference",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {
+              "l_freq": 1.0,
+              "h_freq": 40.0
+            }
+          },
+          {
+            "id": "epoch",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [
+        "S08"
+      ],
+      "applicability": [],
+      "deviations": [
+        "借鉴PREP坏道诊断原则；当前检测器为明确简化的工程适配，不是完整PREP复现。",
+        "保持固定trial分母，输出修复与质量标记，不按分类成绩剔除试次。 "
+      ]
+    },
+    {
+      "id": "literature-asr-repair",
+      "title": "ASR · 坏道修复 · 宽频带",
+      "origin": "literature_adaptation",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "highpass",
+            "operator": "highpass",
+            "parameters": {}
+          },
+          {
+            "id": "detect_bad_channels",
+            "operator": "detect_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "asr",
+            "operator": "asr",
+            "parameters": {}
+          },
+          {
+            "id": "interpolate_bad_channels",
+            "operator": "interpolate_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "average_reference",
+            "operator": "average_reference",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {
+              "l_freq": 1.0,
+              "h_freq": 40.0
+            }
+          },
+          {
+            "id": "epoch",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [
+        "S08",
+        "S20",
+        "S21"
+      ],
+      "applicability": [],
+      "deviations": [
+        "ASRpy固定实现；逐记录整批未标注校准，不是原文数据集或在线实验复现。",
+        "未达到校准时长、秩或修复比例条件时保留失败原因，不静默跳过算子。 "
+      ]
+    },
+    {
+      "id": "literature-conditional-asr-repair",
+      "title": "条件ASR · 坏道修复 · 宽频带",
+      "origin": "literature_adaptation",
+      "recipe": {
+        "nodes": [
+          {
+            "id": "resample",
+            "operator": "resample",
+            "parameters": {}
+          },
+          {
+            "id": "highpass",
+            "operator": "highpass",
+            "parameters": {}
+          },
+          {
+            "id": "detect_bad_channels",
+            "operator": "detect_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "asr",
+            "operator": "asr",
+            "parameters": {
+              "on_insufficient_calibration": "identity"
+            }
+          },
+          {
+            "id": "interpolate_bad_channels",
+            "operator": "interpolate_bad_channels",
+            "parameters": {}
+          },
+          {
+            "id": "average_reference",
+            "operator": "average_reference",
+            "parameters": {}
+          },
+          {
+            "id": "bandpass",
+            "operator": "bandpass",
+            "parameters": {
+              "l_freq": 1.0,
+              "h_freq": 40.0
+            }
+          },
+          {
+            "id": "epoch",
+            "operator": "epoch",
+            "parameters": {}
+          }
+        ],
+        "adaptation": {
+          "adaptation": "none",
+          "alignment_threshold": 10.0
+        }
+      },
+      "evidence_ids": [
+        "S08",
+        "S20",
+        "S21"
+      ],
+      "applicability": [],
+      "deviations": [
+        "ASRpy固定实现，逐记录整批未标注校准；工程条件策略。",
+        "仅校准时长不足时保持ASR步骤输入，继续其余算子；记录ASR未应用及真实原因。",
+        "完整保留固定被试与试次分母；其他ASR错误不转为恒等处理。"
+      ]
+    }
+  ],
+  "priors": [
+    {
+      "id": "continuous-before-epoch",
+      "strength": "hard",
+      "relation": "before",
+      "operators": [
+        "resample",
+        "epoch"
+      ],
+      "condition": "共同事件时间网格",
+      "rationale": "先同步重采样信号与事件，再按冻结网格切窗。",
+      "evidence_ids": [],
+      "origin": "implementation",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "notch-before-diagnosis",
+      "strength": "soft",
+      "relation": "before",
+      "operators": [
+        "notch",
+        "detect_bad_channels"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "存在明显工频污染时，优先在幅度/相关性诊断前抑制线噪；无明显污染时可能没有收益。",
+      "evidence_ids": [
+        "S06",
+        "S08"
+      ],
+      "origin": "engineering",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "notch-before-asr",
+      "strength": "soft",
+      "relation": "before",
+      "operators": [
+        "notch",
+        "asr"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "若需要工频处理，优先让ASR校准和应用共同使用处理后的输入；该次序是待验证工程先验。",
+      "evidence_ids": [
+        "S06",
+        "S20"
+      ],
+      "origin": "engineering",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "repair-needs-detection",
+      "strength": "hard",
+      "relation": "requires",
+      "operators": [
+        "interpolate_bad_channels",
+        "detect_bad_channels"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "插值必须有同一主链的显式坏道诊断。",
+      "evidence_ids": [],
+      "origin": "implementation",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "detect-before-repair",
+      "strength": "hard",
+      "relation": "before",
+      "operators": [
+        "detect_bad_channels",
+        "interpolate_bad_channels"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "先确定坏道与供体，再恢复固定通道网格。",
+      "evidence_ids": [],
+      "origin": "implementation",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "asr-before-car",
+      "strength": "hard",
+      "relation": "before",
+      "operators": [
+        "asr",
+        "average_reference"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "当前ASR实现要求满秩原参考；不能把该实现约束外推到所有ASR方法。",
+      "evidence_ids": [],
+      "origin": "implementation",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "asr-before-interpolation",
+      "strength": "hard",
+      "relation": "before",
+      "operators": [
+        "asr",
+        "interpolate_bad_channels"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "插值可能引入冗余，当前ASR校准在未插值好道上完成。",
+      "evidence_ids": [],
+      "origin": "implementation",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "repair-before-car",
+      "strength": "soft",
+      "relation": "before",
+      "operators": [
+        "interpolate_bad_channels",
+        "average_reference"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "坏道和参考相互影响；完成修复后再形成最终平均参考是优先比较路线。",
+      "evidence_ids": [
+        "S08"
+      ],
+      "origin": "literature",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "diagnose-before-analysis-band",
+      "strength": "soft",
+      "relation": "before",
+      "operators": [
+        "detect_bad_channels",
+        "bandpass"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "分析频带可能隐藏异常幅度或高频污染，优先保留较宽诊断视图。",
+      "evidence_ids": [
+        "S08"
+      ],
+      "origin": "literature",
+      "when": [],
+      "requirements": []
+    },
+    {
+      "id": "asr-before-analysis-band",
+      "strength": "soft",
+      "relation": "before",
+      "operators": [
+        "asr",
+        "bandpass"
+      ],
+      "condition": "所列算子均用于当前同一连续数据主链",
+      "rationale": "优先在去漂移的宽带信号完成ASR，再选择任务频带；窄带ASR属于需要验证的适配。",
+      "evidence_ids": [
+        "S20",
+        "S21"
+      ],
+      "origin": "engineering",
+      "when": [],
+      "requirements": []
+    }
+  ],
+  "evidence": {
+    "S06": {
+      "source_url": "https://mne.tools/stable/generated/mne.filter.notch_filter.html",
+      "locator": "Parameters notch_widths, trans_bandwidth, method；网页行730–738",
+      "text": "MNE支持显式频率的陷波滤波；本实现固定FIR零相位与过渡带。选择50/60 Hz须结合实测线噪，窄任务带之外的陷波可能冗余。",
+      "artifact_ref": null,
+      "source_version": "MNE 1.12.1"
+    },
+    "S08": {
+      "source_url": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
+      "locator": "Early stage preprocessing；Phase 1/2；Detecting noisy or outlier channels；Fig.6；Table5，网页行329–347,371–426,615–616",
+      "text": "PREP提出结合幅度、相关性等诊断检测坏道，并处理坏道与参考之间的相互影响。这里采用有明确差异的检测及插值适配，不宣称完整复现PREP。",
+      "artifact_ref": null,
+      "source_version": "2026-09-10"
+    },
+    "S20": {
+      "source_url": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_calibrate.m",
+      "locator": "Header Input, RejectionCutoff, FilterB/A, WindowLength；默认初始化",
+      "text": "ASR校准从适合的片段估计稳健统计；校准空间、采样率和频谱处理必须与应用相容。具体Python实现由ASRpy固定版本合同约束。",
+      "artifact_ref": null,
+      "source_version": "85eab7d22f00f1ed36392c96eb0774752d62bd11"
+    },
+    "S21": {
+      "source_url": "https://github.com/sccn/clean_rawdata/blob/85eab7d22f00f1ed36392c96eb0774752d62bd11/asr_process.m",
+      "locator": "Header Data/State/LookAhead/MaxDimensions；默认初始化",
+      "text": "ASR应用利用已校准统计修复异常子空间；连续窗口和状态有明确参数，不能等同于逐试次任意删样本。",
+      "artifact_ref": null,
+      "source_version": "85eab7d22f00f1ed36392c96eb0774752d62bd11"
+    },
+    "S38": {
+      "source_url": "https://arxiv.org/html/1808.05464",
+      "locator": "§III-A Eqs.(10)–(12)；§V offline；§VI-A/B online，网页行174–188,440–448；DOI 10.1109/TBME.2019.2913914",
+      "text": "EA从各域未标注样本的平均协方差构造对齐变换；本项目采用逐被试完整批次及正则化适配。",
+      "artifact_ref": null,
+      "source_version": "2026-09-10"
+    }
+  },
+  "max_edits_per_proposal": 3
+}

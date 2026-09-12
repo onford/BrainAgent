@@ -6,6 +6,14 @@ import { apiRequest } from '../api/client'
 vi.mock('../api/client', () => ({ apiRequest: vi.fn(), apiUrl: (s: string) => s }))
 const props = { searchId: 'run', candidateId: 'one', basePath: 'assessment/a1', receiptPath: 'quality/data-quality.json' }
 describe('quality drilldown', () => {
+  it('summarizes identical observations without drawing a redundant distribution', async () => {
+    const metric = { metricID:'numerical_rank', value:63, unit:'dimensions', status:'ok' }
+    vi.mocked(apiRequest).mockReset().mockResolvedValue({ stages:{processed_task:{numerical_rank:metric}}, bysubject:{S1:{stages:{processed_task:{numerical_rank:metric}}},S2:{stages:{processed_task:{numerical_rank:metric}}}} })
+    const wrapper = mount(QualityPlots, { props }); await flushPromises()
+    await wrapper.findAll('select')[1]!.setValue('numerical_rank')
+    expect(wrapper.find('.single-value').text()).toContain('2 个有效观测值相同')
+    expect(wrapper.find('figure').exists()).toBe(false)
+  })
   it('keeps the chart stage synchronized with the assessment table', async () => {
     vi.mocked(apiRequest).mockReset().mockResolvedValue({ stages: {} })
     const wrapper = mount(QualityPlots, { props: { ...props, stage: 'source_task' } })
@@ -35,7 +43,7 @@ describe('quality drilldown', () => {
   })
   it('breaks curves at missing data rather than drawing through the gap', () => {
     const wrapper = mount(AssessmentPlot, { props: { title: 'test', caption: 'test', xLabel: 'Hz', yLabel: 'power', series: [{ name: 'PSD', points: [{x: 0,y: 1},{x: 1,y: null},{x: 2,y: 3}] }] } })
-    expect(wrapper.find('path').attributes('d').match(/M/g)).toHaveLength(2)
-    expect(wrapper.findAll('circle')).toHaveLength(2)
+    expect(wrapper.find('.data-line').attributes('d').match(/M/g)).toHaveLength(2)
+    expect(wrapper.findAll('.data-marker')).toHaveLength(2)
   })
 })

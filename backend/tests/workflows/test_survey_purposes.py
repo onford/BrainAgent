@@ -184,3 +184,13 @@ async def test_downstream_receives_only_selected_literature_for_its_use(
             "literature_for_this_stage"
         ]
     ] == ["entry-method"]
+
+
+def test_official_source_discovery_accepts_author_repository_providers():
+    from app.workflows.survey_research import available_tools
+    catalog=[{'name':'papers','category':'literature','available':True},
+             {'name':'github','category':'code','available':True},
+             {'name':'disabled','category':'code','available':False}]
+    assert available_tools(catalog,'official') == {'papers','github'}
+    assert available_tools(catalog,'paper') == {'papers'}
+    assert available_tools(catalog,'repository') == {'github'}

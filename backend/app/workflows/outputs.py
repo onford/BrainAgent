@@ -23,6 +23,7 @@ from .formats import ARRAY_FORMATS, PROVENANCE_FILES, delivery_members
 
 def choose(search_state, plan, store):
     """Project a terminal search winner; the supplied store is search/engine."""
+    from app.search.method_provenance import participation
     if search_state["status"] not in {"completed", "stopped"}:
         raise ValueError("搜索尚未正常结束，不能交付候选")
     candidates = search_state["candidates"]
@@ -40,7 +41,8 @@ def choose(search_state, plan, store):
         entry = registered.get(candidate["id"])
         if entry is None or (candidate.get("parameters") is not None and candidate["parameters"] != entry["parameters"]):
             raise ValueError("候选参数与冻结动态配方不同")
-    winner = select([{**c, "parameters": registered[c["id"]]["parameters"]} for c in candidates])
+    winner = select([{**c, "parameters": registered[c["id"]]["parameters"]} for c in candidates],
+        require_complete_assessment=bool(search_state["protocol"].get("selection_requires_complete_assessment") and search_state["protocol"].get("assessment")))
     if winner is None or winner != search_state["selected_candidate_id"]:
         raise ValueError("选中候选与固定开发指标及平局规则不一致")
     selected = next(c for c in candidates if c["id"] == winner)
@@ -94,6 +96,7 @@ def choose(search_state, plan, store):
         raise ValueError("选中候选未完整执行或产物校验失败")
     selection = EvaluationOutput.model_validate(
         {
+            "literature_participation": participation(search_state),
             "selection_policy": "development_score",
             "quality_evaluated": True,
             "search_id": search_state["id"],
@@ -429,90 +432,26 @@ def _representation_files(selection, store, records):
     entry = next((c for c in registered if c["id"] == selection["selected_candidate_id"]), None)
     if entry is None:
         raise ValueError("选中策略不在冻结目录中")
-    adaptation = entry["parameters"].get("adaptation", "none")
     representation = selection.get("representation")
-    if representation is None:
-        if adaptation != "none":
-            raise ValueError("适配策略缺少表示回执，不能回退原始数组")
-        return {}, [], "V", "physical EEG channels"
     if representation != selection["selected_receipt"].get("representation"):
         raise ValueError("交付表示与选中评价回执不同")
-    representation = EvaluationRepresentation.model_validate(representation).model_dump(
-        mode="json"
-    )
-    unit = representation["unit"]
-    if unit not in {"V", "dimensionless"}:
-        raise ValueError("交付不允许混合单位")
-    if representation["policy"]["adaptation"] != adaptation or unit != (
-        "V" if adaptation == "none" else "dimensionless"
-    ):
-        raise ValueError("表示策略或单位与选中目录候选不同")
-    if (
-        adaptation == "conditional_alignment"
-        and representation["policy"]["alignment_threshold"]
-        != entry["parameters"]["alignment_threshold"]
-    ):
-        raise ValueError("条件策略阈值与选中候选不同")
-    semantics = {
-        "V": "physical EEG channels",
-        "dimensionless": "subject-specific transformed coordinates (EA or scale-only); names identify source-channel basis, not physical electrodes",
-    }[unit]
+    if selection["selected_receipt"].get("evaluator_version") != 4:
+        raise ValueError("历史协议仅供读取；请以当前共享方法协议重新运行后交付")
+    representation = EvaluationRepresentation.model_validate(representation).model_dump(mode="json")
     files = representation["records"]
     if set(files) != {r["record_id"] for r in records}:
-        raise ValueError("适配数组未覆盖全部选中记录")
-    root = within(store.root.parent, "candidates/" + selection["selected_candidate_id"])
-
-    def resolve(name, checksum):
-        candidate = Path(name)
-        if candidate.is_absolute():
-            try:
-                name = candidate.resolve().relative_to(root).as_posix()
-            except ValueError as exc:
-                raise ValueError("适配产物路径越界") from exc
-        path = within(root, name)
-        if not path.is_file() or file_hash(path) != checksum:
-            raise ValueError("适配产物完整性核验失败")
-        return path
-
+        raise ValueError("评分数组未覆盖全部选中记录")
     arrays = {}
     for record in records:
         identity = record["record_id"]
         entry = files[identity]
-        if adaptation == "none":
-            # The evaluator deliberately reuses the verified numeric worker array
-            # for no-adaptation policies. Authorize that exact record, not engine/.
-            source = next(
-                a for a in record["result"]["artifacts"] if a["name"] == "signal_V.npy"
-            )
-            path = within(store.root, source["path"])
-            if (
-                Path(entry["array_path"]).resolve() != path
-                or entry["array_sha256"] != source["sha256"]
-                or file_hash(path) != source["sha256"]
-            ):
-                raise ValueError("无适配表示与选中数值记录不同")
-            arrays[identity] = path
-        else:
-            arrays[identity] = resolve(entry["array_path"], entry["array_sha256"])
-    provenance = []
-    subjects = representation["subjects"]
-    if {entry["subject"] for entry in files.values()} != set(subjects):
-        raise ValueError("适配数组与被试变换范围不同")
-    units = {entry["unit"] for entry in subjects.values()}
-    if units != {unit}:
-        raise ValueError("适配总体单位与被试单位不一致")
-    for entry in files.values():
-        if entry["unit"] != subjects[entry["subject"]]["unit"]:
-            raise ValueError("适配记录单位与被试单位不一致")
-    for entry in subjects.values():
-        if entry["unit"] == "dimensionless" and (
-            not entry["transform_path"] or not entry["transform_sha256"]
-        ):
-            raise ValueError("无量纲适配数组缺少变换溯源")
-        if entry["transform_path"]:
-            path = resolve(entry["transform_path"], entry["transform_sha256"])
-            provenance.append((path, path.relative_to(root).as_posix()))
-    return arrays, provenance, unit, semantics
+        source = next(a for a in record["result"]["artifacts"] if a["name"] == "signal_V.npy")
+        path = within(store.root, source["path"])
+        if (Path(entry["array_path"]).resolve() != path or entry["array_sha256"] != source["sha256"]
+                or file_hash(path) != source["sha256"]):
+            raise ValueError("评分表示与选中数值记录不同")
+        arrays[identity] = path
+    return arrays, "V", "physical EEG channels"
 
 
 def _protect_delivery(folder, store, survey, selection, evidence):
@@ -572,7 +511,7 @@ def deliver(state, folder, store):
         or {r["record_id"] for r in result_records} != expected_records
     ):
         raise ValueError("交付记录与冻结面板不同")
-    adapted, transforms, unit, spatial_semantics = _representation_files(
+    scored_arrays, unit, spatial_semantics = _representation_files(
         selection, store, result_records
     )
     source_records = {r["id"]: r for r in survey["records"]}
@@ -586,19 +525,19 @@ def deliver(state, folder, store):
         artifacts = {
             a["name"]: store.root / a["path"] for a in r["result"]["artifacts"]
         }
-        array_path = adapted.get(r["record_id"], artifacts["signal_V.npy"])
+        array_path = scored_arrays[r["record_id"]]
         with _mapped_npy(array_path) as values:
             if values.ndim != 3 or len(values) == 0:
                 raise ValueError("训练输出必须为有限值 Epoch 数组")
             shape = values.shape
         info = r["result"]["delta"]["after"]
-        if adapted and (
+        if (
             list(shape)
             != selection["representation"]["records"][r["record_id"]]["shape"]
             or list(shape) != info["shape"]
             or selection["representation"]["channels"] != info["channels"]
         ):
-            raise ValueError("适配数组形状与原始 Epoch 或回执不一致")
+            raise ValueError("评分数组形状与原始 Epoch 或回执不一致")
         if channels is not None and (
             channels != info["channels"]
             or sfreq != info["sfreq"]
@@ -623,11 +562,10 @@ def deliver(state, folder, store):
             raise ValueError("事件与训练数组未逐行对齐")
         subject = source_records[r["record_id"]]["subject"]
         if (
-            adapted
-            and selection["representation"]["records"][r["record_id"]]["subject"]
+            selection["representation"]["records"][r["record_id"]]["subject"]
             != subject
         ):
-            raise ValueError("适配记录的被试身份与来源不同")
+            raise ValueError("评分记录的被试身份与来源不同")
         for event in events:
             if event["label"] not in {"left_hand", "right_hand"}:
                 raise ValueError("交付发现未定义类别")
@@ -749,21 +687,6 @@ def deliver(state, folder, store):
             "path_base": "archive_root",
         })
         representation_files.append(assessment_index)
-    transform_map = []
-    for source, relative in transforms:
-        target = within(folder, "representation/" + relative)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(source, target)
-        if file_hash(target) != file_hash(source):
-            raise ValueError("适配变换复制校验失败")
-        representation_files.append(target)
-        transform_map.append(
-            {
-                "source_ref": "selected_receipt.representation.subjects:transform_sha256",
-                "archive_path": target.relative_to(folder).as_posix(),
-                "sha256": file_hash(target),
-            }
-        )
     array_map = []
     offset = 0
     for record, (source, shape) in zip(
@@ -784,7 +707,7 @@ def deliver(state, folder, store):
         offset += shape[0]
     write_json(
         folder / "evaluation/artifact-map.json",
-        {"arrays": array_map, "transforms": transform_map},
+        {"arrays": array_map},
     )
     write_json(
         folder / "sources.json",
@@ -805,7 +728,7 @@ def deliver(state, folder, store):
     readme = """# EEG 训练数据
 
 X.npy: float32，Epoch × 空间坐标 × 时间点；单位和坐标含义见 channels.json。
-EA 或 scale-only 数组为无量纲变换坐标，不能解释为原电极位置的伏特测量；不应再次适配。
+同一预处理配方用于全部记录；空间轴为 EEG 通道，物理单位 V。
 y.npy: int64，0=left_hand，1=right_hand。
 subjects.npy / split.npy: 每行对应的被试与 train / validation / test 分组。
 trial-index.tsv: 每一行到原始事件、记录和样点的映射。
@@ -818,7 +741,6 @@ assessment-v2 候选仅按 EEGNet 三种子（17、42、2026）的开发被试�
 历史 assessment-v1 的选择含义以其冻结协议为准。
 core CSP macro_ba 仅为锚点，质量和重建不加入总分。selection.json 保存分数与候选摘要。
 反复用于选择的开发分数不是独立泛化结论；交叉验证折之间不得共享拟合的 CSP/LDA。
-无标签整批适配仅使用协议允许的各被试信号，不能据此推断实时或前瞻有效。
 evaluation/ 保存冻结协议、含全部原始 trial 的完整面板、折、选中评价回执，
 以及 originalpredictions.tsv 核心 CSP 逐试次预测；面板和预测按原文件字节及哈希收录。
 evaluation/assessment/aN/utility/ 保存 EEGNet 三种子的逐试次概率、每折 model.pt、
@@ -862,7 +784,7 @@ finally:
     missing_splits = sorted({"train", "validation", "test"} - set(splits))
     if missing_splits:
         limitations.append("按评价协议，以下分组为空：" + ", ".join(missing_splits))
-    # Recheck adapted source hashes after streaming, before publishing the archive.
+    # Recheck physical source hashes after streaming, before publishing the archive.
     _representation_files(selection, store, result_records)
     members = delivery_members(
         folder, [r["record_id"] for r in result_records], representation_files

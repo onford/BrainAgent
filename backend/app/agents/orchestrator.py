@@ -180,14 +180,20 @@ class Orchestrator:
                 yield context.emit("observation", context.final_answer, step.agent, {"result":result.model_dump(mode="json"),"step":step.model_dump(mode="json")})
                 yield context.emit("run_completed", "后台数据流程已提交", self.planner.name, {"final_answer":context.final_answer})
                 return
-            preprocessing_state = result.metadata.get("execution_status") if step.agent == "data_preprocessing" else None
-            if result.success and preprocessing_state in ("submitted", "queued", "running", "interrupted", "needs_input", "planned", "methods_drafted", "partial", "failed", "cancelled"):
-                step.status = StepStatus.SUBMITTED if preprocessing_state in ("submitted", "queued", "running") else StepStatus.BLOCKED
+            execution_state = result.metadata.get("execution_status")
+            if execution_state is None and isinstance(result.output, dict) and result.output.get("status") == "needs_input":
+                execution_state = "needs_input"
+            if result.success and execution_state in ("submitted", "queued", "running", "interrupted", "needs_input", "planned", "methods_drafted", "partial", "failed", "cancelled"):
+                step.status = StepStatus.SUBMITTED if execution_state in ("submitted", "queued", "running") else StepStatus.BLOCKED
                 context.status = RunStatus.COMPLETED
                 context.current_step = None
-                context.final_answer = "预处理任务已提交，可在任务卡片查看进度；完成后再进入评价。" if step.status == StepStatus.SUBMITTED else "预处理尚未完成，请查看输入缺口、计划或执行记录。"
+                label = {"data_preprocessing": "预处理", "data_survey": "调研", "data_collection": "数据接入", "data_evaluation": "评价", "data_report": "报告", "data_delivery": "数据交付"}.get(step.agent, step.agent)
+                details = result.output if isinstance(result.output, dict) else {}
+                missing = details.get("missing_fields") or details.get("missing_dependencies")
+                gap_note = "缺少：" + "、".join(str(v) for v in missing) + "。" if isinstance(missing, list) and missing else "尚未取得可核验的调研证据。" if details.get("evidence_status") == "not_collected" else "请查看证据缺口、所需输入或执行记录。"
+                context.final_answer = f"{label}任务已提交，可在任务卡片查看进度；完成后再进入下一阶段。" if step.status == StepStatus.SUBMITTED else f"{label}尚未完成。{gap_note}"
                 yield context.emit("observation", context.final_answer, step.agent, {"result": result.model_dump(mode="json"), "step": step.model_dump(mode="json")})
-                yield context.emit("run_completed", "已返回当前预处理状态", self.planner.name, {"final_answer": context.final_answer})
+                yield context.emit("run_completed", "已返回当前阶段状态", self.planner.name, {"final_answer": context.final_answer})
                 return
             if not result.success:
                 logger.error(

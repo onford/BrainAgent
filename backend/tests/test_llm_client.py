@@ -41,6 +41,42 @@ def completion(content='{"count": 7}', finish_reason="stop"):
     )
 
 
+@pytest.mark.asyncio
+async def test_usage_reservation_precedes_io_and_survives_retries(tmp_path, delays):
+    from app.llm.usage import usage_scope
+
+    path = tmp_path / "calls.json"
+    calls = []
+
+    def handler(request):
+        saved = json.loads(path.read_text(encoding="utf8"))["calls"][0]
+        calls.append(request)
+        assert saved["status"] == "running" and saved["attempts"] == len(calls)
+        return httpx.Response(503) if len(calls) == 1 else completion()
+
+    with usage_scope(path, "literature extraction"):
+        await make_client(handler).chat([{"role": "user", "content": "private prompt contents"}])
+    saved = json.loads(path.read_text(encoding="utf8"))["calls"][0]
+    assert saved["attempts"] == 2 and saved["status"] == "completed"
+    assert saved["usage"] == {"prompt_tokens": 123, "completion_tokens": 45}
+    assert saved["monetary_cost"] is None and "may also be billed" in saved["usage_scope"]
+    assert "private prompt contents" not in path.read_text()
+    assert "private-api-key" not in path.read_text()
+
+
+@pytest.mark.asyncio
+async def test_usage_failure_does_not_claim_zero_cost(tmp_path):
+    from app.llm.usage import usage_scope
+
+    path = tmp_path / "calls.json"
+    with usage_scope(path, "failed source extraction"):
+        with pytest.raises(RuntimeError):
+            await make_client(lambda request: httpx.Response(401)).chat([])
+    saved = json.loads(path.read_text(encoding="utf8"))["calls"][0]
+    assert saved["status"] == "failed" and saved["attempts"] == 1
+    assert saved["usage"] is None and saved["monetary_cost"] is None
+
+
 @pytest.fixture
 def delays(monkeypatch):
     observed = []

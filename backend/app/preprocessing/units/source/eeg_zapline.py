@@ -1,3 +1,4 @@
+from app.preprocessing.native_process import run as native_run
 import numpy as np
 import mne
 from pathlib import Path
@@ -62,7 +63,10 @@ def _run(data,fs,cfg,source,runtime,timeout,mode,order=4):
             if s.count('addOptional(p,')!=29: raise RuntimeError('作者 name-value 参数声明数量不符')
             s=s.replace('addOptional(p,','addParameter(p,');s=_replace_once(s,'    nChunks = length(chunkIndices)-1;',"    global BA_TRACE; BA_TRACE(end+1).frequency=noisefreq; BA_TRACE(end).chunk_indices=chunkIndices;\n    nChunks = length(chunkIndices)-1;",1);fp.write_text(s)
             (compat/'round.m').write_text("function y=round(x,n)\n if nargin==1; y=builtin('round',x); else; factor=10.^n; y=builtin('round',x.*factor)./factor; end\nend\n");(compat/'pwelch.m').write_text(PWELCH_CODE);(work/'callback.py').write_text(CALLBACK_CODE)
-            command=shlex.quote(sys.executable)+' '+shlex.quote(str(work/'callback.py'))
+            # Windows cmd.exe does not recognize POSIX single-quote escaping.
+            # This changes only process argument quoting, not the DSP callback.
+            argv=[sys.executable,str(work/'callback.py')]
+            command=subprocess.list2cmdline(argv) if sys.platform=='win32' else shlex.join(argv)
             callback="request=[tempname() '.mat']; response=[tempname() '.mat']; save('-mat7-binary',request,VARS); [status,message]=system([PREFIX ' \"' request '\" \"' response '\"']); if status~=0; error(message); end; result=load(response); delete(request);delete(response);"
             findbody=callback.replace('VARS',"'data','minprominence','mindistance'").replace('PREFIX',_quote(command+' findpeaks'))
             (compat/'findpeaks.m').write_text("function [pks,locs,widths,proms]=findpeaks(data,varargin)\n minprominence=-1;mindistance=0; for k=1:2:numel(varargin); if strcmp(varargin{k},'MinPeakProminence'); minprominence=varargin{k+1}; elseif strcmp(varargin{k},'MinPeakDistance'); mindistance=varargin{k+1}; else; error('Unsupported peak option'); end; end\n"+findbody+"\npks=result.pks;locs=result.locs;widths=result.widths;proms=result.proms;\nend\n")
@@ -73,7 +77,7 @@ def _run(data,fs,cfg,source,runtime,timeout,mode,order=4):
         savemat(work/'input.mat',dict(data=data,srate=float(fs),cfg=matcfg))
         script="warning('off','Octave:shadowed-function'); pkg load signal; pkg load statistics; if ~strncmp(version,'11.3.',5);error('Octave 11.3.x required');end; if ~strcmp(ver('signal').Version,'1.4.8') || ~strcmp(ver('statistics').Version,'1.7.7');error('Package version mismatch');end; addpath(genpath("+_quote(native)+"));addpath("+_quote(compat)+",'-begin'); load("+_quote(work/'input.mat')+"); global BA_TRACE BA_CALL; BA_TRACE=struct([]);BA_CALL=0; "+invocation+" trace=BA_TRACE; save('-mat7-binary',"+_quote(work/'output.mat')+",'cleaned','effective','analytics','trace');"
         (work/'run.m').write_text(script)
-        result=subprocess.run([str(runtime),'--quiet','--no-gui',str(work/'run.m')],capture_output=True,text=True,timeout=timeout)
+        result=native_run([str(runtime),'--quiet','--no-gui',str(work/'run.m')],capture_output=True,text=True,timeout=timeout)
         if result.returncode!=0 or not (work/'output.mat').exists(): raise RuntimeError('Octave 作者算法执行失败：'+(result.stdout+result.stderr)[-6000:])
         out=loadmat(work/'output.mat',simplify_cells=True)
         value=np.asarray(out['cleaned'])

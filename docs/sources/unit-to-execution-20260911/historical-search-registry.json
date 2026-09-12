@@ -1,0 +1,590 @@
+[
+  {
+    "id": "bp8-30-average",
+    "title": "基本运动频带 · 平均参考",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 8.0,
+            "h_freq": 30.0
+          }
+        },
+        {
+          "id": "reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "epochs",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "c08cb35ae7be5cadf278d9049f593972df7db8153f7105f9508705b485fb04ed",
+    "origin": "basic",
+    "seed_id": "bp8-30-average",
+    "evidence_ids": [],
+    "deviations": [
+      "工程参考配方；8–30 Hz不是文献最优结论。"
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "bandpass",
+        "average_reference",
+        "epoch"
+      ]
+    },
+    "operator_count": 4,
+    "order": 0
+  },
+  {
+    "id": "basic-broadband",
+    "title": "基本宽频带 · 平均参考",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 1.0,
+            "h_freq": 40.0
+          }
+        },
+        {
+          "id": "reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "epochs",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "ea0dd00ccbae4556214c6e6828a6786570f3485a50aeae8c95b6615d04e0a0f7",
+    "origin": "basic",
+    "seed_id": "basic-broadband",
+    "evidence_ids": [],
+    "deviations": [
+      "较宽频率内容的竞争起点；1–40 Hz为工程比较参数。 "
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "bandpass",
+        "average_reference",
+        "epoch"
+      ]
+    },
+    "operator_count": 4,
+    "order": 1
+  },
+  {
+    "id": "basic-acquisition-reference",
+    "title": "基本运动频带 · 采集参考",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 8.0,
+            "h_freq": 30.0
+          }
+        },
+        {
+          "id": "epochs",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "1685a8594578bfbb8152ef65907aa7dd2d3c77b99c5c815592c7e12b6338fa96",
+    "origin": "basic",
+    "seed_id": "basic-acquisition-reference",
+    "evidence_ids": [],
+    "deviations": [],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "bandpass",
+        "epoch"
+      ]
+    },
+    "operator_count": 3,
+    "order": 2
+  },
+  {
+    "id": "literature-ea",
+    "title": "宽频带 · 个体无标签EA",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 4.0,
+            "h_freq": 40.0
+          }
+        },
+        {
+          "id": "epochs",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "euclidean_alignment",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "24629121ccbac03d1e7d2cde0437198fb0a09b8b63b8f5197442964b0a65917d",
+    "origin": "literature_adaptation",
+    "seed_id": "literature-ea",
+    "evidence_ids": [
+      "S38"
+    ],
+    "deviations": [
+      "4–40 Hz与0.1协方差正则为工程适配；逐被试整批无标签拟合，非在线归纳条件。 "
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "euclidean_alignment",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "bandpass",
+        "epoch"
+      ]
+    },
+    "operator_count": 4,
+    "order": 3
+  },
+  {
+    "id": "literature-channel-repair",
+    "title": "坏道诊断 · 插值 · 宽频带",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "highpass",
+          "operator": "highpass",
+          "parameters": {
+            "l_freq": 1.0
+          }
+        },
+        {
+          "id": "detect_bad_channels",
+          "operator": "detect_bad_channels",
+          "parameters": {
+            "deviation_z": 5.0,
+            "correlation_threshold": 0.4,
+            "bad_window_fraction": 0.1,
+            "flat_duration_s": 5.0,
+            "persistent_low_corr_fraction": 0.5,
+            "persistent_low_corr_seconds": 5.0,
+            "shared_correlation_threshold": 0.7
+          }
+        },
+        {
+          "id": "interpolate_bad_channels",
+          "operator": "interpolate_bad_channels",
+          "parameters": {
+            "max_fraction": 0.1
+          }
+        },
+        {
+          "id": "average_reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 1.0,
+            "h_freq": 40.0
+          }
+        },
+        {
+          "id": "epoch",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "d4b2c0448b47a0ebc93a490ff840d53f5ee53a28f3dbc33957be695038d60f3c",
+    "origin": "literature_adaptation",
+    "seed_id": "literature-channel-repair",
+    "evidence_ids": [
+      "S08"
+    ],
+    "deviations": [
+      "借鉴PREP坏道诊断原则；当前检测器为明确简化的工程适配，不是完整PREP复现。",
+      "保持固定trial分母，输出修复与质量标记，不按分类成绩剔除试次。 "
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "highpass",
+        "detect_bad_channels",
+        "interpolate_bad_channels",
+        "average_reference",
+        "bandpass",
+        "epoch"
+      ]
+    },
+    "operator_count": 7,
+    "order": 4
+  },
+  {
+    "id": "literature-asr-repair",
+    "title": "ASR · 坏道修复 · 宽频带",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "highpass",
+          "operator": "highpass",
+          "parameters": {
+            "l_freq": 1.0
+          }
+        },
+        {
+          "id": "detect_bad_channels",
+          "operator": "detect_bad_channels",
+          "parameters": {
+            "deviation_z": 5.0,
+            "correlation_threshold": 0.4,
+            "bad_window_fraction": 0.1,
+            "flat_duration_s": 5.0,
+            "persistent_low_corr_fraction": 0.5,
+            "persistent_low_corr_seconds": 5.0,
+            "shared_correlation_threshold": 0.7
+          }
+        },
+        {
+          "id": "asr",
+          "operator": "asr",
+          "parameters": {
+            "cutoff": 20.0,
+            "win_len": 0.5,
+            "lookahead": 0.25,
+            "maxdims": 0.66,
+            "on_insufficient_calibration": "error"
+          }
+        },
+        {
+          "id": "interpolate_bad_channels",
+          "operator": "interpolate_bad_channels",
+          "parameters": {
+            "max_fraction": 0.1
+          }
+        },
+        {
+          "id": "average_reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 1.0,
+            "h_freq": 40.0
+          }
+        },
+        {
+          "id": "epoch",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "1d2d86a4cb516cd7626746d9d439293122b8f2a318046935f1c4e2ce2b87fe49",
+    "origin": "literature_adaptation",
+    "seed_id": "literature-asr-repair",
+    "evidence_ids": [
+      "S08",
+      "S20",
+      "S21"
+    ],
+    "deviations": [
+      "ASRpy固定实现；逐记录整批未标注校准，不是原文数据集或在线实验复现。",
+      "未达到校准时长、秩或修复比例条件时保留失败原因，不静默跳过算子。 "
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "highpass",
+        "detect_bad_channels",
+        "asr",
+        "interpolate_bad_channels",
+        "average_reference",
+        "bandpass",
+        "epoch"
+      ]
+    },
+    "operator_count": 8,
+    "order": 5
+  },
+  {
+    "id": "literature-conditional-asr-repair",
+    "title": "条件ASR · 坏道修复 · 宽频带",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "highpass",
+          "operator": "highpass",
+          "parameters": {
+            "l_freq": 1.0
+          }
+        },
+        {
+          "id": "detect_bad_channels",
+          "operator": "detect_bad_channels",
+          "parameters": {
+            "deviation_z": 5.0,
+            "correlation_threshold": 0.4,
+            "bad_window_fraction": 0.1,
+            "flat_duration_s": 5.0,
+            "persistent_low_corr_fraction": 0.5,
+            "persistent_low_corr_seconds": 5.0,
+            "shared_correlation_threshold": 0.7
+          }
+        },
+        {
+          "id": "asr",
+          "operator": "asr",
+          "parameters": {
+            "cutoff": 20.0,
+            "win_len": 0.5,
+            "lookahead": 0.25,
+            "maxdims": 0.66,
+            "on_insufficient_calibration": "identity"
+          }
+        },
+        {
+          "id": "interpolate_bad_channels",
+          "operator": "interpolate_bad_channels",
+          "parameters": {
+            "max_fraction": 0.1
+          }
+        },
+        {
+          "id": "average_reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 1.0,
+            "h_freq": 40.0
+          }
+        },
+        {
+          "id": "epoch",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "none",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "459be893405cee77dce1d8c53a1a6f3a95b4e766c633e4f52092b5dc31c75027",
+    "origin": "literature_adaptation",
+    "seed_id": "literature-conditional-asr-repair",
+    "evidence_ids": [
+      "S08",
+      "S20",
+      "S21"
+    ],
+    "deviations": [
+      "ASRpy固定实现，逐记录整批未标注校准；工程条件策略。",
+      "仅校准时长不足时保持ASR步骤输入，继续其余算子；记录ASR未应用及真实原因。",
+      "完整保留固定被试与试次分母；其他ASR错误不转为恒等处理。"
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": null,
+    "edits": [],
+    "parameters": {
+      "adaptation": "none",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "highpass",
+        "detect_bad_channels",
+        "asr",
+        "interpolate_bad_channels",
+        "average_reference",
+        "bandpass",
+        "epoch"
+      ]
+    },
+    "operator_count": 8,
+    "order": 6
+  },
+  {
+    "id": "candidate-27a27c03f628f9337906353f",
+    "title": "8–30 Hz 运动频带 · 个体无标签 EA",
+    "recipe": {
+      "nodes": [
+        {
+          "id": "resample",
+          "operator": "resample",
+          "parameters": {}
+        },
+        {
+          "id": "bandpass",
+          "operator": "bandpass",
+          "parameters": {
+            "l_freq": 8.0,
+            "h_freq": 30.0
+          }
+        },
+        {
+          "id": "reference",
+          "operator": "average_reference",
+          "parameters": {}
+        },
+        {
+          "id": "epochs",
+          "operator": "epoch",
+          "parameters": {}
+        }
+      ],
+      "adaptation": {
+        "adaptation": "euclidean_alignment",
+        "alignment_threshold": 10.0
+      }
+    },
+    "recipe_hash": "27a27c03f628f9337906353fd0fbf06f0ba42df92cdd0d29492e7a50c66894b5",
+    "origin": "basic",
+    "seed_id": "bp8-30-average",
+    "evidence_ids": [],
+    "deviations": [
+      "工程参考配方；8–30 Hz不是文献最优结论。"
+    ],
+    "prior_warnings": [],
+    "prior_challenges": {},
+    "parent_id": "bp8-30-average",
+    "edits": [
+      {
+        "action": "set_adaptation",
+        "policy": {
+          "adaptation": "euclidean_alignment",
+          "alignment_threshold": 10.0
+        }
+      }
+    ],
+    "parameters": {
+      "adaptation": "euclidean_alignment",
+      "alignment_threshold": 10.0,
+      "operators": [
+        "resample",
+        "bandpass",
+        "average_reference",
+        "epoch"
+      ]
+    },
+    "operator_count": 5,
+    "order": 7
+  }
+]

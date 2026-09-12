@@ -1,3 +1,4 @@
+from app.preprocessing.native_process import run as native_run
 # Python 3.12 | MNE 1.10.2 | NumPy 1.26.4 | SciPy 1.15.3
 import numpy as np
 import mne
@@ -159,7 +160,7 @@ def _run(data, fs, cfg, source, runtime, timeout, mode, order=4):
         savemat(work / 'input.mat', dict(data=data, srate=float(fs), cfg=matcfg))
         script = "warning('off','Octave:shadowed-function'); pkg load signal; pkg load statistics; if ~strncmp(version,'11.3.',5);error('Octave 11.3.x required');end; if ~strcmp(ver('signal').Version,'1.4.8') || ~strcmp(ver('statistics').Version,'1.7.7');error('Package version mismatch');end; addpath(genpath(" + _quote(native) + '));addpath(' + _quote(compat) + ",'-begin'); load(" + _quote(work / 'input.mat') + '); global BA_TRACE BA_CALL; BA_TRACE=struct([]);BA_CALL=0; ' + invocation + " trace=BA_TRACE; save('-mat7-binary'," + _quote(work / 'output.mat') + ",'cleaned','effective','analytics','trace');"
         (work / 'run.m').write_text(script)
-        result = subprocess.run([str(runtime), '--quiet', '--no-gui', str(work / 'run.m')], capture_output=True, text=True, timeout=timeout)
+        result = native_run([str(runtime), '--quiet', '--no-gui', str(work / 'run.m')], capture_output=True, text=True, timeout=timeout)
         if result.returncode != 0 or not (work / 'output.mat').exists():
             raise RuntimeError('Octave 作者算法执行失败：' + (result.stdout + result.stderr)[-6000:])
         out = loadmat(work / 'output.mat', simplify_cells=True)

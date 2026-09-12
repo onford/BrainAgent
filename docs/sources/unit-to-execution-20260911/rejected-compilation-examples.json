@@ -1,0 +1,22 @@
+[
+  {
+    "case": "目录中存在但执行器未接入 ICA",
+    "status": "rejected",
+    "error": "operation not integrated: EEG-ICA/ica_fit"
+  },
+  {
+    "case": "200 Hz 输入请求 110 Hz 低通",
+    "status": "rejected",
+    "error": "filter bounds violate sampling rate"
+  },
+  {
+    "case": "EOG 校准作用域错误指向 test 区间",
+    "status": "rejected",
+    "error": "fit scope includes unknown, test or incompatible partitions"
+  },
+  {
+    "case": "坏道标记输入与检测输入不是同一节点",
+    "status": "rejected",
+    "error": "marking requires a detection bound to the exact input"
+  }
+]

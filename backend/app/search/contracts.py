@@ -1,6 +1,6 @@
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import ConfigDict, Field, model_validator
 
 from app.preprocessing.schemas import Contract
 from .evaluation_contracts import EvaluationReceipt
@@ -8,6 +8,7 @@ from .space_contracts import CandidateRecipe, PipelineEdit
 
 
 class SearchBudget(Contract):
+    max_diagnostics: int = Field(default=32, ge=0, le=256)
     max_candidates: int = Field(default=48, ge=1, le=256)
     max_proposals: int = Field(default=128, ge=0, le=1024)
     max_evidence_reads: int = Field(default=32, ge=0, le=256)
@@ -70,18 +71,24 @@ class MechanismHypothesis(Contract):
                 p.metric in {"macro_ba", "secondary_macro_ba", "mean_delta"}
                 or p.metric.endswith(".ba")
                 or p.metric.startswith("secondary_subjects.")
-                or p.metric == "assessment.selection_score"
+                or p.metric in {"assessment.selection_score", "assessment.core_csp_macro_ba"}
                 or p.metric.startswith("assessment.utility.")
             )
             signal = p.metric.startswith(("diagnostics.", "assessment.quality.", "assessment.reconstruction."))
             if (p.kind == "utility" and not utility) or (
                 p.kind == "signal" and not signal
             ):
-                raise ValueError("效用分数与信号诊断必须分开")
+                raise ValueError(f"{p.kind} prediction path {p.metric!r} is not supported; copy an exact path from numeric_metric_index. Utility includes assessment.selection_score and assessment.core_csp_macro_ba; signal includes diagnostics.* and assessment.quality.summary.metrics.<id>.value")
         return self
 
 
 class ProposeCandidate(Contract):
+    model_config = ConfigDict(json_schema_extra={"oneOf": [
+        {"required": ["candidate_id", "edits"], "properties": {
+            "candidate_id": {"type": "string", "minLength": 1}, "edits": {"maxItems": 0}}},
+        {"required": ["candidate_id", "edits", "title"], "properties": {
+            "candidate_id": {"type": "null"}, "edits": {"minItems": 1}, "title": {"type": "string", "minLength": 1}}},
+    ]})
     action: Literal["propose_candidate"]
     candidate_id: str | None = None
     edits: list[PipelineEdit] = Field(default_factory=list, max_length=8)
@@ -92,6 +99,10 @@ class ProposeCandidate(Contract):
     expected_result: str = Field(min_length=1)
     decision_branches: dict[Literal["improvement", "no_improvement"], str]
     hypothesis: MechanismHypothesis
+    diagnostic_ids: list[str] = Field(default_factory=list, max_length=8)
+    prior_rule_ids: list[str] = Field(default_factory=list, max_length=12)
+    prior_claims: dict[str, Literal["true", "false", "unknown"]] = Field(default_factory=dict,
+        description="For every cited prior_rule_id, copy its actual condition_state from the cited diagnostics. Unknown must remain unknown.")
 
     @model_validator(mode="after")
     def branches(self):
@@ -116,15 +127,32 @@ class RequestEvidence(Contract):
 
 
 class Finish(Contract):
+    untried_candidate_reasons: dict[str, str] = Field(default_factory=dict)
     action: Literal["finish"]
     reason: str = Field(min_length=1)
     unresolved: list[str]
     unexplored_edit_reasons: dict[str, str] = Field(default_factory=dict)
 
 
+class RequestDiagnostic(Contract):
+    action: Literal["request_diagnostic"]
+    kind: Literal["signal_profile", "paired_comparison"]
+    candidate_id: str
+    reference_candidate_id: str | None = None
+    stage: Literal["source_raw", "source_task", "processed_task", "processed_continuous"] = "source_raw"
+    question: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def paired(self):
+        if (self.kind == "paired_comparison") != (self.reference_candidate_id is not None):
+            raise ValueError("paired comparison requires a reference; signal profile does not")
+        return self
+
+
 class Decision(Contract):
     decision: Annotated[
-        ProposeCandidate | RequestEvidence | Finish, Field(discriminator="action")
+        ProposeCandidate | RequestEvidence | RequestDiagnostic | Finish, Field(discriminator="action")
     ]
 
 
@@ -134,6 +162,8 @@ class InitialSchedule(Contract):
 
 
 class Usage(Contract):
+    diagnostics: int = 0
+    diagnostic_seconds: float = 0
     candidates: int = 0
     proposals: int = 0
     evidence_reads: int = 0
@@ -201,8 +231,9 @@ class SearchState(Contract):
     protocol: dict
     usage: Usage = Field(default_factory=Usage)
     candidates: list[Candidate] = Field(default_factory=list)
-    registry: list[CandidateRecipe] = Field(default_factory=list)
+    registry: list[dict] = Field(default_factory=list)  # Stored history; execution validates the frozen registry.
     actions: list[ActionRecord] = Field(default_factory=list)
+    diagnostics: list[dict] = Field(default_factory=list)
     schedule: list[str] | None = None
     selected_candidate_id: str | None = None
     stop_reason: str | None = None

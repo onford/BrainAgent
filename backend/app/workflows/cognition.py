@@ -97,7 +97,9 @@ class WorkflowCognition:
             )
             result, error, status = None, None, "accepted"
             try:
-                value = await self.llm.structured_output(messages, model)
+                from app.llm.usage import usage_scope
+                with usage_scope(self.folder / self.prefix / "llm-calls.json", operation):
+                    value = await self.llm.structured_output(messages, model)
                 result = value.model_dump(mode="json")
                 if validate:
                     validate(value)
@@ -220,21 +222,27 @@ class WorkflowCognition:
         )
 
     async def research_batch(self, actions, sources, available):
-        """Fetch independently; merge and persist each completion on the event loop."""
+        """Reserve durably before network IO; commit results before aggregate saves."""
+        from .research_journal import ResearchJournal
+
+        journal = ResearchJournal(self.folder / self.prefix / "research-journal.json", sources)
+        tickets = journal.reserve(actions)
         semaphore = asyncio.Semaphore(RESEARCH_CONCURRENCY)
-        base = max((o.sequence for o in sources.observations), default=0)
         completed = 0
         self.progress(f"并行处理 {len(actions)} 项资料任务（最多同时 4 项）")
 
         async def run(index, action):
             nonlocal completed
-            local = ResearchSources(documents=[], observations=[])
+            ticket = tickets[index]
+            local = ResearchSources.model_validate(ticket["result"]) if ticket["result"] else ResearchSources(documents=[], observations=[])
             async with semaphore:
                 try:
-                    await asyncio.wait_for(
-                        self.research_tool(action, local, available),
-                        timeout=RESEARCH_TIMEOUT_SECONDS,
-                    )
+                    if not ticket["result"]:
+                        timeout = RESEARCH_TIMEOUT_SECONDS
+                        if ticket["seconds_left"] is not None:
+                            from time import time
+                            timeout = min(timeout, max(0, ticket["seconds_left"] - (time() - ticket["reserved_at"])))
+                        await asyncio.wait_for(self.research_tool(action, local, available), timeout=timeout)
                 except TimeoutError:
                     local.observations.append(
                         ToolObservation(
@@ -245,15 +253,12 @@ class WorkflowCognition:
                             error="资料任务超过 90 秒，已停止等待",
                         )
                     )
-            for document in local.documents:
-                sources.documents = [
-                    d for d in sources.documents if d.id != document.id
-                ] + [document]
-            sources.documents.sort(key=lambda d: d.id)
             observation = local.observations[0]
-            observation.sequence = base + index + 1
-            sources.observations.append(observation)
-            sources.observations.sort(key=lambda o: o.sequence)
+            observation.sequence = ticket["sequence"]
+            observation.action = action
+            if not ticket["result"]:
+                journal.complete(ticket, local)
+            journal.restore(sources)
             self.save(self.prefix + "/sources.json", sources)
             completed += 1
             self.progress(
@@ -284,7 +289,7 @@ class WorkflowCognition:
                 if action.tool not in available:
                     raise ValueError("tool not in available research catalog")
                 result = await self.tools.execute(
-                    action.tool, self.context, query=action.query, limit=5
+                    action.tool, self.context, query=action.query, limit=10
                 )
                 if not result.success:
                     raise ValueError(result.error)
@@ -398,7 +403,8 @@ class WorkflowCognition:
                     f["id"] for f in entry["findings"]
                 }:
                     raise ValueError(
-                        "literature exclusions must cite findings of an included dataset-discussion entry"
+                        f"literature exclusions must cite findings of an included dataset-discussion entry; rejected entry={claim.entry_id}, findings={claim.finding_ids}; "
+                        + str({key: [f['id'] for f in item['findings']] for key, item in entries.items()})
                     )
                 if claim.object_type == "subject":
                     text = " ".join(
@@ -415,7 +421,7 @@ class WorkflowCognition:
                             or int(re.sub(r"\D", "", identity)) not in numbers
                         ):
                             raise ValueError(
-                                "subject exclusions must list explicit subject numbers present in their quoted evidence; keep ambiguous objects unspecified"
+                                f"subject exclusions must list explicit subject numbers present in their quoted evidence; rejected={identity}, entry={claim.entry_id}, quoted evidence={text!r}; keep ambiguous objects unspecified"
                             )
             required = {e["id"] for e in discussion if e.get("exclusions")}
             if not required <= {c.entry_id for c in value.literature_exclusions}:
@@ -436,7 +442,7 @@ class WorkflowCognition:
             ids = tuple(f.id for f in findings.facts)
             review_schema = create_model(
                 "CollectionReview",
-                __base__=collection_review_contract(ids, training_runs),
+                __base__=collection_review_contract(ids, training_runs, discussion),
                 conflicts=(
                     list[str],
                     Field(
@@ -559,6 +565,7 @@ class WorkflowCognition:
             },
             "Write only concise interpretation to fill fixed report sections. Actual numeric tables are rendered by code. "
             "Explain source/engineering decisions for the selected candidate, uncertainty, retention and training limitations. "
+            "Epoch extraction is 分段, not a taper/window function unless a real taper operation was executed. "
             "Report the measured development score and its exact learner/protocol only. Do not claim independent test improvement, globally best preprocessing, or superior neural signal quality.",
             validate,
         )

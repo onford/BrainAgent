@@ -48,3 +48,21 @@ def test_large_history_keeps_all_scores_and_retrievable_exact_records():
 def test_candidate_retrieval_rejects_arbitrary_paths():
     with pytest.raises(ValueError, match="未知"):
         read_context_evidence({"source_id": "candidate:../../secrets", "query": "anything"}, state_with_history(), [])
+
+
+def test_recovery_audit_not_repeated_in_decision_but_remains_retrievable():
+    state = state_with_history()
+    state["protocol"]["method_extraction"] = {
+        "sources": [{"source_id": "source-1", "status": "blocked", "reason": "operator_missing",
+                     "excluded_branches": [{"branch_id": "ica", "reason": "unsupported"}],
+                     "recovery": {"messages": "large repeated schema " * 20000, "answer": "retained-blocked"}}],
+        "recovery_actions_used": 1}
+    before = deepcopy(state)
+    context = feedback(state, [])
+    assert len(json.dumps(context, ensure_ascii=False)) < 180000
+    row = context["protocol"]["method_extraction"]["sources"][0]
+    assert "recovery" not in row and row["reason"] == "operator_missing"
+    assert row["excluded_branches"][0]["branch_id"] == "ica"
+    reading = read_context_evidence({"source_id": "protocol:method_extraction", "query": "retained-blocked"}, state, [])
+    assert reading["status"] == "read" and "retained-blocked" in reading["excerpts"][0]
+    assert state == before

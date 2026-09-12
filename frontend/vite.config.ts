@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [vue()],
     test: {
+      include: ['src/**/*.{test,spec}.{ts,tsx,js,jsx}'],
       environment: 'jsdom',
       setupFiles: ['./tests/setup.ts'],
     },

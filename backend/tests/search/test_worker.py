@@ -151,13 +151,9 @@ def test_bounded_edit_executes_without_static_catalog_membership(search):
                 "parameter": "l_freq",
                 "value": 4.0,
             },
-            {
-                "action": "set_adaptation",
-                "policy": {"adaptation": "euclidean_alignment"},
-            },
         ],
         space,
-        title="4–30 with EA",
+        title="4–30 shared filter",
         order=len(seeds),
     )
     worker.write_json(search / "registry.json", seeds + [entry])
@@ -171,7 +167,7 @@ def test_bounded_edit_executes_without_static_catalog_membership(search):
     assert reference["status"] == "evaluated"
     result = worker.candidate(search, entry["id"])
     assert result["status"] == "evaluated", result
-    assert result["representation"]["policy"]["adaptation"] == "euclidean_alignment"
+    assert result["representation"]["unit"] == "V"
     assert result["coverage"]["predicted"] == reference["coverage"]["predicted"]
 
 

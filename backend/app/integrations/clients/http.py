@@ -1,4 +1,5 @@
 import asyncio
+import re
 from typing import Any
 
 import httpx
@@ -39,10 +40,17 @@ class HttpExternalToolClient(ExternalToolClient):
         )
 
     async def search(self, query: str, **kwargs: Any) -> Any:
+        if not isinstance(query, str) or not query.strip():
+            raise ValueError("query must be a non-empty string")
         path, params = self._search_request(query, kwargs)
         response = await self._request(path, params=params)
         content_type = response.headers.get("content-type", "")
-        return response.json() if "json" in content_type else response.text
+        try:
+            return response.json() if "json" in content_type else response.text
+        except ValueError as exc:
+            raise ExternalToolUnavailableError(
+                f"{self.tool_id} returned invalid JSON"
+            ) from exc
 
     def _search_request(
         self, query: str, kwargs: dict[str, Any]
@@ -54,14 +62,19 @@ class HttpExternalToolClient(ExternalToolClient):
                 {
                     "query": query,
                     "limit": limit,
-                    "fields": "title,url,year,authors,openAccessPdf,citationCount,venue",
+                    "fields": "title,url,year,authors,abstract,externalIds,openAccessPdf,citationCount,venue",
                 },
             ),
             "openalex": ("/works", {"search": query, "per-page": limit}),
             "crossref": ("/works", {"query": query, "rows": limit}),
             "europe_pmc": (
                 "/search",
-                {"query": query, "pageSize": limit, "format": "json"},
+                {
+                    "query": query,
+                    "pageSize": limit,
+                    "format": "json",
+                    "resultType": "core",
+                },
             ),
             "arxiv": (
                 "/query",
@@ -78,10 +91,16 @@ class HttpExternalToolClient(ExternalToolClient):
 
     @staticmethod
     def _arxiv_query(query: str) -> str:
-        cleaned = " ".join(query.replace('"', "").split())
+        cleaned = " ".join(query.split())
         if not cleaned:
-            return "all:*"
-        return f'all:"{cleaned}"' if " " in cleaned else f"all:{cleaned}"
+            raise ValueError("query must be a non-empty string")
+        # Preserve native field/Boolean expressions, including explicit phrases.
+        if re.search(
+            r"\b(?:ti|au|abs|co|jr|cat|rn|id|all):|\b(?:AND|OR|ANDNOT)\b", cleaned
+        ):
+            return cleaned
+        terms = re.findall(r'"[^"]+"|[^\s"]+', cleaned)
+        return " AND ".join(f"all:{term}" for term in terms)
 
     async def _request(
         self, path: str, *, params: dict[str, Any] | None = None

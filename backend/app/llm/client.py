@@ -77,6 +77,14 @@ class OpenAICompatibleClient(LLMClient):
         self._max_retries = max_retries
 
     async def chat(self, messages: list[dict[str, str]]) -> str:
+        from .usage import metered_call
+
+        with metered_call(self.config, messages):
+            return await self._chat(messages)
+
+    async def _chat(self, messages: list[dict[str, str]]) -> str:
+        from .usage import record
+
         started_at = perf_counter()
         endpoint = f"{self.config.base_url.rstrip('/')}/chat/completions"
         parsed_url = urlsplit(endpoint)
@@ -109,6 +117,7 @@ class OpenAICompatibleClient(LLMClient):
                     "POST", endpoint, headers=headers, json=payload
                 )
                 for attempt in range(1, self._max_retries + 2):
+                    record(status="running", attempts=attempt)
                     try:
                         response = await client.send(request)
                         response.raise_for_status()
@@ -168,6 +177,9 @@ class OpenAICompatibleClient(LLMClient):
             )
             try:
                 response_body = response.json()
+                record(usage=response_body.get("usage"), http_status=response.status_code,
+                    request_id=response.headers.get("x-request-id"),
+                    usage_scope="last_response_only; failed/unknown attempts may also be billed")
                 choice = response_body["choices"][0]
                 finish_reason = choice.get("finish_reason") or "-"
                 if finish_reason == "length":

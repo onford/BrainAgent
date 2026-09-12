@@ -28,9 +28,9 @@ it('shows recorded seeds and domain provenance without inventing missing values'
 
 it('paginates large channel-pair matrices using global color limits', async () => {
   const wrapper = mount(AssessmentHeatmap, { props: { title: 'pairs', rows: ['epoch'], columns: Array.from({length: 130}, (_, i) => String(i)), values: [Array.from({length: 130}, (_, i) => i)], unit: 'uV', caption: 'test' } })
-  expect(wrapper.findAll('rect')).toHaveLength(64)
+  expect(wrapper.findAll('.heatmap-cell')).toHaveLength(64)
   expect(wrapper.text()).toContain('0 ～ 129')
   await wrapper.findAll('button').find(b => b.text() === '下一组列')!.trigger('click')
-  expect(wrapper.find('rect title').text()).toContain('64')
+  expect(wrapper.find('.heatmap-cell title').text()).toContain('64')
   expect(wrapper.text()).toContain('0 ～ 129')
 })

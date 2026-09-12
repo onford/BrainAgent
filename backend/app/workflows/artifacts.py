@@ -65,6 +65,7 @@ def local_files(folder, state, previous=()):
             relative.parts[0] in finished | {"process"}
             or path.name in COGNITIVE_FILES
             or name in LIVE_FILES | {"preprocessing/plan.json"}
+            or name.startswith("preprocessing/literature-methods/")
             or (name == "training-data.zip" and delivery_completed)
         ):
             continue

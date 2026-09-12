@@ -1,0 +1,161 @@
+{
+  "scope": "I03 fresh four-subject workflow acceptance. Independent source/parameter and action-use review; does not establish full-cohort performance or semantic correctness of every explanation.",
+  "checks": {
+    "formal_workflow_delivered": true,
+    "no_numerical_overrides": true,
+    "fresh_not_resumed": true,
+    "original_data_unchanged": true,
+    "frozen_code_unchanged": true,
+    "substantive_source_candidate_evaluated": true,
+    "all_three_axes_evaluated": true,
+    "reference_and_filter_applied_all_12_records": true,
+    "later_model_actions_use_source_result": true,
+    "later_model_edit_uses_source_parent": true,
+    "source_present_in_final_comparison": true,
+    "final_selection_is_best_ready_score": true,
+    "delivery_binds_final_selection": true,
+    "delivery_declares_development_only": true
+  },
+  "acceptance_passed": true,
+  "source_candidate_id": "paper-0e447ddd37aca83922e2f22b",
+  "source_url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2023.1134869/pdf",
+  "source_parameters": {
+    "reference": "average",
+    "bandpass_Hz": [
+      8,
+      35
+    ],
+    "source_window_s": [
+      0.5,
+      3
+    ]
+  },
+  "engineering_adaptations": [
+    "FIR zero-phase implementation choices are labeled engineering where unspecified by the source.",
+    "Common 0–2 s final epoch is a separate engineering branch; not the source 0.5–3 s window."
+  ],
+  "actual_source_score": 0.49645915678524377,
+  "final_selected_candidate_id": "basic-broadband",
+  "final_score": 0.6352108036890646,
+  "source_record_execution": {
+    "EEG-FILTER/filter": {
+      "unit_id": "EEG-FILTER",
+      "op": "filter",
+      "denominator": 12,
+      "configured_records": 12,
+      "counts": {
+        "applied": 12,
+        "not_applicable": 0,
+        "failed": 0,
+        "not_reached": 0
+      },
+      "reason_counts": {
+        "applied": {
+          "STEP_COMPLETED": 12
+        },
+        "not_applicable": {},
+        "failed": {},
+        "not_reached": {}
+      }
+    },
+    "EEG-REREFERENCE/reference": {
+      "unit_id": "EEG-REREFERENCE",
+      "op": "reference",
+      "denominator": 12,
+      "configured_records": 12,
+      "counts": {
+        "applied": 12,
+        "not_applicable": 0,
+        "failed": 0,
+        "not_reached": 0
+      },
+      "reason_counts": {
+        "applied": {
+          "STEP_COMPLETED": 12
+        },
+        "not_applicable": {},
+        "failed": {},
+        "not_reached": {}
+      }
+    }
+  },
+  "subsequent_model_actions": [
+    {
+      "index": 5,
+      "action": "propose_candidate",
+      "candidate_id": "candidate-17af39b31d96d3ebaf61099e",
+      "base_candidate_id": "bp8-30-average",
+      "reason": "两项已完成候选的主指标都近随机：bp8-30-average 的 assessment.selection_score=0.498435，paper-0e447ddd37aca83922e2f22b=0.496459 且未达预测（utility 预测被反例否定，mu 分频也意外升高 1.28）。诊断显示低相关 0.008、平坦 0、无坏道证据，μ/β 频带功率可用（mu=22.39、beta=7.38 µV²/Hz），说明问题不在通道质量或频带缺失。当前 adaptation=none，跨被试协方差偏移未被任何对齐处理，是最能区分「协方差偏移机制」与「频带/滤波配置」的可用编辑，且 set_adaptation 家族尚未尝试。"
+    },
+    {
+      "index": 7,
+      "action": "propose_candidate",
+      "candidate_id": "basic-acquisition-reference",
+      "base_candidate_id": "bp8-30-average",
+      "reason": "两项近随机候选与一项轻微正信号已实测：bp8-30-average 的 assessment.selection_score=0.498435、macro_ba=0.556077；先行文献分支 paper-0e447ddd37aca83922e2f22b=0.496459（utility 预测被反例否定，且其相对参考同时改动了参考/滤波顺序、通带 30→35 Hz 与 IIR→零相位 FIR，属多因素差异，不构成单因素结论）；candidate-17af39b31d96d3ebaf61099e=0.512352（EA，超出其自身 seed_sd=0.0327 之内）。参考候选 recipe 含 average_reference 节点，而『通道参考语义』是本任务的受保护目标之一，且至今从未被单独检验。basic-acquisition-reference 是已登记、可执行、尚未尝试的起点，相对参考为单一差异（移除 average_reference，保留采集参考），用于判断参考步骤是否为近随机的一个可区分来源。"
+    },
+    {
+      "index": 9,
+      "action": "propose_candidate",
+      "candidate_id": "candidate-334c512e177bdff7f96a6069",
+      "base_candidate_id": "candidate-17af39b31d96d3ebaf61099e",
+      "reason": "已实测四项。参考 bp8-30-average 的 assessment.selection_score=0.498435；文献分支 paper-0e447ddd37aca83922e2f22b=0.496459（相对参考同时改动参考/滤波顺序、通带 30→35 Hz、IIR→零相位 FIR，为多因素差异，其 utility 预测被反例否定；且其 μ 分频预测也被反例，未构成单因素结论）；移除重参考的 basic-acquisition-reference=0.485672（rank 63→64、covariance_trace 5871→14573 均按预测变化，utility 变化在其自身 seed_sd=0.0336 内，说明参考语义对判别信息惰性）；唯一正信号来自 set_adaptation 的 EA：candidate-17af39b31d96d3ebaf61099e=0.512352，比参考高 0.0139。但该方案的两条诊断预测中 mean_condition_after 被反例（1e12→1e12，看起来是数值钳制而非真实未变），floor_fraction 匹配（0→0），故 EA 的增益机制尚未被区分：它可能来自逐被试尺度归一化，也可能来自完整协方差方向白化。subject_scale 只做逐被试缩放、不做旋转，是在同一父方案上把这一机制分离出来的最小单一编辑（set_adaptation 家族内取值变化，不叠加频带改动）。"
+    },
+    {
+      "index": 11,
+      "action": "propose_candidate",
+      "candidate_id": "candidate-468a8e914a398eb418bcf59a",
+      "base_candidate_id": "paper-0e447ddd37aca83922e2f22b",
+      "reason": "已实测四项且方向已收窄：参考 bp8-30-average 的 assessment.selection_score=0.498435；文献分支 paper-0e447ddd37aca83922e2f22b=0.496459（其相对参考同时改参考/滤波顺序、通带 30→35 Hz、IIR→零相位 FIR，是多因素差异，不构成单因素结论）；移除重参考的 basic-acquisition-reference=0.485672（numerical_rank 63→64、covariance_trace 5871→14573 按预测变化，utility 变化在 seed_sd 内，说明参考语义对通道差分判别信息基本惰性）；唯一正信号来自无标签对齐：candidate-17af39b31d96d3ebaf61099e（EA）=0.512352，比参考高 0.0139。随后在 EA 父方案上仅切换为 set_adaptation=subject_scale 的 candidate-334c512e177bdff7f96a6069=0.496706，提前预测“仅尺度会低于 EA”被匹配（差 −0.0156），说明 EA 的作用不只是尺度归一化。现在需要检验该对齐贡献是否对管线上下文稳健：在已实测的 Gwon 分支（CAR→8–35 Hz 零相位 FIR）之上仅加一个 set_adaptation=euclidean_alignment，相对其自身父方案是单因素编辑，可区分“EA 是普遍可迁移的逐被试输入协方差对齐”与“EA 的增益依赖 8–30 Hz/带通后置参考这一特定管线或仅为噪声”。"
+    },
+    {
+      "index": 13,
+      "action": "propose_candidate",
+      "candidate_id": "basic-broadband",
+      "base_candidate_id": "bp8-30-average",
+      "reason": "六项候选已实测，方向已明显收窄。参考 bp8-30-average 的 assessment.selection_score=0.498435；Gwon 文献分支 paper-0e447ddd37aca83922e2f22b=0.496459（相对参考同时改参考/滤波顺序、通带 30→35 Hz 与 IIR→零相位 FIR，为多因素差异，其 utility 预测被反例否定，且 μ 频带预测也被反例，不能据此作单因素归因）；移除重参考的 basic-acquisition-reference=0.485672（numerical_rank 63→64、covariance_trace 5871→14573 按预测变化，utility 变化在 seed_sd 内，说明参考语义对通道差分判别信息基本惰性）。唯一跨管线一致的正向信号来自 set_adaptation：EA-on-reference=0.512352、EA-on-Gwon=0.508729，均高于各自父方案约 +0.013，且 subject_scale 对照回落 −0.0156（预测匹配）。与此同时，频带内容这一机制至今只在 8–30 与 8–35 之间被动比较过（上限 +5 Hz），从未检验真正更宽的 1–40 Hz 内容。basic-broadband 是 coverage 中唯一尚未尝试的注册起点，相对参考为同一 filter 算子的两个参数变化（l_freq 8→1、h_freq 30→40），可把『宽带频谱内容是否携带被 8–30/8–35 漏掉的判别信息』作为单机制问题区分出来，成本可控且不与其他编辑家族混淆。"
+    },
+    {
+      "index": 15,
+      "action": "propose_candidate",
+      "candidate_id": "candidate-ce39b110f087db734a3f2ef1",
+      "base_candidate_id": "bp8-30-average",
+      "reason": "已实测七项，频带内容出现当前唯一大幅正向：参考 bp8-30-average 的 assessment.selection_score=0.498435、covariance_trace=5871.4；Gwon 分支 paper-0e447ddd37aca83922e2f22b（CAR→8–35 Hz 零相位 FIR，同时改参考/滤波顺序、上限 30→35、IIR→FIR）仅 0.496459，其 utility 预测被反例否定，不能单因素归因；basic-acquisition-reference=0.485672（rank 63→64、covariance_trace 5871→14573 按预测变化，utility 变化在其 seed_sd 内，说明参考语义对通道差分信息基本惰性）；basic-broadband（l_freq 1.0/h_freq 40.0，相对参考为两个参数变化）的 assessment.selection_score=0.635211，比参考高 0.1368，其 covariance_trace 升到 32608.4、beta_mean_psd 2.572→2.775，但该方案同时改动了下限与上限，无法归因。跨管线一致的正信号仍只有 set_adaptation（EA 0.512352 与 0.508729，subject_scale 对照回落 −0.0156）。因此现在最有信息量的一步是把宽带方案的增益拆开：在完全相同的参考配方（8–30 基线、IIR、平均参考、冻结 0–2 s 窗）上只把 l_freq 由 8 改为 1，h_freq 保持 30，用同一 filter 算子的单一参数编辑区分『8 Hz 以下被截内容是否携带判别信息』与『30 Hz 以上扩展是否为主因』。该编辑属尚未尝试的 set_parameter 家族，不与已测的 set_adaptation 家族混淆，且不引入新的物理算子。"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/design.json",
+      "sha256": "8ed2751ddd56092ba7118c455604d586efee08a963ca011a26198666e579ab24"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/result.json",
+      "sha256": "4f4c903418860e521f1169c9c42f6fa38f68b0a98b75a15defdb69070cd74f35"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/offline-search/e0cbb545e6a9495a9f4ce1e9c6454bc9/search.json",
+      "sha256": "ccfc308f16104f33e59b45d030a8041019810a0940c8d23afd390a31cb601069"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/offline-search/e0cbb545e6a9495a9f4ce1e9c6454bc9/selection.json",
+      "sha256": "c45f1787d0516ab6bb6ffdd1f965826dbefdd7d2b284da16e49458645a0f3319"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/offline-search/e0cbb545e6a9495a9f4ce1e9c6454bc9/report.html",
+      "sha256": "a03f346ff615cd74eebb3429bc8a6abb9d41ae0eb8118e29e0ba4961562440b7"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/delivery/manifest.json",
+      "sha256": "76789ee2fe6cfb85329ae65857a2f832ca7a27a8fc66f659f5f354fa14de0150"
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/preprocessing/literature-methods/2ec59061779310e1cb5f/resolved-extraction.json",
+      "sha256": "849b5f7cdce64497047a841b24b3a01a82425a3c1335168229b33f09556a5246"
+    }
+  ],
+  "limitations": [
+    "S001–S004 integration panel; no independent confirmation.",
+    "Model explanations still contain an unsupported filter/reference order interaction hypothesis, scale-insensitive PSD tolerances, and stronger causal language than the small development comparison warrants; I14/I23 remain open.",
+    "Frozen workflow code predates later prerequisite/budget/recovery hardening. Current numerical engine has separately bound unit and real-graph receipts; this is not a same-final-commit full release acceptance."
+  ]
+}

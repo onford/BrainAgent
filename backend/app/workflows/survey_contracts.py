@@ -103,7 +103,8 @@ class SourceStatement(Contract):
     def cited_or_unknown(self):
         if (self.statement is None) != (not self.finding_ids):
             raise ValueError(
-                "a source statement must have citations; unknown statements use null and an empty citation list"
+                'a source statement must have citations; unknown statements use {"statement":null,"finding_ids":[]}. '
+                'Do not put absence explanations in statement; put them in conclusion or gaps'
             )
         return self
 

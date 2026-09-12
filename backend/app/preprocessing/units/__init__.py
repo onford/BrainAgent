@@ -215,6 +215,14 @@ def environment() -> dict[str, str]:
         )
     result = {**versions, "python": platform.python_version(),
               "threadpoolctl": metadata.version("threadpoolctl")}
+    for name in ('pyprep','python-picard','mne-faster','mne-icalabel','PyWavelets','autoreject','onnxruntime','torch'):
+        try:
+            extra=metadata.distribution(name)
+        except metadata.PackageNotFoundError:
+            continue
+        result[name]=extra.version
+        if name not in ('torch','onnxruntime'):
+            result[name+'.source_sha256']=digest({str(p):file_hash(Path(extra.locate_file(p))) for p in (extra.files or []) if str(p).endswith(('.py','.pt','.onnx')) and Path(extra.locate_file(p)).is_file()})
     try:
         dist = metadata.distribution("asrpy")
     except metadata.PackageNotFoundError:
@@ -228,9 +236,10 @@ def environment() -> dict[str, str]:
 
 def engine_hash() -> str:
     root = ROOT.parent
-    files = [*root.rglob("*.py"), ROOT / "catalog.json"]
+    files = [*root.rglob("*.py"), ROOT / "catalog.json", root / "classic_pipelines.json", root / "classic_source_pins.json"]
     hashes = {p.relative_to(root).as_posix(): file_hash(p) for p in sorted(files)}
     hashes["../file_publish.py"] = file_hash(root.parent / "file_publish.py")
+    hashes["../search/processes.py"] = file_hash(root.parent / "search/processes.py")
     return digest(hashes)
 
 

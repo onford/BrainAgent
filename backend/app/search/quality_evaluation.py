@@ -129,6 +129,19 @@ def _unavailable(metric, reason):
 def _recipe_steps(config, entry):
     """Explicit compiler contract: detection expands to decision + signal mark."""
     nodes = entry["recipe"]["nodes"]
+    from .graph_evaluation import graph_method
+    if graph_method(config.steps):
+        _require(len(nodes)==len(config.steps), 'graph_recipe_step_count_mismatch')
+        mapped=[]
+        for node, step in zip(nodes, config.steps, strict=True):
+            graph=node.get('graph')
+            if graph:
+                _require((graph['unit_id'],graph['op'],graph['profile'])==(step.unit_id,step.op,step.profile),'graph_recipe_operation_mismatch')
+            else:
+                _require(_OP_NAMES.get(node['operator'])==(step.unit_id,step.op),'graph_promoted_operation_mismatch')
+            _require(all(step.params.get(k)==v for k,v in node.get('parameters',{}).items()),'graph_recipe_parameter_mismatch')
+            mapped.append((node,step))
+        return mapped
     previous, index, mapped = "raw", 0, []
     _require(len({s.id for s in config.steps}) == len(config.steps), "duplicate_candidate_step_id")
     for node in nodes:
@@ -204,7 +217,8 @@ def _artifacts(root, item, config, plan, panel, entry):
     for log, step in zip(logs, config.steps):
         _require((log["step_id"], log["unit_id"], log["op"]) == (step.id, step.unit_id, step.op),
                  "provenance_operation_mismatch")
-        _require(all(log["parameters"].get(k) == v for k, v in step.params.items() if k != "events"),
+        from .graph_evaluation import check_log
+        _require(check_log(log, step),
                  "provenance_parameters_mismatch")
     contract, after = panel["output_contract"], delta["after"]
     _require(after["kind"] == "epochs" and after["unit"] == "V", "genuine_physical_voltage_epochs_required")
@@ -213,7 +227,8 @@ def _artifacts(root, item, config, plan, panel, entry):
     _require(not any(s.op in {"csd", "surface_laplacian"} for s in config.steps),
              "voltage_to_csd_unit_change_not_supported")
     epoch = config.steps[boundary]
-    _require(all(epoch.params[k] == contract[k] for k in ("tmin", "tmax"))
+    window=config.evaluation_window.model_dump() if config.evaluation_window else epoch.params
+    _require(all(window[k] == contract[k] for k in ("tmin", "tmax"))
              and epoch.params["picks"] == contract["channels"]
              and epoch.params["event_id"] == panel["event_codes"], "frozen_epoch_contract_mismatch")
     frozen = {t["event_id"]: t for t in panel["trials"] if t["record_id"] == config.record_id}
@@ -444,6 +459,37 @@ def _post_reference(data, raw, channels, steps):
     return out
 
 
+def _post_epoch_windows(task, baseline, context, times, raw, channels, steps):
+    """Apply each source epoch offset to both scoring and cue-paired rest.
+
+    Baseline means come from the complete source epoch, never the cropped
+    scoring window or the independent pre-cue measurement window.
+    """
+    for step in steps:
+        if step.op == "reference":
+            task, baseline, context = (
+                _post_reference(values, raw, channels, [step])
+                for values in (task, baseline, context))
+        else:
+            _require(step.op == "baseline" and step.unit_id == "EEG-BASELINE",
+                     "unsupported_postepoch_operation")
+            window = step.params.get("baseline")
+            if window is None:
+                continue
+            _require(isinstance(window, (list, tuple)) and len(window) == 2,
+                     "invalid_source_baseline_window")
+            lo, hi = window
+            lo = times[0] if lo is None else float(lo)
+            hi = times[-1] if hi is None else float(hi)
+            _require(times[0] - 1e-12 <= lo <= hi <= times[-1] + 1e-12,
+                     "source_baseline_outside_context")
+            mask = (times >= lo - 1e-12) & (times <= hi + 1e-12)
+            _require(mask.any(), "empty_source_baseline_window")
+            offset = context[:, :, mask].mean(axis=-1, keepdims=True)
+            task, baseline, context = (values - offset for values in (task, baseline, context))
+    return task, baseline
+
+
 def _measure(values, fs, channels, history, *, baseline=None, trial_ids=None, positions=None,
              baseline_audit=None):
     from .quality_diagnostics import diagnostic_views
@@ -452,6 +498,8 @@ def _measure(values, fs, channels, history, *, baseline=None, trial_ids=None, po
     report = evaluate_quality(values, fs, channels, baseline_epochs_V=baseline,
                               montage_positions=positions).model_dump(mode="json")
     report["metadata"]["diagnostic_views"] = diagnostic_views(values, fs, channels, positions, trial_ids)
+    from .neural_signal import task_tfr
+    report["metadata"]["neural_tfr"] = task_tfr(values, baseline, fs, channels, trial_ids, history)
     if baseline_audit is not None:
         for m in report["metrics"]:
             if m["metricID"].startswith("erds_"):
@@ -492,8 +540,9 @@ def _continuous(paths, provenance, config, boundary, shape, kept, panel, mapping
                     key=lambda t: t["source_row"])
     _require(meta.get("target_events") == [[t["output_sample"], 0, panel["event_codes"][t["label"]]] for t in frozen],
              "continuous_snapshot_event_inventory_mismatch")
-    _require(all(s.op == "reference" and s.unit_id == "EEG-REREFERENCE"
-                 and s.params == {"ref_channels": "average"} for s in post),
+    _require(all((s.op == "reference" and s.unit_id == "EEG-REREFERENCE"
+                 and s.params == {"ref_channels": "average"})
+                 or (s.op == "baseline" and s.unit_id == "EEG-BASELINE") for s in post),
              "unsupported_postepoch_operation")
     raw = mne.io.read_raw_fif(paths["continuous-raw.fif"], preload=False, verbose="ERROR")
     try:
@@ -507,16 +556,19 @@ def _continuous(paths, provenance, config, boundary, shape, kept, panel, mapping
         task, task_audit = _segments(raw, kept, channels,
                                      (contract["epoch_start_offset"], contract["epoch_end_offset"]+1),
                                      sample_key="output_sample")
-        task = _post_reference(task, raw, channels, post)
-        with _mapped(paths["signal_V.npy"]) as observed:
-            _require(task.shape == shape and np.isfinite(task).all()
-                     and np.allclose(task, observed, rtol=2*np.finfo(np.float32).eps, atol=1e-18),
-                     "continuous_reextracted_task_does_not_match_signal_V")
         baseline, audit = _segments(raw, kept, channels,
                                     tuple(round(t*contract["sfreq"]) for t in PRECUE_SECONDS),
                                     sample_key="output_sample", original_mapping=mapping,
                                     task_tmax=max(0, contract["tmax"]), baseline=True)
-        baseline = _post_reference(baseline, raw, channels, post)
+        start, stop = (round(float(epoch.params[key]) * contract["sfreq"])
+                       for key in ("tmin", "tmax"))
+        context, _ = _segments(raw, kept, channels, (start, stop + 1), sample_key="output_sample")
+        times = np.arange(start, stop + 1) / contract["sfreq"]
+        task, baseline = _post_epoch_windows(task, baseline, context, times, raw, channels, post)
+        with _mapped(paths["signal_V.npy"]) as observed:
+            _require(task.shape == shape and np.isfinite(task).all()
+                     and np.allclose(task, observed, rtol=2*np.finfo(np.float32).eps, atol=1e-18),
+                     "continuous_reextracted_task_does_not_match_signal_V")
         return raw, baseline, audit, post
     except Exception:
         raw.close()
@@ -701,14 +753,20 @@ def evaluate_dataset_quality(plan, result, store_root, panel, candidate_entry, o
                         detail["baseline_provenance"] = {"artifact": "continuous-raw.fif",
                                                          "sha256": file_hash(paths["continuous-raw.fif"]),
                                                          "same_task_reextraction_verified": True,
-                                                         "postepoch_reference_steps": [s.id for s in post],
+                                                         "postepoch_reference_steps": [s.id for s in post if s.op == "reference"],
+                                                         "postepoch_baseline_steps": [s.model_dump(mode="json") for s in post if s.op == "baseline"],
+                                                         "baseline_offset_source": "complete_source_epoch_paired_to_same_cue",
                                                          "precue_seconds": list(PRECUE_SECONDS),
                                                          "raw_source_precue_was_not_substituted": True}
                         positions = _positions(continuous, channels)
-                        full = _post_reference(continuous.get_data(picks=channels)[None], continuous, channels, post)
-                        detail["stages"]["processed_continuous"] = _measure(full, contract["sfreq"], channels,
-                                                                             history, positions=positions)
-                        del full
+                        if any(s.op == "baseline" for s in post):
+                            detail["stages"]["processed_continuous"] = _empty(
+                                "trial_specific_baseline_has_no_unique_continuous_representation")
+                        else:
+                            full = _post_reference(continuous.get_data(picks=channels)[None], continuous, channels, post)
+                            detail["stages"]["processed_continuous"] = _measure(full, contract["sfreq"], channels,
+                                                                                 history, positions=positions)
+                            del full
                         detail["stages"]["processed_precue"] = _measure(baseline, contract["sfreq"], channels,
                                                                          history, trial_ids=ids, positions=positions)
                     except (OSError, ValueError, KeyError, TypeError, RuntimeError) as exc:

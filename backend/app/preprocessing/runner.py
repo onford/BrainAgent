@@ -118,6 +118,9 @@ def save_artifacts(value, directory: Path, name="artifacts"):
 
 
 def verify_result(root: Path, result):
+    if result and result.get("schema_version") == "2":
+        from .graph_runtime import verify_graph_result
+        return verify_graph_result(root, result)
     if not result or not result.get("artifacts"):
         return False
     try:
@@ -196,6 +199,9 @@ def run_record(
     storage_root: Path,
     cancelled=lambda: False,
 ):
+    if any(s.implementation_version == "2" for s in config.steps):
+        from .graph_runtime import run_graph_record
+        return run_graph_record(plan, config, source_root, output, storage_root, cancelled)
     record = next(
         r for r in plan.input_snapshot.collection.records if r.id == config.record_id
     )

@@ -1,0 +1,2106 @@
+{
+  "scope": "I04 targeted category acceptance on a naturally formed candidate pool. Real model chooses the parents/edits. Does not establish unprompted category choice in I03 or scientific improvement.",
+  "checks_passed": true,
+  "cases": [
+    {
+      "run": "model-composition-basic-2",
+      "search_id": "a45a9253175b44b3a53f7d63d2f748ff",
+      "category": "basic+literature",
+      "candidate_id": "candidate-d8d9b678b45e1fd2b5ac90d8",
+      "checks": {
+        "real_model_accepted": true,
+        "original_metadata_unchanged": true,
+        "frozen_code_unchanged": true,
+        "all_three_axes_evaluated": true,
+        "two_parent_methods": true,
+        "all_twelve_records_executed": true
+      },
+      "passed": true,
+      "score": 0.498435441370224,
+      "parent_ids": [
+        "basic-acquisition-reference",
+        "paper-0e447ddd37aca83922e2f22b"
+      ],
+      "lineage": [
+        {
+          "kind": "basic",
+          "method_id": "basic-acquisition-reference",
+          "version": "1",
+          "basis": "standard project control, not current research",
+          "prior_origin": "basic"
+        },
+        {
+          "analysis": "Gwon et al. 2023 (Front. Hum. Neurosci. 17:1134869) 对 8 个代表性 MI 数据集施加的统一比较协议中，落在目标前置数据准备范围内的一致步骤：共同平均参考 → 8–35 Hz 带通 → 以 cue（onset）为基准截取 500–3000 ms 的 Epochs。本分支只包含这三步；来源全文被截断读取（source.truncated=true，reading_scope=partial_text），因此本分支不对来源管线是否完整作任何断言。",
+          "branch_evidence_indices": [
+            3,
+            20,
+            21
+          ],
+          "branch_id": "review_unified_mi_preproc-shared-window",
+          "entry_ids": [
+            "lit-02-dataset-review"
+          ],
+          "extraction_hash": "a4f851d94b365c0b77d153bd7d68a98e77f78505f453411345b120b43022254b",
+          "extraction_path": "preprocessing/literature-methods/2ec59061779310e1cb5f/resolved-extraction.json",
+          "kind": "literature",
+          "prerequisites": [
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "channel_type",
+                  "value": "eeg"
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "输入须为多通道 EEG 电位记录，才能执行共同平均参考与通道化带通、分段。",
+              "evidence_indices": [
+                20
+              ],
+              "predicate": {
+                "kind": "channel_type",
+                "value": "eeg"
+              },
+              "status": "satisfied",
+              "target_basis": "target.channel_profiles[0].channels 声明 64 个通道且类型均为 eeg（FC5…Iz），满足本分支的多通道 EEG 电位前提。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "channels",
+                  "value": [
+                    "C3",
+                    "C4"
+                  ]
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "须包含中央区手部代表通道，源比较的 MI 数据集均覆盖中央区电极。",
+              "evidence_indices": [
+                20,
+                3
+              ],
+              "predicate": {
+                "kind": "channels",
+                "value": [
+                  "C3",
+                  "C4"
+                ]
+              },
+              "status": "satisfied",
+              "target_basis": "target.channel_profiles[0].channel_order 中含 C3、C4（中央区），与本分支所依据的 MI 数据集电极覆盖一致。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "events",
+                  "value": {
+                    "left_hand": 1,
+                    "right_hand": 2
+                  }
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "须提供左/右手运动想象的 cue 起点（onset）事件，才能按本分支协议从 cue 后 500 ms 开始分段。",
+              "evidence_indices": [
+                21,
+                3
+              ],
+              "predicate": {
+                "kind": "events",
+                "value": {
+                  "left_hand": 1,
+                  "right_hand": 2
+                }
+              },
+              "status": "satisfied",
+              "target_basis": "target.event_id 给出 {left_hand: 1, right_hand: 2}，与本分支左/右手想象两分类的任务标签对应。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "duration",
+                  "value": 3.0
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "每条记录须长于 cue 后 3000 ms 的分段上界，且为连续原始信号（本分支对连续记录先滤波再分段）。",
+              "evidence_indices": [
+                21,
+                3
+              ],
+              "predicate": {
+                "kind": "duration",
+                "value": 3.0
+              },
+              "status": "satisfied",
+              "target_basis": "target.records 各条记录为 19680–20000 样点、160 Hz（约 123–125 s），且 intervals 为空（连续段），远超 3.0 s 窗所需长度。"
+            }
+          ],
+          "semantic_review": {
+            "claims": [
+              {
+                "claim_id": "review_unified_mi_preproc/__complete_source_branch",
+                "evidence_index": 20,
+                "reason": "证据20连续给出 CAR→8–35 Hz 带通，证据21同一段落紧随其后给出 500–3000 ms 以 cue onset 为基准分段；三步骤在该来源中被描述为同一分析流程的完整前置链，未出现被拆分的额外必需环节（唯一例外——Cho et al. 的 gain/32——源明确标注为单数据集附加预处理，落在目标范围外，排除合理）。分支自身亦声明来源为截断文本、不作管线完整性断言，属限制而非不实主张。判定为该分支范围内前置条件齐备。",
+                "source_unit": null,
+                "span": {
+                  "end": 1032,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 869
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/car_reference",
+                "evidence_index": 20,
+                "reason": "证据20逐字给出对原始信号做共同平均参考（CAR）的重参考操作，明确属于本分析分支（8 个代表性 MI 数据集的统一比较协议）的预处理步骤。",
+                "source_unit": null,
+                "span": {
+                  "end": 993,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 926
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/car_reference.ref_channels",
+                "evidence_index": 20,
+                "reason": "“common average reference”即全部通道平均作为参考，与参数 ref_channels='average' 的操作契约一致；来源未列出被排除的通道，故按全体 EEG 通道平均理解。",
+                "source_unit": null,
+                "span": {
+                  "end": 993,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 926
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/bandpass_8_35",
+                "evidence_index": 20,
+                "reason": "证据20逐字给出带通滤波操作；profile 中的 method=fir、phase=zero 已在参数来源中标注为工程实现选择，不冒充源参数，操作本身（带通滤波）有来源支持。",
+                "source_unit": null,
+                "span": {
+                  "end": 1031,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 995
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/bandpass_8_35.l_freq",
+                "evidence_index": 20,
+                "reason": "源的统一带通下限为 8 Hz，与 l_freq=8.0 的下限含义一致、量纲匹配（Hz→Hz）。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 1031,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 995
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/bandpass_8_35.h_freq",
+                "evidence_index": 20,
+                "reason": "源的统一带通上限为 35 Hz，与 h_freq=35.0 的上限含义一致、量纲匹配（Hz→Hz）。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 1031,
+                  "evidence_sha256": "8154b0baa9afae743f21f9eb31ba11d216239c5fd26a15f94afdb337b55e3e1b",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 995
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/epoch_cue_500_3000",
+                "evidence_index": 21,
+                "reason": "证据21逐字给出以 cue onset 为基准的分段（epoch）操作，属该统一协议的前置步骤；profile=source 与源描述一致。",
+                "source_unit": null,
+                "span": {
+                  "end": 194,
+                  "evidence_sha256": "5eb7944b6512ad21d2ba3639bad4cde72da6e5f5098f6780e7a907d0e44daa76",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 29
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/epoch_cue_500_3000.tmin",
+                "evidence_index": 21,
+                "reason": "源起点为 cue 后 500 ms，与 tmin=0.5 s 的含义（cue 后起点）一致，量纲换算正确（ms→s）。",
+                "source_unit": "ms",
+                "span": {
+                  "end": 194,
+                  "evidence_sha256": "5eb7944b6512ad21d2ba3639bad4cde72da6e5f5098f6780e7a907d0e44daa76",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 124
+                },
+                "status": "supported",
+                "target_unit": "s"
+              },
+              {
+                "claim_id": "review_unified_mi_preproc/epoch_cue_500_3000.tmax",
+                "evidence_index": 21,
+                "reason": "源终点为 cue 后 3000 ms，与 tmax=3.0 s 的含义（cue 后终点）一致，量纲换算正确（ms→s）。",
+                "source_unit": "ms",
+                "span": {
+                  "end": 194,
+                  "evidence_sha256": "5eb7944b6512ad21d2ba3639bad4cde72da6e5f5098f6780e7a907d0e44daa76",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 124
+                },
+                "status": "supported",
+                "target_unit": "s"
+              }
+            ],
+            "input_hash": "c029500441e617e83b39e5de1ec32cda742bea8a5039580642f46d324cce4d1d"
+          },
+          "shared_evidence_indices": [],
+          "source_id": "s-36afd5bc6d165a3c",
+          "source_ref": {
+            "id": "21bd2bd8449a3afaa59eee14524f413a5940e92ea1bb8f68e7f57c5af6bbb6ab",
+            "sha256": "21bd2bd8449a3afaa59eee14524f413a5940e92ea1bb8f68e7f57c5af6bbb6ab"
+          },
+          "source_sha256": "52aa855020f0ed29ffceafd25c4254c405e41d7102cb1654f3f136d4e30ac0aa",
+          "source_url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2023.1134869/pdf",
+          "workflow_id": "b9e0a521dafa470aaaa1bfba45f8bcc7",
+          "fidelity": "engineering_adaptation",
+          "original_branch_id": "review_unified_mi_preproc",
+          "original_method_hash": "01168d576767b05b94853ddff47924addcc299b8244bf8b8d638c9299e3ef4de",
+          "adaptation": {
+            "policy": "shared-final-epoch-window-v1",
+            "original": {
+              "tmin": 0.5,
+              "tmax": 3.0
+            },
+            "replacement": {
+              "tmin": 0.0,
+              "tmax": 2.0
+            },
+            "scope": "final epoch only; preserve all required source operations and event/channel identities"
+          },
+          "method_ref": {
+            "id": "01168d576767b05b94853ddff47924addcc299b8244bf8b8d638c9299e3ef4de",
+            "sha256": "01168d576767b05b94853ddff47924addcc299b8244bf8b8d638c9299e3ef4de"
+          },
+          "method_id": "review-unified-mi-preproc",
+          "version": "v1"
+        }
+      ],
+      "representative_compiled_steps": [
+        {
+          "id": "s00",
+          "unit_id": "EEG-RESAMPLE",
+          "op": "resample",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "raw",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "events": "$events",
+            "sfreq": 160.0
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            70
+          ],
+          "parameter_sources": {
+            "events": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "sfreq": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            }
+          },
+          "optional": true,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": null,
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s01",
+          "unit_id": "EEG-REREFERENCE",
+          "op": "reference",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "s00",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "ref_channels": "average"
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            20
+          ],
+          "parameter_sources": {
+            "ref_channels": {
+              "origin": "paper",
+              "evidence_indices": [
+                20
+              ],
+              "rationale": "源明确写 'the raw signal was re-referenced through a common average reference'，并说明原因是各数据集参考电极不同，故取值为全部参与通道的平均参考。"
+            }
+          },
+          "optional": false,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": [
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "FT7",
+            "FT8",
+            "T7",
+            "T8",
+            "T9",
+            "T10",
+            "TP7",
+            "TP8",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "O1",
+            "Oz",
+            "O2",
+            "Iz"
+          ],
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s02",
+          "unit_id": "EEG-FILTER",
+          "op": "filter",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "s01",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "filter_length": "auto",
+            "l_trans_bandwidth": "auto",
+            "h_trans_bandwidth": "auto",
+            "pad": "reflect_limited",
+            "annotation_policy": "raw",
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ],
+            "nonfinite": "reject",
+            "h_freq": 30.0,
+            "l_freq": 8.0,
+            "method": "iir",
+            "phase": "zero",
+            "picks": [
+              "FC5",
+              "FC3",
+              "FC1",
+              "FCz",
+              "FC2",
+              "FC4",
+              "FC6",
+              "C5",
+              "C3",
+              "C1",
+              "Cz",
+              "C2",
+              "C4",
+              "C6",
+              "CP5",
+              "CP3",
+              "CP1",
+              "CPz",
+              "CP2",
+              "CP4",
+              "CP6",
+              "Fp1",
+              "Fpz",
+              "Fp2",
+              "AF7",
+              "AF3",
+              "AFz",
+              "AF4",
+              "AF8",
+              "F7",
+              "F5",
+              "F3",
+              "F1",
+              "Fz",
+              "F2",
+              "F4",
+              "F6",
+              "F8",
+              "FT7",
+              "FT8",
+              "T7",
+              "T8",
+              "T9",
+              "T10",
+              "TP7",
+              "TP8",
+              "P7",
+              "P5",
+              "P3",
+              "P1",
+              "Pz",
+              "P2",
+              "P4",
+              "P6",
+              "P8",
+              "PO7",
+              "PO3",
+              "POz",
+              "PO4",
+              "PO8",
+              "O1",
+              "Oz",
+              "O2",
+              "Iz"
+            ]
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            70
+          ],
+          "parameter_sources": {
+            "h_freq": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "l_freq": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "method": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "phase": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "picks": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            }
+          },
+          "optional": true,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": null,
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s03",
+          "unit_id": "EEG-EPOCH",
+          "op": "epoch",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "s02",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "event_id": {
+              "left_hand": 1,
+              "right_hand": 2
+            },
+            "events": "$events",
+            "picks": [
+              "FC5",
+              "FC3",
+              "FC1",
+              "FCz",
+              "FC2",
+              "FC4",
+              "FC6",
+              "C5",
+              "C3",
+              "C1",
+              "Cz",
+              "C2",
+              "C4",
+              "C6",
+              "CP5",
+              "CP3",
+              "CP1",
+              "CPz",
+              "CP2",
+              "CP4",
+              "CP6",
+              "Fp1",
+              "Fpz",
+              "Fp2",
+              "AF7",
+              "AF3",
+              "AFz",
+              "AF4",
+              "AF8",
+              "F7",
+              "F5",
+              "F3",
+              "F1",
+              "Fz",
+              "F2",
+              "F4",
+              "F6",
+              "F8",
+              "FT7",
+              "FT8",
+              "T7",
+              "T8",
+              "T9",
+              "T10",
+              "TP7",
+              "TP8",
+              "P7",
+              "P5",
+              "P3",
+              "P1",
+              "Pz",
+              "P2",
+              "P4",
+              "P6",
+              "P8",
+              "PO7",
+              "PO3",
+              "POz",
+              "PO4",
+              "PO8",
+              "O1",
+              "Oz",
+              "O2",
+              "Iz"
+            ],
+            "tmax": 2.0,
+            "tmin": 0.0
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            70
+          ],
+          "parameter_sources": {
+            "event_id": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "events": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "picks": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "tmax": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            },
+            "tmin": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"
+            }
+          },
+          "optional": true,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": null,
+          "record_decisions": {},
+          "decision_target": "input"
+        }
+      ],
+      "recipe_hash": "d8d9b678b45e1fd2b5ac90d83d35bd7041bec58ebd392480b823b7d0ff21310b",
+      "result_ref": {
+        "path": ".local\\section-a-20260912\\model-composition-basic-2\\result.json",
+        "sha256": "a6a6fd4420315f0125f82a99dc982df1e40ee0d86173f44c2de2f1b3c2cf49a9"
+      },
+      "search_ref": {
+        "path": ".local\\section-a-20260912\\model-composition-basic-2\\offline-search\\a45a9253175b44b3a53f7d63d2f748ff\\search.json",
+        "sha256": "7442761239dcbd829da05b69464a721c08ec6f88283b5fd4bf7d6a90f6973c3d"
+      }
+    },
+    {
+      "run": "model-composition-literature",
+      "search_id": "17f2e3cd6c1043ff8514c6187c1f77d4",
+      "category": "literature+literature",
+      "candidate_id": "candidate-b3e320a2c091bc9da6cf052e",
+      "checks": {
+        "real_model_accepted": true,
+        "original_metadata_unchanged": true,
+        "frozen_code_unchanged": true,
+        "all_three_axes_evaluated": true,
+        "two_parent_methods": true,
+        "all_twelve_records_executed": true
+      },
+      "passed": true,
+      "score": 0.47743741765480896,
+      "parent_ids": [
+        "paper-b606ed9145650faa4b9ccdbf",
+        "paper-d8f4b112976f134a00d6889e"
+      ],
+      "lineage": [
+        {
+          "analysis": "文献常用带宽 (4,12) Hz（theta 与 alpha/mu）结合线索后 0–4 s 时间窗；该组合在全体被试平均准确率最高。",
+          "branch_evidence_indices": [
+            2,
+            5,
+            6,
+            8,
+            12,
+            16,
+            17,
+            24
+          ],
+          "branch_id": "lit_4_12_hz_w0_4s-scoring-window",
+          "entry_ids": [
+            "ls-007",
+            "ls-008",
+            "ls-009"
+          ],
+          "extraction_hash": "14a833ccc63aa58c5874c9152473c8221b063659a8f266bdc71c0f6a496ab3af",
+          "extraction_path": "preprocessing/literature-methods/702c0ec4dcdce3fe9577/resolved-extraction.json",
+          "kind": "literature",
+          "prerequisites": [
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "channel_type",
+                  "value": "eeg"
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "64 通道 10-10 电极布局的 EEG 记录（运动想象左右手，runs 4/8/12）。",
+              "evidence_indices": [
+                12
+              ],
+              "predicate": {
+                "kind": "channel_type",
+                "value": "eeg"
+              },
+              "status": "satisfied",
+              "target_basis": "target.dataset_id=eegmmidb，records 含 S001R04/S001R08/S001R12 等，channel_profiles[0] 全部为 eeg 类型且共 64 通道。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "events",
+                  "value": {
+                    "left_hand": 1,
+                    "right_hand": 2
+                  }
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "左右手运动想象线索事件标签。",
+              "evidence_indices": [
+                12
+              ],
+              "predicate": {
+                "kind": "events",
+                "value": {
+                  "left_hand": 1,
+                  "right_hand": 2
+                }
+              },
+              "status": "satisfied",
+              "target_basis": "target.event_id={left_hand:1,right_hand:2}，与本任务的二分类标签一致。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "duration",
+                  "value": 4.0
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "线索后至少 4.0 s 的连续可用数据以承载 0–4 s 窗口。",
+              "evidence_indices": [
+                12
+              ],
+              "predicate": {
+                "kind": "duration",
+                "value": 4.0
+              },
+              "status": "unknown",
+              "target_basis": "target facts 只给出记录总样点数（如 20000 样点 @160 Hz），未给出每个 trial 线索后的可用时长。"
+            }
+          ],
+          "semantic_review": {
+            "claims": [
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/__complete_source_branch",
+                "evidence_index": 2,
+                "reason": "源文逐字记录该 (0,4) s × (4,12) Hz 网格组合为跨被试最优组合，是一个独立可辨识的分析组合；配方只含该带宽带限与线索后 0–4 s 窗口两步，源文未报告其它必需预处理（重参考/坏道/基线等未报告，已在 issues 标为 limitation），故该分支在源文可支持的范围内完整。",
+                "source_unit": null,
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/bandpass",
+                "evidence_index": 2,
+                "reason": "源文把 4–12 Hz 作为该分析所用电信号带宽（对 EEG 施加该带限），故 filter 操作及其频带在该分支成立；具体实现（method=fir、phase=zero）为库默认工程选择，不据此声明源支持。",
+                "source_unit": null,
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/bandpass.l_freq",
+                "evidence_index": 2,
+                "reason": "源文逐字给出该组合频率下沿为 4 Hz，含义（滤波低频截止）与单位一致。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/bandpass.h_freq",
+                "evidence_index": 2,
+                "reason": "源文逐字给出该组合频率上沿为 12 Hz，单位一致。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/epoch",
+                "evidence_index": 6,
+                "reason": "源文明确线索后时间窗用于训练分类器，即按该窗口从连续记录中切分试次，epoch 操作成立；事件码绑定属目标数据工程处理。",
+                "source_unit": null,
+                "span": {
+                  "end": 202,
+                  "evidence_sha256": "e039f1cc23e4f898ae9d66629b3b58595a8ccba2a786ffdff66675db2c1e935d",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 96
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/epoch.tmin",
+                "evidence_index": 2,
+                "reason": "源文逐字给出该组合窗口起点 0 s，且说明 0 s 为线索呈现时刻。",
+                "source_unit": "s",
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": "s"
+              },
+              {
+                "claim_id": "lit_4_12_hz_w0_4s/epoch.tmax",
+                "evidence_index": 2,
+                "reason": "源文逐字给出该组合窗口终点 4 s（线索后），单位一致。",
+                "source_unit": "s",
+                "span": {
+                  "end": 814,
+                  "evidence_sha256": "51ba3f6041f6b952a288409a8918bb5ad712b5e831081e05524162486be3d6b0",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 695
+                },
+                "status": "supported",
+                "target_unit": "s"
+              }
+            ],
+            "input_hash": "a92c63a4d71a8b47abbfe4104e861a97981bc9694f04d4f921688dcca2a85f71"
+          },
+          "shared_evidence_indices": [
+            5,
+            6,
+            12,
+            16
+          ],
+          "source_id": "s-3f8e349a95fc99d0",
+          "source_ref": {
+            "id": "30cc92b12153ca9b385013c815a87aa501614a8774639f9d2cded41060667e9b",
+            "sha256": "30cc92b12153ca9b385013c815a87aa501614a8774639f9d2cded41060667e9b"
+          },
+          "source_sha256": "05a7b3706217b1dcebae587e4089de2b32fed6ef4898fb9f5b1dc2ce9018ad68",
+          "source_url": "https://arxiv.org/pdf/2605.21319",
+          "workflow_id": "bbd3662eea47498c8aecf1895372b8b7",
+          "fidelity": "engineering_adaptation",
+          "original_method_hash": "fbd4312c349848fa291b7460f50765c46be3b4261980142b68fd201f76972a94",
+          "adaptation": {
+            "policy": "postprocessing-scoring-projection-v1",
+            "original": {
+              "tmin": 0.0,
+              "tmax": 4.0
+            },
+            "replacement": {
+              "tmin": 0.0,
+              "tmax": 2.0
+            },
+            "preserved": "all source operations, fit scopes, screening and baseline windows"
+          },
+          "method_ref": {
+            "id": "fbd4312c349848fa291b7460f50765c46be3b4261980142b68fd201f76972a94",
+            "sha256": "fbd4312c349848fa291b7460f50765c46be3b4261980142b68fd201f76972a94"
+          },
+          "method_id": "lit_4_12_hz_w0_4s",
+          "version": "1"
+        },
+        {
+          "analysis": "CSP+LDA 解码流程中的预处理部分：对 runs 4/8/12 的连续 EEG 施加 7–30 Hz 带通，并按线索后 1–4 s 分段（源 README 方法表明确列出的唯二预处理配置，按同一源流水线的相继阶段合并为一个分支）。",
+          "branch_evidence_indices": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "branch_id": "mi_mu_beta_bandpass_cue_epoch-shared-window",
+          "entry_ids": [
+            "ls-015",
+            "ls-016"
+          ],
+          "extraction_hash": "ebe90a0999f6f89e553f930d3b1eef2ef4bb8f999b957cce99dfa64260d8276b",
+          "extraction_path": "preprocessing/literature-methods/89eddfe063e71fc70af1/resolved-extraction.json",
+          "kind": "literature",
+          "prerequisites": [
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "channel_type",
+                  "value": "eeg"
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "64 通道头皮 EEG 电位记录（10-10 系统，160 Hz），作为带通与分段的输入。",
+              "evidence_indices": [
+                0,
+                3
+              ],
+              "predicate": {
+                "kind": "channel_type",
+                "value": "eeg"
+              },
+              "status": "satisfied",
+              "target_basis": "target.channel_profiles[0] 列出 64 个通道且全部标记为 eeg，records 的 sfreq 均为 160.0，与源描述的“64-channel EEG at 160 Hz”一致。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "events",
+                  "value": {
+                    "left_hand": 1,
+                    "right_hand": 2
+                  }
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "存在可用的左/右手运动想象线索事件，用于线索后分段。",
+              "evidence_indices": [
+                0,
+                2
+              ],
+              "predicate": {
+                "kind": "events",
+                "value": {
+                  "left_hand": 1,
+                  "right_hand": 2
+                }
+              },
+              "status": "satisfied",
+              "target_basis": "target.task=left_right_motor_imagery，target.event_id={left_hand:1, right_hand:2}，提供该分支分段所需事件码；源 README 未给出事件码，故按目标绑定使用。"
+            },
+            {
+              "computed_basis": {
+                "predicate": {
+                  "kind": "duration",
+                  "value": 4.0
+                },
+                "records": {
+                  "S001R04": true,
+                  "S001R08": true,
+                  "S001R12": true,
+                  "S002R04": true,
+                  "S002R08": true,
+                  "S002R12": true,
+                  "S003R04": true,
+                  "S003R08": true,
+                  "S003R12": true,
+                  "S004R04": true,
+                  "S004R08": true,
+                  "S004R12": true
+                }
+              },
+              "computed_status": "satisfied",
+              "description": "记录长度足以容纳线索后 1–4 s 的分段窗。",
+              "evidence_indices": [
+                0,
+                2
+              ],
+              "predicate": {
+                "kind": "duration",
+                "value": 4.0
+              },
+              "status": "satisfied",
+              "target_basis": "target.records 中每条记录为 19680–20000 样点、160 Hz，约 123–125 s，远大于分段所需的 4 s。"
+            }
+          ],
+          "semantic_review": {
+            "claims": [
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/__complete_source_branch",
+                "evidence_index": 0,
+                "reason": "该分支对应源 README 所记载的完整预处理链：源文件清单明确写作 “standalone pipeline (load → filter → epoch → CSP+LDA → CV)”，方法表列出的载入后、CSP 前的预处理步骤即带通与分段，二者均在本分支中给出且顺序与源流水线一致（连续 Raw → 7–30 Hz 带通 → 线索后 1–4 s 分段）。源文本未记录陷波、伪迹剔除、ICA/EOG 校正、重参考或基线校正，因此不能断言存在额外必需步骤，也不能据此补充；该不确定性已记为 limitation。runs 4/8/12 的适用范围在源中明示（“This pipeline uses runs 4, 8, and 12”），本分支未做被试/run 选择单元，属已声明的限制而非缺失前置处理。",
+                "source_unit": null,
+                "span": {
+                  "end": 835,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 729
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/bandpass_mu_beta",
+                "evidence_index": 0,
+                "reason": "被审操作名为 filter（带通滤波）。源 README 方法表明确列出 “Band-pass” 阶段并给出 7–30 Hz 频带，足以支持在连续 EEG 上执行带通滤波这一操作。profile 中的 method=fir、phase=zero、annotation_policy=raw 均为实现选择，源文本未指定，不构成本操作项的源证据，但也不影响“操作存在”这一判定（其在参数来源中已标注为 engineering）。",
+                "source_unit": null,
+                "span": {
+                  "end": 784,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 729
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/bandpass_mu_beta.l_freq",
+                "evidence_index": 0,
+                "reason": "源方法表带通下界写作 7–30 Hz 的 “7”，单位为 Hz，与本声明的 l_freq=7.0 Hz 数值与单位一致，语义为带通滤波下限，符合参数契约。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 784,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 729
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/bandpass_mu_beta.h_freq",
+                "evidence_index": 0,
+                "reason": "源方法表带通上界写作 7–30 Hz 的 “30”，单位为 Hz，与声明的 h_freq=30.0 Hz 数值与单位一致，语义为带通滤波上限，符合参数契约。",
+                "source_unit": "Hz",
+                "span": {
+                  "end": 784,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 729
+                },
+                "status": "supported",
+                "target_unit": "Hz"
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/epoch_mi",
+                "evidence_index": 0,
+                "reason": "被审操作名为 epoch（按事件分段）。源 README 方法表明确列出 “Epoch | 1–4 s after cue (motor-imagery window)” 阶段，文件清单亦写作 load → filter → epoch，足以支持在带通后的连续数据上按线索事件切分试次窗。源未给出事件码或样点，故 events/event_id 保持为目标绑定，不构成本操作存在性的反证。",
+                "source_unit": null,
+                "span": {
+                  "end": 835,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 785
+                },
+                "status": "supported",
+                "target_unit": null
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/epoch_mi.tmin",
+                "evidence_index": 0,
+                "reason": "源方法表分段的起点为线索后 1 s，与声明的 tmin=1.0 s 数值、单位（s）及“相对线索事件起点”的语义一致。",
+                "source_unit": "s",
+                "span": {
+                  "end": 835,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 785
+                },
+                "status": "supported",
+                "target_unit": "s"
+              },
+              {
+                "claim_id": "mi_mu_beta_bandpass_cue_epoch/epoch_mi.tmax",
+                "evidence_index": 0,
+                "reason": "源方法表分段的终点为线索后 4 s，与声明的 tmax=4.0 s 数值、单位（s）及“相对线索事件终点”的语义一致。",
+                "source_unit": "s",
+                "span": {
+                  "end": 835,
+                  "evidence_sha256": "c07f76818fee1fdf8e2e047d0c0ea5b1360a4b8e227cbc3b4afb1e79c2a17bcc",
+                  "normalization": "NFKC_whitespace_only",
+                  "start": 785
+                },
+                "status": "supported",
+                "target_unit": "s"
+              }
+            ],
+            "input_hash": "ab113d23a270bf4a98922ed15c5ed4e4d35844fe65fcb464140aaf4d364f48e4"
+          },
+          "shared_evidence_indices": [],
+          "source_id": "s-5aefa84d6dc2e0b6",
+          "source_ref": {
+            "id": "3b65d10a1e76f6b583419dc380f4759656850fd2619026dfb9b0c368f55a19e2",
+            "sha256": "3b65d10a1e76f6b583419dc380f4759656850fd2619026dfb9b0c368f55a19e2"
+          },
+          "source_sha256": "bb1105c43929b229b80ce8d1b197c33221dd701de7bc41862c058fb39793d668",
+          "source_url": "https://api.github.com/repos/jacksangster03/eeg-motor-imagery-decoding/readme",
+          "workflow_id": "bbd3662eea47498c8aecf1895372b8b7",
+          "fidelity": "engineering_adaptation",
+          "original_branch_id": "mi_mu_beta_bandpass_cue_epoch",
+          "original_method_hash": "2ff23f7837e0b0d9241df79d8c94c456438e46550a44c151fc529f5b6858ae51",
+          "adaptation": {
+            "policy": "shared-final-epoch-window-v1",
+            "original": {
+              "tmin": 1.0,
+              "tmax": 4.0
+            },
+            "replacement": {
+              "tmin": 0.0,
+              "tmax": 2.0
+            },
+            "scope": "final epoch only; preserve all required source operations and event/channel identities"
+          },
+          "method_ref": {
+            "id": "2ff23f7837e0b0d9241df79d8c94c456438e46550a44c151fc529f5b6858ae51",
+            "sha256": "2ff23f7837e0b0d9241df79d8c94c456438e46550a44c151fc529f5b6858ae51"
+          },
+          "method_id": "eegmmidb_mi_bandpass_cue_epoch",
+          "version": "1"
+        }
+      ],
+      "representative_compiled_steps": [
+        {
+          "id": "s00",
+          "unit_id": "EEG-FILTER",
+          "op": "filter",
+          "profile": "method=fir,phase=zero,annotation_policy=raw",
+          "implementation_version": "2",
+          "input": "raw",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "filter_length": "auto",
+            "l_trans_bandwidth": "auto",
+            "h_trans_bandwidth": "auto",
+            "pad": "reflect_limited",
+            "annotation_policy": "raw",
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ],
+            "nonfinite": "reject",
+            "method": "fir",
+            "phase": "zero",
+            "h_freq": 12.0,
+            "l_freq": 4.0,
+            "picks": [
+              "FC5",
+              "FC3",
+              "FC1",
+              "FCz",
+              "FC2",
+              "FC4",
+              "FC6",
+              "C5",
+              "C3",
+              "C1",
+              "Cz",
+              "C2",
+              "C4",
+              "C6",
+              "CP5",
+              "CP3",
+              "CP1",
+              "CPz",
+              "CP2",
+              "CP4",
+              "CP6",
+              "Fp1",
+              "Fpz",
+              "Fp2",
+              "AF7",
+              "AF3",
+              "AFz",
+              "AF4",
+              "AF8",
+              "F7",
+              "F5",
+              "F3",
+              "F1",
+              "Fz",
+              "F2",
+              "F4",
+              "F6",
+              "F8",
+              "FT7",
+              "FT8",
+              "T7",
+              "T8",
+              "T9",
+              "T10",
+              "TP7",
+              "TP8",
+              "P7",
+              "P5",
+              "P3",
+              "P1",
+              "Pz",
+              "P2",
+              "P4",
+              "P6",
+              "P8",
+              "PO7",
+              "PO3",
+              "POz",
+              "PO4",
+              "PO8",
+              "O1",
+              "Oz",
+              "O2",
+              "Iz"
+            ]
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            5,
+            2,
+            17
+          ],
+          "parameter_sources": {
+            "annotation_policy": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "filter_length": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "fir_design": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "fir_window": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "h_freq": {
+              "origin": "paper",
+              "evidence_indices": [
+                5,
+                2,
+                17
+              ],
+              "rationale": "同上，带宽上沿逐字为 12 Hz。"
+            },
+            "h_trans_bandwidth": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "l_freq": {
+              "origin": "paper",
+              "evidence_indices": [
+                5,
+                2,
+                17
+              ],
+              "rationale": "原文把 4 - 12 Hz（theta and alpha）列为常用带宽之一；同一来源在结果段逐字写出带宽 (4, 12) Hz 与时间窗 (0, 4) s 并列的组合。"
+            },
+            "l_trans_bandwidth": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "method": {
+              "origin": "engineering",
+              "evidence_indices": [
+                12
+              ],
+              "rationale": "原文只说明沿用 MNE 的 CSP 管线，未给出滤波实现；按 MNE 默认 FIR 处理。"
+            },
+            "nonfinite": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "pad": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "phase": {
+              "origin": "engineering",
+              "evidence_indices": [
+                12
+              ],
+              "rationale": "原文未报告相位设置；按 MNE 默认零相位处理。"
+            },
+            "picks": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "目标数据为 64 通道 EEG，使用全部 EEG 通道。"
+            },
+            "skip_by_annotation": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            }
+          },
+          "optional": false,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": [
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "FT7",
+            "FT8",
+            "T7",
+            "T8",
+            "T9",
+            "T10",
+            "TP7",
+            "TP8",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "O1",
+            "Oz",
+            "O2",
+            "Iz"
+          ],
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s01",
+          "unit_id": "EEG-FILTER",
+          "op": "filter",
+          "profile": "method=fir,phase=zero,annotation_policy=raw",
+          "implementation_version": "2",
+          "input": "s00",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "filter_length": "auto",
+            "l_trans_bandwidth": "auto",
+            "h_trans_bandwidth": "auto",
+            "pad": "reflect_limited",
+            "annotation_policy": "raw",
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ],
+            "nonfinite": "reject",
+            "method": "fir",
+            "phase": "zero",
+            "h_freq": 30.0,
+            "l_freq": 7.0,
+            "picks": [
+              "FC5",
+              "FC3",
+              "FC1",
+              "FCz",
+              "FC2",
+              "FC4",
+              "FC6",
+              "C5",
+              "C3",
+              "C1",
+              "Cz",
+              "C2",
+              "C4",
+              "C6",
+              "CP5",
+              "CP3",
+              "CP1",
+              "CPz",
+              "CP2",
+              "CP4",
+              "CP6",
+              "Fp1",
+              "Fpz",
+              "Fp2",
+              "AF7",
+              "AF3",
+              "AFz",
+              "AF4",
+              "AF8",
+              "F7",
+              "F5",
+              "F3",
+              "F1",
+              "Fz",
+              "F2",
+              "F4",
+              "F6",
+              "F8",
+              "FT7",
+              "FT8",
+              "T7",
+              "T8",
+              "T9",
+              "T10",
+              "TP7",
+              "TP8",
+              "P7",
+              "P5",
+              "P3",
+              "P1",
+              "Pz",
+              "P2",
+              "P4",
+              "P6",
+              "P8",
+              "PO7",
+              "PO3",
+              "POz",
+              "PO4",
+              "PO8",
+              "O1",
+              "Oz",
+              "O2",
+              "Iz"
+            ]
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            36,
+            38,
+            39
+          ],
+          "parameter_sources": {
+            "annotation_policy": {
+              "origin": "engineering",
+              "evidence_indices": [
+                36,
+                38
+              ],
+              "rationale": "输入为连续 Raw，故按启用 profile 采用 raw 策略在注释分段边界处处理；源未讨论该策略。"
+            },
+            "filter_length": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "fir_design": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "fir_window": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "h_freq": {
+              "origin": "paper",
+              "evidence_indices": [
+                36,
+                38,
+                39
+              ],
+              "rationale": "源 README 方法表明示带通上界为 30 Hz。"
+            },
+            "h_trans_bandwidth": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "l_freq": {
+              "origin": "paper",
+              "evidence_indices": [
+                36,
+                38,
+                39
+              ],
+              "rationale": "源 README 方法表明示带通下界为 7 Hz（“Band-pass | 7–30 Hz (mu + beta sensorimotor rhythm)”）。"
+            },
+            "l_trans_bandwidth": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "method": {
+              "origin": "engineering",
+              "evidence_indices": [
+                36,
+                38
+              ],
+              "rationale": "源仅写“Band-pass”，未指定 FIR/IIR 与设计窗口；此处按所选启用 profile 固定为 FIR 零相位，属实现选择而非源参数。"
+            },
+            "nonfinite": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "pad": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            },
+            "phase": {
+              "origin": "engineering",
+              "evidence_indices": [
+                36,
+                38
+              ],
+              "rationale": "源未说明相位特性；选择 profile 提供的 zero 相位以避免相位失真，属工程决定。"
+            },
+            "picks": {
+              "origin": "engineering",
+              "evidence_indices": [
+                36,
+                38
+              ],
+              "rationale": "源 README 未限定通道子集，只说明使用 64 通道头皮 EEG，故对全部 EEG 通道滤波。"
+            },
+            "skip_by_annotation": {
+              "origin": "engineering",
+              "evidence_indices": [],
+              "rationale": "Expanded source implementation default; not a paper claim."
+            }
+          },
+          "optional": false,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": [
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "FT7",
+            "FT8",
+            "T7",
+            "T8",
+            "T9",
+            "T10",
+            "TP7",
+            "TP8",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "O1",
+            "Oz",
+            "O2",
+            "Iz"
+          ],
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s02",
+          "unit_id": "EEG-RESAMPLE",
+          "op": "resample",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "s01",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "events": "$events",
+            "sfreq": 160.0
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            0
+          ],
+          "parameter_sources": {
+            "events": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "Explicit frozen output-grid adapter"
+            },
+            "sfreq": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "Explicit frozen output-grid adapter"
+            }
+          },
+          "optional": false,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": null,
+          "record_decisions": {},
+          "decision_target": "input"
+        },
+        {
+          "id": "s03",
+          "unit_id": "EEG-EPOCH",
+          "op": "epoch",
+          "profile": "source",
+          "implementation_version": "2",
+          "input": "s02",
+          "model_from": null,
+          "decision_from": null,
+          "params": {
+            "event_id": {
+              "left_hand": 1,
+              "right_hand": 2
+            },
+            "events": "$events",
+            "picks": [
+              "FC5",
+              "FC3",
+              "FC1",
+              "FCz",
+              "FC2",
+              "FC4",
+              "FC6",
+              "C5",
+              "C3",
+              "C1",
+              "Cz",
+              "C2",
+              "C4",
+              "C6",
+              "CP5",
+              "CP3",
+              "CP1",
+              "CPz",
+              "CP2",
+              "CP4",
+              "CP6",
+              "Fp1",
+              "Fpz",
+              "Fp2",
+              "AF7",
+              "AF3",
+              "AFz",
+              "AF4",
+              "AF8",
+              "F7",
+              "F5",
+              "F3",
+              "F1",
+              "Fz",
+              "F2",
+              "F4",
+              "F6",
+              "F8",
+              "FT7",
+              "FT8",
+              "T7",
+              "T8",
+              "T9",
+              "T10",
+              "TP7",
+              "TP8",
+              "P7",
+              "P5",
+              "P3",
+              "P1",
+              "Pz",
+              "P2",
+              "P4",
+              "P6",
+              "P8",
+              "PO7",
+              "PO3",
+              "POz",
+              "PO4",
+              "PO8",
+              "O1",
+              "Oz",
+              "O2",
+              "Iz"
+            ],
+            "tmax": 4.0,
+            "tmin": 0.0
+          },
+          "fit_scope": null,
+          "evidence_indices": [
+            6,
+            2,
+            17
+          ],
+          "parameter_sources": {
+            "event_id": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "原文以 T1/T2 描述左右手线索；目标提供 left_hand=1 / right_hand=2 的整数码。"
+            },
+            "events": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "使用目标记录的事件表。"
+            },
+            "picks": {
+              "origin": "target_binding",
+              "evidence_indices": [],
+              "rationale": "下游 CSP 使用全部 64 个 EEG 通道。"
+            },
+            "tmax": {
+              "origin": "paper",
+              "evidence_indices": [
+                6,
+                2,
+                17
+              ],
+              "rationale": "同上，窗口终点为线索后 4 s。"
+            },
+            "tmin": {
+              "origin": "paper",
+              "evidence_indices": [
+                6,
+                2,
+                17
+              ],
+              "rationale": "原文时间窗选项之一为 0 - 4 seconds，0 为线索呈现时刻；同一来源结果段逐字给出 (0, 4) s 与 (4, 12) Hz 的并列组合。"
+            }
+          },
+          "optional": false,
+          "artifact_inputs": {},
+          "parameter_inputs": {},
+          "asset_inputs": {},
+          "decision": null,
+          "adaptation_scope": "none",
+          "input_representation": "native",
+          "input_channels": [
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "FT7",
+            "FT8",
+            "T7",
+            "T8",
+            "T9",
+            "T10",
+            "TP7",
+            "TP8",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "O1",
+            "Oz",
+            "O2",
+            "Iz"
+          ],
+          "record_decisions": {},
+          "decision_target": "input"
+        }
+      ],
+      "recipe_hash": "b3e320a2c091bc9da6cf052eb65879559995cbbba110865e9d25468a9754cf68",
+      "result_ref": {
+        "path": ".local\\section-a-20260912\\model-composition-literature\\result.json",
+        "sha256": "60b0be5ed2625c51c812bd9fcc480fdfd7ddbe0b9a8be6f7dd7c4e5b8f81ee04"
+      },
+      "search_ref": {
+        "path": ".local\\section-a-20260912\\model-composition-literature\\offline-search\\17f2e3cd6c1043ff8514c6187c1f77d4\\search.json",
+        "sha256": "8cc2f3042008fd09749d384623cdb3d44349abc1061c0e5d653890b09359c847"
+      }
+    }
+  ],
+  "limitations": [
+    "The basic+literature CAR insertion is numerically equivalent to an existing basic CAR workflow under the same linear conditions; it proves lineage/assembly execution, not novelty.",
+    "The literature+literature cascade combines 4–12 Hz and 7–30 Hz source filters as an explicit engineering composition. It does not reproduce either complete original method or prove an improvement."
+  ]
+}

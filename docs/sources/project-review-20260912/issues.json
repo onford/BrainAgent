@@ -1,0 +1,1557 @@
+{
+  "schema_version": "1",
+  "as_of": "2026-09-12",
+  "purpose": "跨对话现状审计与方案；不代表实施完成",
+  "issues": [
+    {
+      "id": "I01",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "统一两种文献提取入口",
+      "current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。",
+      "solution_and_acceptance": "共享分支提取服务、目标合同和能力注册；两入口对同一来源输出一致的分支、参数出处、端口与阻塞原因，再通过真实模型实测。",
+      "dependencies": [
+        "I45"
+      ],
+      "sources": [
+        "T36",
+        "T37",
+        "T40",
+        "C1",
+        "C2"
+      ]
+    },
+    {
+      "id": "I02",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "未实现",
+      "title": "v2 图进入统一 EEGNet 评价",
+      "current": "literature_space 拒绝非 v1；recipe_compiler 明确拒绝把 unit_graph_v2 送入冻结面板。图可以执行，却不能参加正式三轴评价与统一选优。",
+      "solution_and_acceptance": "建立显式评价适配层：Trial/通道/时间/单位/参考/拟合域逐项对齐。只让符合当前协议的输出进入同一面板；CSD、删 Trial 等不兼容输出保留原因或另立协议。验证图到预测、分数和交付全链。",
+      "dependencies": [
+        "I01",
+        "I36"
+      ],
+      "sources": [
+        "T36",
+        "T40",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "I03",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "实测失败",
+      "title": "实质文献方法自主参与闭环",
+      "current": "C 的 14 个源方法全阻塞；D 只执行公共 resample/epoch 的来源适配。7–30 Hz 和 60 Hz 陷波来源方案未调度；定向文献小测不等于自主成功。",
+      "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。",
+      "dependencies": [
+        "I01",
+        "I02",
+        "I05",
+        "I06",
+        "I07",
+        "I14",
+        "I32"
+      ],
+      "sources": [
+        "T37",
+        "T40",
+        "D1",
+        "D3"
+      ]
+    },
+    {
+      "id": "I04",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "尚未验证",
+      "title": "真实模型自主组合两类来源",
+      "current": "兼容片段组合及谱系已有实现/回归，尚无真实模型自主完成双来源组合并评价的充分证据。",
+      "solution_and_acceptance": "在自然形成的候选池中验证基础＋文献、文献＋文献组合；每个片段保留父方法、差异、拟合依赖和证据，编译、实际执行与评价一致。",
+      "dependencies": [
+        "I01",
+        "I02",
+        "I03"
+      ],
+      "sources": [
+        "T37",
+        "D3"
+      ]
+    },
+    {
+      "id": "I05",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "参数和引文的语义核验",
+      "current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。",
+      "solution_and_acceptance": "建立参数值/单位/适用分支到原文跨度的校验记录；确定性规则检查可判定部分，独立复核处理语义；证据不足保持 unknown。错误单位、借用分支数值、默认值冒充原文必须被阻断或降为未证实假设。",
+      "dependencies": [
+        "I01"
+      ],
+      "sources": [
+        "T37",
+        "T40",
+        "C1",
+        "D1"
+      ]
+    },
+    {
+      "id": "I06",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "前置条件由真实目标事实判定",
+      "current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。",
+      "solution_and_acceptance": "为通道类型、坐标、事件、参考、分区、记录长度建立可执行谓词；数据不足为 unknown。构造虚假“有 EOG/有校准”时必须拒绝，不能仅信模型字符串。",
+      "dependencies": [
+        "I01"
+      ],
+      "sources": [
+        "T40",
+        "C1",
+        "D1"
+      ]
+    },
+    {
+      "id": "I07",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "缺口恢复真正解决来源和依赖",
+      "current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。",
+      "solution_and_acceptance": "按具体缺口选择可审计动作，共享动作/时间账本；跟踪配置和依赖的固定版本。优先解决证据，仍未知则阻塞；记录有效修复率及失败原因，不猜科学参数。",
+      "dependencies": [
+        "I05",
+        "I06",
+        "I13",
+        "I14"
+      ],
+      "sources": [
+        "T35",
+        "T37",
+        "T40",
+        "D1"
+      ]
+    },
+    {
+      "id": "I08",
+      "priority": "P1",
+      "scope": "能力扩展",
+      "status": "部分实现",
+      "title": "复杂窗口和多输出语义",
+      "current": "已支持有限的最终 epoch 共同窗适配；依赖基线、筛查、拟合区间的窗口和多输出流尚未统一。",
+      "solution_and_acceptance": "源方法与工程适配分支分开；显式映射上下文窗、分析窗、评分窗与输出角色。不能把共同窗覆盖原始科学依赖；兼容性无法证明时保留不可比。",
+      "dependencies": [
+        "I02",
+        "I36"
+      ],
+      "sources": [
+        "T36",
+        "T40",
+        "D1",
+        "D2"
+      ]
+    },
+    {
+      "id": "I09",
+      "priority": "P1",
+      "scope": "能力扩展",
+      "status": "尚未验证",
+      "title": "完整经典流程库",
+      "current": "52 单元集成并不证明 PREP、RELAX、HAPPE、Automagic 等完整作者流程均已复现；已有部分完整组合验收。",
+      "solution_and_acceptance": "以固定作者版本整理完整方法配方及适用条件；逐步核对所有必需操作、默认值、交互决定与输出。工程近似单独命名；完整原方法的声明须有整套数值与适用真实数据证据。",
+      "dependencies": [
+        "I01",
+        "I02"
+      ],
+      "sources": [
+        "T04",
+        "T36",
+        "D2",
+        "D10"
+      ]
+    },
+    {
+      "id": "I10",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "调研覆盖和停止依据",
+      "current": "已覆盖本地/官方/论文核对与多用途检索，但做完必要尝试不等于充分召回；全文、反证及代码覆盖不齐。",
+      "solution_and_acceptance": "维护问题×资料类型覆盖表、去重来源、补充材料和引用追踪；用新增有效证据与尚存问题决定继续/停止，逐项保存未覆盖原因，不用篇数证明全面。",
+      "dependencies": [
+        "I12",
+        "I13"
+      ],
+      "sources": [
+        "T04",
+        "T06",
+        "T35",
+        "T40",
+        "D4",
+        "D5"
+      ]
+    },
+    {
+      "id": "I11",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "证据质量分级",
+      "current": "已有定位、来源哈希与纳入理由，研究设计质量、复现偏差、适用人群和冲突证据尚未形成完整可查询评价。",
+      "solution_and_acceptance": "形成 claim-evidence 记录，区分全文方法、摘要、仓库 README、作者代码、项目推断；参数和神经结论分别设置证据要求，不能以引用量/星数代替相关性。",
+      "dependencies": [
+        "I05",
+        "I10"
+      ],
+      "sources": [
+        "T04",
+        "T40",
+        "D1",
+        "D5"
+      ]
+    },
+    {
+      "id": "I12",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "检索供应商实际可用性",
+      "current": "真实调用部分匿名源遭限流；Europe PMC/Crossref 已成功；Unpaywall 真实请求尚未验收，不能把样例回归当联网成功。",
+      "solution_and_acceptance": "按供应商记录可用性、退避、缓存、缺失配置和替代来源；完成实际配置下的失败转移与正文获取验收，保留低相关结果筛选。",
+      "dependencies": [],
+      "sources": [
+        "T35",
+        "D4"
+      ]
+    },
+    {
+      "id": "I13",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "待复核风险",
+      "title": "检索中断的预算及幂等恢复",
+      "current": "历史子任务复现过预算重置与重复成功查询。当前 retrieve 仍从 remaining=budget 开始；筛选失败跳过重复检索已有修复，但检索中途崩溃后的全局计费与幂等未充分证明。",
+      "solution_and_acceptance": "用持久化 action_id、累计花费和 deadline 约束恢复；在工具已返回而保存未完成等节点注入故障。确认重试不免费恢复预算、不重复记成功；本项是代码风险，非本轮新实测故障。",
+      "dependencies": [],
+      "sources": [
+        "T08",
+        "C5"
+      ]
+    },
+    {
+      "id": "I14",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "上下文、调用成本和搜索调度",
+      "current": "历史决策输入曾达 249230 tokens；已压缩重复恢复日志。全集、88 op 合同及长历史仍无全局上下文保证；候选信息价值/成本与停止判断主要依赖模型文字。",
+      "solution_and_acceptance": "分层摘要＋按需原证据读取；逐调用记录 token/时延/成本并预留输出，持久化总预算。用有效新证据、候选差异、真实成本及未执行理由校准调度，保持完整分数账本，不固定方法比例。",
+      "dependencies": [
+        "I10",
+        "I13",
+        "I32"
+      ],
+      "sources": [
+        "T08",
+        "T37",
+        "T40",
+        "D1"
+      ]
+    },
+    {
+      "id": "I15",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "神经先验研究覆盖",
+      "current": "既有知识 43 来源、25 操作类、300 对关系中仍有 130 对 gap；11 解读议题和精选规则不代表穷尽先验。",
+      "solution_and_acceptance": "按任务、污染、算子、损伤与失效条件建立研究议题队列；补参数、反证和边界，允许不可解决 gap，发布覆盖与停止理由。",
+      "dependencies": [
+        "I10",
+        "I11"
+      ],
+      "sources": [
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I16",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "研究规则统一编译和应用",
+      "current": "研究目录有 68 条规则，第一轮神经包落地 10 条条件规则；三态执行已具备，尚未覆盖所有可操作研究规则。",
+      "solution_and_acceptance": "统一规则类型、触发事实、作用域和结果回执；纯解释规则保持 advisory，不把全部文献意见硬化。核对每个可执行规则的命中/未命中/未知与真实动作。",
+      "dependencies": [
+        "I06",
+        "I15"
+      ],
+      "sources": [
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I17",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "规则冲突与例外",
+      "current": "已有硬软区分、冲突文本和挑战记录，缺跨规则优先适用、例外及冲突集的完整处理。",
+      "solution_and_acceptance": "以任务/单位/阶段/数据权限确定适用域；硬条件优先，经验冲突触发诊断或明确保留。针对互相矛盾的规则验证结果和用户说明。",
+      "dependencies": [
+        "I16"
+      ],
+      "sources": [
+        "T40",
+        "D5"
+      ]
+    },
+    {
+      "id": "I18",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "未完成",
+      "title": "知识更新、失效和撤销",
+      "current": "来源与运行可冻结；更新、勘误、撤稿、作者依赖变化没有形成新运行影响分析闭环。",
+      "solution_and_acceptance": "版本化知识状态与变更日志，失效来源影响新配方与新运行；历史只读保留原依据，记录重评范围与撤销原因。",
+      "dependencies": [
+        "I11",
+        "I16"
+      ],
+      "sources": [
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I19",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "动态诊断的能力范围",
+      "current": "request_diagnostic 已真实执行；主要分析已有测量/画像，尚非可按假设启动任意已注册新数值诊断的统一系统。",
+      "solution_and_acceptance": "为新诊断注册输入域、标签权限、成本、数值合同和产物；让模型按竞争假设选择，有预算地执行并改变下一步动作。",
+      "dependencies": [
+        "I02",
+        "I14",
+        "I16"
+      ],
+      "sources": [
+        "T12",
+        "T40",
+        "D6"
+      ]
+    },
+    {
+      "id": "I20",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "强神经保护测量",
+      "current": "已有 ROI TFR、μ/β 与 Welch ERDS，尚缺完整个体峰频、周期/非周期分离、时序失真、侧化与移除信号保护证据。",
+      "solution_and_acceptance": "逐项实现适用性和有效时间支持，保留基线/分母/不确定性；先做已知信号验证，再做真实 EEG。不能以“典型 ERD”作为必须制造的形态。",
+      "dependencies": [
+        "I19",
+        "I21",
+        "I25"
+      ],
+      "sources": [
+        "T34",
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I21",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "物理视图、适配视图及移除信号对照",
+      "current": "已区分 EA 前后阶段并做配对可比性检查；通用图的原生视图/共同视图/被移除成分尚未贯通全部比较。",
+      "solution_and_acceptance": "统一比较合同与视图来源；同步同片段前后及残差，说明参考、单位、频带变化；不可比时不制造配对差或相关性。",
+      "dependencies": [
+        "I02",
+        "I36"
+      ],
+      "sources": [
+        "T36",
+        "T38",
+        "T40",
+        "D2",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I22",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "运行中复核与局部回退",
+      "current": "已有失败、条件 ASR、人工待决定及重试；缺每步观测→复核规则→影子分支→受约束回退的通用闭环。",
+      "solution_and_acceptance": "保存步骤后条件和不可变检查点，显式重编译局部替代分支；原失败和决定不改写，回退本身也须验证适用性。",
+      "dependencies": [
+        "I19",
+        "I21",
+        "I36"
+      ],
+      "sources": [
+        "T12",
+        "T36",
+        "T40",
+        "D2",
+        "D5"
+      ]
+    },
+    {
+      "id": "I23",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "解释语义的忠实性",
+      "current": "结构和阶段校验已增强，但真实模型仍出现总方差推出低频主导、条件数饱和被错误归因等问题；少量模型复核不等于专家确认。",
+      "solution_and_acceptance": "把可核实事实、允许推断、竞争假设、待测预测分开；确定性差异表作为输入，建立真实回复样本和反事实审阅。无频率证据的归因须拒绝或明确保留假设。",
+      "dependencies": [
+        "I05",
+        "I06",
+        "I21"
+      ],
+      "sources": [
+        "T38",
+        "T40",
+        "D1",
+        "D6"
+      ]
+    },
+    {
+      "id": "I24",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "效用、质量、神经保护的结论合同",
+      "current": "EEGNet 唯一选优和三轴分离已实现；“完成评价/质量合格/神经信息保留/泛化改善”仍需统一到目标和发布结论合同。",
+      "solution_and_acceptance": "保持当前三种子 BA 选优，缺失不填零；单独输出各类结论资格及证据限制。若未来以保护量约束选优，另立事前冻结协议，不事后加权。",
+      "dependencies": [
+        "I23"
+      ],
+      "sources": [
+        "T06",
+        "T12",
+        "T26",
+        "T40",
+        "D1",
+        "D5"
+      ]
+    },
+    {
+      "id": "I25",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "部分实现",
+      "title": "半合成重建的科学验证",
+      "current": "14 项指标与负对照已有；cleanproxy 来自真实 EEG，不是纯净神经真值，当前每被试固定探针也不是全部记录重建。",
+      "solution_and_acceptance": "增加已知神经源仿真、真实伪迹模板、真实数据三轨；报告移除与保留、参数敏感性和适用范围，不能用重建成功宣称生理无损。",
+      "dependencies": [
+        "I21"
+      ],
+      "sources": [
+        "T12",
+        "T26",
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I26",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "未充分验证",
+      "title": "方法鲁棒性与不确定性",
+      "current": "已有被试/种子分布和局部对照，缺跨污染强度、参数、任务、人群的统一适用范围画像。",
+      "solution_and_acceptance": "以配对被试差、置信区间、失败率、成本及预测覆盖汇总；预先确定敏感性分析，分别报告种子波动和个体差异。",
+      "dependencies": [
+        "I27",
+        "I28"
+      ],
+      "sources": [
+        "T12",
+        "T40",
+        "D5"
+      ]
+    },
+    {
+      "id": "I27",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "未完成",
+      "title": "新协议全集搜索",
+      "current": "109 人、327 目标记录、4918 Trial 已有源一致性/清理证据；尚无当前 EEGNet 三种子＋实质文献主链的完整全集搜索。",
+      "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。",
+      "dependencies": [
+        "I03",
+        "I32",
+        "I45"
+      ],
+      "sources": [
+        "T06",
+        "T31",
+        "T40",
+        "D1",
+        "D7"
+      ]
+    },
+    {
+      "id": "I28",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "未完成",
+      "title": "独立泛化确认",
+      "current": "开发分数被反复用于选择，且既往已查看全部 EEGMMIDB 被试；简单重新切分不能抹去既有开发信息。",
+      "solution_and_acceptance": "在进一步开发前登记未参与开发的外部数据/未来记录与适配权限，冻结完整控制器后确认；新确认结果不回流同一轮改规则。无新数据时明确只报告开发结果。",
+      "dependencies": [
+        "I24",
+        "I27"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "T40",
+        "D5",
+        "D7"
+      ]
+    },
+    {
+      "id": "I29",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "未完成",
+      "title": "自动探索及先验本身是否有价值",
+      "current": "random/exhaustive/one_shot 对照入口已有，尚无同预算真实实验表明完整 Agent 比静态/无先验方法更好。",
+      "solution_and_acceptance": "比较无先验、静态先验、动态诊断、完整系统，并保留随机/一次提案基线；用相同信息与计算预算衡量最终效用、有效修复、重复率和成本。",
+      "dependencies": [
+        "I27",
+        "I28",
+        "I32"
+      ],
+      "sources": [
+        "T12",
+        "T40",
+        "D5",
+        "D6"
+      ]
+    },
+    {
+      "id": "I30",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "未完成",
+      "title": "接近领域前沿的性能目标",
+      "current": "旧 CSP 70.66%、D 四被试 78.96% 均不能作为当前协议 SOTA 证据；完全可比的强结果尚未确立。",
+      "solution_and_acceptance": "建立任务/被试/Run/切窗/标签权限/划分/指标对照表，选可复现方法在同协议重跑；报告差距，研究目标不承诺达标。",
+      "dependencies": [
+        "I27",
+        "I28",
+        "I31"
+      ],
+      "sources": [
+        "T06",
+        "T21",
+        "D7"
+      ]
+    },
+    {
+      "id": "I31",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "未充分验证",
+      "title": "预处理收益与学习器收益分离",
+      "current": "EEGNet 主、CSP-LDA 对照已落地；真实全规模收益是否跨学习器稳定尚未证明。",
+      "solution_and_acceptance": "保持正式两模型协议；独立分析固定学习器的处理前后配对差与源端/目标端干预，必要扩展仅作为明确额外实验，不恢复旧六模型加权主分。",
+      "dependencies": [
+        "I27",
+        "I28"
+      ],
+      "sources": [
+        "T06",
+        "T12",
+        "T26",
+        "D7"
+      ]
+    },
+    {
+      "id": "I32",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "未充分验证",
+      "title": "全集资源与耗时实测",
+      "current": "小面板成本已有；全集每候选五折×三种子共 15 次 EEGNet 训练及质量/重建、图存储成本未实测。旧运行发现明显 I/O 等待，具体原因未确认。",
+      "solution_and_acceptance": "记录完整候选阶段 wall/CPU、峰值进程树内存、磁盘增长与 I/O 等待，按实测选择并发和预算。估算须给范围；资源不够应停止，不能削种子/被试凑完成。",
+      "dependencies": [
+        "I45"
+      ],
+      "sources": [
+        "T06",
+        "T08",
+        "T15",
+        "T23",
+        "D1",
+        "D7"
+      ]
+    },
+    {
+      "id": "I33",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "待系统验收",
+      "title": "整合后的恢复、并发和长任务生命周期",
+      "current": "已有 Worker/进程树取消与断点保护；新图、旧搜索、两个后端及历史 running 状态尚无同版系统恢复验收。",
+      "solution_and_acceptance": "先核对任务与进程身份，再验证崩溃恢复、资源耗尽、断网、并发隔离与终态发布；已完成产物验证后复用，不能把状态文件 running 当作活进程。",
+      "dependencies": [
+        "I13",
+        "I37",
+        "I45"
+      ],
+      "sources": [
+        "T08",
+        "T15",
+        "T36",
+        "T39",
+        "T40",
+        "D2",
+        "D8"
+      ]
+    },
+    {
+      "id": "I34",
+      "priority": "P1",
+      "scope": "能力扩展",
+      "status": "未实现",
+      "title": "v2 逐被试无标签拟合",
+      "current": "v1 EA 已支持逐被试变换；v2 来源批处理拟合器明确拒绝 subject_unlabeled，不能互相替代证明。",
+      "solution_and_acceptance": "增加按被试跨记录的拟合数据集/状态合同、变换绑定和应用规则；实际核验读取范围与模型复用，清楚标记转导协议。",
+      "dependencies": [
+        "I02",
+        "I36"
+      ],
+      "sources": [
+        "T17",
+        "T36",
+        "D2"
+      ]
+    },
+    {
+      "id": "I35",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未实现",
+      "title": "在线处理和拟合",
+      "current": "v2 当前拒绝 online；整批 EA/记录拟合不能声称在线能力。",
+      "solution_and_acceptance": "另立时间顺序协议，记录到达时刻、先预测后更新规则、滤波延迟与持久状态；逐时刻模拟并验证不读取未来数据。",
+      "dependencies": [
+        "I34",
+        "I36",
+        "I53"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "T36",
+        "D2"
+      ]
+    },
+    {
+      "id": "I36",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "状态化分区拟合图",
+      "current": "train/calibration 重放只支持不依赖模型、决定或外部参数端口的确定性前处理；复杂清理后再拟合仍受限。",
+      "solution_and_acceptance": "将每个拟合节点依赖与合法视图显式入图，先分区再重放可用依赖；对修改测试区间而训练模型应不变的故障用例验证泄漏边界。不支持组合继续拒绝。",
+      "dependencies": [
+        "I45"
+      ],
+      "sources": [
+        "T36",
+        "T40",
+        "D2"
+      ]
+    },
+    {
+      "id": "I37",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "原生算法即时取消",
+      "current": "图取消在步骤边界生效，长时间作者调用仅靠自身 timeout；已有搜索进程树控制不等于每个 v2 原生调用可立即停止。",
+      "solution_and_acceptance": "隔离原生调用并接入任务取消/超时与后代回收，保存部分产物状态；验证不产生孤儿进程、不把中断写为完成。",
+      "dependencies": [
+        "I45"
+      ],
+      "sources": [
+        "T15",
+        "T36",
+        "D2"
+      ]
+    },
+    {
+      "id": "I38",
+      "priority": "P1",
+      "scope": "能力扩展",
+      "status": "尚未验证",
+      "title": "真实 EEG 的 profile 覆盖",
+      "current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
+      "solution_and_acceptance": "按 EOG/ECG/几何/资产/任务适用性建立代表性数据矩阵，逐类验证；不强迫 EEGMMIDB 验证无 EOG 方法，也不要求无限连续参数笛卡尔积。",
+      "dependencies": [
+        "I09",
+        "I40",
+        "I58"
+      ],
+      "sources": [
+        "T36",
+        "D2",
+        "E2"
+      ]
+    },
+    {
+      "id": "I39",
+      "priority": "P1",
+      "scope": "研究终局",
+      "status": "尚未验证",
+      "title": "超越“与同一来源一致”的算法正确性",
+      "current": "306 项主要比较固定来源函数与图适配器；证明适配一致，不等于独立算法正确性或所有作者论文结果复现。",
+      "solution_and_acceptance": "按高风险方法增加解析信号、独立参考、公开基准或作者测试；区分适配器一致、算法行为、论文效果三种证据。",
+      "dependencies": [
+        "I09",
+        "I38"
+      ],
+      "sources": [
+        "T36",
+        "D2",
+        "E2"
+      ]
+    },
+    {
+      "id": "I40",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "数据事实与缺失检查器",
+      "current": "当前仍缺通用 BIDS 根发现、WFDB event 对照、完整设备/接地/人口学/行为等本地提取；模板坐标不等于个体实测坐标。",
+      "solution_and_acceptance": "按本地可获得文件实现对应只读检查器，关联官方资料；没有数据保持 unknown/not_checked，并明确哪些缺失会阻止哪些方法，不让报告自动补全。",
+      "dependencies": [
+        "I10",
+        "I06"
+      ],
+      "sources": [
+        "T04",
+        "T06",
+        "D9",
+        "C6"
+      ]
+    },
+    {
+      "id": "I41",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "未完成",
+      "title": "完整官方 BIDS Validator",
+      "current": "当前合同 official_validator 只能取 not_run；MNE-BIDS 写入与逐点往返校验不能替代完整标准验证。",
+      "solution_and_acceptance": "固定 Validator/规范版本，对新标准化产物运行并保存 JSON 回执；区分错误与有理由保留的警告，核对单位、元数据、事件与数值回读。",
+      "dependencies": [
+        "I40",
+        "I45"
+      ],
+      "sources": [
+        "T04",
+        "D9",
+        "C7"
+      ]
+    },
+    {
+      "id": "I42",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "科学排除规则与对象证据",
+      "current": "结构性失败排除、前后统计和文献对象匹配已实现；文献建议不自动排除，部分来源对象无法定位，科学质量排除策略未最终确认。",
+      "solution_and_acceptance": "以可定位来源和本地对象制定事前冻结的共同规则；保留 flag 与排除理由、pre/post/Delta。禁止因开发分数差而删除困难对象，也不沿用早期“宁可错杀”作无条件规则。",
+      "dependencies": [
+        "I05",
+        "I06",
+        "I40"
+      ],
+      "sources": [
+        "T04",
+        "T06",
+        "D9"
+      ]
+    },
+    {
+      "id": "I43",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "尚未验证",
+      "title": "当前最终赢家的正式训练交付",
+      "current": "旧全集 CSP 交付与小型 EEGNet 重载已验证；当前整合版文献/图搜索赢家的全集 X/y、模型、推理与下载包尚未完整验收。",
+      "solution_and_acceptance": "最终选择后独立逐 Trial 核对评分数组、变换和导出数组，重载模型复算预测/主分，核对 ZIP/manifest/hash 与可运行训练说明；注明开发折身份，不伪造独立测试集。",
+      "dependencies": [
+        "I02",
+        "I03",
+        "I27",
+        "I45"
+      ],
+      "sources": [
+        "T18",
+        "T30",
+        "T31",
+        "T40",
+        "D7"
+      ]
+    },
+    {
+      "id": "I44",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "跨层产物的统一严格合同",
+      "current": "已有固定 JSON/TSV 模板和 v2 封闭 codec；底层异构诊断 payload 尚未全部形成各消费者共享的严格语义模型。",
+      "solution_and_acceptance": "按数据/模型/诊断/决定/评分输出定义版本化 schema，覆盖生产者、API、报告、前端与迁移；对未知字段、单位/轴失配、旧版本读取做一致性检查。",
+      "dependencies": [
+        "I02",
+        "I21"
+      ],
+      "sources": [
+        "T06",
+        "T36",
+        "D2",
+        "D11"
+      ]
+    },
+    {
+      "id": "I45",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "未完成",
+      "title": "统一源码及可复现发布版本",
+      "current": "本轮初查 HEAD=5d6ebac、dev-xx；82 个 tracked 修改＋107 个 untracked 状态条目。各方向测试对应不同冻结副本，不能相加声称当前整树通过。",
+      "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
+      "dependencies": [],
+      "sources": [
+        "T34",
+        "T36",
+        "T37",
+        "T40",
+        "E1"
+      ]
+    },
+    {
+      "id": "I46",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "实测未接入",
+      "title": "运行服务未加载新能力",
+      "current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。",
+      "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
+      "dependencies": [
+        "I45",
+        "I33"
+      ],
+      "sources": [
+        "T36",
+        "T39",
+        "T40",
+        "E1"
+      ]
+    },
+    {
+      "id": "I47",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "尚未验证",
+      "title": "正式界面的完整决策链",
+      "current": "图表和解读在独立真实数据实例已多轮验证；统一发布工作流、图候选与全部来源/失败状态尚无同版浏览器验收。",
+      "solution_and_acceptance": "在正式服务逐项走来源→分支→配方→决定→执行→三轴→赢家→包，覆盖失败/缺失/等待决定、窄屏、双语和下载；字段必须与账本一致。",
+      "dependencies": [
+        "I02",
+        "I23",
+        "I43",
+        "I46"
+      ],
+      "sources": [
+        "T34",
+        "T38",
+        "T40",
+        "D1",
+        "D12"
+      ]
+    },
+    {
+      "id": "I48",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "文档、双语和状态口径同步",
+      "current": "EN 基准双语已实现；旧交接仍写七起点、旧白名单和暂停状态，部分新文档写261而最终已306；历史材料与现行说明混读风险存在。",
+      "solution_and_acceptance": "维护一个现行能力/版本入口及统一术语；历史文档保留日期并指向现行说明，动态报告保留生成时语言/知识版本。审查最终新入口是否全部使用EN/ZH资源。",
+      "dependencies": [
+        "I45",
+        "I46"
+      ],
+      "sources": [
+        "T32",
+        "T34",
+        "T36",
+        "T40",
+        "D1",
+        "D2",
+        "D13"
+      ]
+    },
+    {
+      "id": "I49",
+      "priority": "P0",
+      "scope": "正式版",
+      "status": "尚未验证",
+      "title": "Sites 当前发布与新功能一致性",
+      "current": "管理端确认 active/public、最新版本3，更新于9月11日；本轮普通HTTP探测403，原因未定，不能据此断言浏览器不能访问或需要GPT登录。",
+      "solution_and_acceptance": "核对第3版源码与新发布构建差异，更新到已验证版本；真实浏览器匿名验证页面、流式聊天、EEG任务和下载。维持用户已选的无GPT登录方式。",
+      "dependencies": [
+        "I45",
+        "I46",
+        "I47"
+      ],
+      "sources": [
+        "T39",
+        "D8",
+        "E3",
+        "E4"
+      ]
+    },
+    {
+      "id": "I50",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "部分实现",
+      "title": "本机后端持续可用与隧道恢复",
+      "current": "已按用户要求用本机后端，临时隧道＋WebSocket桥已接通；重启地址变化，需要人工更新Sites，尚非自动启动的持久服务。",
+      "solution_and_acceptance": "保留本机计算方式，使用固定连接身份与受控服务启动/恢复，增加只读健康及版本检查；演练重启、断网、休眠后恢复和长响应。",
+      "dependencies": [
+        "I33",
+        "I46",
+        "I49"
+      ],
+      "sources": [
+        "T39",
+        "D8"
+      ]
+    },
+    {
+      "id": "I51",
+      "priority": "P1",
+      "scope": "正式版",
+      "status": "待产品定界",
+      "title": "匿名共享工作区和资源边界",
+      "current": "Sites 匿名访问者共用 sites-public；与本机 owner/凭据已隔离，但多人访问共享任务、数据可见范围与资源上限需要明确产品规则。",
+      "solution_and_acceptance": "不引入GPT登录；按“公开单人演示”或“多用户使用”确定任务归属/隔离、并发和配额。对选定模式验证数据访问及资源耗尽行为，避免把共享实例当个人私有工作区。",
+      "dependencies": [
+        "I33",
+        "I49",
+        "I50"
+      ],
+      "sources": [
+        "T39",
+        "D8"
+      ]
+    },
+    {
+      "id": "I52",
+      "priority": "P2",
+      "scope": "正式版",
+      "status": "交付待更新",
+      "title": "离线展示对应旧运行",
+      "current": "已有离线HTML忠实保存9月9日旧工作流，离线生成任务已完成；文件名“最新”不代表当前协议。",
+      "solution_and_acceptance": "新正式运行通过后生成新的独立快照，附运行/协议/构建时间与manifest；保留旧快照；禁网检查、真实浏览器及大数组清单边界一并核对。",
+      "dependencies": [
+        "I43",
+        "I47"
+      ],
+      "sources": [
+        "T16",
+        "T32",
+        "D14"
+      ]
+    },
+    {
+      "id": "I53",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未实现",
+      "title": "共享条件化个体预处理策略",
+      "current": "已有共享规则内逐人 EA 和逐记录拟合，没有实现“观察新人→选择结构/强度/诊断/默认”的完整可迁移策略。",
+      "solution_and_acceptance": "以共同任务语义和合法个人信息训练条件策略，允许相同方案、弱调整与保持默认；先在现有离线协议验证，再扩展其他适配模式。",
+      "dependencies": [
+        "I19",
+        "I28",
+        "I34"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "D15"
+      ]
+    },
+    {
+      "id": "I54",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未实现",
+      "title": "个体输出的共同语义",
+      "current": "独立个人最优不保证混合训练最优；数组同形、域距离低和ICA编号相同不能保证标签语义兼容。",
+      "solution_and_acceptance": "采用有明确频率/空间/时间语义的共享表示，或显式评价前端＋条件解码器联合系统；用可构造反例和真实跨人验证检验兼容性。",
+      "dependencies": [
+        "I02",
+        "I53"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "D15"
+      ]
+    },
+    {
+      "id": "I55",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未完成",
+      "title": "个体化收益、信息成本与回退证据",
+      "current": "无目标信息、预校准、整批转导、在线、少标签尚无完整分别验收；无标签影子运行不能直接证明BA收益或回退无害。",
+      "solution_and_acceptance": "外层新被试、内层模拟真实部署；拆源端/目标端贡献，冻结校准/标签成本，报告配对收益、退化不确定性、覆盖及回退适用域。",
+      "dependencies": [
+        "I28",
+        "I31",
+        "I35",
+        "I53",
+        "I54"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "D15"
+      ]
+    },
+    {
+      "id": "I56",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未实现",
+      "title": "可信跨人和跨会话记忆",
+      "current": "个体化与跨任务经验停留在研究设计；缺成功/失败经验的分域晋级、过期、撤销和折间隔离。",
+      "solution_and_acceptance": "区分公共、设备、个人稳定因素和会话状态；经验带条件、证据、负例及有效期，验证后晋级，确认数据不得进入当前策略记忆。",
+      "dependencies": [
+        "I18",
+        "I28",
+        "I53"
+      ],
+      "sources": [
+        "T12",
+        "T17",
+        "T40",
+        "D15"
+      ]
+    },
+    {
+      "id": "I57",
+      "priority": "P2",
+      "scope": "能力扩展",
+      "status": "未实现",
+      "title": "ERP/SSVEP/静息等任务插件",
+      "current": "当前主工作流固定 EEGMMIDB 左右手 MI；图操作广泛不等于其他任务已端到端支持。",
+      "solution_and_acceptance": "按任务插件明确事件/基线/保护量/单位/评价器和独立验收；不能直接套用MI频带和EEGNet成绩解释其他任务。",
+      "dependencies": [
+        "I02",
+        "I24",
+        "I28"
+      ],
+      "sources": [
+        "T04",
+        "T40",
+        "C8",
+        "D5"
+      ]
+    },
+    {
+      "id": "I58",
+      "priority": "P2",
+      "scope": "能力扩展",
+      "status": "未实现",
+      "title": "其他数据集、文件格式和模态",
+      "current": "WorkflowCreate.adapter 仅 eegmmidb；通用BIDS输入与BIDS-iEEG/NWB等原始规划未全部实现。",
+      "solution_and_acceptance": "把数据发现、标准化、标签和元数据适配器接口化；逐数据集验证只读输入、映射、标准与数据权限。新模态单独确定科学协议。",
+      "dependencies": [
+        "I40",
+        "I41",
+        "I57"
+      ],
+      "sources": [
+        "T01",
+        "T04",
+        "C8",
+        "D9"
+      ]
+    },
+    {
+      "id": "I59",
+      "priority": "P2",
+      "scope": "研究终局",
+      "status": "未展开",
+      "title": "面向科学分析的质量路线",
+      "current": "讨论中明确先聚焦跨被试解码与训练效用；原始关于分析结论支持、质量标准合理性的另一条路线没有完成。",
+      "solution_and_acceptance": "另定义分析估计目标、可识别性、时空偏差、阳性/阴性对照和独立验证；与训练主分分开研究。未计划立即纳入近期训练版发布。",
+      "dependencies": [
+        "I20",
+        "I24",
+        "I25",
+        "I28"
+      ],
+      "sources": [
+        "T12",
+        "T26",
+        "D15"
+      ]
+    },
+    {
+      "id": "I60",
+      "priority": "归档",
+      "scope": "历史未续办",
+      "status": "未复核",
+      "title": "BBBD 旧框架的4个顶层文件差额",
+      "current": "v1 只读路径审阅记录17782对17786，留下4个顶层文件待核；之后用户明确改用GitHub架构和EEGMMIDB主线，未找到关闭证据。",
+      "solution_and_acceptance": "保留为归档待办；若重新接入BBBD，重新只读核对清单与原始根。不能算当前EEGMMIDB失败，也不迁回已经替换的旧框架。",
+      "dependencies": [
+        "I58"
+      ],
+      "sources": [
+        "T01",
+        "T02"
+      ]
+    }
+  ],
+  "sources": {
+    "C1": {
+      "title": "workflow 共用提取输入与前提判定",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\preprocessing\\literature.py",
+      "line": 95,
+      "sha256": "0229dfc9937f06d3f425e366a8b929aa369d331cbbf1a567bec8c72c891c3098"
+    },
+    "C2": {
+      "title": "独立方法库 v1/v2 合同入口",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\preprocessing\\methods.py",
+      "line": 232,
+      "sha256": "c064ea08b8ef397229c846245c278537a120255542fc2f942f89dbacba93970f"
+    },
+    "C3": {
+      "title": "文献搜索拒绝非v1步骤",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\search\\literature_space.py",
+      "line": 34,
+      "sha256": "50bb04682956c81291fdd56c8093f9d63a6e7545290aff74b6c6a1ca069b9420"
+    },
+    "C4": {
+      "title": "图到旧评价面的显式拒绝",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\search\\recipe_compiler.py",
+      "line": 10,
+      "sha256": "22b267d48bca1c48eac59a7271e459529959ef4d1b43901acede4124ce9de9fb"
+    },
+    "C5": {
+      "title": "检索动作预算与恢复路径",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\workflows\\survey_research.py",
+      "line": 110,
+      "sha256": "d1bc5c36b6ca173c488618b301072b549b7c92d20a668b9aef78fe2c12cb46a2"
+    },
+    "C6": {
+      "title": "本地未执行检查项",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\workflows\\local_observation.py",
+      "line": 270,
+      "sha256": "9f2447d800725f2fa32ab90eb6d1e07b16e5c5880a24bba8f0097865f2d2c1ca"
+    },
+    "C7": {
+      "title": "BIDS验证状态合同",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\workflows\\collection_contracts.py",
+      "line": 126,
+      "sha256": "58fd5fa245d079af948ecb5c302b32177b1dada001b6239b7bad47f1b3275b3a"
+    },
+    "C8": {
+      "title": "当前数据适配器范围",
+      "path": "E:\\work\\BrainAgent\\backend\\app\\workflows\\schemas.py",
+      "line": 34,
+      "sha256": "2aed732e6bf980940cb279c9a223f9af034d2b705de4d8a821420bb1d52c12b0"
+    },
+    "D1": {
+      "title": "正式业务整改与验收",
+      "path": "E:\\work\\BrainAgent\\docs\\release-business-logic-review-20260912.md",
+      "line": 1,
+      "sha256": "ec57dcc4e0b2902dc57b2d6d0a4d5d0aba156b83089956f9dc235cfdb47cfd17"
+    },
+    "D2": {
+      "title": "52/88/306 全量图执行说明",
+      "path": "E:\\work\\BrainAgent\\docs\\preprocessing-integration-v2.md",
+      "line": 1,
+      "sha256": "869c1aace721012612bd6e4c19d144735fda862e6b98112c3255b02ba3d0f779"
+    },
+    "D3": {
+      "title": "文献方法实测与边界",
+      "path": "E:\\work\\BrainAgent\\docs\\literature-method-validation-20260912.md",
+      "line": 1,
+      "sha256": "f49fc27b74f06fd763f2ff9c1368324bd8fd5b3801b7205e14dc0bdc71eeeb5b"
+    },
+    "D4": {
+      "title": "检索修复与真实接口验证",
+      "path": "E:\\work\\BrainAgent\\docs\\literature-retrieval-audit.md",
+      "line": 1,
+      "sha256": "ac33844dd3d4eb045bb7bee4b64e35fca0a479ed3cd87a2779d3265f64ce94e4"
+    },
+    "D5": {
+      "title": "原32项神经先验缺口",
+      "path": "E:\\work\\BrainAgent\\docs\\neural-prior-gap-analysis.md",
+      "line": 61,
+      "sha256": "4065daa89ac344ebee15fa6cf1277043020e028f06f6a47fb7de2342a897102c"
+    },
+    "D6": {
+      "title": "神经先验已实现闭环及剩余项",
+      "path": "E:\\work\\BrainAgent\\docs\\neural-prior-implementation-review.md",
+      "line": 1,
+      "sha256": "8ae8f549a33afa5448452d328d9af6c68eb74bdbe2dae3b2f2250c228e340020"
+    },
+    "D7": {
+      "title": "评价协议与既有验收",
+      "path": "E:\\work\\BrainAgent\\docs\\offline-search-acceptance.md",
+      "line": 1,
+      "sha256": "ecd247fd7174eb49fe9e0397cef123f69d4c0e4f4e052f682c64c5723f4ca068"
+    },
+    "D8": {
+      "title": "Sites连接和部署边界",
+      "path": "E:\\work\\BrainAgent\\docs\\sites-deployment.md",
+      "line": 1,
+      "sha256": "4e002f414a0e1208d8c44002cb5de11ce0acf3e0defa172ac086b8438e741700"
+    },
+    "D9": {
+      "title": "数据接入完整要求对照",
+      "path": "E:\\work\\BrainAgent\\docs\\data-collection-review.md",
+      "line": 1,
+      "sha256": "c0d9ce984ceca9141e815685e730001320b5d3dea48a0c92432c8aaabe456ace"
+    },
+    "D10": {
+      "title": "经典完整方法调研",
+      "path": "E:\\work\\BrainAgent\\docs\\preprocessing-classic-methods-survey.md",
+      "line": 1,
+      "sha256": "090e0adc0a4cbc1b17339a93d3e4363575bd99df45d31dfe970acaf4777e820a"
+    },
+    "D11": {
+      "title": "固定产物格式",
+      "path": "E:\\work\\BrainAgent\\docs\\artifact-formats.md",
+      "line": 1,
+      "sha256": "3e218ec66d3b519d0c0a2f506fb1c22bbb1248ebc712280b0c96198cc2e80394"
+    },
+    "D12": {
+      "title": "图表实测",
+      "path": "E:\\work\\BrainAgent\\docs\\figure-audit-20260912.md",
+      "line": 1,
+      "sha256": "8fc02e916388c6ce2fc1a0e16b416e6c9f91eeddff81fc3f3cd4c0d1260480d3"
+    },
+    "D13": {
+      "title": "双语约定",
+      "path": "E:\\work\\BrainAgent\\docs\\localization.md",
+      "line": 1,
+      "sha256": "40af048e318a808e98842554c8236bfbb8c19fb9863a977294817ec4c443bd28"
+    },
+    "D14": {
+      "title": "离线导出说明",
+      "path": "E:\\work\\BrainAgent\\exports\\README.md",
+      "line": 1,
+      "sha256": "c9f178958d9d36dbb8ec2977290934e69b1df74e471faffece489e36ee48f241"
+    },
+    "D15": {
+      "title": "个体化研究终局",
+      "path": "E:\\work\\BrainAgent\\docs\\individualized-preprocessing-paradigm.md",
+      "line": 1,
+      "sha256": "1e1f8dcc4ea9725cd3b2f4050329062e78b43e7bb52f30ba1b4feae0a0229e9d"
+    },
+    "E1": {
+      "title": "本轮Git和本地服务只读快照",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\snapshot.json",
+      "line": 1,
+      "sha256": "ff59d862f7c5f12340de055f281850d3f4ce9e44f112beebcbfb1ef9512e86fd"
+    },
+    "E2": {
+      "title": "本轮306份收据哈希核验",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\receipt-check.json",
+      "line": 1,
+      "sha256": "b46cf1f8c79828e7793825624d5b26cf5fa57ae7f3b3041e20628fd34c05d7fa"
+    },
+    "E3": {
+      "title": "本轮Sites普通HTTP探测",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\sites-readonly-check.json",
+      "line": 1,
+      "sha256": "156a2498efcdaa1aacf57cb6ac58927db18efe5257e4a69b4eb296fe649f1593"
+    },
+    "E4": {
+      "title": "本轮Sites管理端只读状态",
+      "path": "E:\\work\\BrainAgent\\docs\\sources\\project-review-20260912\\sites-management.json",
+      "line": 1,
+      "sha256": "2a657ac3b7eb651176390f12ae122efb896260e5c75b8e32722cc1b1f3d37c87"
+    },
+    "T01": {
+      "title": "agent v1",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\01-01a0653a-6fde-7870-b064-e34cc74e9f76.json",
+      "line": 1,
+      "sha256": "fe3e3d3f959ec954140025310025e566779e676bb03fd1658db045833c6ea8c7"
+    },
+    "T02": {
+      "title": "https://github.com/onford/BrainAgent 把目前文件夹内实现的agent打包起来，把这…",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\02-01a06a44-771b-7a02-ba6e-174a444d2350.json",
+      "line": 1,
+      "sha256": "2353167721330e3b135e495479814f58f292cfd2f5d49e3c0b774b9a91473c6c"
+    },
+    "T03": {
+      "title": "/root/classic_preprocessing_survey",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\03-01a07074-bc95-7bd0-942f-eb5470f862f1.json",
+      "line": 1,
+      "sha256": "565c1eb608858d83a91841f8b205bf593dc317e460ed7be3928e3507759fede9"
+    },
+    "T04": {
+      "title": "以下是agent v2的模块规划内容： 1 Data Survey good paper & code 定位是信息的收…",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\04-01a0704d-f524-7252-8434-2e9a506c61e9.json",
+      "line": 1,
+      "sha256": "55fdacc4bc9df551066398b75419decc8a67aa9b90684d1f9471f9653f8f03c1"
+    },
+    "T05": {
+      "title": "具体实现",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\05-01a07fe7-4277-7363-b76a-9e568adc959e.json",
+      "line": 1,
+      "sha256": "db18bdf3c9c20091e644c01ffab65208eedd7be785e12e0b6ae47ea991ab7c72"
+    },
+    "T06": {
+      "title": "具体实现 v2",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\06-01a07ffa-4e85-74b3-ac0a-5ee3029c9926.json",
+      "line": 1,
+      "sha256": "fed3976d89944b3ed1c127b7cc9997404b39ba8de60fd69292bb189c5a5686c2"
+    },
+    "T07": {
+      "title": "在 E:/work/BrainAgent 中审阅并修复训练交付模块的小数据假设。仅修改 backend/app/workflows",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\07-01a08519-f1fb-76f3-8d41-cf0037c0d210.json",
+      "line": 1,
+      "sha256": "f1e27c3f7de895d44c2e7857d2f0b613016ab05cab6eaaa36bbb08746362eadf"
+    },
+    "T08": {
+      "title": "在 E:/work/BrainAgent 中只读审阅工作流调研规模/LLM上下文/超时/重试中因小数据验收而留下的问题。重点 su",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\08-01a08519-f299-74f1-8632-1130407af672.json",
+      "line": 1,
+      "sha256": "a849916b18445fa0e71f93ab117466f44ef0bec29f15973a46289577c29838bd"
+    },
+    "T09": {
+      "title": "/root/quality_standards",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\09-01a08545-858b-70f1-ba41-7fc301c650b1.json",
+      "line": 1,
+      "sha256": "af77a2bff96932e42b0a325606a348692b2b565230250bd34875076c623a8900"
+    },
+    "T10": {
+      "title": "/root/exploration_controller",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\10-01a08545-bcee-7430-b35a-1c14ec8574bb.json",
+      "line": 1,
+      "sha256": "bebb7918950f6767c7509afba6527be0c0fc49a2792343bfd8b6f014724f4553"
+    },
+    "T11": {
+      "title": "/root/validity_skeptic",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\11-01a08546-08e4-74c2-b66e-4841dcbf42dc.json",
+      "line": 1,
+      "sha256": "f5657a5ff133f8c4b9c4e1064dc71a1d300b3216ac06203da33eb4502dcb0664"
+    },
+    "T12": {
+      "title": "问题探索：文章意义",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\12-01a08535-7ef9-7552-bb78-3a1369b9a9d4.json",
+      "line": 1,
+      "sha256": "1d3bc493a985b7dd5e932882e0e8d9c1830f9fcec321fcb2c5fcce0969a77d19"
+    },
+    "T13": {
+      "title": "实现离线预处理搜索的冻结面板和独立开发评价器，直接编辑 E:/work/BrainAgent 工作区，写入范围仅 backend/",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\13-01a08592-0824-7f93-a479-64497ee8cfb9.json",
+      "line": 1,
+      "sha256": "a4490f2f427d3e681b4dcbcdbfb82e214b076400796f39cf72cbe4791a4c3d04"
+    },
+    "T14": {
+      "title": "实现离线预算搜索器前端，直接改E:/work/BrainAgent。写入范围仅 frontend/src/api/searches",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\14-01a08592-08bb-7901-bbff-59e329f35bb4.json",
+      "line": 1,
+      "sha256": "98cdf9b997c49efa946fceaf1872e58072fa34931bd14ee49a8dc5074205da2e"
+    },
+    "T15": {
+      "title": "实现搜索器数值子进程 backend/app/search/worker.py 和对应tests/search/test_work",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\15-01a08595-b4a8-72f0-acee-c90da8a306c1.json",
+      "line": 1,
+      "sha256": "839db34f73718dbca08b9646af4974c244bcdb57d640dbcc932d21c306cb2873"
+    },
+    "T16": {
+      "title": "对目前开发的agent的最新运行结果做成一个html，离线、忠实复刻页面结构和内容（不需要再支持运行，只是为了展示一次…",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\16-01a085bc-33c4-7f50-b127-ff69904d2d8c.json",
+      "line": 1,
+      "sha256": "17a641cddcfb2d5ec0fc01d75079542fb999363b7ec5fbb155842fd98f8722f6"
+    },
+    "T17": {
+      "title": "问题探索：个性化预处理",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\17-01a085ef-db84-7e82-abab-07488f3ca386.json",
+      "line": 1,
+      "sha256": "5144b1f7652eacdc900a3dbbd6db9b7f99084a4a6a01087df21f4155a4a2c06f"
+    },
+    "T18": {
+      "title": "Read-only review in E:/work/BrainAgent. Task integrate existing b",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\18-01a0861d-ba8a-7d90-b9bc-fcde6e9d313e.json",
+      "line": 1,
+      "sha256": "6d238ceb73b312e22a0bb0a81fd7004600d9b59a450f7631bc7114db001184a8"
+    },
+    "T19": {
+      "title": "Implement evaluation upgrade in E:/work/BrainAgent. OWN ONLY back",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\19-01a0861f-f338-7643-b970-ae0727390ecd.json",
+      "line": 1,
+      "sha256": "38a6d6cad97d3631fc7cb1f9bf3b936b008e26b1b5127c43f27db6208344f35b"
+    },
+    "T20": {
+      "title": "Own frontend only E:/work/BrainAgent frontend/src views Workflows",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\20-01a0861f-f3d4-70f0-8196-33dd9a0bd1a8.json",
+      "line": 1,
+      "sha256": "0083d4b8d848fca87c4b1ca5ce3c576bb08073aa78659f54fe51d6c7b5a92c4b"
+    },
+    "T21": {
+      "title": "项目 E:/work/BrainAgent。用户明确要求众多agent全面可信调研、积极讨论审阅，并完整实现更广泛算子/方法搜索与",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\21-01a08718-571f-7e53-a0a8-6a981c9dbbfa.json",
+      "line": 1,
+      "sha256": "f32427a2f4ea0fded4a0cedf941933f365546b3c1d66e4c3b95337d5e0081d49"
+    },
+    "T22": {
+      "title": "E:/work/BrainAgent，用户授权众多agent全面调研并构建算子/方法搜索和多维评价体系。你负责：信号质量及MI任务",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\22-01a08718-ea13-7283-a568-4f92dd8b82e5.json",
+      "line": 1,
+      "sha256": "14c297615bae5baea85b5e029a1c913fd843888025fec579bd546380fc252af6"
+    },
+    "T23": {
+      "title": "E:/work/BrainAgent，用户授权众多agent全面调研并构建算子/方法搜索和多维评价体系。你负责：全面可…",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\23-01a08718-eabe-7590-8943-7c961987a230.json",
+      "line": 1,
+      "sha256": "0b3b2089510b48811cfd9696d98e14dbb3495a5eb45c3d5d6fb520e730f8868c"
+    },
+    "T24": {
+      "title": "当前用户暂停进一步探索，只修错误固定版本。工作区E:\\work\\BrainAgent。请独立负责重建partial异常：只读历史s",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\24-01a08983-36f6-7061-8b23-9d095f512354.json",
+      "line": 1,
+      "sha256": "8fb0d0434f2f0c5739f18dbf61fcd6d09342abf861d94caaeb1bc4c17e00e0bd"
+    },
+    "T25": {
+      "title": "用户暂停探索，只修bug固定版本。工作区E:\\work\\BrainAgent。负责Windows路径错误与旧cognition测试",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\25-01a08983-7ee6-78f2-974a-02973cefa59d.json",
+      "line": 1,
+      "sha256": "1ed6c389dfe0c3590da8cd004d581b6df2572b1dd8797c999ed4d51d63bd67f1"
+    },
+    "T26": {
+      "title": "使用deepseek的api完成部分任务以节约用量。向我报告目前的指标细节",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\26-01a0899a-a541-7392-a70a-47fa53d2f0aa.json",
+      "line": 1,
+      "sha256": "56aa168370ceed023ec1696e1c93afcb5e197528b4638ca32da4e401a5c58ddd"
+    },
+    "T27": {
+      "title": "Implement standalone EEGNet learner in E:\\work\\BrainAgent, author",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\27-01a08a43-eef1-7520-97ca-39db63825db6.json",
+      "line": 1,
+      "sha256": "19c825945d5c595e4be08008b91279bf59726d783f4092c9f10e45473f96985d"
+    },
+    "T28": {
+      "title": "Implement presentation updates only in E:\\work\\BrainAgent. User a",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\28-01a08a43-efad-7eb3-ae24-5fba22089b5e.json",
+      "line": 1,
+      "sha256": "49173c70c35d8002f51005d43a6e43834bf468b502fc64ae9c66db1a36e4eaf9"
+    },
+    "T29": {
+      "title": "Own core evaluator simplification only, E:\\work\\BrainAgent. Appro",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\29-01a08a44-7910-7d23-84e3-dca55ebe0834.json",
+      "line": 1,
+      "sha256": "17c859196d68545e20246720ad5f91d8067f8c2e0f7f4f6efbdd4ce6019af5e6"
+    },
+    "T30": {
+      "title": "Own workflow output/export integration for approved EEGNet-primar",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\30-01a08a44-79b7-7ec1-a348-dde238736e2e.json",
+      "line": 1,
+      "sha256": "0d777b39c9ec65987b9ecf9f2e7bcfea9d45271b9266211e4b192324d427dfec"
+    },
+    "T31": {
+      "title": "具体实现 v3",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\31-01a08a5f-0389-7c13-be0c-90ec66392ea1.json",
+      "line": 1,
+      "sha256": "afca1154118b52313706153c9a49099350cf03c2413e8997dfd1b60ec5a759dc"
+    },
+    "T32": {
+      "title": "把项目概况、项目进度、工作原则以及任何你认为重要的信息总结出来。我用于交付下一个agent继续工作",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\32-01a08c6f-c0ef-7712-91b0-087adf541c2f.json",
+      "line": 1,
+      "sha256": "128e5419ff42b3d1f0b0e4143b14be185df42242bcc7f7e86251d12bac4d3219"
+    },
+    "T33": {
+      "title": "继续未完成的工作",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\33-01a08e36-f290-7b20-98d0-7ab014adf68a.json",
+      "line": 1,
+      "sha256": "62588b031342fc432bde4945d5e424b2f6725beedcc47276263f28469fe9e369"
+    },
+    "T34": {
+      "title": "具体实现 v4",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\34-01a08c77-1e12-7513-b1e7-a87ada01c5ed.json",
+      "line": 1,
+      "sha256": "1a23808159e75406583e37e6da4d6a2b6a9ec2b0106d153e5f9f28edf0cd2ef9"
+    },
+    "T35": {
+      "title": "文献检索逻辑",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\35-01a08e5f-2409-7081-b286-14b1878cbfd8.json",
+      "line": 1,
+      "sha256": "3dbd42921e4533842b699680f8a3ad72fbc0d540df8b6820b89699ea9d297119"
+    },
+    "T36": {
+      "title": "展示目前预处理基本单元->可执行预处理流程的逻辑，并举实际例子说明（要求全量结果）",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\36-01a09012-e2dc-7b62-aca5-bd0c0fa66869.json",
+      "line": 1,
+      "sha256": "836e709cd7b22ca1b88d57b25dee7f7e33046ce1065abfa7ebc6c866554afde6"
+    },
+    "T37": {
+      "title": "展示目前从文献->预处理方法拆解的流程，并举全量实例说明",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\37-01a09013-8949-7900-9559-5978b7d9cf6d.json",
+      "line": 1,
+      "sha256": "adecc12aa8d1f4f1233ef6415062d86c1002284c056768e03751038edc973e3e"
+    },
+    "T38": {
+      "title": "展示目前质量评估相关的所有内容的一个实例",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\38-01a09013-dff1-7322-b7fc-253282f005ca.json",
+      "line": 1,
+      "sha256": "827551e58add90927186ec70febf0be339bb598b50b688ea85c650d809ba4549"
+    },
+    "T39": {
+      "title": "把该agent用site部署，不要有gpt认证",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\39-01a0908d-c484-72f0-b987-bdf1f25ed3be.json",
+      "line": 1,
+      "sha256": "f1b64df19e75f757e40b2873a2b6ca7fe70986a57eb889b6d8673dd33278f80f"
+    },
+    "T40": {
+      "title": "我想在此项目的预处理方法选择的整个流程中：包含预处理方法调研、预处理方法拆解形成、预处理基本单元、预处理运行、预处理方…",
+      "path": "E:\\work\\BrainAgent\\.local\\project-review-20260912\\40-01a08e74-6627-7891-86c0-57260e819ff8.json",
+      "line": 1,
+      "sha256": "ec901cd13f02f3e4f444cc3b914c59b87ca72fbc779bc22fd6887251655b0425"
+    }
+  }
+}

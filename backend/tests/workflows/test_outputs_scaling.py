@@ -26,35 +26,11 @@ from app.workflows.formats import ARRAY_FORMATS, DELIVERY_FILES, PROVENANCE_FILE
 
 
 def numeric_metadata(receipt, representation):
-    receipt["representation"] = representation
-    receipt["learner_metadata"] = LearnerMetadata(
-        csp_components=2, logistic_random_state=42
-    ).model_dump(mode="json")
-    receipt["diagnostics"] = {
-        "subjects": {
-            subject: dict(
-                channel_variance=[1.0, 1.0],
-                channel_flat_fraction=[0.0, 0.0],
-                covariance_condition=1.0,
-                covariance_condition_before=1.0,
-                covariance_condition_after=1.0,
-                mean_channel_variance_before=1.0,
-                mean_channel_variance_after=1.0,
-                effective_rank_before=2,
-                effective_rank_after=2,
-            )
-            for subject in representation["subjects"]
-        },
-        "summary": dict(
-            mean_condition_before=1.0,
-            mean_condition_after=1.0,
-            mean_variance_before=1.0,
-            mean_variance_after=1.0,
-            gate_fraction=representation["gate_fraction"],
-            mean_effective_rank=2.0,
-            mean_anisotropy=1.0,
-        ),
-    }
+    from app.search.evaluation_contracts import CoreLearnerMetadata
+    receipt.update(evaluator_version=4, secondary_learner=None, secondary_macro_ba=None, secondary_subjects={})
+    receipt["representation"] = {"version": "2", **{k: representation[k] for k in ("unit", "channels", "records")}}
+    receipt["learner_metadata"] = CoreLearnerMetadata(csp_components=2).model_dump(mode="json")
+    receipt["diagnostics"] = {}
 
 
 def complete_delivery_receipt(store, selection):
@@ -76,27 +52,7 @@ def complete_delivery_receipt(store, selection):
             shape=shape,
             unit="V",
         )
-    rep = dict(
-        policy={"adaptation": "none"},
-        unit="V",
-        transductive=False,
-        channels=["C3", "C4"],
-        gate_subject_count=0,
-        gate_passed_subject_count=0,
-        gate_fraction=None,
-        subjects={
-            s: dict(
-                applied_adaptation="none",
-                gate_passed=False,
-                covariance_anisotropy=1.0,
-                gate_metric_value=1.0,
-                fit_trials=n,
-                unit="V",
-            )
-            for s, n in counts.items()
-        },
-        records=arrays,
-    )
+    rep = dict(version="2", unit="V", channels=["C3", "C4"], records=arrays)
     receipt = selection["selected_receipt"]
 
     def coverage(n, predicted):

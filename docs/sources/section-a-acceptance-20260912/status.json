@@ -1,0 +1,111 @@
+{
+  "updated_at": "2026-09-12T10:38:35.570001+00:00",
+  "section": "A",
+  "section_complete": false,
+  "remaining_ids": [
+    "I09"
+  ],
+  "issue_statuses": [
+    {
+      "id": "I01",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "dual-entry-comparison.json",
+        "runs.json"
+      ],
+      "scope": "Shared extractor/schema/review/recovery; actual same-source dual-entry parameter comparison and 12-record direct Worker execution."
+    },
+    {
+      "id": "I02",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "graph-delivery.json",
+        "i03-review.json"
+      ],
+      "scope": "Comparable v2 graphs enter actual three-axis evaluation; actual evaluated v2 artifacts pass isolated delivery component test."
+    },
+    {
+      "id": "I03",
+      "status": "passed_frozen_fresh_workflow",
+      "evidence": [
+        "i03-review.json"
+      ],
+      "scope": "frozen-5, four subjects, real configured model/tools, eight evaluated candidates, substantive source affects next actions and final comparison; delivered."
+    },
+    {
+      "id": "I04",
+      "status": "passed_targeted_real_model_categories",
+      "evidence": [
+        "i04-review.json"
+      ],
+      "scope": "Natural pool, real model-selected fragments; basic+literature and independent literature+literature; category prescribed by acceptance harness."
+    },
+    {
+      "id": "I05",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "dual-entry-comparison.json",
+        "i03-review.json"
+      ],
+      "scope": "Independent semantic review plus deterministic span/parameter/unit/branch checks; negative cases and real rejected corrections retained."
+    },
+    {
+      "id": "I06",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "runs.json"
+      ],
+      "scope": "Executable Collection predicates and measured geometry/name preparation; missing facts remain unknown."
+    },
+    {
+      "id": "I07",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "recovery-outcomes.json"
+      ],
+      "scope": "Persistent shared deadlines/action reservations, concurrency lock, located dependency recovery, checkpoint resume, preservation of source/adapted windows. Effective source-revision outcomes remain 1/3 in each of two recorded runs."
+    },
+    {
+      "id": "I08",
+      "status": "implemented_with_scoped_acceptance",
+      "evidence": [
+        "graph-delivery.json",
+        "i04-review.json"
+      ],
+      "scope": "Explicit source/scoring window projection, retained baseline and fit context, named outputs; unsupported compatibility remains blocked."
+    },
+    {
+      "id": "I09",
+      "status": "partial",
+      "evidence": [
+        "../section-a-classic-20260912/manifest.json"
+      ],
+      "remaining": [
+        "PREP and Automagic production adapters/common-scoring validation",
+        "HAPPE Optimization Toolbox and complete headless configuration validation",
+        "RELAX dependency binding, default sampling-rate applicability and/or distinctly named engineering variant validation"
+      ]
+    }
+  ],
+  "verification": {
+    "backend_full_tests": 1134,
+    "backend_full_warnings": 109,
+    "subsequent_focused_tests": 9,
+    "new_window_cases_in_focused_suite": 2,
+    "frontend_typecheck": "passed",
+    "profiles_passed": 306,
+    "operations": 88,
+    "units": 52,
+    "variant_cases_passed": 186,
+    "complex_graph_cases_passed": 2,
+    "real_record_executions": 4,
+    "real_profiles_covered": 11,
+    "numeric_engine_sha256": "3367f02cda43b09b4af8c354c804fb0ec3cdc353a77b3b359c044373276ec769"
+  },
+  "limits": [
+    "Scoped acceptance evidence across recorded immutable code snapshots, not same-final-commit full release acceptance.",
+    "Four-subject integration panel, no independent confirmation.",
+    "I09 and project issues outside Section A remain open.",
+    "No commit/push; existing uncommitted dependencies require I45 integration baseline."
+  ]
+}

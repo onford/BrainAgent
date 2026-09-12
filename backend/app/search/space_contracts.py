@@ -4,8 +4,7 @@ from typing import Any, Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from app.preprocessing.schemas import Contract, Evidence
-from .evaluation_contracts import AlignmentPolicy
+from app.preprocessing.schemas import Contract, Evidence, Scope, Step, EvaluationWindow
 
 
 Identifier = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_-]*$")]
@@ -57,6 +56,8 @@ class OperatorDefinition(Contract):
     title: str
     unit_id: str
     op: str
+    implementation_version: Literal['1', '2'] = '1'
+    profile: str = 'source'
     input_stage: Literal["continuous", "epochs", "either"]
     output_stage: Literal["continuous", "epochs", "same"]
     fit_scope: Literal["none", "record_unlabelled", "subject_unlabelled"]
@@ -69,6 +70,7 @@ class OperatorDefinition(Contract):
     evidence_ids: list[str] = Field(default_factory=list)
     separations: list[ParameterSeparation] = Field(default_factory=list)
     input_highpass: InputHighpassRequirement | None = None
+    emit_mark: bool = True
 
     @model_validator(mode="after")
     def valid_separations(self):
@@ -85,11 +87,20 @@ class PipelineNode(Contract):
     id: Identifier
     operator: Identifier
     parameters: dict[str, Any] = Field(default_factory=dict)
+    input_from: str | None = None
+    model_from: str | None = None
+    decision_from: str | None = None
+    fit_scope: Scope | None = None
+    optional: bool = True
+    trace: list[dict[str, Any]] = Field(default_factory=list)
+    graph: Step | None = None
 
 
 class PipelineRecipe(Contract):
     nodes: list[PipelineNode] = Field(min_length=1, max_length=24)
-    adaptation: AlignmentPolicy = Field(default_factory=AlignmentPolicy)
+    output: str | None = None
+    evaluation_window: EvaluationWindow | None = None
+    output_roles: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def node_identity(self):
@@ -102,11 +113,13 @@ class PipelineRecipe(Contract):
 class MethodSeed(Contract):
     id: Identifier
     title: str
-    origin: Literal["basic", "literature", "literature_adaptation"]
+    origin: Literal["basic", "literature", "literature_adaptation", "derived"]
     recipe: PipelineRecipe
     evidence_ids: list[str] = Field(default_factory=list)
     applicability: list[str] = Field(default_factory=list)
     deviations: list[str] = Field(default_factory=list)
+    lineage: list[dict[str, Any]] = Field(default_factory=list)
+    issues: list[dict[str, Any]] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def source(self):
@@ -169,6 +182,12 @@ class InsertEdit(Contract):
     after_node_id: Identifier | None
     node: PipelineNode
 
+    @model_validator(mode="after")
+    def no_invented_provenance(self):
+        if self.node.trace:
+            raise ValueError("inserted operators cannot invent source traces; use a registered donor fragment")
+        return self
+
 
 class RemoveEdit(Contract):
     action: Literal["remove_operator"]
@@ -181,13 +200,17 @@ class SwapEdit(Contract):
     second_node_id: Identifier
 
 
-class AdaptationEdit(Contract):
-    action: Literal["set_adaptation"]
-    policy: AlignmentPolicy
+
+
+class CombineEdit(Contract):
+    action: Literal["combine_fragment"]
+    donor_id: Identifier
+    node_ids: list[Identifier] = Field(min_length=1, max_length=16)
+    after_node_id: Identifier | None
 
 
 PipelineEdit = Annotated[
-    ParameterEdit | InsertEdit | RemoveEdit | SwapEdit | AdaptationEdit,
+    ParameterEdit | InsertEdit | RemoveEdit | SwapEdit | CombineEdit,
     Field(discriminator="action"),
 ]
 
@@ -198,7 +221,7 @@ class PriorWarning(Contract):
     evidence_ids: list[str]
 
 
-class PolicySummary(AlignmentPolicy):
+class PolicySummary(Contract):
     operators: list[str]
 
 
@@ -207,7 +230,7 @@ class CandidateRecipe(Contract):
     title: str
     recipe: PipelineRecipe
     recipe_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
-    origin: Literal["basic", "literature", "literature_adaptation"]
+    origin: Literal["basic", "literature", "literature_adaptation", "derived"]
     seed_id: Identifier
     evidence_ids: list[str]
     deviations: list[str]
@@ -218,10 +241,14 @@ class CandidateRecipe(Contract):
     parameters: PolicySummary
     operator_count: int = Field(ge=1)
     order: int = Field(ge=0)
+    lineage: list[dict[str, Any]] = Field(default_factory=list)
+    parent_ids: list[str] = Field(default_factory=list)
+    issues: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class ExplorationSpace(Contract):
     version: Literal["1"] = "1"
+    semantic_identity: Literal["operator_ids_v1", "operation_contracts_v1"] = "operator_ids_v1"
     operators: list[OperatorDefinition]
     methods: list[MethodSeed]
     priors: list[ScientificPrior]

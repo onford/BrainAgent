@@ -17,14 +17,12 @@ from app.workflows.planning_contracts import survey_plan_contract
 source = source_fixture
 
 
-def ea_proposal(context):
+def filter_proposal(context):
     from tests.search.test_controller import propose
 
-    identity = next(
-        seed["id"] for seed in context["method_seeds"]
-        if seed["recipe"]["adaptation"]["adaptation"] == "euclidean_alignment"
-    )
-    value = propose(identity, context["reference_candidate"])
+    value = propose(None, context["reference_candidate"])
+    value["decision"].update(title="Test measured-parent shared filter derivation", edits=[{
+        "action": "set_parameter", "node_id": "bandpass", "parameter": "l_freq", "value": 7.0}])
     hypothesis = value["decision"]["hypothesis"]
     hypothesis["observations"][0]["metric"] = "assessment.selection_score"
     next(p for p in hypothesis["predictions"] if p["kind"] == "utility")["metric"] = "assessment.selection_score"
@@ -150,7 +148,7 @@ async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
                 return await super().structured_output(messages, model)
             self.calls.append("Decision")
             context = json.loads(messages[-1]["content"])
-            value = ea_proposal(context)
+            value = filter_proposal(context)
             self.policy_id = value["decision"]["candidate_id"]
             if self.calls.count("Decision") == 1:
                 # Exercise the real Decision validator, rather than raising a
@@ -190,20 +188,19 @@ async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
     assert search["stop_reason"] == "candidate_budget_exhausted"
     executed = [a for a in search["actions"] if a["action"] == "propose_candidate"]
     assert len(executed) == 1 and executed[0]["status"] == "completed", executed
-    assert executed[0]["candidate_id"] == llm.policy_id
+    assert executed[0]["request"]["candidate_id"] == executed[0]["candidate_id"]
+    assert next(e for e in search["registry"] if e["id"] == executed[0]["candidate_id"])["origin"] == "derived"
+    assert executed[0]["request"]["edits"][0]["value"] == 7.0
     assert rejected[0]["index"] < executed[0]["index"]
-    policy = next(c for c in search["candidates"] if c["id"] == llm.policy_id)
+    policy = next(c for c in search["candidates"] if c["id"] == executed[0]["candidate_id"])
     assert policy["status"] == "evaluated" and policy["attempts"] == 1
     assert policy["receipt"]["assessment"]["selection_score"] is not None
-    transforms = policy["receipt"]["representation"]["subjects"]
-    assert set(transforms) == set(search["panel"]["development_subjects"])
+    representation = policy["receipt"]["representation"]
+    assert representation["version"] == "2" and representation["unit"] == "V"
     from app.preprocessing.storage import file_hash
     from pathlib import Path
-
-    for transform in transforms.values():
-        assert transform["applied_adaptation"] == "euclidean_alignment"
-        assert transform["unit"] == "dimensionless"
-        assert file_hash(Path(transform["transform_path"])) == transform["transform_sha256"]
+    for record in representation["records"].values():
+        assert file_hash(Path(record["array_path"])) == record["array_sha256"]
     plan = json.loads((folder / "preprocessing/plan.json").read_text(encoding="utf-8"))
     assert all(r["steps"][1]["params"]["h_freq"] < 80 for r in plan["records"])
     artifacts = service.describe(OWNER, state["id"])["artifacts"]
@@ -232,7 +229,7 @@ async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
     html = (folder / "report/report.html").read_text(encoding="utf-8")
     projection = json.loads((folder / "report/report.json").read_text(encoding="utf-8"))
     assert "错误地声称首先重采样" not in html
-    assert "实际处理顺序：重采样 → 带通滤波" in html
+    assert "实际处理顺序：重采样 → 频率滤波" in html
     assert projection["narrative"]["method_reasoning"] in html
 
 
@@ -467,7 +464,7 @@ async def test_search_reads_frozen_evidence_before_experiment(source, tmp_path):
                     }
                 )
             assert self.calls.count("Decision") == 2
-            return model.model_validate(ea_proposal(context))
+            return model.model_validate(filter_proposal(context))
 
     llm = SupplementLLM()
     prep = PreprocessingService(tmp_path / "prep")

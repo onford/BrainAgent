@@ -74,3 +74,19 @@ async def test_data_survey_agent_does_not_execute_unavailable_tool() -> None:
     assert call["success"] is False
     assert call["error"] == "工具不存在或当前不可用。"
     assert call["metadata"]["error_code"] == "tool_unavailable"
+    assert result.metadata["execution_status"] == "partial"
+    assert result.output["evidence_status"] == "not_collected"
+
+
+@pytest.mark.asyncio
+async def test_missing_dependencies_return_an_explicit_gap_without_placeholder_artifacts():
+    result = await DataSurveyAgent().run(AgentTask(instruction="调研 EEG"), context())
+    assert result.metadata["execution_status"] == "needs_input"
+    assert result.output["missing_dependencies"] == ["model_client", "tool_registry"]
+    assert not result.artifacts and "mode" not in result.output
+
+
+def test_empty_retrieval_is_not_evidence_but_measured_zero_is():
+    assert not DataSurveyAgent._has_evidence({"items": [], "result_count": 0})
+    assert not DataSurveyAgent._has_evidence({})
+    assert DataSurveyAgent._has_evidence(0)

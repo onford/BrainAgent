@@ -12,7 +12,16 @@ from .survey_contracts import SearchGoal, SurveyPlan, LITERATURE_TARGETS
 
 
 def verification_contract(local):
-    from .survey_contracts import Comparison, DatasetVerification, FIELDS
+    from .survey_contracts import Comparison, DatasetVerification, FIELDS, SourceStatement
+
+    # Prompt guidance belongs to the model-facing contract. Keep the stored
+    # artifact schema stable when only instructions (not data fields) change.
+    statement = create_model('CitedSourceStatement', __base__=SourceStatement,
+        statement=(str | None, Field(min_length=1, description=(
+            'A factual source statement supported by finding_ids. For missing evidence return JSON null; '
+            'put absence explanations in the row conclusion/gaps, never here.'))),
+        finding_ids=(list[str], Field(description=(
+            'Nonempty exact finding IDs for a non-null statement; [] if and only if statement is null.'))))
 
     rows = []
     for field in FIELDS:
@@ -21,6 +30,8 @@ def verification_contract(local):
                 "Compare_" + field,
                 __base__=Comparison,
                 field=(Literal[field], ...),
+                official_sources=(statement, ...),
+                official_paper=(statement, ...),
                 local_fact_ids=(
                     list[str],
                     Field(
@@ -63,7 +74,7 @@ def survey_plan_contract():
     )
 
 
-def collection_review_contract(finding_ids, runs):
+def collection_review_contract(finding_ids, runs, discussion=None):
     ids = tuple(finding_ids)
     mapping_models = tuple(
         create_model(
@@ -80,11 +91,25 @@ def collection_review_contract(finding_ids, runs):
         )
         for run in sorted(set(runs))
     )
+    fields = {}
+    if discussion is not None:
+        from .collection_contracts import ReportedExclusion
+        variants = tuple(create_model(f"Exclusions_{i}", __base__=ReportedExclusion,
+            entry_id=(Literal[e["id"]], ...),
+            finding_ids=(list[Literal[tuple(f["id"] for f in e["findings"])]], Field(min_length=1,
+                description="Exact IDs from this literature entry; these are not source IDs or research-summary fact IDs.")))
+            for i, e in enumerate(discussion) if e["findings"])
+        if variants:
+            item = variants[0] if len(variants) == 1 else Annotated[Union[variants], Field(discriminator="entry_id")]
+            fields["literature_exclusions"] = (list[item], Field(default_factory=list))
+        else:
+            fields["literature_exclusions"] = (list[ReportedExclusion], Field(default_factory=list, max_length=0))
     return create_model(
         "CollectionReview",
         __base__=CollectionReview,
         supporting_facts=(list[Literal[ids]], Field(min_length=1)),
         task_mappings=(tuple[mapping_models], ...),
+        **fields,
     )
 
 

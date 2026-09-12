@@ -8,7 +8,8 @@
     "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,green \"pnpm dev:backend\" \"pnpm dev:web\"",
     "dev:web": "vite --host 0.0.0.0",
     "dev:backend": "cd ../backend && DATABASE_URL_OVERRIDE=sqlite+aiosqlite:///./brain_agent_dev.db uv run --extra dev uvicorn app.main:create_app --factory --reload --host 0.0.0.0 --port 8000",
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc -b && vite build && node sites/build.mjs",
+    "test:sites": "node --test sites/worker.test.mjs",
     "test": "vitest run",
     "preview": "vite preview --host 0.0.0.0"
   },

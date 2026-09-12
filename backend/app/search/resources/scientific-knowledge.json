@@ -411,17 +411,6 @@
       "limitations": "未完整读取论文；不据摘要断言普遍无需baseline"
     },
     {
-      "id": "S38",
-      "title": "He & Wu — Euclidean Alignment",
-      "url": "https://arxiv.org/html/1808.05464",
-      "kind": "original_paper",
-      "locator": "§III-A Eqs.(10)–(12)；§V offline；§VI-A/B online，网页行174–188,440–448；DOI 10.1109/TBME.2019.2913914",
-      "version": null,
-      "accessed_at": "2026-09-10",
-      "evidence_scope": "已读原始作者稿公式与评估协议",
-      "limitations": "EA与RA、label alignment不同；原文XX^T的缩放/中心化约定应显式化；online2019/卷期2020"
-    },
-    {
       "id": "S39",
       "title": "MNE CSP API",
       "url": "https://mne.tools/stable/generated/mne.decoding.CSP.html",
@@ -602,12 +591,6 @@
       "id": "AR",
       "name": "Autoreject",
       "scope": "内部CV fit/transform；前后轮节点",
-      "stage": "fit_apply"
-    },
-    {
-      "id": "EA",
-      "name": "Euclidean Alignment",
-      "scope": "域内参考协方差fit/transform",
       "stage": "fit_apply"
     },
     {
@@ -926,11 +909,6 @@
         },
         {
           "a": "NT",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "NT",
           "b": "IF",
           "relation": "interaction"
         },
@@ -1115,21 +1093,6 @@
       "pairs": [
         {
           "a": "RF",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "IP",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "IA",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "RF",
           "b": "CS",
           "relation": "interaction"
         },
@@ -1156,10 +1119,9 @@
       ],
       "claim": "平均参考/插值/空间成分删除可能使数据或协方差奇异，逆、白化与ICA维度必须匹配实际有效子空间。",
       "condition": "非满秩线性空间处理；不是凭通道数推断满秩。",
-      "implication": "计算有效秩与特征谱；n_ICA≤rank，n_CSP≤可识别维数；EA用明确降维或带正则方案。",
+      "implication": "计算有效秩与特征谱；n_ICA≤rank，n_CSP≤可识别维数。",
       "source_ids": [
         "S12",
-        "S38",
         "S39"
       ],
       "derivation": "R=I−1w^T且w^T1=1时rank(R)=C−1，但rank(RX)可更低；IP不能增加独立信息。连续叠加的降秩量一般不能简单逐项相减。",
@@ -1223,11 +1185,6 @@
           "relation": "interaction"
         },
         {
-          "a": "EA",
-          "b": "IA",
-          "relation": "interaction"
-        },
-        {
           "a": "IP",
           "b": "IA",
           "relation": "interaction"
@@ -1238,13 +1195,12 @@
           "relation": "interaction"
         }
       ],
-      "claim": "ICA拟合后的传感器缩放、EA、插值或重排会改变坐标；原模型不能无检查应用。",
+      "claim": "ICA拟合后的传感器缩放、插值或重排会改变坐标；原模型不能无检查应用。",
       "condition": "这些变换位于IF和IA之间；feature级缩放在IA完成之后不在此限制内。",
       "implication": "对所有空间状态变化设置model-invalidated事件；冻结同一变换或正确传递模型后才允许apply。",
       "source_ids": [
         "S12",
-        "S14",
-        "S38"
+        "S14"
       ],
       "derivation": "形状相同不代表坐标相同；一般WAX≠WX。",
       "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
@@ -1524,11 +1480,6 @@
           "a": "SC",
           "b": "AS",
           "relation": "interaction"
-        },
-        {
-          "a": "EA",
-          "b": "AS",
-          "relation": "interaction"
         }
       ],
       "claim": "ASR先校准再应用；校准状态与数据的通道空间、参考、尺度、频谱处理及采样率必须相容。",
@@ -1771,11 +1722,6 @@
         },
         {
           "a": "AR",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "AR",
           "b": "CS",
           "relation": "interaction"
         }
@@ -1788,7 +1734,7 @@
         "S31",
         "S08"
       ],
-      "derivation": "逐trial矩阵W_i不同，C_i变为W_i C_i W_i^T，改变CSP/EA的分布。",
+      "derivation": "逐trial矩阵W_i不同，C_i变为W_i C_i W_i^T，改变CSP的分布。",
       "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
     },
     {
@@ -2100,11 +2046,6 @@
         },
         {
           "a": "SP",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "SP",
           "b": "CS",
           "relation": "prefer_before"
         },
@@ -2133,8 +2074,7 @@
       "condition": "严格归纳预测；离线整记录无监督清理可作为单独预声明的transductive recording protocol。",
       "implication": "split单位用subject/session/block避免重叠trial；source-label与target-label权限分开；内部CV、无监督、无标签均不能自动豁免scope。",
       "source_ids": [
-        "S41",
-        "S38"
+        "S41"
       ],
       "derivation": "SP是权限声明节点，不要求每个独立固定滤波都在随机trial拆分后进行；泛化目标决定允许的fit数据。",
       "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
@@ -2147,127 +2087,17 @@
           "a": "SP",
           "b": "CS",
           "relation": "prefer_before"
-        },
-        {
-          "a": "EA",
-          "b": "CS",
-          "relation": "prefer_before"
         }
       ],
       "claim": "CSP用训练标签拟合；EA若选用，应在CSP看到的数据空间确定之后拟合CSP。",
       "condition": "传感器级EA+CSP解码。",
-      "implication": "每outer fold内fit EA/CS；n_components和reg在inner CV选择；禁止全数据先CSP再CV。EA目标数据权限按R50。",
+      "implication": "每outer fold内fit EA/CS；n_components和reg在inner CV选择；禁止全数据先CSP再CV。",
       "source_ids": [
         "S39",
         "S40",
-        "S38",
         "S41"
       ],
       "derivation": null,
-      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
-    },
-    {
-      "id": "R50",
-      "strength": "hard_contract",
-      "pairs": [
-        {
-          "a": "SP",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "EA",
-          "b": "EP",
-          "relation": "interaction"
-        }
-      ],
-      "claim": "EA无需标签但需要域内数据；全目标域无标签EA属于transductive，不能当严格inductive或真实online成绩。",
-      "condition": "按subject/session求mean covariance。",
-      "implication": "fit_scope枚举train_only/target_calibration_unlabeled/target_all_unlabeled/past_only；在线更新不读未来，预先规定当前trial是否参与及决策时刻。",
-      "source_ids": [
-        "S38",
-        "S41"
-      ],
-      "derivation": null,
-      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
-    },
-    {
-      "id": "R51",
-      "strength": "hard_math",
-      "pairs": [
-        {
-          "a": "EA",
-          "b": "RF",
-          "relation": "interaction"
-        },
-        {
-          "a": "EA",
-          "b": "IP",
-          "relation": "interaction"
-        },
-        {
-          "a": "EA",
-          "b": "IA",
-          "relation": "interaction"
-        },
-        {
-          "a": "EA",
-          "b": "SC",
-          "relation": "interaction"
-        }
-      ],
-      "claim": "标准EA的全空间逆平方根要求正定；平均参考后通常奇异。",
-      "condition": "Rbar^-1/2定义在全传感器空间。",
-      "implication": "检测lambda_min及条件数；支持rank-subspace EA或shrinkage EA并标algorithm_variant；不要静默clip特征值后仍宣称精确原版EA。",
-      "source_ids": [
-        "S38",
-        "S12"
-      ],
-      "derivation": "Rbar=UΛU^T；Λ>0才能取普通Λ^-1/2。伪逆产生投影而非I；加λI后Q Rbar Q^T也一般不等于I。",
-      "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
-    },
-    {
-      "id": "R52",
-      "strength": "engineering",
-      "pairs": [
-        {
-          "a": "HP",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "LP",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "NT",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "EP",
-          "b": "EA",
-          "relation": "prefer_before"
-        },
-        {
-          "a": "BL",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "DT",
-          "b": "EA",
-          "relation": "interaction"
-        }
-      ],
-      "claim": "EA参考协方差应从最终分析频带/窗/基线定义的数据估计，改变这些条件通常需重估。",
-      "condition": "已选择EA且目标是对这一数据视图均值协方差对齐。",
-      "implication": "先确定view再fit EA；多频带EA按band分开作为候选，不默认所有频带共享同一个Q。",
-      "source_ids": [
-        "S38"
-      ],
-      "derivation": "Q对C_view白化；换频带/时窗后C不同，旧Q不保证目标均值接近I。",
       "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
     },
     {
@@ -2281,11 +2111,6 @@
         },
         {
           "a": "SC",
-          "b": "CS",
-          "relation": "interaction"
-        },
-        {
-          "a": "EA",
           "b": "CS",
           "relation": "interaction"
         }
@@ -2408,27 +2233,12 @@
         },
         {
           "a": "AR",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "AR",
           "b": "EF",
           "relation": "interaction"
         },
         {
           "a": "MW",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
-          "a": "MW",
           "b": "CS",
-          "relation": "interaction"
-        },
-        {
-          "a": "LN",
-          "b": "EA",
           "relation": "interaction"
         },
         {
@@ -2442,8 +2252,7 @@
       "implication": "不生成强先验；小预算随机/析因顺序探索，记录所有fit scope、形状/秩与失败。",
       "source_ids": [
         "S24",
-        "S29",
-        "S38"
+        "S29"
       ],
       "derivation": "所列文献定义方法及局部组合，不能视为这些算子对的直接比较证据。",
       "scope": "仅在condition成立时；不得由相关性推出通用因果最优顺序"
@@ -2515,18 +2324,8 @@
           "relation": "interaction"
         },
         {
-          "a": "BS",
-          "b": "EA",
-          "relation": "interaction"
-        },
-        {
           "a": "AR",
           "b": "CS",
-          "relation": "interaction"
-        },
-        {
-          "a": "AR",
-          "b": "EA",
           "relation": "interaction"
         }
       ],
@@ -2535,7 +2334,6 @@
       "implication": "同时报告共同样本上的性能、原始样本分母覆盖率/abstention、按类/被试保留率；无法输出不能作为缺失后静默删除。",
       "source_ids": [
         "S29",
-        "S38",
         "S41"
       ],
       "derivation": null,
@@ -3577,44 +3375,6 @@
       ]
     },
     {
-      "id": "P26",
-      "operator": "EA",
-      "parameter": "EA_reference_and_regularization",
-      "source_anchors": [
-        "原文Rbar=mean XiXiT，Q=Rbar^-1/2；离线可全目标无标签、在线仅已得数据"
-      ],
-      "exploration_space": {
-        "domain": [
-          "subject",
-          "session"
-        ],
-        "fit_scope": [
-          "train_only",
-          "target_calibration_unlabeled",
-          "target_all_unlabeled",
-          "past_only"
-        ],
-        "variant": [
-          "original_SPD",
-          "subspace",
-          "shrinkage"
-        ],
-        "shrinkage_alpha": [
-          0,
-          0.001,
-          0.01,
-          0.1
-        ]
-      },
-      "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
-      "conditions": "非零alpha和subspace是工程变体；不归于原文默认",
-      "validity_gates": "scope、rank、正定/条件数；trace/样本长度归一化定义明确；对齐至I的误差按variant解释",
-      "source_ids": [
-        "S38",
-        "S41"
-      ]
-    },
-    {
       "id": "P27",
       "operator": "CS",
       "parameter": "CSP",
@@ -3711,7 +3471,7 @@
       "operator": "SP",
       "parameter": "evaluation_protocol",
       "source_anchors": [
-        "sklearn防泄漏；EA论文offline与simulated-online明确区分"
+        "训练与评价分离；同一被试的全部记录在同一外折"
       ],
       "exploration_space": {
         "outer_split": [
@@ -3721,18 +3481,15 @@
         ],
         "inner_split": "只在outer train内调参",
         "scope_modes": [
-          "strict_inductive",
-          "transductive_unlabeled",
-          "online_causal"
+          "shared_recipe"
         ],
-        "guard": "由实际时间支持/record边界确定"
+        "guard": "共同记录、时间支持和分组边界"
       },
       "exploration_status": "下列搜索集合由工程设计；只有source_anchors中明确标明者才是文献设置/软件默认",
       "conditions": "不同协议结果分别列；同一subject重叠epochs不得跨fold",
       "validity_gates": "label与signal访问审计；所有state列出fit_ids、fit_time_end、transform_ids、version和seed",
       "source_ids": [
         "S41",
-        "S38",
         "S03"
       ]
     }
@@ -3891,14 +3648,6 @@
       "b": "AR",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "HP",
-      "b": "EA",
-      "rule_ids": [
-        "R52"
-      ],
-      "gap": null
     },
     {
       "a": "HP",
@@ -4066,14 +3815,6 @@
     },
     {
       "a": "LP",
-      "b": "EA",
-      "rule_ids": [
-        "R52"
-      ],
-      "gap": null
-    },
-    {
-      "a": "LP",
       "b": "CS",
       "rule_ids": [
         "R61"
@@ -4231,15 +3972,6 @@
     },
     {
       "a": "NT",
-      "b": "EA",
-      "rule_ids": [
-        "R10",
-        "R52"
-      ],
-      "gap": null
-    },
-    {
-      "a": "NT",
       "b": "CS",
       "rule_ids": [
         "R10"
@@ -4369,14 +4101,6 @@
     {
       "a": "LN",
       "b": "AR",
-      "rule_ids": [
-        "R56"
-      ],
-      "gap": "G01：某些组合仍无直接比较证据"
-    },
-    {
-      "a": "LN",
-      "b": "EA",
       "rule_ids": [
         "R56"
       ],
@@ -4519,12 +4243,6 @@
     },
     {
       "a": "RS",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "RS",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -4652,14 +4370,6 @@
     },
     {
       "a": "BS",
-      "b": "EA",
-      "rule_ids": [
-        "R59"
-      ],
-      "gap": null
-    },
-    {
-      "a": "BS",
       "b": "CS",
       "rule_ids": [
         "R59"
@@ -4782,12 +4492,6 @@
     },
     {
       "a": "BC",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "BC",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -4905,12 +4609,6 @@
     },
     {
       "a": "DR",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "DR",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5013,15 +4711,6 @@
       "rule_ids": [
         "R39",
         "R66"
-      ],
-      "gap": null
-    },
-    {
-      "a": "IP",
-      "b": "EA",
-      "rule_ids": [
-        "R17",
-        "R51"
       ],
       "gap": null
     },
@@ -5138,15 +4827,6 @@
     },
     {
       "a": "RF",
-      "b": "EA",
-      "rule_ids": [
-        "R17",
-        "R51"
-      ],
-      "gap": null
-    },
-    {
-      "a": "RF",
       "b": "CS",
       "rule_ids": [
         "R17",
@@ -5250,12 +4930,6 @@
     },
     {
       "a": "IF",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "IF",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5345,16 +5019,6 @@
     },
     {
       "a": "IA",
-      "b": "EA",
-      "rule_ids": [
-        "R17",
-        "R20",
-        "R51"
-      ],
-      "gap": null
-    },
-    {
-      "a": "IA",
       "b": "CS",
       "rule_ids": [
         "R17"
@@ -5429,12 +5093,6 @@
     },
     {
       "a": "AC",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "AC",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5509,14 +5167,6 @@
     },
     {
       "a": "AS",
-      "b": "EA",
-      "rule_ids": [
-        "R30"
-      ],
-      "gap": null
-    },
-    {
-      "a": "AS",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5570,14 +5220,6 @@
     {
       "a": "MW",
       "b": "AR",
-      "rule_ids": [
-        "R56"
-      ],
-      "gap": "G01：某些组合仍无直接比较证据"
-    },
-    {
-      "a": "MW",
-      "b": "EA",
       "rule_ids": [
         "R56"
       ],
@@ -5645,15 +5287,6 @@
     },
     {
       "a": "EP",
-      "b": "EA",
-      "rule_ids": [
-        "R50",
-        "R52"
-      ],
-      "gap": null
-    },
-    {
-      "a": "EP",
       "b": "CS",
       "rule_ids": [
         "R61"
@@ -5709,14 +5342,6 @@
     },
     {
       "a": "BL",
-      "b": "EA",
-      "rule_ids": [
-        "R52"
-      ],
-      "gap": null
-    },
-    {
-      "a": "BL",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5753,14 +5378,6 @@
       "b": "AR",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "DT",
-      "b": "EA",
-      "rule_ids": [
-        "R52"
-      ],
-      "gap": null
     },
     {
       "a": "DT",
@@ -5801,12 +5418,6 @@
     },
     {
       "a": "EF",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "EF",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5835,12 +5446,6 @@
     },
     {
       "a": "EAO",
-      "b": "EA",
-      "rule_ids": [],
-      "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "EAO",
       "b": "CS",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
@@ -5858,16 +5463,6 @@
       "b": "SP",
       "rule_ids": [],
       "gap": "G01：本轮无可核实的直接顺序规则；不得解释为可交换/无效/禁止"
-    },
-    {
-      "a": "AR",
-      "b": "EA",
-      "rule_ids": [
-        "R39",
-        "R56",
-        "R59"
-      ],
-      "gap": "G01：某些组合仍无直接比较证据"
     },
     {
       "a": "AR",
@@ -5889,32 +5484,6 @@
       "b": "SP",
       "rule_ids": [
         "R48"
-      ],
-      "gap": null
-    },
-    {
-      "a": "EA",
-      "b": "CS",
-      "rule_ids": [
-        "R49",
-        "R53"
-      ],
-      "gap": null
-    },
-    {
-      "a": "EA",
-      "b": "SC",
-      "rule_ids": [
-        "R51"
-      ],
-      "gap": null
-    },
-    {
-      "a": "EA",
-      "b": "SP",
-      "rule_ids": [
-        "R48",
-        "R50"
       ],
       "gap": null
     },

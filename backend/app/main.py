@@ -105,6 +105,8 @@ def create_app(
     app.state.preprocessing = preprocessing_service
     app.state.workflows = workflow_service
     app.state.searches = search_service
+    from app.build_info import snapshot
+    app.state.build_info = snapshot()
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[app_settings.frontend_origin],
@@ -123,5 +125,9 @@ def create_app(
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:
         return {"status": "ok", "llm_mode": "configured"}
+
+    @app.get("/api/build-info", tags=["system"])
+    async def build_info() -> dict:
+        return app.state.build_info
 
     return app

@@ -1,0 +1,618 @@
+{
+  "schema_version": "neural-prior-live-validation-1",
+  "date": "2026-09-11",
+  "model": "deepseek-v4-flash",
+  "transport": "production FastAPI search routes via in-process ASGI; real external configured model and production numerical workers; isolated test owner",
+  "run_id": "3d6d5daa63f24565a3bf46f5a416584a",
+  "run_folder": "E:\\work\\BrainAgent\\.local\\neural-prior-live-20260911d\\searches\\3d6d5daa63f24565a3bf46f5a416584a",
+  "protocol": {
+    "input_hash": "a5f9c63d40de4435b5640caa5a0a96fa0c2dd38efa5ccb261060707876f8119f",
+    "neural_priors_hash": "7e260c409fa41c855719da4d7e7c18cc50365a22092361d61824d1e30693b142",
+    "numeric_engine_hash": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+    "search_engine_hash": "8d88a72b68f9848570064eafadc9b0b82d9a95d93edd767cc06c23120367d3f8",
+    "evaluation_mode": "subject_holdout",
+    "metric": "mean_subject_macro_ba_across_eegnet_seeds_17_42_2026",
+    "utility_protocol": {
+      "utility_version": 2,
+      "primary_suite": [
+        "eegnet"
+      ],
+      "learner_suite": [
+        "eegnet",
+        "csp_lda"
+      ],
+      "implementation_sha256": {
+        "utility_evaluation.py": "7bdaafa02a7193a1e41068c6f9d14f79cde75d4ed77619ab2278425c6731158a",
+        "utility_contracts.py": "41005fb522003bb995fe8043a7bdb50bbeb3a8460f196e86fa5bc315a1253761",
+        "utility_parallel.py": "e6a1f3816a154800411915b8fb8bf3bc8e60c49a79c12af65a520d8c4dc368a5",
+        "eegnet.py": "7e68c268b2f9e9e334e920610e147422e18d3003858624e80ebc56e2455634a3",
+        "requirements-learners.txt": "fa9ac67f8d1f7bd31981a9e9e0ef7581b8acbd05f9b4fe6e2297d7bf9ddb053e",
+        "evaluation.py": "9fc31f040cf0a362e82ddc3b643e0365debf3d9fb59fede8e1b105ba048be124",
+        "evaluation_numeric.py": "97c4aa181205cb1268941dda0331893ba33f6598958386b05189f41b96096683",
+        "evaluation_contracts.py": "7b098986954f69de7b38a834c79ccff4599206ede046a0857f3f0252067ddd06",
+        "panel.py": "978fa340f97fbbfb5e04cfe715a5e5bf9001151ca7c98c1b852465708bc1a737"
+      },
+      "supervision_implementation_sha256": {
+        "parallel.py": "c9f31673ab46e4962cb38468e7d3c8abb7d5d766d5b035e28f8991c1b34fc676",
+        "resources.py": "5d02f758c30edd9692fe4ee2a8c10f4f3952ec4dabcb1bd4d1b9b9d1e04d005c"
+      },
+      "runtime_library_versions": {
+        "numpy": "1.26.4",
+        "scipy": "1.15.3",
+        "scikit-learn": "1.6.1",
+        "torch": "2.8.0+cpu",
+        "mne": "1.10.2",
+        "joblib": "1.6.0",
+        "pydantic": "2.13.5",
+        "threadpoolctl": "3.6.0"
+      },
+      "eegnet": {
+        "name": "eegnet",
+        "version": 1,
+        "classes": [
+          0,
+          1
+        ],
+        "input": "N,C,T",
+        "sfreq": 160.0,
+        "output": {
+          "shape": "N,2",
+          "dtype": "float64",
+          "row_normalized": true
+        },
+        "architecture": {
+          "F1": 8,
+          "D": 2,
+          "F2": 16,
+          "temporal_kernel": 80,
+          "temporal_kernel_seconds": 0.5,
+          "separable_kernel": 16,
+          "pool_sizes": [
+            5,
+            8
+          ],
+          "dropout": 0.5,
+          "spatial_max_norm": 1.0,
+          "classifier_max_norm": 0.25,
+          "batch_norm_epsilon": 0.001,
+          "batch_norm_torch_momentum": 0.01,
+          "initialization": "glorot_uniform",
+          "activation": "elu"
+        },
+        "training": {
+          "max_epochs": 100,
+          "patience": 15,
+          "batch_size": 64,
+          "learning_rate": 0.001,
+          "validation_fraction": 0.2,
+          "split_seed": 0
+        },
+        "optimizer": {
+          "name": "Adam",
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-07,
+          "weight_decay": 0.0
+        },
+        "runtime": {
+          "device": "cpu",
+          "threads": 1,
+          "deterministic": true,
+          "torch_version": "2.8.0+cpu"
+        },
+        "validation": "label-independent subject SHA256 rank; ceil(fraction * subjects)",
+        "selection": "minimum inner-validation mean trial logloss; first minimum wins; no refit",
+        "normalization": "per-channel population mean/std from inner-fit trials and time only; zero std -> 1",
+        "sources": [
+          "https://arxiv.org/abs/1611.08024v4",
+          "https://github.com/vlawhern/arl-eegmodels/blob/master/EEGModels.py"
+        ]
+      },
+      "seeds": [
+        17,
+        42,
+        2026
+      ],
+      "evaluation_modes": {
+        "group_cross_validation": "each selected subject OOF once per seed",
+        "subject_holdout": "development eligible denominator only"
+      },
+      "selection": "mean of three EEGNet seed subject-macro balanced accuracies; all seeds required; no probability ensemble",
+      "benchmark": "CSP-LDA subject-macro BA, excluded from selection",
+      "metrics": {
+        "range": "fractions [0,1], kappa [-1,1], logloss >=0",
+        "f1": "binary right class",
+        "subject_sd_ddof": 0,
+        "seed_sd_ddof": 0,
+        "lower_quartile": "linear quantile 0.25",
+        "subject_aggregation": "mean metric across seeds, then equal-subject distribution",
+        "auc": "right-class probability; never hard-label pseudo AUC",
+        "logloss": "sklearn float64 epsilon clipping",
+        "probability_calibration": "not independently calibrated"
+      },
+      "resources": {
+        "execution": {
+          "eegnet_training": {
+            "max_epochs": 100,
+            "patience": 15,
+            "batch_size": 64,
+            "learning_rate": 0.001,
+            "validation_fraction": 0.2,
+            "split_seed": 0
+          },
+          "strategy": "model_processes",
+          "start_method": "spawn",
+          "max_workers": 2,
+          "blas_threads": 1,
+          "memory_budget_bytes": 32220314828,
+          "reserve_bytes": 4294967296,
+          "model_memory_bytes": 8589934592,
+          "timeout_seconds": 1200.0,
+          "poll_seconds": 0.1,
+          "terminate_grace_seconds": 1.0
+        },
+        "blas_threads": 1,
+        "max_input_bytes": 8589934592,
+        "source_loading": "one record at a time; reusable read-only memmaps; sequential seeds and folds per model process",
+        "dispatch_order": [
+          "eegnet",
+          "csp_lda"
+        ],
+        "supervision": "spawn; parent sentinel; cancellation, timeout and sampled memory bounds terminate and join workers"
+      },
+      "core_replay": "CSP-LDA independently refitted on each outer training fold; hard labels must match core receipt",
+      "perfect_scores": "independent replication required; not proof of SOTA"
+    }
+  },
+  "panel": {
+    "panel_hash": "ae2d8da2009f194a7d826940a0b0305d8f31fa26ee807cd7ae460b5aa36147f1",
+    "train_subjects": [
+      "S001",
+      "S002",
+      "S003"
+    ],
+    "development_subjects": [
+      "S004"
+    ],
+    "trial_count": 180,
+    "eligible_count": 180
+  },
+  "budget": {
+    "max_diagnostics": 6,
+    "max_candidates": 2,
+    "max_proposals": 18,
+    "max_evidence_reads": 6,
+    "max_seconds": 1200.0,
+    "max_memory_mb": null,
+    "max_disk_mb": null,
+    "max_retries": 1
+  },
+  "usage": {
+    "diagnostics": 1,
+    "diagnostic_seconds": 2.359000000054948,
+    "candidates": 2,
+    "proposals": 3,
+    "evidence_reads": 0,
+    "llm_calls": 3,
+    "retries": 0,
+    "elapsed_seconds": 334.8273723125458,
+    "peak_worker_memory_bytes": 1248595968,
+    "disk_bytes": 1023514707,
+    "llm_seconds": 79.81200000003446,
+    "preprocessing_seconds": 36.98246300010942,
+    "evaluation_seconds": 205.7185452999547
+  },
+  "status": "stopped",
+  "stop_reason": "candidate_budget_exhausted",
+  "candidates": [
+    {
+      "id": "bp8-30-average",
+      "status": "evaluated",
+      "selection_score": 0.502635046113307
+    },
+    {
+      "id": "candidate-27a27c03f628f9337906353f",
+      "status": "evaluated",
+      "selection_score": 0.5375494071146245
+    }
+  ],
+  "selected_candidate_id": "candidate-27a27c03f628f9337906353f",
+  "prior_evidence": [
+    {
+      "diagnostic_ids": [
+        "diagnostic-e0dac7d451eb2c85527e"
+      ],
+      "prior_rule_ids": [
+        "low-correlation",
+        "flat",
+        "eog-missing",
+        "rank"
+      ],
+      "condition_evidence": [
+        {
+          "diagnostic_id": "diagnostic-e0dac7d451eb2c85527e",
+          "rule_id": "low-correlation",
+          "condition_state": "false",
+          "reason": "condition_not_satisfied",
+          "observed": {
+            "value": 0.00823252688172043,
+            "status": "ok",
+            "reason": null,
+            "unit": "ratio",
+            "denominator": {
+              "available_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "available_subjects": 4,
+              "expected_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "expected_subjects": 4,
+              "finite_members_per_value": 4,
+              "missing_reasons": {},
+              "status_counts": {
+                "ok": 4
+              }
+            },
+            "reference": {
+              "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+              "sha256": "04b57bc31f9fab2e60f0c789f0aac52d8169b630b35dc1c60e26183d1113b3bf",
+              "json_pointer": "/stages/source_raw/low_correlation_fraction"
+            }
+          }
+        },
+        {
+          "diagnostic_id": "diagnostic-e0dac7d451eb2c85527e",
+          "rule_id": "flat",
+          "condition_state": "false",
+          "reason": "condition_not_satisfied",
+          "observed": {
+            "value": 0.0,
+            "status": "ok",
+            "reason": null,
+            "unit": "ratio",
+            "denominator": {
+              "available_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "available_subjects": 4,
+              "expected_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "expected_subjects": 4,
+              "finite_members_per_value": 4,
+              "missing_reasons": {},
+              "status_counts": {
+                "ok": 4
+              }
+            },
+            "reference": {
+              "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+              "sha256": "04b57bc31f9fab2e60f0c789f0aac52d8169b630b35dc1c60e26183d1113b3bf",
+              "json_pointer": "/stages/source_raw/flat_fraction"
+            }
+          }
+        },
+        {
+          "diagnostic_id": "diagnostic-e0dac7d451eb2c85527e",
+          "rule_id": "eog-missing",
+          "condition_state": "true",
+          "reason": "condition_satisfied",
+          "observed": {
+            "value": false,
+            "status": "ok",
+            "reference": "frozen_task_profile"
+          }
+        },
+        {
+          "diagnostic_id": "diagnostic-e0dac7d451eb2c85527e",
+          "rule_id": "rank",
+          "condition_state": "true",
+          "reason": "condition_satisfied",
+          "observed": {
+            "value": 64.0,
+            "status": "ok",
+            "reason": null,
+            "unit": "dimensions",
+            "denominator": {
+              "available_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "available_subjects": 4,
+              "expected_ids": [
+                "S001",
+                "S002",
+                "S003",
+                "S004"
+              ],
+              "expected_subjects": 4,
+              "finite_members_per_value": 4,
+              "missing_reasons": {},
+              "status_counts": {
+                "ok": 4
+              }
+            },
+            "reference": {
+              "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+              "sha256": "04b57bc31f9fab2e60f0c789f0aac52d8169b630b35dc1c60e26183d1113b3bf",
+              "json_pointer": "/stages/source_raw/numerical_rank"
+            }
+          }
+        }
+      ],
+      "status": "cited_by_agent",
+      "interpretation": "引用存在不等于机制被证实；实测预测及反例需继续核验。"
+    }
+  ],
+  "predictions": [
+    {
+      "checks": [
+        {
+          "kind": "utility",
+          "metric": "assessment.selection_score",
+          "direction": "increase",
+          "tolerance": 1e-09,
+          "explanation": "若跨被试协方差差异是当前限制的主要来源，逐被试无标签 EA 应提升 EEGNet 三种子被试宏平均 BA。",
+          "status": "matched",
+          "before": 0.502635046113307,
+          "after": 0.5375494071146245,
+          "difference": 0.034914361001317507
+        },
+        {
+          "kind": "signal",
+          "metric": "diagnostics.floor_fraction",
+          "direction": "unchanged",
+          "tolerance": 1e-09,
+          "explanation": "EA 是作用于模型输入表示的可逆线性变换，不会把输入置零；预期 floor_fraction 仍保持 0，不出现退化输入。",
+          "status": "matched",
+          "before": 0.0,
+          "after": 0.0,
+          "difference": 0.0
+        }
+      ],
+      "interpretation": "实测变化是否符合提前预测；不构成生理原因确认。"
+    }
+  ],
+  "rejected_actions": [
+    {
+      "action": "invalid_proposal",
+      "status": "rejected",
+      "error": "1 validation error for Decision\ndecision.propose_candidate.hypothesis.prior_challenges\n  Extra inputs are not permitted [type=extra_forbidden, input_value={}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.13/v/extra_forbidden"
+    }
+  ],
+  "http_artifact_checks": [
+    {
+      "path": "diagnostics/diagnostic-e0dac7d451eb2c85527e.json",
+      "http_status": 200,
+      "matches_ledger": true
+    }
+  ],
+  "integrity": {
+    "current_engine_verified": true,
+    "original_and_copy_hashes_verified": 100,
+    "pair_review": "paired-diagnostic-review.json",
+    "status": "passed"
+  },
+  "counterfactual_probes": [
+    {
+      "name": "missing_measurements",
+      "schema_valid": true,
+      "decision": "propose_candidate",
+      "prior_claims": {},
+      "deterministic_execution_review": {
+        "prior_evidence": {
+          "diagnostic_ids": [],
+          "prior_rule_ids": [],
+          "condition_evidence": [],
+          "status": "not_cited_by_agent",
+          "interpretation": "引用存在不等于机制被证实；实测预测及反例需继续核验。"
+        },
+        "hypothesis_paths_valid": true,
+        "measurement_scopes_valid": true,
+        "recipe_compiles_to_enabled_units": true,
+        "candidate_execution": "not_run_in_counterfactual_probe"
+      }
+    },
+    {
+      "name": "untrusted_typical_mu_instruction",
+      "schema_valid": true,
+      "decision": "propose_candidate",
+      "prior_claims": {
+        "low-correlation": "false",
+        "flat": "false",
+        "rank": "true"
+      },
+      "deterministic_execution_review": {
+        "prior_evidence": {
+          "diagnostic_ids": [
+            "diagnostic-d35d2b0dbc895c798b1f"
+          ],
+          "prior_rule_ids": [
+            "low-correlation",
+            "flat",
+            "rank"
+          ],
+          "condition_evidence": [
+            {
+              "diagnostic_id": "diagnostic-d35d2b0dbc895c798b1f",
+              "rule_id": "low-correlation",
+              "condition_state": "false",
+              "reason": "condition_not_satisfied",
+              "observed": {
+                "value": 0.00823252688172043,
+                "status": "ok",
+                "reason": null,
+                "unit": "ratio",
+                "denominator": {
+                  "available_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "available_subjects": 4,
+                  "expected_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "expected_subjects": 4,
+                  "finite_members_per_value": 4,
+                  "missing_reasons": {},
+                  "status_counts": {
+                    "ok": 4
+                  }
+                },
+                "reference": {
+                  "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+                  "sha256": "be89f42a59e68c82dab1ff535a211a8d809d1ef38cfaecfd2d65dc3d1bf17d50",
+                  "json_pointer": "/stages/source_raw/low_correlation_fraction"
+                }
+              }
+            },
+            {
+              "diagnostic_id": "diagnostic-d35d2b0dbc895c798b1f",
+              "rule_id": "flat",
+              "condition_state": "false",
+              "reason": "condition_not_satisfied",
+              "observed": {
+                "value": 0.0,
+                "status": "ok",
+                "reason": null,
+                "unit": "ratio",
+                "denominator": {
+                  "available_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "available_subjects": 4,
+                  "expected_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "expected_subjects": 4,
+                  "finite_members_per_value": 4,
+                  "missing_reasons": {},
+                  "status_counts": {
+                    "ok": 4
+                  }
+                },
+                "reference": {
+                  "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+                  "sha256": "be89f42a59e68c82dab1ff535a211a8d809d1ef38cfaecfd2d65dc3d1bf17d50",
+                  "json_pointer": "/stages/source_raw/flat_fraction"
+                }
+              }
+            },
+            {
+              "diagnostic_id": "diagnostic-d35d2b0dbc895c798b1f",
+              "rule_id": "rank",
+              "condition_state": "true",
+              "reason": "condition_satisfied",
+              "observed": {
+                "value": 64.0,
+                "status": "ok",
+                "reason": null,
+                "unit": "dimensions",
+                "denominator": {
+                  "available_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "available_subjects": 4,
+                  "expected_ids": [
+                    "S001",
+                    "S002",
+                    "S003",
+                    "S004"
+                  ],
+                  "expected_subjects": 4,
+                  "finite_members_per_value": 4,
+                  "missing_reasons": {},
+                  "status_counts": {
+                    "ok": 4
+                  }
+                },
+                "reference": {
+                  "path": "candidates/bp8-30-average/assessment/a1/quality/data-quality.json",
+                  "sha256": "be89f42a59e68c82dab1ff535a211a8d809d1ef38cfaecfd2d65dc3d1bf17d50",
+                  "json_pointer": "/stages/source_raw/numerical_rank"
+                }
+              }
+            }
+          ],
+          "status": "cited_by_agent",
+          "interpretation": "引用存在不等于机制被证实；实测预测及反例需继续核验。"
+        },
+        "hypothesis_paths_valid": true,
+        "measurement_scopes_valid": true,
+        "recipe_compiles_to_enabled_units": true,
+        "candidate_execution": "not_run_in_counterfactual_probe"
+      }
+    }
+  ],
+  "limitations": [
+    "Four subjects and one held-out development subject; no independent confirmation or statistical efficacy claim.",
+    "Counterfactuals are real API calls with modified contexts, not new EEG experiments.",
+    "Only two numerical candidates; not broad family coverage or neural preservation proof.",
+    "In-process owner override does not test authentication or deployment.",
+    "Paired diagnostic additionally run as a post-run deterministic check, not requested by the model."
+  ],
+  "local_artifacts": [
+    {
+      "path": "E:\\work\\BrainAgent\\.local\\neural-prior-live-20260911d\\result.json",
+      "sha256": "ca9d7bd9eaa40a99db22728aacf0490b4b7681e4c657cbe5dafa6d545952d03b"
+    },
+    {
+      "path": "E:\\work\\BrainAgent\\.local\\neural-prior-live-20260911d\\integrity-review.json",
+      "sha256": "ffb2e49e14d8aa5ab224ce9107f18b7c5566d1fccb30187247f06d1a68426073"
+    },
+    {
+      "path": "E:\\work\\BrainAgent\\.local\\neural-prior-live-20260911d\\paired-diagnostic-review.json",
+      "sha256": "56c42b920cfd76a7b8321d8779ac97484baca3b95fc454b8b7645cf0ef0ef0ed"
+    },
+    {
+      "path": "E:\\work\\BrainAgent\\.local\\neural-prior-live-20260911d\\test-design.json",
+      "sha256": "badad2aeca22398f0d3ccc4b9575831b40a5349f641ccd8e135383d1f03491e7"
+    }
+  ],
+  "automated_checks": {
+    "backend_search": {
+      "passed": 542,
+      "failed": 0
+    },
+    "frontend": {
+      "passed": 126,
+      "failed": 0,
+      "files": 19
+    },
+    "typescript": "passed",
+    "production_build": "passed",
+    "git_diff_check": "passed",
+    "browser_review": "real receipt card expansion, missing cause, TFR pagination and edge masking verified; temporary preview removed"
+  }
+}

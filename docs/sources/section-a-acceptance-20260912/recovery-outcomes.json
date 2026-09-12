@@ -1,0 +1,140 @@
+{
+  "definition": "Per-run source denominator: at least one attempted read_source/reextract action. Effective: at least one completed reextraction followed by at least one eligible source branch/adaptation at final intake. Existing eligibility without a completed revision is not a repair success. Descriptive integration evidence, not causal attribution or a population success estimate.",
+  "runs": [
+    {
+      "run": "live-6",
+      "attempted_sources": 3,
+      "effective_sources": 1,
+      "rate": 0.3333333333333333,
+      "sources": [
+        {
+          "source_id": "s-67d52c3e3182141f",
+          "url": "https://api.github.com/repos/jevrton-code/bci-motor-imagery-classifier/readme",
+          "attempts": 1,
+          "completed_revision": true,
+          "final_eligible_candidate_ids": [],
+          "effective_under_definition": false,
+          "actions": [
+            {
+              "status": "reextracted",
+              "action": "reextract",
+              "reason": null
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/preprocessing/literature-methods/0cf2239cf3d2eeef34a2/resolved-extraction.json",
+          "sha256": "7c0e148e95243f342a7f0c797999ed5529aa89ae81ee84d7707cd3953ac64ebc"
+        },
+        {
+          "source_id": "s-3890ff161c7594f4",
+          "url": "https://api.github.com/repos/Z-bros/EEG-MotorImagery/readme",
+          "attempts": 1,
+          "completed_revision": true,
+          "final_eligible_candidate_ids": [],
+          "effective_under_definition": false,
+          "actions": [
+            {
+              "status": "reextracted",
+              "action": "reextract",
+              "reason": null
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/preprocessing/literature-methods/1c4dc47d934747c86aab/resolved-extraction.json",
+          "sha256": "f571b4484056d47768845d2797b7bf0a88deee63d75bf0a0cba28c2c9fcc5665"
+        },
+        {
+          "source_id": "s-36afd5bc6d165a3c",
+          "url": "https://www.frontiersin.org/journals/human-neuroscience/articles/10.3389/fnhum.2023.1134869/pdf",
+          "attempts": 1,
+          "completed_revision": true,
+          "final_eligible_candidate_ids": [
+            "paper-0e447ddd37aca83922e2f22b"
+          ],
+          "effective_under_definition": true,
+          "actions": [
+            {
+              "status": "reextracted",
+              "action": "reextract",
+              "reason": null
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/preprocessing/literature-methods/2ec59061779310e1cb5f/resolved-extraction.json",
+          "sha256": "849b5f7cdce64497047a841b24b3a01a82425a3c1335168229b33f09556a5246"
+        }
+      ]
+    },
+    {
+      "run": "recovery-6",
+      "attempted_sources": 3,
+      "effective_sources": 1,
+      "rate": 0.3333333333333333,
+      "sources": [
+        {
+          "source_id": "s-3f8e349a95fc99d0",
+          "url": "https://arxiv.org/pdf/2605.21319",
+          "attempts": 1,
+          "completed_revision": true,
+          "final_eligible_candidate_ids": [
+            "paper-b606ed9145650faa4b9ccdbf",
+            "paper-30cfe7488e3d4902f7472a10",
+            "paper-0064487b6b006ec8364550f4",
+            "paper-4225ac223c6eeb937fd7b350",
+            "paper-8ccbb57466253d2d6b4554b7",
+            "paper-6ef87a114297d352a34aa599",
+            "paper-1027c086f19579d7f488bc2c"
+          ],
+          "effective_under_definition": true,
+          "actions": [
+            {
+              "status": "reextracted",
+              "action": "reextract",
+              "reason": null
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/recovery-6/workflows/bbd3662eea47498c8aecf1895372b8b7/preprocessing/literature-methods/702c0ec4dcdce3fe9577/resolved-extraction.json",
+          "sha256": "84dfed9a5e141be400a544d10a2e9def6cb7101aa1056b147ee8536c6c5c2e09"
+        },
+        {
+          "source_id": "s-5aefa84d6dc2e0b6",
+          "url": "https://api.github.com/repos/jacksangster03/eeg-motor-imagery-decoding/readme",
+          "attempts": 1,
+          "completed_revision": false,
+          "final_eligible_candidate_ids": [
+            "paper-d8f4b112976f134a00d6889e"
+          ],
+          "effective_under_definition": false,
+          "actions": [
+            {
+              "status": "failed",
+              "action": "read_source",
+              "reason": "ValueError: recovery URL is absent from the read source's actual links"
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/recovery-6/workflows/bbd3662eea47498c8aecf1895372b8b7/preprocessing/literature-methods/89eddfe063e71fc70af1/resolved-extraction.json",
+          "sha256": "9885f2149f78865c7fedfdf2eef94a577b60a18fa41837a62733511ce89b28eb"
+        },
+        {
+          "source_id": "s-24819661d08432c0",
+          "url": "https://api.github.com/repos/CyrilleMesue/eeg-me-mi/readme",
+          "attempts": 2,
+          "completed_revision": true,
+          "final_eligible_candidate_ids": [],
+          "effective_under_definition": false,
+          "actions": [
+            {
+              "status": "reextracted",
+              "action": "read_source",
+              "reason": null
+            },
+            {
+              "status": "failed",
+              "action": "read_source",
+              "reason": "ValueError: recovery removed an existing source branch"
+            }
+          ],
+          "receipt": "E:/work/BrainAgent/.local/section-a-20260912/recovery-6/workflows/bbd3662eea47498c8aecf1895372b8b7/preprocessing/literature-methods/97d1295eb22eee3de509/resolved-extraction.json",
+          "sha256": "c705e384a490ec5fe1b8eeac06f3f8c4ff7f2935bd4ee9ef1c9fb90fd0b19dd7"
+        }
+      ]
+    }
+  ]
+}

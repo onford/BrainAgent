@@ -1,0 +1,79 @@
+{
+  "report": {
+    "path": "E:/work/BrainAgent/docs/preprocessing-unit-to-execution-full-20260911.md",
+    "bytes": 55094,
+    "sha256": "707bd26a26ad39fc59a857c89ef3ae583d8bb946ee86a8c045e2f13a48082990"
+  },
+  "files": [
+    {
+      "name": "all-record-results.json",
+      "bytes": 19033,
+      "sha256": "a2ec091c4451812fb40689276eef80465adf3edfe0d8d4bcbb8a90c4d7a19fb6"
+    },
+    {
+      "name": "all-seven-seed-compilations.json",
+      "bytes": 658044,
+      "sha256": "f4f59abe8bf64d88bc841009f0faa608b052081c9ae619b09d812cfdb6bd70de"
+    },
+    {
+      "name": "bp8-30-average-full.json",
+      "bytes": 1072861,
+      "sha256": "2d2f72ac230cbe7bd6a25f2d07bedbe26d82909ecd17435fb4e3580f604b9f52"
+    },
+    {
+      "name": "candidate-27a27c03f628f9337906353f-full.json",
+      "bytes": 1074654,
+      "sha256": "aeb01b758cca1632d39a4c2e02a6417a8389358265a65e256e44e47d4234aa49"
+    },
+    {
+      "name": "catalog-full.json",
+      "bytes": 129577,
+      "sha256": "37421c2a91078fa8440f7672a33dab2308491626a78732eded69482633076b70"
+    },
+    {
+      "name": "enabled-operations-full.json",
+      "bytes": 17246,
+      "sha256": "48115374a9dc68c6d7d9da7f8ee57068c340f37a9adf9641c3da85680c6e679f"
+    },
+    {
+      "name": "historical-live-validation-report.json",
+      "bytes": 22221,
+      "sha256": "7537f4306deb4ad0da0c7cd78344523c7980ae7c72c7bb0b0c26deea28fd5735"
+    },
+    {
+      "name": "historical-search-registry.json",
+      "bytes": 15259,
+      "sha256": "0608cb0f5eff07374afdebcd2ebfc4658af256352de2cbf541301aed81c37441"
+    },
+    {
+      "name": "method-templates-full.json",
+      "bytes": 16297,
+      "sha256": "34094e9c39e06df1fc9dc0f828a91fc1c8885179db70b82e4d459e4b85b6ebbd"
+    },
+    {
+      "name": "rejected-compilation-examples.json",
+      "bytes": 648,
+      "sha256": "0fb3962a54f4f88618b6f120e1106cef2ca0a27a7426ea9dd7af5568e3c58572"
+    },
+    {
+      "name": "search-space-full.json",
+      "bytes": 30197,
+      "sha256": "591f331c867b567ee8fa0131db44b3da2368e69d7e9f7b0cdbefa45459b5e648"
+    },
+    {
+      "name": "source-checksums.json",
+      "bytes": 5555,
+      "sha256": "ff7d0c2b15389decdf7006dc7ca50a8ace494f56002a4caa0d5f55069f2d1f3c"
+    },
+    {
+      "name": "synthetic-current-full.json",
+      "bytes": 154577,
+      "sha256": "2a16cfbfa6eb00f8f3aa76f0056f5099e6980233fed2503c1e5197227ad0007d"
+    },
+    {
+      "name": "verification.json",
+      "bytes": 1371,
+      "sha256": "bfaae54db706ca5decfce19c54cf49d2cc2cce467b8e414613422e683ac79740"
+    }
+  ]
+}

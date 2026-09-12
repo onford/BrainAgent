@@ -237,6 +237,7 @@ onBeforeUnmount(() => {
           {{ t('Tool integrations') }}
         </RouterLink>
         <RouterLink to="/workflows" class="sidebar-link">{{ t('Data workflows') }}</RouterLink>
+        <RouterLink to="/preprocessing/units" class="sidebar-link">预处理单元与编排</RouterLink>
         <RouterLink to="/agents" class="sidebar-link">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm8 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM2.5 20v-2.2A4.8 4.8 0 0 1 7.3 13h1.4a4.8 4.8 0 0 1 4.8 4.8V20m0-6.6a4.8 4.8 0 0 1 8 3.6v3" /></svg>
           {{ t('Agent registry') }}

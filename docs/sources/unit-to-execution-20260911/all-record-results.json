@@ -1,0 +1,618 @@
+[
+  {
+    "example": "synthetic-current",
+    "record_id": "sub-01",
+    "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+    "status": "completed",
+    "input_shape": [
+      5,
+      8000
+    ],
+    "output_shape": [
+      7,
+      5,
+      141
+    ],
+    "events_before": 8,
+    "events_retained": 7,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9612489800605037e-12,
+    "artifact_count": 12,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0000/a1"
+  },
+  {
+    "example": "synthetic-current",
+    "record_id": "sub-02",
+    "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+    "status": "completed",
+    "input_shape": [
+      5,
+      8000
+    ],
+    "output_shape": [
+      7,
+      5,
+      141
+    ],
+    "events_before": 8,
+    "events_retained": 7,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9612489800605037e-12,
+    "artifact_count": 12,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0001/a1"
+  },
+  {
+    "example": "synthetic-current",
+    "record_id": "sub-01",
+    "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+    "status": "completed",
+    "input_shape": [
+      5,
+      8000
+    ],
+    "output_shape": [
+      7,
+      5,
+      141
+    ],
+    "events_before": 8,
+    "events_retained": 7,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9612489800605037e-12,
+    "artifact_count": 17,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0002/a1"
+  },
+  {
+    "example": "synthetic-current",
+    "record_id": "sub-02",
+    "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+    "status": "completed",
+    "input_shape": [
+      5,
+      8000
+    ],
+    "output_shape": [
+      7,
+      5,
+      141
+    ],
+    "events_before": 8,
+    "events_retained": 7,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9612489800605037e-12,
+    "artifact_count": 17,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0003/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S001R04",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.1418229603081818e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0000/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S001R08",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.438118233439839e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0001/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S001R12",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.0452105720797364e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0002/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S002R04",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.0299815877577376e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0003/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S002R08",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.089622153355868e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0004/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S002R12",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.4122690240566185e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0005/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S003R04",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.850549796950443e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0006/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S003R08",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9040766684706723e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0007/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S003R12",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.0385919514975814e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0008/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S004R04",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.367509942431678e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0009/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S004R08",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.4312052479720514e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0010/a1"
+  },
+  {
+    "example": "bp8-30-average",
+    "record_id": "S004R12",
+    "method_id": "670c49b3a791d4747b720af916362cc6063b829eb178fe6298469254fc021079",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.19094954310127e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/73970042983f4ac58b22418aaf9d4224/r0011/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S001R04",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.1418229603081818e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0000/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S001R08",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.438118233439839e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0001/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S001R12",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.0452105720797364e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0002/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S002R04",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.0299815877577376e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0003/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S002R08",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.089622153355868e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0004/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S002R12",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.4122690240566185e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0005/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S003R04",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.850549796950443e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0006/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S003R08",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 1.9040766684706723e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0007/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S003R12",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      20000
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.0385919514975814e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0008/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S004R04",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.367509942431678e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0009/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S004R08",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.4312052479720514e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0010/a1"
+  },
+  {
+    "example": "candidate-27a27c03f628f9337906353f",
+    "record_id": "S004R12",
+    "method_id": "302566256a2535c3047a8a73a95d7eb3a300c0300824cb39f952e53c7ec5140c",
+    "status": "completed",
+    "input_shape": [
+      64,
+      19680
+    ],
+    "output_shape": [
+      15,
+      64,
+      321
+    ],
+    "events_before": 15,
+    "events_retained": 15,
+    "source_unchanged": true,
+    "roundtrip_max_error_V": 2.19094954310127e-12,
+    "artifact_count": 16,
+    "verified_now": true,
+    "result_directory": "E:/work/BrainAgent/.local/neural-prior-live-20260911d/searches/3d6d5daa63f24565a3bf46f5a416584a/engine/runs/ee042cf651294bf0a3451137d171047e/r0011/a1"
+  }
+]

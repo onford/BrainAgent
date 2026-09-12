@@ -34,6 +34,9 @@ def bind(value, bindings):
 
 
 def compile_steps(method: MethodSpec, record, data, parameters):
+    if any(s.implementation_version == "2" for s in method.recipe):
+        from .graph_planner import compile_graph
+        return compile_graph(method, record, data, parameters)
     bindings = {"profile." + k: v for k, v in parameters.items()}
     bindings.update(
         eeg_channels=[n for n in record.channel_order if record.channels[n] == "eeg"],
@@ -216,7 +219,7 @@ def numerical_signature(configs):
         names = {"raw": "raw", **{s.id: f"s{i}" for i, s in enumerate(config.steps)}}
         steps = []
         for step in config.steps:
-            row = step.model_dump(exclude={"evidence_indices"})
+            row = step.model_dump(exclude={"evidence_indices", "parameter_sources", "optional"})
             for field in ("id", "input", "model_from", "decision_from"):
                 if row[field] is not None:
                     row[field] = names[row[field]]
@@ -236,7 +239,8 @@ def signal_bytes(record, steps, root):
     size = len(record.channels) * record.samples * 8
     rates = {"raw": record.sfreq}
     for step in steps:
-        sfreq = step.params["sfreq"] if step.op == "resample" else rates[step.input]
+        sfreq = step.params["sfreq"] if step.op in ('resample','resample_fft','resample_fir','resample_eeglab') else rates[step.input]
+        if step.op=='decimate':sfreq/=step.params['decim']
         rates[step.id] = sfreq
         size = max(
             size,
@@ -244,7 +248,7 @@ def signal_bytes(record, steps, root):
             * int(round(record.samples * sfreq / record.sfreq))
             * 8,
         )
-        if step.op == "epoch":
+        if step.op in ('epoch','epoch_with_nonfinite'):
             path = Path(root) / record.bids_path.replace("eeg.vhdr", "events.tsv")
             with path.open(encoding="utf-8-sig", newline="") as stream:
                 events = sum(1 for _ in csv.DictReader(stream, delimiter="\t"))
@@ -260,15 +264,30 @@ def training_grid(config, record):
     nodes = {"raw": (tuple(record.channel_order), record.sfreq, None)}
     for step in config.steps:
         channels, sfreq, window = nodes[step.input]
-        if step.op == "resample":
+        if step.input_channels is not None:channels=tuple(step.input_channels)
+        if step.op in ('resample','resample_fft','resample_fir','resample_eeglab'):
             sfreq = step.params["sfreq"]
-        elif step.op == "epoch":
+        elif step.op in ('epoch','epoch_with_nonfinite'):
             channels = tuple(step.params["picks"])
             window = (
                 round(step.params["tmin"] * sfreq),
                 round(step.params["tmax"] * sfreq),
             )
+        elif step.op=='drop':channels=tuple(n for n in channels if n not in step.params['channels'])
+        elif step.op=='relax_car':channels=tuple(n for n in channels if n not in step.params['confirmed_bad_channels'])
+        elif step.op=='decimate':
+            d=step.params['decim'];sfreq/=d
+            if window is not None:
+                lo,hi=window;offset=step.params['offset'];retained=[i for i in range(lo,hi+1) if i%d==offset]
+                window=(round(retained[0]/d),round(retained[-1]/d)) if retained else None
         nodes[step.id] = channels, sfreq, window
+    if getattr(config, 'evaluation_window', None):
+        channels,sfreq,original=nodes[config.output]
+        target=config.evaluation_window
+        requested=(round(target.tmin*sfreq),round(target.tmax*sfreq))
+        if original is None or requested[0]<original[0] or requested[1]>original[1]:
+            raise ValueError('scoring window cannot extend the source output or its context')
+        nodes[config.output]=(channels,sfreq,requested)
     return nodes[config.output]
 
 
@@ -293,9 +312,10 @@ def create_plan(
     for ref in request.methods:
         method = MethodSpec.model_validate(store.get(owner, ref, "method"))
         try:
-            if method.status == "retired" or method.checks:
+            blockers = method.checks + [i.message for i in method.issues if i.severity == "blocking"]
+            if method.status == "retired" or blockers:
                 raise ValueError(
-                    "retired method or unresolved checks: " + "; ".join(method.checks)
+                    "retired method or unresolved checks: " + "; ".join(blockers)
                 )
             if request.mode == "production" and (
                 method.status != "validated"
@@ -346,18 +366,36 @@ def create_plan(
             for record in selected_records:
                 try:
                     steps = compile_steps(method, record, data, request.parameters)
+                    assets={}
+                    from .assets import freeze_native
+                    native_files=freeze_native(steps)
+                    for s in steps:
+                        for field,asset_ref in s.asset_inputs.items():
+                            snapshot=store.get(owner,asset_ref,'unit_asset')
+                            from .assets import load as load_asset
+                            load_asset(store.root,snapshot)
+                            expected={'forward':'forward','projs':'projections','annotations':'annotations'}[field]
+                            if snapshot['kind']!=expected:raise ValueError('incompatible scientific asset port')
+                            assets[asset_ref.id]=snapshot
                     estimate = (
                         signal_bytes(record, steps, data.collection.root)
                         * (len(steps) + 8)
                         * 3
                     )
                     for s in steps:
-                        if s.op == "asr_clean":
+                        if s.op in ('asr_clean','asr_apply'):
                             # ASRpy materializes channel-pair moving covariance arrays.
                             estimate += (8 * len(record.channels) ** 2 * record.samples * 6
                                          // s.params["mem_splits"])
+                        if s.op=='mwf_fit':
+                            dimension=len(record.channels)*(s.params['delay']*(1 if s.params['singlesided'] else 2)+1)
+                            estimate+=8*(dimension*record.samples*4+dimension**2*12)
                     configs.append(
                         RecordPlan(
+                            evaluation_window=method.evaluation_window,
+                            output_roles=method.output_roles,
+                            asset_snapshots=assets,
+                            native_files=native_files,
                             method_ref=ref,
                             record_id=record.id,
                             steps=steps,
@@ -449,6 +487,7 @@ def create_plan(
         resources.memory_limit_bytes,
     )
     plan = ExecutionPlan(
+        schema_version='2' if any(s.implementation_version=='2' for r in records for s in r.steps) else '1',
         request=request,
         input_snapshot=data,
         screening=screening,

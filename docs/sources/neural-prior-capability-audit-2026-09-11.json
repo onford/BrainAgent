@@ -1,0 +1,223 @@
+{
+  "schema_version": "neural-prior-audit-1",
+  "captured_at": "2026-09-11T03:21:53.643260+00:00",
+  "head": "8f9a5aee4628ece37a1f398f13901be919c1f837",
+  "scope": "Static code inspection and capability construction; no EEG execution or efficacy validation. Counts are separate layers, not comparable coverage percentages. Search context enables all three currently supported capability flags.",
+  "knowledge": {
+    "sources": 43,
+    "operators": 25,
+    "rules": 68,
+    "strengths": {
+      "hard_math": 7,
+      "hard_contract": 20,
+      "conditional_empirical": 23,
+      "engineering": 11,
+      "conflict": 4,
+      "unknown": 3
+    },
+    "parameters": 30,
+    "pairs": 300,
+    "pairs_with_explicit_gap": 130
+  },
+  "runtime": {
+    "catalog_units": 52,
+    "enabled_units": 11,
+    "enabled_operations": 14,
+    "unit_integration": {
+      "not_enabled": 41,
+      "enabled_bounded_domain": 11
+    },
+    "operations": [
+      {
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "detect_bad_channels"
+      },
+      {
+        "unit_id": "EEG-AUTO-BAD-CHANNEL",
+        "op": "interpolate_bad_channels"
+      },
+      {
+        "unit_id": "EEG-ASR-AUTO",
+        "op": "asr_clean"
+      },
+      {
+        "unit_id": "EEG-DETREND",
+        "op": "detrend"
+      },
+      {
+        "unit_id": "EEG-FILTER",
+        "op": "filter"
+      },
+      {
+        "unit_id": "EEG-FILTER",
+        "op": "notch"
+      },
+      {
+        "unit_id": "EEG-RESAMPLE",
+        "op": "resample"
+      },
+      {
+        "unit_id": "EEG-REREFERENCE",
+        "op": "reference"
+      },
+      {
+        "unit_id": "EEG-EPOCH",
+        "op": "epoch"
+      },
+      {
+        "unit_id": "EEG-BASELINE",
+        "op": "baseline"
+      },
+      {
+        "unit_id": "EEG-EOG-REGRESSION",
+        "op": "eog_fit"
+      },
+      {
+        "unit_id": "EEG-EOG-REGRESSION",
+        "op": "eog_apply"
+      },
+      {
+        "unit_id": "EEG-AMPLITUDE-THRESHOLD",
+        "op": "amplitude_windows"
+      },
+      {
+        "unit_id": "EEG-BAD-CHANNEL-MARK",
+        "op": "mark_channels"
+      }
+    ]
+  },
+  "search": {
+    "operators": [
+      "resample",
+      "bandpass",
+      "average_reference",
+      "detrend",
+      "epoch",
+      "notch",
+      "highpass",
+      "detect_bad_channels",
+      "interpolate_bad_channels",
+      "asr"
+    ],
+    "priors": [
+      {
+        "id": "continuous-before-epoch",
+        "strength": "hard",
+        "origin": "implementation",
+        "when_count": 0
+      },
+      {
+        "id": "notch-before-diagnosis",
+        "strength": "soft",
+        "origin": "engineering",
+        "when_count": 0
+      },
+      {
+        "id": "notch-before-asr",
+        "strength": "soft",
+        "origin": "engineering",
+        "when_count": 0
+      },
+      {
+        "id": "repair-needs-detection",
+        "strength": "hard",
+        "origin": "implementation",
+        "when_count": 0
+      },
+      {
+        "id": "detect-before-repair",
+        "strength": "hard",
+        "origin": "implementation",
+        "when_count": 0
+      },
+      {
+        "id": "asr-before-car",
+        "strength": "hard",
+        "origin": "implementation",
+        "when_count": 0
+      },
+      {
+        "id": "asr-before-interpolation",
+        "strength": "hard",
+        "origin": "implementation",
+        "when_count": 0
+      },
+      {
+        "id": "repair-before-car",
+        "strength": "soft",
+        "origin": "literature",
+        "when_count": 0
+      },
+      {
+        "id": "diagnose-before-analysis-band",
+        "strength": "soft",
+        "origin": "literature",
+        "when_count": 0
+      },
+      {
+        "id": "asr-before-analysis-band",
+        "strength": "soft",
+        "origin": "engineering",
+        "when_count": 0
+      }
+    ],
+    "seeds": [
+      "bp8-30-average",
+      "basic-broadband",
+      "basic-acquisition-reference",
+      "literature-ea",
+      "literature-channel-repair",
+      "literature-asr-repair",
+      "literature-conditional-asr-repair"
+    ]
+  },
+  "reviewed_file_sha256": {
+    "backend/app/search/knowledge_contracts.py": "153c5a4eddec4f291b49bb6861d030c2089b2f9b4b6c3cd9af81409238fd95a9",
+    "backend/app/search/scientific_space.py": "21b3359b6d4fafdd3241003e56c5d8062c31e513d3f961fc52c675bdc41a1011",
+    "backend/app/search/space_contracts.py": "9f7abc6474d05e8b7b91734de4c5c996b9578267d5f2230aefc339f4fd7de599",
+    "backend/app/search/pipeline_space.py": "98c01e7fca49936d5cfa283c584eeb48021da141a022a1574493aa55f7777901",
+    "backend/app/search/recipe_compiler.py": "c711c2fe8e6497eab764256c75059fc141f9a2887c48f886eb67b4b1d689d926",
+    "backend/app/search/reasoning.py": "bc3487e0fee4491916dbd4e3be6c118e003161a4bea3988b8815389259a08f49",
+    "backend/app/search/hypotheses.py": "7515b8f03da3ed416583b1125fc238ae4ec6b6bc3679634c55d4e0386dde952f",
+    "backend/app/search/quality.py": "6e158403c66b0c4cfb7cc09b3ed680dd09c763e818ea560d14c370d32d434400",
+    "backend/app/search/quality_evaluation.py": "807f061623802a1e446bdd15589812af4e1c03a94857cfbc71c3f06d52017a9a",
+    "backend/app/search/quality_diagnostics.py": "5b5cac8f2c98425e7405856b96fbbf96d93f2579951a2dd2a049aabf33548ca5",
+    "backend/app/search/reconstruction.py": "e2af3ac515872374ec1624d5c88f10f9671862ed8d70641c0db9de394d62429c",
+    "backend/app/search/service.py": "31431510e61fd5627251eb51458142a55a9ab6936c209102826042d9b498862c",
+    "backend/app/search/interpretation.py": "bd800a658c9a9230a224527af36390a4261a048c13ee02ca204f9d75cf1142b0",
+    "backend/app/search/contracts.py": "deab5cf8f798931d7402d18e744bd71cbac5389f4036663e2a26dc5a39d7ab7b",
+    "backend/app/search/resources/scientific-knowledge.json": "224075b539136197d546b650f31168fbe109b2a3e3c518183dabc76f78b169ab",
+    "backend/app/search/resources/interpretation-guide.json": "3acf0f733ba6d743421bb0bd70d80d2d0084110280f6bd399275817106d11e38",
+    "backend/app/preprocessing/methods.py": "952c662d01de24c164a1e4e59aeb41b3e2dca702169f212a85ea7ddb14fad019",
+    "backend/app/preprocessing/planner.py": "98ecf7073b763c962d151975e8cf44a9f42b2a8dafc040a3d6d0e2ff6bd6f7ee",
+    "backend/app/preprocessing/runner.py": "22b33b8d55cdddd97d7b93e78cb89df56180af7f3fd9a15f02c9d146d73bbb63",
+    "backend/app/preprocessing/schemas.py": "196686e9c41df2143c76c4f626e5668c976639a5a2bde2d9705df17c659b17c3",
+    "backend/app/preprocessing/units/__init__.py": "ef8a19f07f8254c768e5480683e1d77f5052f00b87aed37ff254e9ea1bad3b3c",
+    "backend/app/preprocessing/units/catalog.json": "84da62c9ec7bb1cfd22ea45f7a9a12fe906af90744a29c78076fd9400f216b98",
+    "backend/app/workflows/survey_contracts.py": "76220134149f9fcd5f0e2fec202f141bf337b2478473b5ad477e303e3a426148",
+    "backend/app/workflows/survey_research.py": "d1bc5c36b6ca173c488618b301072b549b7c92d20a668b9aef78fe2c12cb46a2",
+    "backend/app/workflows/cognition.py": "f6b3d098b6f3030c4f9816feebac2588b343dbdbd748cab1fcd0c79d58a9766f",
+    "frontend/src/components/SearchDecisionOverview.vue": "66e992dbd8466a4ad14128429d3bc243e897835fd1d6aef95c10474982c2b7f6",
+    "frontend/src/components/SearchAssessment.vue": "760c56d66243a3ceb3b78e9075269ab632141f1b8c8334d9c4e4d19f72450fce",
+    "docs/preprocessing-evaluation.md": "825ad0fd1ecbbdcccb293cc9c8cafc8a54db05252d28a0469f98c6a9aed2d1f1",
+    "docs/visualization-and-interpretation.md": "8644688c77c1ebf88601cb8493a6a3ea28b54ac7abf2dd920394b72fd1f8e408",
+    "docs/individualized-preprocessing-paradigm.md": "1e1f8dcc4ea9725cd3b2f4050329062e78b43e7bb52f30ba1b4feae0a0229e9d",
+    "docs/literature-retrieval-audit.md": "ac33844dd3d4eb045bb7bee4b64e35fca0a479ed3cd87a2779d3265f64ce94e4"
+  },
+  "verification": "Pydantic knowledge, unit catalog and search-space models constructed successfully; no full test suite rerun.",
+  "followup_review": {
+    "at": "2026-09-11T03:30:13.030937+00:00",
+    "head": "df9423f451ffcc02e0004bdce4d46687582b339e",
+    "files": {
+      "frontend/src/components/SearchDecisionOverview.vue": {
+        "initial_sha256": "87a5d8ba69dca3b0d87d4ca5aefbb777a0825fc7cee04c06f6c195b2ce857b0f",
+        "rechecked_sha256": "66e992dbd8466a4ad14128429d3bc243e897835fd1d6aef95c10474982c2b7f6"
+      },
+      "frontend/src/components/SearchAssessment.vue": {
+        "initial_sha256": "f922a18988b2ce21e41c1d652f47441dde8fefbd20b7f0ef0fcf303d54199691",
+        "rechecked_sha256": "760c56d66243a3ceb3b78e9075269ab632141f1b8c8334d9c4e4d19f72450fce"
+      }
+    },
+    "finding": "Concurrent frontend changes rechecked. Current overview includes saved selection and tie-break explanations; unified prior-trigger/observation/counterfactual audit remains a gap."
+  }
+}

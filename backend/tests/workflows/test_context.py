@@ -48,3 +48,9 @@ def test_report_context_retains_measured_scope_without_large_file_payloads():
     text = json.dumps(compact)
     assert len(text) < 2500 and "private/" not in text
     assert len(selection["representation"]["records"]) == 2000
+
+
+def test_context_only_describes_physical_representation():
+    selection = {"representation": {"version": "2", "unit": "V", "channels": ["C3"], "records": {}}}
+    value = results_context({"data_evaluation": selection})["data_evaluation"]["representation"]
+    assert value == {"version": "2", "unit": "V", "channels": ["C3"]}

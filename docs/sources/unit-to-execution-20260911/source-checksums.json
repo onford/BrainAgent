@@ -1,0 +1,262 @@
+[
+  {
+    "unit_id": "EEG-CROP",
+    "module": "eeg_crop",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-DETREND",
+    "module": "eeg_detrend",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-FILTER",
+    "module": "eeg_filter",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-SINE-REGRESSION",
+    "module": "eeg_sine_regression",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-RESAMPLE",
+    "module": "eeg_resample",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-REREFERENCE",
+    "module": "eeg_rereference",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-REST",
+    "module": "eeg_rest",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-CSD",
+    "module": "eeg_csd",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-LOF",
+    "module": "eeg_bad_channel_lof",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-AMPLITUDE-THRESHOLD",
+    "module": "eeg_amplitude_threshold",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-MUSCLE-DETECT",
+    "module": "eeg_muscle_detect",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-MARK",
+    "module": "eeg_bad_channel_mark",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-SEGMENT-MARK",
+    "module": "eeg_bad_segment_mark",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-DROP",
+    "module": "eeg_bad_channel_drop",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ICA",
+    "module": "eeg_ica",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-EOG-REGRESSION",
+    "module": "eeg_eog_regression",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-SSP",
+    "module": "eeg_ssp",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BRIDGE-DETECT",
+    "module": "eeg_bridge_detect",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BRIDGE-REPAIR",
+    "module": "eeg_bridge_repair",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-INTERPOLATE",
+    "module": "eeg_interpolate",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-EPOCH",
+    "module": "eeg_epoch",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-TRIAL-REJECT",
+    "module": "eeg_trial_reject",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BASELINE",
+    "module": "eeg_baseline",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ZAPLINE",
+    "module": "eeg_zapline",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-ENSEMBLE",
+    "module": "eeg_bad_channel_ensemble",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-DEVIATION",
+    "module": "eeg_bad_channel_deviation",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-CORRELATION",
+    "module": "eeg_bad_channel_correlation",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-HF-RATIO",
+    "module": "eeg_bad_channel_hf_ratio",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BAD-CHANNEL-LINE-NOISE",
+    "module": "eeg_bad_channel_line_noise",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ICLABEL",
+    "module": "eeg_iclabel",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-MARA",
+    "module": "eeg_mara",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ADJUST",
+    "module": "eeg_adjust",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-FASTER-IC",
+    "module": "eeg_faster_ic",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-SASICA",
+    "module": "eeg_sasica",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ASR",
+    "module": "eeg_asr",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-WICA",
+    "module": "eeg_wica",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-CCA",
+    "module": "eeg_cca",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-MWF",
+    "module": "eeg_mwf",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-AUTOREJECT",
+    "module": "eeg_autoreject",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-REGRESSION-BASELINE",
+    "module": "eeg_regression_baseline",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-WINDOW-MAD",
+    "module": "eeg_window_mad",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-SPECTRAL-SLOPE",
+    "module": "eeg_spectral_slope",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-EOG-STEP",
+    "module": "eeg_eog_step",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-JOINT-PROBABILITY",
+    "module": "eeg_joint_probability",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-KURTOSIS",
+    "module": "eeg_kurtosis",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-BLINK-IQR",
+    "module": "eeg_blink_iqr",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ROBUST-REFERENCE",
+    "module": "eeg_robust_reference",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-IC-BLINK-WEIGHTS",
+    "module": "eeg_ic_blink_weights",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-CHANNEL-REJECTION-BUDGET",
+    "module": "eeg_channel_rejection_budget",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-MUSCLE-TRIAL-DECISION",
+    "module": "eeg_muscle_trial_decision",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-AUTO-BAD-CHANNEL",
+    "module": "automatic_cleaning",
+    "hash_matches": true
+  },
+  {
+    "unit_id": "EEG-ASR-AUTO",
+    "module": "automatic_cleaning",
+    "hash_matches": true
+  }
+]

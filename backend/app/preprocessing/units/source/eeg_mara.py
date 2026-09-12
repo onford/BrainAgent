@@ -1,3 +1,4 @@
+from app.preprocessing.native_process import run as native_run
 # Python 3.12 | MNE 1.10.2 | NumPy 1.26.4 | SciPy 1.15.3 | scikit-learn 1.6.1
 import numpy as np
 import mne
@@ -257,7 +258,12 @@ def _run_native(algorithm,eeg,root,octave,timeout,pins):
             command+=''.join(f'result.{name}={name};' for name in outputs)
         code="warning('off','Octave:shadowed-function');try;"+common+command+f"save('-mat7-binary',{_quote(tmp/'output.mat')},'result');catch err;fprintf(2,'%s\\n',err.message);for k=1:length(err.stack),fprintf(2,'%s:%d\\n',err.stack(k).file,err.stack(k).line);end;exit(1);end;"
         (tmp/'driver.m').write_text(code)
-        run=subprocess.run([octave,'--no-gui','--quiet',str(tmp/'driver.m')],capture_output=True,text=True,timeout=timeout)
+        # Isolate Octave startup and EEGLAB preferences from the caller's user
+        # profile. Scientific options come from the pinned author bundle.
+        import os
+        env=os.environ.copy()
+        if os.name=='nt':env['USERPROFILE']=str(tmp)
+        run=native_run([octave,'--no-init-file','--no-gui','--quiet',str(tmp/'driver.m')],capture_output=True,text=True,timeout=timeout,env=env)
         if run.returncode or not (tmp/'output.mat').exists():raise RuntimeError(algorithm+' 原生执行失败: '+(run.stdout+run.stderr)[-6000:])
         result=loadmat(tmp/'output.mat',simplify_cells=True)['result']
     return result,dict(source_hashes=pins,source_root=str(root),runtime='Octave 11.3.0 / signal 1.4.8 / statistics 1.7.7 / optim 1.6.3',stdout=run.stdout[-4000:],stderr=run.stderr[-4000:])

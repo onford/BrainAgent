@@ -15,6 +15,13 @@ function props() {
 }
 
 describe('multi-axis assessment', () => {
+  it('plots reconstruction conditions separately and follows the selected metric', async () => {
+    const wrapper = mount(SearchAssessment, { props: props() })
+    await wrapper.findAll('nav button')[2]!.trigger('click')
+    const plot = wrapper.findComponent({ name: 'AssessmentPlot' })
+    expect(plot.props('categorical')).toBe(true)
+    expect(plot.props('series')[0].points[0]).toEqual({x:1,y:null,label:'blink_low'})
+  })
   it('does not substitute the CSP score when the fixed primary suite is incomplete', () => {
     const wrapper = mount(SearchAssessment, { props: props() })
     expect(wrapper.find('.summary strong').text()).toBe('—')

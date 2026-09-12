@@ -112,6 +112,7 @@ def _execute(corpus, entry):
     for record in data.collection.records:
         steps = compile_steps(method, record, data, {})
         configs.append(RecordPlan(method_ref=ref, record_id=record.id, steps=steps, output=method.output,
+            evaluation_window=method.evaluation_window,output_roles=method.output_roles,
             code_hashes={s.unit_id: specification(s.unit_id).source["code_sha256"] for s in steps}))
     plan = ExecutionPlan(request=PlanRequest(input_ref=Ref(id=panel["input_hash"], sha256=panel["input_hash"]),
         methods=[ref], mode="validation"), input_snapshot=data, screening=[], records=configs,
@@ -125,7 +126,7 @@ def _execute(corpus, entry):
         checksum = digest(plan.model_dump(mode="json"))
         result = RunResult(job_id="integrated-operators", plan_ref=Ref(id=checksum, sha256=checksum), status="completed",
             records=results, completed=len(results), total=len(results), cancel_requested=False)
-        core = evaluate(result, plan, store, panel, destination / "core", policy=entry["recipe"]["adaptation"])
+        core = evaluate(result, plan, store, panel, destination / "core")
     assert core["status"] == "evaluated", (entry["id"], core)
     assert core["coverage"]["eligible"] == core["coverage"]["predicted"] == 78
     write_json(destination / "core-receipt.json", core)

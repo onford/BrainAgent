@@ -166,7 +166,8 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
         survey_run_id="survey-1",
         dataset_id="synthetic",
         dataset_version="1",
-        papers=[paper],
+        papers=[paper], input_ref=service.register_input(OWNER, dataset),
+        shared_output={"sfreq":160.,"tmin":PARAMETERS['tmin'],"tmax":PARAMETERS['tmax']},
     )
     context = AgentContext(
         owner_id=OWNER, session_id="test", user_message="extract literature"
@@ -185,7 +186,18 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
         == "paper-1"
     )
     method = baseline_methods()[0]
-    service.methods.llm = ScriptedLLMClient([method.model_dump(mode="json", exclude={"evidence"})])
+    draft=method.model_dump(mode="json",exclude={'evidence','evaluation_window'})
+    for step in draft['recipe']:
+        step['implementation_version']='2'
+        step['params']={k:PARAMETERS[v.removeprefix('$profile.')] if isinstance(v,str) and v.startswith('$profile.') else v for k,v in step['params'].items()}
+        if step['op']=='epoch':step['params']['picks']='$eeg_channels'
+        step['parameter_sources']={k:{'origin':'target_binding' if isinstance(v,str) and v.startswith('$') else 'engineering',
+            'evidence_indices':[],'rationale':'Explicit integration fixture setting'} for k,v in step['params'].items()}
+    extraction={'branches':[{'branch_id':'fixture','analysis':'Fixture method','evidence_indices':[0],'method':draft}]}
+    review={'claims':[{'claim_id':'fixture/'+step['id'],'status':'supported','evidence_index':0,'quote':evidence.text,
+        'reason':'Simulated source reviewer for transport integration'} for step in draft['recipe']]}
+    review['claims'].append({'claim_id':'fixture/__complete_source_branch','status':'supported','evidence_index':0,'quote':evidence.text,'reason':'Transport-only complete-branch test double'})
+    service.methods.llm = ScriptedLLMClient([extraction,review])
     result = await service.methods.intake(OWNER, bundle)
     assert not result["supplement_requests"]
     extracted = service.store.get(OWNER, result["methods"][0], "method")
@@ -208,6 +220,9 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
     )
     service.submit(OWNER, plan_ref)
     assert Worker(service.store, service.allowed_roots).run_once().status == "completed"
+    reused = await service.methods.intake(OWNER, bundle)
+    assert reused["methods"] == result["methods"]
+    assert len(service.methods.llm.messages_seen) == 2
     paper.fulltext_ref = None
     result = await service.methods.intake(OWNER, bundle)
     assert result["methods"] == []
@@ -222,21 +237,29 @@ async def test_invalid_model_mapping_is_retained_as_blocked_draft(service, datas
         relation_to_dataset="same modality", inclusion_reason="regression test", landing_url=evidence.source_url,
         fulltext_ref=service.store.put(OWNER, "evidence", {"content": evidence.text}), evidence=[evidence],
     )
-    method = baseline_methods()[0].model_dump(mode="json", exclude={"evidence"})
+    method = baseline_methods()[0].model_dump(mode="json", exclude={"evidence", "evaluation_window"})
+    for step in method['recipe']:
+        step['implementation_version']='2'
+        step['params']={k:PARAMETERS[v.removeprefix('$profile.')] if isinstance(v,str) and v.startswith('$profile.') else v for k,v in step['params'].items()}
+        step['parameter_sources']={k:{'origin':'engineering','evidence_indices':[],'rationale':'Fixture'} for k in step['params']}
     method["recipe"][0]["params"] = {"cutoff_hz": 1, "picks": ["$eeg_channels"]}
     method["recipe"][1]["input"] = "future_step"
-    method["recipe"][1]["evidence_indices"] = [1]
     method["output"] = "Filtered EEG in prose"
-    service.methods.llm = ScriptedLLMClient([method])
+    extraction={'branches':[{'branch_id':'fixture','analysis':'Invalid fixture','evidence_indices':[0],'method':method}]}
+    review={'claims':[{'claim_id':'fixture/'+step['id'],'status':'supported','evidence_index':0,'quote':evidence.text,
+        'reason':'Transport-only test double'} for step in method['recipe']]}
+    review['claims'].append({'claim_id':'fixture/__complete_source_branch','status':'supported','evidence_index':0,'quote':evidence.text,'reason':'Transport-only complete-branch test double'})
+    service.methods.llm = ScriptedLLMClient([extraction,review,{'action':'retain_blocked','reason':'No source repair','question':'Missing mapping'}])
     result = await service.methods.intake(OWNER, SurveyLiteratureBundle(
         survey_run_id="mapping-test", dataset_id="synthetic", dataset_version="1", papers=[paper],
+        input_ref=service.register_input(OWNER,dataset),
     ))
     extracted = service.store.get(OWNER, result["methods"][0], "method")
-    assert any(c.startswith("parameter contract: filter") for c in extracted["checks"])
-    assert "collection binding must replace the whole parameter value: filter.picks" in extracted["checks"]
-    assert "invalid step dependencies: reference" in extracted["checks"]
-    assert "missing parameter/step evidence: reference" in extracted["checks"]
-    assert "method output must reference a recipe step id" in extracted["checks"]
+    blockers=[i['message'] for i in extracted['issues'] if i['severity']=='blocking']
+    assert any(c.startswith("parameter contract: filter") for c in blockers)
+    assert "collection binding must replace the whole parameter value: filter.picks" in blockers
+    assert "invalid step dependencies: reference" in blockers
+    assert "method output must reference a recipe step id" in blockers
     _, plan = service.plan(OWNER, PlanRequest(
         input_ref=service.register_input(OWNER, dataset), methods=result["methods"], mode="validation", parameters=PARAMETERS,
     ))

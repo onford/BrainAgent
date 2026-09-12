@@ -1,0 +1,42 @@
+{
+  "scope": "Current compilation of all seven seeds on 12 real records; freshly executed synthetic fixture; read-only numerical artifact reread for all 24 historical real-record results. No new real-data search or learner training.",
+  "environment": {
+    "mne": "1.10.2",
+    "mne-bids": "0.17.0",
+    "numpy": "1.26.4",
+    "scipy": "1.15.3",
+    "scikit-learn": "1.6.1",
+    "pandas": "2.2.3",
+    "h5io": "0.2.5",
+    "h5py": "3.13.0",
+    "pybv": "0.7.6",
+    "python": "3.12.14",
+    "threadpoolctl": "3.6.0",
+    "asrpy": "0.0.8",
+    "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205"
+  },
+  "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+  "results": [
+    {
+      "example": "synthetic-current",
+      "records_verified": 4,
+      "status": "completed",
+      "engine_matches_current": true,
+      "environment_matches_current": true
+    },
+    {
+      "example": "bp8-30-average",
+      "records_verified": 12,
+      "status": "completed",
+      "engine_matches_current": true,
+      "environment_matches_current": true
+    },
+    {
+      "example": "candidate-27a27c03f628f9337906353f",
+      "records_verified": 12,
+      "status": "completed",
+      "engine_matches_current": true,
+      "environment_matches_current": true
+    }
+  ]
+}

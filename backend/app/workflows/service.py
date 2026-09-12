@@ -427,6 +427,9 @@ class WorkflowService:
         )
 
     async def preprocess(self, state, request):
+        from .literature_methods import extract_methods
+
+        await extract_methods(self, state)
         owner = state["owner"]
         searches = self.search_service()
         identity = state.get("search_id")

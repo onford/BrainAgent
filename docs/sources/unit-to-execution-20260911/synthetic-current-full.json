@@ -1,0 +1,4750 @@
+{
+  "plan": {
+    "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+    "environment": {
+      "asrpy": "0.0.8",
+      "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+      "h5io": "0.2.5",
+      "h5py": "3.13.0",
+      "mne": "1.10.2",
+      "mne-bids": "0.17.0",
+      "numpy": "1.26.4",
+      "pandas": "2.2.3",
+      "pybv": "0.7.6",
+      "python": "3.12.14",
+      "scikit-learn": "1.6.1",
+      "scipy": "1.15.3",
+      "threadpoolctl": "3.6.0"
+    },
+    "estimated_disk_bytes": 16026856,
+    "input_snapshot": {
+      "collection": {
+        "dataset_id": "synthetic",
+        "dataset_version": "1",
+        "records": [
+          {
+            "bids_path": "sub-01/eeg/sub-01_task-motor_eeg.vhdr",
+            "channel_order": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "channels": {
+              "C3": "eeg",
+              "C4": "eeg",
+              "Cz": "eeg",
+              "Pz": "eeg",
+              "VEOG": "eog"
+            },
+            "files": {
+              "README": "6490e8871d55d31fb534d75799528b11d9559718f98304a7d0fc43b1441304ad",
+              "dataset_description.json": "caf227475a82a1e150cd57fe7b1fe2a22a75b3d45907518f565f89673d027072",
+              "participants.json": "a36e2ec49f79184fdbdd2000ea7420e86f049deeb33cbfeed36c184f7f00f0e6",
+              "participants.tsv": "086dd570ec779983d528c3097f228ac4c75a2ac97d42f29b225d00e1e715fd91",
+              "sub-01/eeg/sub-01_space-CapTrak_coordsystem.json": "ed782fdcb8bcdd4c937d4636b2a5f2e05b613ae3a2ab452e0df16013e3d26470",
+              "sub-01/eeg/sub-01_space-CapTrak_electrodes.tsv": "9a1ed613a3819c9b6216456e75f09afe87a96e41f92415b1a7711334ea5104aa",
+              "sub-01/eeg/sub-01_task-motor_channels.tsv": "6704e212931223647942f2d200a9fd9529c83f7748b665f6ddfe7dee35fb1c85",
+              "sub-01/eeg/sub-01_task-motor_eeg.eeg": "9a1b768a4b8770af2d2890bce3b3c76943ff5b5e66ef2b118f72e27decc0d263",
+              "sub-01/eeg/sub-01_task-motor_eeg.json": "c71b8abd84dc67cee01adade2d554cd15978d6463210afffc7f02549f60ae226",
+              "sub-01/eeg/sub-01_task-motor_eeg.vhdr": "8fa485299f3f943f7c7eed894f1d551341800cd7e6eca6161df0c126b6c3e7ea",
+              "sub-01/eeg/sub-01_task-motor_eeg.vmrk": "4f83fcd565a26e67cee9967df7bd8194f5166ec5f63f3f8e122118c8fa191914",
+              "sub-01/eeg/sub-01_task-motor_events.json": "7d8a1d3535368695b608f474a8532b59f92d7b8516b60156a4e8c58e285c3fad",
+              "sub-01/eeg/sub-01_task-motor_events.tsv": "e0752f62e16144c2908f10f82f2352d46ee75200aa06c938cc3a827ae81ebefd",
+              "sub-01/sub-01_scans.tsv": "c89f9f2fd33b8d3accd6a0a7208919a3726326ba925d6588d84b6555a6d0767d",
+              "sub-02/eeg/sub-02_space-CapTrak_coordsystem.json": "ed782fdcb8bcdd4c937d4636b2a5f2e05b613ae3a2ab452e0df16013e3d26470",
+              "sub-02/eeg/sub-02_space-CapTrak_electrodes.tsv": "9a1ed613a3819c9b6216456e75f09afe87a96e41f92415b1a7711334ea5104aa",
+              "sub-02/eeg/sub-02_task-motor_channels.tsv": "6704e212931223647942f2d200a9fd9529c83f7748b665f6ddfe7dee35fb1c85",
+              "sub-02/eeg/sub-02_task-motor_eeg.eeg": "baea9503729a4d25f6e67a3f496ebad5fb41f2dfc7b55b204f184cc266db1c56",
+              "sub-02/eeg/sub-02_task-motor_eeg.json": "c71b8abd84dc67cee01adade2d554cd15978d6463210afffc7f02549f60ae226",
+              "sub-02/eeg/sub-02_task-motor_eeg.vhdr": "cf26c20d2e63484d2d0c9de7fce6166c9e5634072e6d953756524fa4c9a867c6",
+              "sub-02/eeg/sub-02_task-motor_eeg.vmrk": "2f1dafdd084b038044703b2408bcbfa8365e23948e22a437455536eb265d862f",
+              "sub-02/eeg/sub-02_task-motor_events.json": "7d8a1d3535368695b608f474a8532b59f92d7b8516b60156a4e8c58e285c3fad",
+              "sub-02/eeg/sub-02_task-motor_events.tsv": "e0752f62e16144c2908f10f82f2352d46ee75200aa06c938cc3a827ae81ebefd",
+              "sub-02/sub-02_scans.tsv": "89dd7bf8850879acd97c91457b54d01fd374db332bb258ea6bb4d8e17c86440d"
+            },
+            "id": "sub-01",
+            "intervals": [
+              {
+                "id": "calibration",
+                "role": "calibration",
+                "start": 0,
+                "stop": 4000
+              },
+              {
+                "id": "heldout",
+                "role": "test",
+                "start": 4000,
+                "stop": 8000
+              }
+            ],
+            "reference": "acquisition",
+            "samples": 8000,
+            "sfreq": 200.0
+          },
+          {
+            "bids_path": "sub-02/eeg/sub-02_task-motor_eeg.vhdr",
+            "channel_order": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "channels": {
+              "C3": "eeg",
+              "C4": "eeg",
+              "Cz": "eeg",
+              "Pz": "eeg",
+              "VEOG": "eog"
+            },
+            "files": {
+              "README": "6490e8871d55d31fb534d75799528b11d9559718f98304a7d0fc43b1441304ad",
+              "dataset_description.json": "caf227475a82a1e150cd57fe7b1fe2a22a75b3d45907518f565f89673d027072",
+              "participants.json": "a36e2ec49f79184fdbdd2000ea7420e86f049deeb33cbfeed36c184f7f00f0e6",
+              "participants.tsv": "086dd570ec779983d528c3097f228ac4c75a2ac97d42f29b225d00e1e715fd91",
+              "sub-01/eeg/sub-01_space-CapTrak_coordsystem.json": "ed782fdcb8bcdd4c937d4636b2a5f2e05b613ae3a2ab452e0df16013e3d26470",
+              "sub-01/eeg/sub-01_space-CapTrak_electrodes.tsv": "9a1ed613a3819c9b6216456e75f09afe87a96e41f92415b1a7711334ea5104aa",
+              "sub-01/eeg/sub-01_task-motor_channels.tsv": "6704e212931223647942f2d200a9fd9529c83f7748b665f6ddfe7dee35fb1c85",
+              "sub-01/eeg/sub-01_task-motor_eeg.eeg": "9a1b768a4b8770af2d2890bce3b3c76943ff5b5e66ef2b118f72e27decc0d263",
+              "sub-01/eeg/sub-01_task-motor_eeg.json": "c71b8abd84dc67cee01adade2d554cd15978d6463210afffc7f02549f60ae226",
+              "sub-01/eeg/sub-01_task-motor_eeg.vhdr": "8fa485299f3f943f7c7eed894f1d551341800cd7e6eca6161df0c126b6c3e7ea",
+              "sub-01/eeg/sub-01_task-motor_eeg.vmrk": "4f83fcd565a26e67cee9967df7bd8194f5166ec5f63f3f8e122118c8fa191914",
+              "sub-01/eeg/sub-01_task-motor_events.json": "7d8a1d3535368695b608f474a8532b59f92d7b8516b60156a4e8c58e285c3fad",
+              "sub-01/eeg/sub-01_task-motor_events.tsv": "e0752f62e16144c2908f10f82f2352d46ee75200aa06c938cc3a827ae81ebefd",
+              "sub-01/sub-01_scans.tsv": "c89f9f2fd33b8d3accd6a0a7208919a3726326ba925d6588d84b6555a6d0767d",
+              "sub-02/eeg/sub-02_space-CapTrak_coordsystem.json": "ed782fdcb8bcdd4c937d4636b2a5f2e05b613ae3a2ab452e0df16013e3d26470",
+              "sub-02/eeg/sub-02_space-CapTrak_electrodes.tsv": "9a1ed613a3819c9b6216456e75f09afe87a96e41f92415b1a7711334ea5104aa",
+              "sub-02/eeg/sub-02_task-motor_channels.tsv": "6704e212931223647942f2d200a9fd9529c83f7748b665f6ddfe7dee35fb1c85",
+              "sub-02/eeg/sub-02_task-motor_eeg.eeg": "baea9503729a4d25f6e67a3f496ebad5fb41f2dfc7b55b204f184cc266db1c56",
+              "sub-02/eeg/sub-02_task-motor_eeg.json": "c71b8abd84dc67cee01adade2d554cd15978d6463210afffc7f02549f60ae226",
+              "sub-02/eeg/sub-02_task-motor_eeg.vhdr": "cf26c20d2e63484d2d0c9de7fce6166c9e5634072e6d953756524fa4c9a867c6",
+              "sub-02/eeg/sub-02_task-motor_eeg.vmrk": "2f1dafdd084b038044703b2408bcbfa8365e23948e22a437455536eb265d862f",
+              "sub-02/eeg/sub-02_task-motor_events.json": "7d8a1d3535368695b608f474a8532b59f92d7b8516b60156a4e8c58e285c3fad",
+              "sub-02/eeg/sub-02_task-motor_events.tsv": "e0752f62e16144c2908f10f82f2352d46ee75200aa06c938cc3a827ae81ebefd",
+              "sub-02/sub-02_scans.tsv": "89dd7bf8850879acd97c91457b54d01fd374db332bb258ea6bb4d8e17c86440d"
+            },
+            "id": "sub-02",
+            "intervals": [
+              {
+                "id": "calibration",
+                "role": "calibration",
+                "start": 0,
+                "stop": 4000
+              },
+              {
+                "id": "heldout",
+                "role": "test",
+                "start": 4000,
+                "stop": 8000
+              }
+            ],
+            "reference": "acquisition",
+            "samples": 8000,
+            "sfreq": 200.0
+          }
+        ],
+        "root": "E:\\work\\BrainAgent\\backend\\workspace\\unit-flow-explanation-20260911\\bids",
+        "selected_record_ids": [
+          "sub-01",
+          "sub-02"
+        ],
+        "selection_reason": "all generated records",
+        "standard": "BIDS-EEG",
+        "standard_version": "1.7.0",
+        "validation_evidence": {
+          "artifact_ref": null,
+          "locator": "generator",
+          "source_url": "fixture://deterministic-eeg",
+          "source_version": "1",
+          "text": "Synthetic 4-channel scalp EEG and VEOG, known event codes, 200 Hz, calibrated first half."
+        }
+      },
+      "purpose": "development_fixture",
+      "schema_version": "1",
+      "survey": {
+        "context_event_id": {},
+        "dataset_id": "synthetic",
+        "dataset_version": "1",
+        "event_id": {
+          "left": 1,
+          "right": 2
+        },
+        "facts": [
+          {
+            "artifact_ref": null,
+            "locator": "generator",
+            "source_url": "fixture://deterministic-eeg",
+            "source_version": "1",
+            "text": "Synthetic 4-channel scalp EEG and VEOG, known event codes, 200 Hz, calibrated first half."
+          }
+        ],
+        "processing_history": [],
+        "survey_run_id": "fixture-survey",
+        "task": "motor",
+        "unresolved": []
+      }
+    },
+    "records": [
+      {
+        "code_hashes": {
+          "EEG-BASELINE": "8fa7924d92bc4e45967b01b5b408f1386fe399f118494953b67b0440fd46e224",
+          "EEG-EPOCH": "f478a5b07e02d0d99a8c8bb1b1b2c70b7eaf41ce9f6224f1a38bbbce3a078eba",
+          "EEG-FILTER": "ee1e138c36c0078667e83de13a9ea1fce83f468ea75a4fe2926ef5f2385103ce",
+          "EEG-REREFERENCE": "99c4b94c211a093772cffdabc25e45900949a0f1d5c88ee4a323922ca7ba7ffb"
+        },
+        "estimated_disk_bytes": 3686714,
+        "estimated_memory_bytes": 11520000,
+        "method_ref": {
+          "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+          "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+        },
+        "output": "baseline",
+        "record_id": "sub-01",
+        "steps": [
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "filter",
+            "implementation_version": "1",
+            "input": "raw",
+            "model_from": null,
+            "op": "filter",
+            "params": {
+              "h_freq": 35.0,
+              "l_freq": 1.0,
+              "method": "iir",
+              "phase": "zero",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-FILTER"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "reference",
+            "implementation_version": "1",
+            "input": "filter",
+            "model_from": null,
+            "op": "reference",
+            "params": {
+              "ref_channels": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-REREFERENCE"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "epochs",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": null,
+            "op": "epoch",
+            "params": {
+              "event_id": {
+                "left": 1,
+                "right": 2
+              },
+              "events": "$events",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "tmax": 0.5,
+              "tmin": -0.2
+            },
+            "profile": "source",
+            "unit_id": "EEG-EPOCH"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "baseline",
+            "implementation_version": "1",
+            "input": "epochs",
+            "model_from": null,
+            "op": "baseline",
+            "params": {
+              "baseline": [
+                -0.2,
+                0.0
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-BASELINE"
+          }
+        ]
+      },
+      {
+        "code_hashes": {
+          "EEG-BASELINE": "8fa7924d92bc4e45967b01b5b408f1386fe399f118494953b67b0440fd46e224",
+          "EEG-EPOCH": "f478a5b07e02d0d99a8c8bb1b1b2c70b7eaf41ce9f6224f1a38bbbce3a078eba",
+          "EEG-FILTER": "ee1e138c36c0078667e83de13a9ea1fce83f468ea75a4fe2926ef5f2385103ce",
+          "EEG-REREFERENCE": "99c4b94c211a093772cffdabc25e45900949a0f1d5c88ee4a323922ca7ba7ffb"
+        },
+        "estimated_disk_bytes": 3686714,
+        "estimated_memory_bytes": 11520000,
+        "method_ref": {
+          "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+          "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+        },
+        "output": "baseline",
+        "record_id": "sub-02",
+        "steps": [
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "filter",
+            "implementation_version": "1",
+            "input": "raw",
+            "model_from": null,
+            "op": "filter",
+            "params": {
+              "h_freq": 35.0,
+              "l_freq": 1.0,
+              "method": "iir",
+              "phase": "zero",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-FILTER"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "reference",
+            "implementation_version": "1",
+            "input": "filter",
+            "model_from": null,
+            "op": "reference",
+            "params": {
+              "ref_channels": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-REREFERENCE"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "epochs",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": null,
+            "op": "epoch",
+            "params": {
+              "event_id": {
+                "left": 1,
+                "right": 2
+              },
+              "events": "$events",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "tmax": 0.5,
+              "tmin": -0.2
+            },
+            "profile": "source",
+            "unit_id": "EEG-EPOCH"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "baseline",
+            "implementation_version": "1",
+            "input": "epochs",
+            "model_from": null,
+            "op": "baseline",
+            "params": {
+              "baseline": [
+                -0.2,
+                0.0
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-BASELINE"
+          }
+        ]
+      },
+      {
+        "code_hashes": {
+          "EEG-BASELINE": "8fa7924d92bc4e45967b01b5b408f1386fe399f118494953b67b0440fd46e224",
+          "EEG-EOG-REGRESSION": "b757b8e623fdee068d14927a36d1ea6ac4e61034e357af8fd7f9293faeb56952",
+          "EEG-EPOCH": "f478a5b07e02d0d99a8c8bb1b1b2c70b7eaf41ce9f6224f1a38bbbce3a078eba",
+          "EEG-FILTER": "ee1e138c36c0078667e83de13a9ea1fce83f468ea75a4fe2926ef5f2385103ce",
+          "EEG-REREFERENCE": "99c4b94c211a093772cffdabc25e45900949a0f1d5c88ee4a323922ca7ba7ffb"
+        },
+        "estimated_disk_bytes": 4326714,
+        "estimated_memory_bytes": 13440000,
+        "method_ref": {
+          "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+          "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+        },
+        "output": "baseline",
+        "record_id": "sub-01",
+        "steps": [
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "filter",
+            "implementation_version": "1",
+            "input": "raw",
+            "model_from": null,
+            "op": "filter",
+            "params": {
+              "h_freq": 35.0,
+              "l_freq": 1.0,
+              "method": "iir",
+              "phase": "zero",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-FILTER"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "reference",
+            "implementation_version": "1",
+            "input": "filter",
+            "model_from": null,
+            "op": "reference",
+            "params": {
+              "ref_channels": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-REREFERENCE"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              1
+            ],
+            "fit_scope": {
+              "ids": [
+                "calibration"
+              ],
+              "role": "calibration"
+            },
+            "id": "fit",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": null,
+            "op": "eog_fit",
+            "params": {
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ],
+              "picks_artifact": [
+                "VEOG"
+              ],
+              "reference_id": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-EOG-REGRESSION"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              1
+            ],
+            "fit_scope": null,
+            "id": "correct",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": "fit",
+            "op": "eog_apply",
+            "params": {
+              "reference_id": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-EOG-REGRESSION"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "epochs",
+            "implementation_version": "1",
+            "input": "correct",
+            "model_from": null,
+            "op": "epoch",
+            "params": {
+              "event_id": {
+                "left": 1,
+                "right": 2
+              },
+              "events": "$events",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "tmax": 0.5,
+              "tmin": -0.2
+            },
+            "profile": "source",
+            "unit_id": "EEG-EPOCH"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "baseline",
+            "implementation_version": "1",
+            "input": "epochs",
+            "model_from": null,
+            "op": "baseline",
+            "params": {
+              "baseline": [
+                -0.2,
+                0.0
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-BASELINE"
+          }
+        ]
+      },
+      {
+        "code_hashes": {
+          "EEG-BASELINE": "8fa7924d92bc4e45967b01b5b408f1386fe399f118494953b67b0440fd46e224",
+          "EEG-EOG-REGRESSION": "b757b8e623fdee068d14927a36d1ea6ac4e61034e357af8fd7f9293faeb56952",
+          "EEG-EPOCH": "f478a5b07e02d0d99a8c8bb1b1b2c70b7eaf41ce9f6224f1a38bbbce3a078eba",
+          "EEG-FILTER": "ee1e138c36c0078667e83de13a9ea1fce83f468ea75a4fe2926ef5f2385103ce",
+          "EEG-REREFERENCE": "99c4b94c211a093772cffdabc25e45900949a0f1d5c88ee4a323922ca7ba7ffb"
+        },
+        "estimated_disk_bytes": 4326714,
+        "estimated_memory_bytes": 13440000,
+        "method_ref": {
+          "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+          "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+        },
+        "output": "baseline",
+        "record_id": "sub-02",
+        "steps": [
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "filter",
+            "implementation_version": "1",
+            "input": "raw",
+            "model_from": null,
+            "op": "filter",
+            "params": {
+              "h_freq": 35.0,
+              "l_freq": 1.0,
+              "method": "iir",
+              "phase": "zero",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-FILTER"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "reference",
+            "implementation_version": "1",
+            "input": "filter",
+            "model_from": null,
+            "op": "reference",
+            "params": {
+              "ref_channels": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-REREFERENCE"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              1
+            ],
+            "fit_scope": {
+              "ids": [
+                "calibration"
+              ],
+              "role": "calibration"
+            },
+            "id": "fit",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": null,
+            "op": "eog_fit",
+            "params": {
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz"
+              ],
+              "picks_artifact": [
+                "VEOG"
+              ],
+              "reference_id": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-EOG-REGRESSION"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              1
+            ],
+            "fit_scope": null,
+            "id": "correct",
+            "implementation_version": "1",
+            "input": "reference",
+            "model_from": "fit",
+            "op": "eog_apply",
+            "params": {
+              "reference_id": "average"
+            },
+            "profile": "source",
+            "unit_id": "EEG-EOG-REGRESSION"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "epochs",
+            "implementation_version": "1",
+            "input": "correct",
+            "model_from": null,
+            "op": "epoch",
+            "params": {
+              "event_id": {
+                "left": 1,
+                "right": 2
+              },
+              "events": "$events",
+              "picks": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "tmax": 0.5,
+              "tmin": -0.2
+            },
+            "profile": "source",
+            "unit_id": "EEG-EPOCH"
+          },
+          {
+            "decision_from": null,
+            "evidence_indices": [
+              0
+            ],
+            "fit_scope": null,
+            "id": "baseline",
+            "implementation_version": "1",
+            "input": "epochs",
+            "model_from": null,
+            "op": "baseline",
+            "params": {
+              "baseline": [
+                -0.2,
+                0.0
+              ]
+            },
+            "profile": "source",
+            "unit_id": "EEG-BASELINE"
+          }
+        ]
+      }
+    ],
+    "request": {
+      "input_ref": {
+        "id": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526",
+        "sha256": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526"
+      },
+      "max_candidates": 3,
+      "max_disk_mb": null,
+      "max_memory_mb": null,
+      "methods": [
+        {
+          "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+          "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+        },
+        {
+          "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+          "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+        }
+      ],
+      "mode": "validation",
+      "parameters": {
+        "baseline": [
+          -0.2,
+          0
+        ],
+        "h_freq": 35.0,
+        "l_freq": 1.0,
+        "tmax": 0.5,
+        "tmin": -0.2
+      },
+      "selection": "diverse"
+    },
+    "required_outputs": [
+      "data",
+      "events",
+      "provenance",
+      "delta"
+    ],
+    "resource_budget": {
+      "disk_available_bytes": 1369267261440,
+      "disk_limit_bytes": 1163877172224,
+      "disk_policy": "available_disk_85_percent",
+      "memory_available_bytes": 57823494144,
+      "memory_limit_bytes": 40476445900,
+      "memory_policy": "available_memory_70_percent"
+    },
+    "schema_version": "1",
+    "screening": [
+      {
+        "duplicate_of": null,
+        "method_ref": {
+          "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+          "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+        },
+        "reasons": [
+          "eligible; mechanism diversity then request order"
+        ],
+        "status": "selected"
+      },
+      {
+        "duplicate_of": null,
+        "method_ref": {
+          "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+          "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+        },
+        "reasons": [
+          "eligible; mechanism diversity then request order"
+        ],
+        "status": "selected"
+      }
+    ]
+  },
+  "result": {
+    "cancel_requested": false,
+    "completed": 4,
+    "job_id": "a60955810e4649aa8f1b5854208c409b",
+    "plan_ref": {
+      "id": "ba4a99c4fb07fe1e569890d2b1d02618dcd5cc9d3694391a0a479703d51f1be0",
+      "sha256": "ba4a99c4fb07fe1e569890d2b1d02618dcd5cc9d3694391a0a479703d51f1be0"
+    },
+    "records": [
+      {
+        "attempt": 1,
+        "error": null,
+        "job_id": "a60955810e4649aa8f1b5854208c409b",
+        "key": "78e63b0abfe826a8619030677ce528382e3a9fd7a46ceba29b75ccd309f0ed3d",
+        "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+        "record_id": "sub-01",
+        "result": {
+          "artifacts": [
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "baseline/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/baseline/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 322325,
+              "kind": "continuous_data",
+              "name": "continuous-raw.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/continuous-raw.fif",
+              "sha256": "8fa6b4e670c30b2471bfde0d5938642eaa31a9b2b43b99dae76c2a067cd3b276"
+            },
+            {
+              "bytes": 41588,
+              "kind": "data",
+              "name": "data-epo.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/data-epo.fif",
+              "sha256": "0ef2384651d46d4beb5b5ae97476be51bbf76a5207f8ed24d12830dfd0fca038"
+            },
+            {
+              "bytes": 896,
+              "kind": "provenance",
+              "name": "delta.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/delta.json",
+              "sha256": "1d0d4279677f6dc3ec3c665066424976d3ad5441fe6369f964deb91eb1a01d85"
+            },
+            {
+              "bytes": 211,
+              "kind": "provenance",
+              "name": "epochs/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/epochs/artifacts.json",
+              "sha256": "69bd93545643a1407983e857bee352913c222f7036fadf0f29ee02970083b79c"
+            },
+            {
+              "bytes": 184,
+              "kind": "provenance",
+              "name": "epochs/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/epochs/artifacts_0.npy",
+              "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7"
+            },
+            {
+              "bytes": 224,
+              "kind": "provenance",
+              "name": "epochs/parameters_1.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/epochs/parameters_1.npy",
+              "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19"
+            },
+            {
+              "bytes": 2576,
+              "kind": "provenance",
+              "name": "events.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/events.json",
+              "sha256": "02297c64f56de480453fb71f049c2dae91c18cc85cb6f34c94a71f81d8b36919"
+            },
+            {
+              "bytes": 563,
+              "kind": "provenance",
+              "name": "filter/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/filter/artifacts.json",
+              "sha256": "2ba2e104facf7183d95db99900a60d2895aa9ba60242da6d902f8bc8a569957f"
+            },
+            {
+              "bytes": 4710,
+              "kind": "provenance",
+              "name": "provenance.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/provenance.json",
+              "sha256": "b6c4bf1e8f6f812b70d86d2fbe830b18f3b1aa31f38269da2f7d514f5736d276"
+            },
+            {
+              "bytes": 41,
+              "kind": "provenance",
+              "name": "reference/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/reference/artifacts.json",
+              "sha256": "316d4a2927bd1866a8511ab3ecfbe3eee22ba544cf1820d170056ca0bf63a979"
+            },
+            {
+              "bytes": 39608,
+              "kind": "provenance",
+              "name": "signal_V.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/signal_V.npy",
+              "sha256": "f73b0108d21159612473eb270b85488e7eeb2af3f0492320eb581a056d0fdef2"
+            }
+          ],
+          "delta": {
+            "after": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 1,
+              "epoch_selection": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "first_sample": null,
+              "highpass": 1.0,
+              "kind": "epochs",
+              "lowpass": 35.0,
+              "rank": 3,
+              "sfreq": 200.0,
+              "shape": [
+                7,
+                5,
+                141
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "before": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 0,
+              "epoch_selection": null,
+              "first_sample": 0,
+              "highpass": 0.0,
+              "kind": "raw",
+              "lowpass": 100.0,
+              "rank": 4,
+              "sfreq": 200.0,
+              "shape": [
+                5,
+                8000
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "channels_removed": [],
+            "duration_after_s": 4.935,
+            "duration_basis": "sum of epoch sample durations (may overlap)",
+            "duration_before_s": 40.0,
+            "events_before": 8,
+            "events_retained": 7,
+            "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+            "trials_before": 8,
+            "trials_fully_retained": 7,
+            "trials_partly_retained": 0
+          },
+          "mode": "validation",
+          "roundtrip_max_error_V": 1.9612489800605037e-12,
+          "source_unchanged": true
+        },
+        "status": "completed"
+      },
+      {
+        "attempt": 1,
+        "error": null,
+        "job_id": "a60955810e4649aa8f1b5854208c409b",
+        "key": "ac7691ad18aa31d9e7f387a2edab104776e7477a9464d27118637548123c5d3f",
+        "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+        "record_id": "sub-01",
+        "result": {
+          "artifacts": [
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "baseline/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/baseline/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 322325,
+              "kind": "continuous_data",
+              "name": "continuous-raw.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/continuous-raw.fif",
+              "sha256": "d22d7c436e829b06707f2267b4bf6c7e490a7d6214b5da404fe09c14f534c86f"
+            },
+            {
+              "bytes": 149,
+              "kind": "provenance",
+              "name": "correct/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/correct/artifacts.json",
+              "sha256": "6d5bb6c64dddd69398495dce5e5b28a9992e5fb1ff9ee2508c8799e11be113e5"
+            },
+            {
+              "bytes": 320128,
+              "kind": "provenance",
+              "name": "correct/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/correct/artifacts_0.npy",
+              "sha256": "228951bcd9d39d61efd0d1d430be8ee04d2ca656947dbe2e30340fcac2eac758"
+            },
+            {
+              "bytes": 41588,
+              "kind": "data",
+              "name": "data-epo.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/data-epo.fif",
+              "sha256": "12a31aad9faa8b80ad655e339c1d2dc63ebbcc594c71644ae8ceb6633740e4aa"
+            },
+            {
+              "bytes": 896,
+              "kind": "provenance",
+              "name": "delta.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/delta.json",
+              "sha256": "1d0d4279677f6dc3ec3c665066424976d3ad5441fe6369f964deb91eb1a01d85"
+            },
+            {
+              "bytes": 211,
+              "kind": "provenance",
+              "name": "epochs/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/epochs/artifacts.json",
+              "sha256": "69bd93545643a1407983e857bee352913c222f7036fadf0f29ee02970083b79c"
+            },
+            {
+              "bytes": 184,
+              "kind": "provenance",
+              "name": "epochs/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/epochs/artifacts_0.npy",
+              "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7"
+            },
+            {
+              "bytes": 224,
+              "kind": "provenance",
+              "name": "epochs/parameters_1.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/epochs/parameters_1.npy",
+              "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19"
+            },
+            {
+              "bytes": 2576,
+              "kind": "provenance",
+              "name": "events.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/events.json",
+              "sha256": "02297c64f56de480453fb71f049c2dae91c18cc85cb6f34c94a71f81d8b36919"
+            },
+            {
+              "bytes": 563,
+              "kind": "provenance",
+              "name": "filter/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/filter/artifacts.json",
+              "sha256": "2ba2e104facf7183d95db99900a60d2895aa9ba60242da6d902f8bc8a569957f"
+            },
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "fit/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/fit/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 112192,
+              "kind": "provenance",
+              "name": "fit/eog-model.h5",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/fit/eog-model.h5",
+              "sha256": "5443f42d8469318a24da434f166637cebc7ad1ed97315f56603327c6b2ea2aa2"
+            },
+            {
+              "bytes": 425,
+              "kind": "provenance",
+              "name": "fit/model-binding.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/fit/model-binding.json",
+              "sha256": "dd93ed96f5bd649993f50a4793b885642f8fa23e603469a4708b8d95b41d4c2f"
+            },
+            {
+              "bytes": 7121,
+              "kind": "provenance",
+              "name": "provenance.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/provenance.json",
+              "sha256": "844cb2302b87276de846eeb90ac26cdc12b462e811e5997d2fd7265b3b1990ed"
+            },
+            {
+              "bytes": 41,
+              "kind": "provenance",
+              "name": "reference/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/reference/artifacts.json",
+              "sha256": "316d4a2927bd1866a8511ab3ecfbe3eee22ba544cf1820d170056ca0bf63a979"
+            },
+            {
+              "bytes": 39608,
+              "kind": "provenance",
+              "name": "signal_V.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/signal_V.npy",
+              "sha256": "6a2f8dd0f81a8e275bebaeabf5efda08a1133a52ac74888638983f6fa620b49d"
+            }
+          ],
+          "delta": {
+            "after": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 1,
+              "epoch_selection": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "first_sample": null,
+              "highpass": 1.0,
+              "kind": "epochs",
+              "lowpass": 35.0,
+              "rank": 3,
+              "sfreq": 200.0,
+              "shape": [
+                7,
+                5,
+                141
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "before": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 0,
+              "epoch_selection": null,
+              "first_sample": 0,
+              "highpass": 0.0,
+              "kind": "raw",
+              "lowpass": 100.0,
+              "rank": 4,
+              "sfreq": 200.0,
+              "shape": [
+                5,
+                8000
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "channels_removed": [],
+            "duration_after_s": 4.935,
+            "duration_basis": "sum of epoch sample durations (may overlap)",
+            "duration_before_s": 40.0,
+            "events_before": 8,
+            "events_retained": 7,
+            "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+            "trials_before": 8,
+            "trials_fully_retained": 7,
+            "trials_partly_retained": 0
+          },
+          "mode": "validation",
+          "roundtrip_max_error_V": 1.9612489800605037e-12,
+          "source_unchanged": true
+        },
+        "status": "completed"
+      },
+      {
+        "attempt": 1,
+        "error": null,
+        "job_id": "a60955810e4649aa8f1b5854208c409b",
+        "key": "b0bd4cf10bffd54e5bfe97ca419fee48c999331da84b6e1d044aedd735e057e7",
+        "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+        "record_id": "sub-02",
+        "result": {
+          "artifacts": [
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "baseline/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/baseline/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 322325,
+              "kind": "continuous_data",
+              "name": "continuous-raw.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/continuous-raw.fif",
+              "sha256": "3329d3c420d50768e02b2a9b872af01b483abda37fab985405b24b5cc422c873"
+            },
+            {
+              "bytes": 149,
+              "kind": "provenance",
+              "name": "correct/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/correct/artifacts.json",
+              "sha256": "24a8d4bfbf14c28924c7cb63f178389a0d9c0d49aba2a62bc0ec772a1f2607de"
+            },
+            {
+              "bytes": 320128,
+              "kind": "provenance",
+              "name": "correct/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/correct/artifacts_0.npy",
+              "sha256": "9ceb61e5a8e92105a577c498adfcd297098aa5c262b4d4137bb27856141d1a7d"
+            },
+            {
+              "bytes": 41588,
+              "kind": "data",
+              "name": "data-epo.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/data-epo.fif",
+              "sha256": "59602d20b4eb05efc9bd01861e13ed6f2b84eba90b700f65b5a81dd048887187"
+            },
+            {
+              "bytes": 896,
+              "kind": "provenance",
+              "name": "delta.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/delta.json",
+              "sha256": "1d0d4279677f6dc3ec3c665066424976d3ad5441fe6369f964deb91eb1a01d85"
+            },
+            {
+              "bytes": 211,
+              "kind": "provenance",
+              "name": "epochs/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/epochs/artifacts.json",
+              "sha256": "69bd93545643a1407983e857bee352913c222f7036fadf0f29ee02970083b79c"
+            },
+            {
+              "bytes": 184,
+              "kind": "provenance",
+              "name": "epochs/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/epochs/artifacts_0.npy",
+              "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7"
+            },
+            {
+              "bytes": 224,
+              "kind": "provenance",
+              "name": "epochs/parameters_1.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/epochs/parameters_1.npy",
+              "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19"
+            },
+            {
+              "bytes": 2576,
+              "kind": "provenance",
+              "name": "events.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/events.json",
+              "sha256": "a366df3c023d3f70a04067c05a3f64470220ba6bdebbed448a2562611c700981"
+            },
+            {
+              "bytes": 563,
+              "kind": "provenance",
+              "name": "filter/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/filter/artifacts.json",
+              "sha256": "d27a01a0f6f69d2e828af4d2261d8f24cb5adcea3552f076e152750329c35525"
+            },
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "fit/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/fit/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 112192,
+              "kind": "provenance",
+              "name": "fit/eog-model.h5",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/fit/eog-model.h5",
+              "sha256": "59d4991b21cb6b690413b6511696b9e49c64ba84caec5495bd7168668431c067"
+            },
+            {
+              "bytes": 425,
+              "kind": "provenance",
+              "name": "fit/model-binding.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/fit/model-binding.json",
+              "sha256": "3c510ccba9b1f13ba022249c431f8152806e4916fa57d401e43331789b57a1d1"
+            },
+            {
+              "bytes": 7121,
+              "kind": "provenance",
+              "name": "provenance.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/provenance.json",
+              "sha256": "3e6547492f2a435accf0d639d8b79fea5e8b877668da085da2163bca56491a5f"
+            },
+            {
+              "bytes": 41,
+              "kind": "provenance",
+              "name": "reference/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/reference/artifacts.json",
+              "sha256": "316d4a2927bd1866a8511ab3ecfbe3eee22ba544cf1820d170056ca0bf63a979"
+            },
+            {
+              "bytes": 39608,
+              "kind": "provenance",
+              "name": "signal_V.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/signal_V.npy",
+              "sha256": "492da6be028ea65b94a2baa632144cfb9f8712b334f2643a81f0117cb37b2f95"
+            }
+          ],
+          "delta": {
+            "after": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 1,
+              "epoch_selection": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "first_sample": null,
+              "highpass": 1.0,
+              "kind": "epochs",
+              "lowpass": 35.0,
+              "rank": 3,
+              "sfreq": 200.0,
+              "shape": [
+                7,
+                5,
+                141
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "before": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 0,
+              "epoch_selection": null,
+              "first_sample": 0,
+              "highpass": 0.0,
+              "kind": "raw",
+              "lowpass": 100.0,
+              "rank": 4,
+              "sfreq": 200.0,
+              "shape": [
+                5,
+                8000
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "channels_removed": [],
+            "duration_after_s": 4.935,
+            "duration_basis": "sum of epoch sample durations (may overlap)",
+            "duration_before_s": 40.0,
+            "events_before": 8,
+            "events_retained": 7,
+            "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+            "trials_before": 8,
+            "trials_fully_retained": 7,
+            "trials_partly_retained": 0
+          },
+          "mode": "validation",
+          "roundtrip_max_error_V": 1.9612489800605037e-12,
+          "source_unchanged": true
+        },
+        "status": "completed"
+      },
+      {
+        "attempt": 1,
+        "error": null,
+        "job_id": "a60955810e4649aa8f1b5854208c409b",
+        "key": "f52ca8492b6934b7990b76ca45c1705aecf0f0e564646cf7e83ae14fbb2da9be",
+        "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+        "record_id": "sub-02",
+        "result": {
+          "artifacts": [
+            {
+              "bytes": 2,
+              "kind": "provenance",
+              "name": "baseline/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/baseline/artifacts.json",
+              "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+            },
+            {
+              "bytes": 322325,
+              "kind": "continuous_data",
+              "name": "continuous-raw.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/continuous-raw.fif",
+              "sha256": "77b124cfb4081153bbfe19a94621a1a677b994206629f006bd71b1b19804d182"
+            },
+            {
+              "bytes": 41588,
+              "kind": "data",
+              "name": "data-epo.fif",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/data-epo.fif",
+              "sha256": "913767582602263091de91b9cffb04858ad7680ef648f59528eb061858663c20"
+            },
+            {
+              "bytes": 896,
+              "kind": "provenance",
+              "name": "delta.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/delta.json",
+              "sha256": "1d0d4279677f6dc3ec3c665066424976d3ad5441fe6369f964deb91eb1a01d85"
+            },
+            {
+              "bytes": 211,
+              "kind": "provenance",
+              "name": "epochs/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/epochs/artifacts.json",
+              "sha256": "69bd93545643a1407983e857bee352913c222f7036fadf0f29ee02970083b79c"
+            },
+            {
+              "bytes": 184,
+              "kind": "provenance",
+              "name": "epochs/artifacts_0.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/epochs/artifacts_0.npy",
+              "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7"
+            },
+            {
+              "bytes": 224,
+              "kind": "provenance",
+              "name": "epochs/parameters_1.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/epochs/parameters_1.npy",
+              "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19"
+            },
+            {
+              "bytes": 2576,
+              "kind": "provenance",
+              "name": "events.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/events.json",
+              "sha256": "a366df3c023d3f70a04067c05a3f64470220ba6bdebbed448a2562611c700981"
+            },
+            {
+              "bytes": 563,
+              "kind": "provenance",
+              "name": "filter/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/filter/artifacts.json",
+              "sha256": "d27a01a0f6f69d2e828af4d2261d8f24cb5adcea3552f076e152750329c35525"
+            },
+            {
+              "bytes": 4710,
+              "kind": "provenance",
+              "name": "provenance.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/provenance.json",
+              "sha256": "d5e1b96d24cd7b82480c7fb6237b34d9dfaec9ba6fa0edbf50668042a4614516"
+            },
+            {
+              "bytes": 41,
+              "kind": "provenance",
+              "name": "reference/artifacts.json",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/reference/artifacts.json",
+              "sha256": "316d4a2927bd1866a8511ab3ecfbe3eee22ba544cf1820d170056ca0bf63a979"
+            },
+            {
+              "bytes": 39608,
+              "kind": "provenance",
+              "name": "signal_V.npy",
+              "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/signal_V.npy",
+              "sha256": "dbf3e64a44971b320d6122d114f102da6b2e9377db86a5644e9e9e6007963c87"
+            }
+          ],
+          "delta": {
+            "after": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 1,
+              "epoch_selection": [
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7
+              ],
+              "first_sample": null,
+              "highpass": 1.0,
+              "kind": "epochs",
+              "lowpass": 35.0,
+              "rank": 3,
+              "sfreq": 200.0,
+              "shape": [
+                7,
+                5,
+                141
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "before": {
+              "bads": [],
+              "channels": [
+                "C3",
+                "C4",
+                "Cz",
+                "Pz",
+                "VEOG"
+              ],
+              "custom_ref_applied": 0,
+              "epoch_selection": null,
+              "first_sample": 0,
+              "highpass": 0.0,
+              "kind": "raw",
+              "lowpass": 100.0,
+              "rank": 4,
+              "sfreq": 200.0,
+              "shape": [
+                5,
+                8000
+              ],
+              "types": [
+                "eeg",
+                "eeg",
+                "eeg",
+                "eeg",
+                "eog"
+              ],
+              "unit": "V"
+            },
+            "channels_removed": [],
+            "duration_after_s": 4.935,
+            "duration_basis": "sum of epoch sample durations (may overlap)",
+            "duration_before_s": 40.0,
+            "events_before": 8,
+            "events_retained": 7,
+            "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+            "trials_before": 8,
+            "trials_fully_retained": 7,
+            "trials_partly_retained": 0
+          },
+          "mode": "validation",
+          "roundtrip_max_error_V": 1.9612489800605037e-12,
+          "source_unchanged": true
+        },
+        "status": "completed"
+      }
+    ],
+    "status": "completed",
+    "total": 4
+  },
+  "all_record_json_artifacts": [
+    {
+      "record_id": "sub-01",
+      "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+      "verified_now": true,
+      "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0000/a1",
+      "json_artifacts": {
+        "delta.json": {
+          "after": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "epoch_selection": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "first_sample": null,
+            "highpass": 1.0,
+            "kind": "epochs",
+            "lowpass": 35.0,
+            "rank": 3,
+            "sfreq": 200.0,
+            "shape": [
+              7,
+              5,
+              141
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "before": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 0,
+            "epoch_selection": null,
+            "first_sample": 0,
+            "highpass": 0.0,
+            "kind": "raw",
+            "lowpass": 100.0,
+            "rank": 4,
+            "sfreq": 200.0,
+            "shape": [
+              5,
+              8000
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "channels_removed": [],
+          "duration_after_s": 4.935,
+          "duration_basis": "sum of epoch sample durations (may overlap)",
+          "duration_before_s": 40.0,
+          "events_before": 8,
+          "events_retained": 7,
+          "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+          "trials_before": 8,
+          "trials_fully_retained": 7,
+          "trials_partly_retained": 0
+        },
+        "events.json": [
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": null,
+            "event_id": "sub-01:event:0",
+            "label": "left",
+            "original_onset_s": 0.05,
+            "original_sample": 10,
+            "output_onset_s": 0.05,
+            "output_sample": 10,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [
+              "NO_DATA"
+            ],
+            "resampling_error_s": 0.0,
+            "retained": false,
+            "source_row": 2,
+            "trial_id": "sub-01:event:0"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 0,
+            "event_id": "sub-01:event:1",
+            "label": "right",
+            "original_onset_s": 3.0,
+            "original_sample": 600,
+            "output_onset_s": 3.0,
+            "output_sample": 600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 3,
+            "trial_id": "sub-01:event:1"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 1,
+            "event_id": "sub-01:event:2",
+            "label": "left",
+            "original_onset_s": 8.0,
+            "original_sample": 1600,
+            "output_onset_s": 8.0,
+            "output_sample": 1600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 4,
+            "trial_id": "sub-01:event:2"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 2,
+            "event_id": "sub-01:event:3",
+            "label": "right",
+            "original_onset_s": 13.0,
+            "original_sample": 2600,
+            "output_onset_s": 13.0,
+            "output_sample": 2600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 5,
+            "trial_id": "sub-01:event:3"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 3,
+            "event_id": "sub-01:event:4",
+            "label": "left",
+            "original_onset_s": 23.0,
+            "original_sample": 4600,
+            "output_onset_s": 23.0,
+            "output_sample": 4600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 6,
+            "trial_id": "sub-01:event:4"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 4,
+            "event_id": "sub-01:event:5",
+            "label": "right",
+            "original_onset_s": 28.0,
+            "original_sample": 5600,
+            "output_onset_s": 28.0,
+            "output_sample": 5600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 7,
+            "trial_id": "sub-01:event:5"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 5,
+            "event_id": "sub-01:event:6",
+            "label": "left",
+            "original_onset_s": 33.0,
+            "original_sample": 6600,
+            "output_onset_s": 33.0,
+            "output_sample": 6600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 8,
+            "trial_id": "sub-01:event:6"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 6,
+            "event_id": "sub-01:event:7",
+            "label": "right",
+            "original_onset_s": 38.0,
+            "original_sample": 7600,
+            "output_onset_s": 38.0,
+            "output_sample": 7600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 9,
+            "trial_id": "sub-01:event:7"
+          }
+        ],
+        "provenance.json": {
+          "continuous_raw": {
+            "applied_through": "reference",
+            "bads": [],
+            "before_epoch_step_id": "epochs",
+            "bytes": 322325,
+            "channel_types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "event_origin": 0,
+            "file": "continuous-raw.fif",
+            "first_sample": 0,
+            "format": "FIFF double",
+            "highpass": 1.0,
+            "lowpass": 35.0,
+            "main_chain_step_ids": [
+              "filter",
+              "reference"
+            ],
+            "path": "runs/a60955810e4649aa8f1b5854208c409b/r0000/a1/continuous-raw.fif",
+            "pipeline_index": 2,
+            "post_epoch_operations_applied": false,
+            "post_epoch_step_ids": [
+              "baseline"
+            ],
+            "post_epoch_steps": [
+              {
+                "decision_from": null,
+                "evidence_indices": [
+                  0
+                ],
+                "fit_scope": null,
+                "id": "baseline",
+                "implementation_version": "1",
+                "input": "epochs",
+                "model_from": null,
+                "op": "baseline",
+                "params": {
+                  "baseline": [
+                    -0.2,
+                    0.0
+                  ]
+                },
+                "profile": "source",
+                "unit_id": "EEG-BASELINE"
+              }
+            ],
+            "pre_epoch_step_ids": [
+              "filter",
+              "reference"
+            ],
+            "roundtrip_max_error_V": 1.0430812843239406e-12,
+            "sfreq": 200.0,
+            "sha256": "8fa6b4e670c30b2471bfde0d5938642eaa31a9b2b43b99dae76c2a067cd3b276",
+            "shape": [
+              5,
+              8000
+            ],
+            "source_data_hash": "a81c32bd149a2cfce901d58f90fc3832cdfed095f93acdf0acd85431de8ebf2c",
+            "source_node_id": "reference",
+            "target_events": [
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                600,
+                0,
+                2
+              ],
+              [
+                1600,
+                0,
+                1
+              ],
+              [
+                2600,
+                0,
+                2
+              ],
+              [
+                4600,
+                0,
+                1
+              ],
+              [
+                5600,
+                0,
+                2
+              ],
+              [
+                6600,
+                0,
+                1
+              ],
+              [
+                7600,
+                0,
+                2
+              ]
+            ],
+            "unit": "V"
+          },
+          "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+          "environment": {
+            "asrpy": "0.0.8",
+            "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+            "h5io": "0.2.5",
+            "h5py": "3.13.0",
+            "mne": "1.10.2",
+            "mne-bids": "0.17.0",
+            "numpy": "1.26.4",
+            "pandas": "2.2.3",
+            "pybv": "0.7.6",
+            "python": "3.12.14",
+            "scikit-learn": "1.6.1",
+            "scipy": "1.15.3",
+            "threadpoolctl": "3.6.0"
+          },
+          "input_ref": {
+            "id": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526",
+            "sha256": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526"
+          },
+          "method_ref": {
+            "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+            "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+          },
+          "mode": "validation",
+          "steps": [
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "a9cde8cc62df565608ed5a14ae4da7e675b5554fe1db80f2d8cf4c168137a0f7",
+              "model_binding": null,
+              "op": "filter",
+              "output_hash": "80d980a22aafa54695d607d149858094d1f8e68cb0405b0ac32e529da3a82c08",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 0,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 4,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "filter",
+              "unit_id": "EEG-FILTER"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "80d980a22aafa54695d607d149858094d1f8e68cb0405b0ac32e529da3a82c08",
+              "model_binding": null,
+              "op": "reference",
+              "output_hash": "a81c32bd149a2cfce901d58f90fc3832cdfed095f93acdf0acd85431de8ebf2c",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "reference",
+              "unit_id": "EEG-REREFERENCE"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "a81c32bd149a2cfce901d58f90fc3832cdfed095f93acdf0acd85431de8ebf2c",
+              "model_binding": null,
+              "op": "epoch",
+              "output_hash": "2b9b1d01ad15b6ad452136000a543675cd8fdda3016c0fbb1c1bba7d61b87828",
+              "parameters": {
+                "event_id": {
+                  "left": 1,
+                  "right": 2
+                },
+                "events": {
+                  "dtype": "int32",
+                  "file": "parameters_1.npy",
+                  "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19",
+                  "shape": [
+                    8,
+                    3
+                  ]
+                },
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "tmax": 0.5,
+                "tmin": -0.2
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "epochs",
+              "unit_id": "EEG-EPOCH"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "2b9b1d01ad15b6ad452136000a543675cd8fdda3016c0fbb1c1bba7d61b87828",
+              "model_binding": null,
+              "op": "baseline",
+              "output_hash": "948ec6b40592abdc4435ca93e41c7be8d420571e197fed004c4b6ff3c2a90700",
+              "parameters": {
+                "baseline": [
+                  -0.2,
+                  0.0
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "baseline",
+              "unit_id": "EEG-BASELINE"
+            }
+          ]
+        },
+        "baseline/artifacts.json": {},
+        "epochs/artifacts.json": {
+          "boundary_annotations": [],
+          "drop_log": [
+            [
+              "NO_DATA"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "kept": {
+            "dtype": "int64",
+            "file": "artifacts_0.npy",
+            "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7",
+            "shape": [
+              7
+            ]
+          }
+        },
+        "filter/artifacts.json": {
+          "array_filter_preserves_info": false,
+          "input_hash": "3a1e8af9b13ce5b6196ed826aecc71711010a02332e7e1defc62c0c233bfbdb4",
+          "output_hash": "84290f016fb31d600ef27da2dbc13a3de30c3317755be8e004a69f27ffdb3e99",
+          "parameters": {
+            "annotation_policy": "raw",
+            "filter_length": "auto",
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "h_freq": 35.0,
+            "h_trans_bandwidth": "auto",
+            "l_freq": 1.0,
+            "l_trans_bandwidth": "auto",
+            "method": "iir",
+            "nonfinite": "reject",
+            "pad": "reflect_limited",
+            "phase": "zero",
+            "picks": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz"
+            ],
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ]
+          },
+          "warnings": []
+        },
+        "reference/artifacts.json": {
+          "representation": "potential",
+          "unit": "V"
+        }
+      }
+    },
+    {
+      "record_id": "sub-02",
+      "method_id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+      "verified_now": true,
+      "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0001/a1",
+      "json_artifacts": {
+        "delta.json": {
+          "after": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "epoch_selection": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "first_sample": null,
+            "highpass": 1.0,
+            "kind": "epochs",
+            "lowpass": 35.0,
+            "rank": 3,
+            "sfreq": 200.0,
+            "shape": [
+              7,
+              5,
+              141
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "before": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 0,
+            "epoch_selection": null,
+            "first_sample": 0,
+            "highpass": 0.0,
+            "kind": "raw",
+            "lowpass": 100.0,
+            "rank": 4,
+            "sfreq": 200.0,
+            "shape": [
+              5,
+              8000
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "channels_removed": [],
+          "duration_after_s": 4.935,
+          "duration_basis": "sum of epoch sample durations (may overlap)",
+          "duration_before_s": 40.0,
+          "events_before": 8,
+          "events_retained": 7,
+          "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+          "trials_before": 8,
+          "trials_fully_retained": 7,
+          "trials_partly_retained": 0
+        },
+        "events.json": [
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": null,
+            "event_id": "sub-02:event:0",
+            "label": "left",
+            "original_onset_s": 0.05,
+            "original_sample": 10,
+            "output_onset_s": 0.05,
+            "output_sample": 10,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [
+              "NO_DATA"
+            ],
+            "resampling_error_s": 0.0,
+            "retained": false,
+            "source_row": 2,
+            "trial_id": "sub-02:event:0"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 0,
+            "event_id": "sub-02:event:1",
+            "label": "right",
+            "original_onset_s": 3.0,
+            "original_sample": 600,
+            "output_onset_s": 3.0,
+            "output_sample": 600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 3,
+            "trial_id": "sub-02:event:1"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 1,
+            "event_id": "sub-02:event:2",
+            "label": "left",
+            "original_onset_s": 8.0,
+            "original_sample": 1600,
+            "output_onset_s": 8.0,
+            "output_sample": 1600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 4,
+            "trial_id": "sub-02:event:2"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 2,
+            "event_id": "sub-02:event:3",
+            "label": "right",
+            "original_onset_s": 13.0,
+            "original_sample": 2600,
+            "output_onset_s": 13.0,
+            "output_sample": 2600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 5,
+            "trial_id": "sub-02:event:3"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 3,
+            "event_id": "sub-02:event:4",
+            "label": "left",
+            "original_onset_s": 23.0,
+            "original_sample": 4600,
+            "output_onset_s": 23.0,
+            "output_sample": 4600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 6,
+            "trial_id": "sub-02:event:4"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 4,
+            "event_id": "sub-02:event:5",
+            "label": "right",
+            "original_onset_s": 28.0,
+            "original_sample": 5600,
+            "output_onset_s": 28.0,
+            "output_sample": 5600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 7,
+            "trial_id": "sub-02:event:5"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 5,
+            "event_id": "sub-02:event:6",
+            "label": "left",
+            "original_onset_s": 33.0,
+            "original_sample": 6600,
+            "output_onset_s": 33.0,
+            "output_sample": 6600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 8,
+            "trial_id": "sub-02:event:6"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 6,
+            "event_id": "sub-02:event:7",
+            "label": "right",
+            "original_onset_s": 38.0,
+            "original_sample": 7600,
+            "output_onset_s": 38.0,
+            "output_sample": 7600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 9,
+            "trial_id": "sub-02:event:7"
+          }
+        ],
+        "provenance.json": {
+          "continuous_raw": {
+            "applied_through": "reference",
+            "bads": [],
+            "before_epoch_step_id": "epochs",
+            "bytes": 322325,
+            "channel_types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "event_origin": 0,
+            "file": "continuous-raw.fif",
+            "first_sample": 0,
+            "format": "FIFF double",
+            "highpass": 1.0,
+            "lowpass": 35.0,
+            "main_chain_step_ids": [
+              "filter",
+              "reference"
+            ],
+            "path": "runs/a60955810e4649aa8f1b5854208c409b/r0001/a1/continuous-raw.fif",
+            "pipeline_index": 2,
+            "post_epoch_operations_applied": false,
+            "post_epoch_step_ids": [
+              "baseline"
+            ],
+            "post_epoch_steps": [
+              {
+                "decision_from": null,
+                "evidence_indices": [
+                  0
+                ],
+                "fit_scope": null,
+                "id": "baseline",
+                "implementation_version": "1",
+                "input": "epochs",
+                "model_from": null,
+                "op": "baseline",
+                "params": {
+                  "baseline": [
+                    -0.2,
+                    0.0
+                  ]
+                },
+                "profile": "source",
+                "unit_id": "EEG-BASELINE"
+              }
+            ],
+            "pre_epoch_step_ids": [
+              "filter",
+              "reference"
+            ],
+            "roundtrip_max_error_V": 1.0430812843239406e-12,
+            "sfreq": 200.0,
+            "sha256": "77b124cfb4081153bbfe19a94621a1a677b994206629f006bd71b1b19804d182",
+            "shape": [
+              5,
+              8000
+            ],
+            "source_data_hash": "4405b5e2009021b7823dc19410da3fa5a665d10483fcf0f86aaedde13f242814",
+            "source_node_id": "reference",
+            "target_events": [
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                600,
+                0,
+                2
+              ],
+              [
+                1600,
+                0,
+                1
+              ],
+              [
+                2600,
+                0,
+                2
+              ],
+              [
+                4600,
+                0,
+                1
+              ],
+              [
+                5600,
+                0,
+                2
+              ],
+              [
+                6600,
+                0,
+                1
+              ],
+              [
+                7600,
+                0,
+                2
+              ]
+            ],
+            "unit": "V"
+          },
+          "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+          "environment": {
+            "asrpy": "0.0.8",
+            "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+            "h5io": "0.2.5",
+            "h5py": "3.13.0",
+            "mne": "1.10.2",
+            "mne-bids": "0.17.0",
+            "numpy": "1.26.4",
+            "pandas": "2.2.3",
+            "pybv": "0.7.6",
+            "python": "3.12.14",
+            "scikit-learn": "1.6.1",
+            "scipy": "1.15.3",
+            "threadpoolctl": "3.6.0"
+          },
+          "input_ref": {
+            "id": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526",
+            "sha256": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526"
+          },
+          "method_ref": {
+            "id": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31",
+            "sha256": "5b35f67168052d58b645721e985d5fbac8bcba25c4abd6795debcaeeb4a53b31"
+          },
+          "mode": "validation",
+          "steps": [
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "4c30d1b6ad7ec0130bae1059d45fc09fa2d9998a7d4b22aa4d98274151aa1b17",
+              "model_binding": null,
+              "op": "filter",
+              "output_hash": "3ef2a9565b87a3d88e4cd66946a58b60691f00a53dc7ae5c71cbd33b851f7fa5",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 0,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 4,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "filter",
+              "unit_id": "EEG-FILTER"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "3ef2a9565b87a3d88e4cd66946a58b60691f00a53dc7ae5c71cbd33b851f7fa5",
+              "model_binding": null,
+              "op": "reference",
+              "output_hash": "4405b5e2009021b7823dc19410da3fa5a665d10483fcf0f86aaedde13f242814",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "reference",
+              "unit_id": "EEG-REREFERENCE"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "4405b5e2009021b7823dc19410da3fa5a665d10483fcf0f86aaedde13f242814",
+              "model_binding": null,
+              "op": "epoch",
+              "output_hash": "3f222e858cdfdb87b636d7946e35f37aac06ef33d449e389560e6b3753bae8ff",
+              "parameters": {
+                "event_id": {
+                  "left": 1,
+                  "right": 2
+                },
+                "events": {
+                  "dtype": "int32",
+                  "file": "parameters_1.npy",
+                  "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19",
+                  "shape": [
+                    8,
+                    3
+                  ]
+                },
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "tmax": 0.5,
+                "tmin": -0.2
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "epochs",
+              "unit_id": "EEG-EPOCH"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "3f222e858cdfdb87b636d7946e35f37aac06ef33d449e389560e6b3753bae8ff",
+              "model_binding": null,
+              "op": "baseline",
+              "output_hash": "6a3f370ae05768b071a72b4f449f1a18d7af2cdb57a623101d686c7ce1b04f46",
+              "parameters": {
+                "baseline": [
+                  -0.2,
+                  0.0
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "baseline",
+              "unit_id": "EEG-BASELINE"
+            }
+          ]
+        },
+        "baseline/artifacts.json": {},
+        "epochs/artifacts.json": {
+          "boundary_annotations": [],
+          "drop_log": [
+            [
+              "NO_DATA"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "kept": {
+            "dtype": "int64",
+            "file": "artifacts_0.npy",
+            "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7",
+            "shape": [
+              7
+            ]
+          }
+        },
+        "filter/artifacts.json": {
+          "array_filter_preserves_info": false,
+          "input_hash": "a8cb48a0388754b1f1e7fb756f0f8958d9d9a56846cb859cad7027c8b17248d0",
+          "output_hash": "943fa9176438e849617c564afe356e538f29bd4e6a32265c8de80e1184094660",
+          "parameters": {
+            "annotation_policy": "raw",
+            "filter_length": "auto",
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "h_freq": 35.0,
+            "h_trans_bandwidth": "auto",
+            "l_freq": 1.0,
+            "l_trans_bandwidth": "auto",
+            "method": "iir",
+            "nonfinite": "reject",
+            "pad": "reflect_limited",
+            "phase": "zero",
+            "picks": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz"
+            ],
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ]
+          },
+          "warnings": []
+        },
+        "reference/artifacts.json": {
+          "representation": "potential",
+          "unit": "V"
+        }
+      }
+    },
+    {
+      "record_id": "sub-01",
+      "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+      "verified_now": true,
+      "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0002/a1",
+      "json_artifacts": {
+        "delta.json": {
+          "after": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "epoch_selection": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "first_sample": null,
+            "highpass": 1.0,
+            "kind": "epochs",
+            "lowpass": 35.0,
+            "rank": 3,
+            "sfreq": 200.0,
+            "shape": [
+              7,
+              5,
+              141
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "before": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 0,
+            "epoch_selection": null,
+            "first_sample": 0,
+            "highpass": 0.0,
+            "kind": "raw",
+            "lowpass": 100.0,
+            "rank": 4,
+            "sfreq": 200.0,
+            "shape": [
+              5,
+              8000
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "channels_removed": [],
+          "duration_after_s": 4.935,
+          "duration_basis": "sum of epoch sample durations (may overlap)",
+          "duration_before_s": 40.0,
+          "events_before": 8,
+          "events_retained": 7,
+          "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+          "trials_before": 8,
+          "trials_fully_retained": 7,
+          "trials_partly_retained": 0
+        },
+        "events.json": [
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": null,
+            "event_id": "sub-01:event:0",
+            "label": "left",
+            "original_onset_s": 0.05,
+            "original_sample": 10,
+            "output_onset_s": 0.05,
+            "output_sample": 10,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [
+              "NO_DATA"
+            ],
+            "resampling_error_s": 0.0,
+            "retained": false,
+            "source_row": 2,
+            "trial_id": "sub-01:event:0"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 0,
+            "event_id": "sub-01:event:1",
+            "label": "right",
+            "original_onset_s": 3.0,
+            "original_sample": 600,
+            "output_onset_s": 3.0,
+            "output_sample": 600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 3,
+            "trial_id": "sub-01:event:1"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 1,
+            "event_id": "sub-01:event:2",
+            "label": "left",
+            "original_onset_s": 8.0,
+            "original_sample": 1600,
+            "output_onset_s": 8.0,
+            "output_sample": 1600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 4,
+            "trial_id": "sub-01:event:2"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 2,
+            "event_id": "sub-01:event:3",
+            "label": "right",
+            "original_onset_s": 13.0,
+            "original_sample": 2600,
+            "output_onset_s": 13.0,
+            "output_sample": 2600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 5,
+            "trial_id": "sub-01:event:3"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 3,
+            "event_id": "sub-01:event:4",
+            "label": "left",
+            "original_onset_s": 23.0,
+            "original_sample": 4600,
+            "output_onset_s": 23.0,
+            "output_sample": 4600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 6,
+            "trial_id": "sub-01:event:4"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 4,
+            "event_id": "sub-01:event:5",
+            "label": "right",
+            "original_onset_s": 28.0,
+            "original_sample": 5600,
+            "output_onset_s": 28.0,
+            "output_sample": 5600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 7,
+            "trial_id": "sub-01:event:5"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 5,
+            "event_id": "sub-01:event:6",
+            "label": "left",
+            "original_onset_s": 33.0,
+            "original_sample": 6600,
+            "output_onset_s": 33.0,
+            "output_sample": 6600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 8,
+            "trial_id": "sub-01:event:6"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 6,
+            "event_id": "sub-01:event:7",
+            "label": "right",
+            "original_onset_s": 38.0,
+            "original_sample": 7600,
+            "output_onset_s": 38.0,
+            "output_sample": 7600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 9,
+            "trial_id": "sub-01:event:7"
+          }
+        ],
+        "provenance.json": {
+          "continuous_raw": {
+            "applied_through": "correct",
+            "bads": [],
+            "before_epoch_step_id": "epochs",
+            "bytes": 322325,
+            "channel_types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "event_origin": 0,
+            "file": "continuous-raw.fif",
+            "first_sample": 0,
+            "format": "FIFF double",
+            "highpass": 1.0,
+            "lowpass": 35.0,
+            "main_chain_step_ids": [
+              "filter",
+              "reference",
+              "correct"
+            ],
+            "path": "runs/a60955810e4649aa8f1b5854208c409b/r0002/a1/continuous-raw.fif",
+            "pipeline_index": 4,
+            "post_epoch_operations_applied": false,
+            "post_epoch_step_ids": [
+              "baseline"
+            ],
+            "post_epoch_steps": [
+              {
+                "decision_from": null,
+                "evidence_indices": [
+                  0
+                ],
+                "fit_scope": null,
+                "id": "baseline",
+                "implementation_version": "1",
+                "input": "epochs",
+                "model_from": null,
+                "op": "baseline",
+                "params": {
+                  "baseline": [
+                    -0.2,
+                    0.0
+                  ]
+                },
+                "profile": "source",
+                "unit_id": "EEG-BASELINE"
+              }
+            ],
+            "pre_epoch_step_ids": [
+              "filter",
+              "reference",
+              "correct"
+            ],
+            "roundtrip_max_error_V": 1.0430812843239406e-12,
+            "sfreq": 200.0,
+            "sha256": "d22d7c436e829b06707f2267b4bf6c7e490a7d6214b5da404fe09c14f534c86f",
+            "shape": [
+              5,
+              8000
+            ],
+            "source_data_hash": "e09f4a9cc65bf44e08afd2ea541de52ec9642c632a9b93d24c53a33b7e8e6f51",
+            "source_node_id": "correct",
+            "target_events": [
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                600,
+                0,
+                2
+              ],
+              [
+                1600,
+                0,
+                1
+              ],
+              [
+                2600,
+                0,
+                2
+              ],
+              [
+                4600,
+                0,
+                1
+              ],
+              [
+                5600,
+                0,
+                2
+              ],
+              [
+                6600,
+                0,
+                1
+              ],
+              [
+                7600,
+                0,
+                2
+              ]
+            ],
+            "unit": "V"
+          },
+          "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+          "environment": {
+            "asrpy": "0.0.8",
+            "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+            "h5io": "0.2.5",
+            "h5py": "3.13.0",
+            "mne": "1.10.2",
+            "mne-bids": "0.17.0",
+            "numpy": "1.26.4",
+            "pandas": "2.2.3",
+            "pybv": "0.7.6",
+            "python": "3.12.14",
+            "scikit-learn": "1.6.1",
+            "scipy": "1.15.3",
+            "threadpoolctl": "3.6.0"
+          },
+          "input_ref": {
+            "id": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526",
+            "sha256": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526"
+          },
+          "method_ref": {
+            "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+            "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+          },
+          "mode": "validation",
+          "steps": [
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "a9cde8cc62df565608ed5a14ae4da7e675b5554fe1db80f2d8cf4c168137a0f7",
+              "model_binding": null,
+              "op": "filter",
+              "output_hash": "80d980a22aafa54695d607d149858094d1f8e68cb0405b0ac32e529da3a82c08",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 0,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 4,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "filter",
+              "unit_id": "EEG-FILTER"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "80d980a22aafa54695d607d149858094d1f8e68cb0405b0ac32e529da3a82c08",
+              "model_binding": null,
+              "op": "reference",
+              "output_hash": "a81c32bd149a2cfce901d58f90fc3832cdfed095f93acdf0acd85431de8ebf2c",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "reference",
+              "unit_id": "EEG-REREFERENCE"
+            },
+            {
+              "branch": "fit",
+              "input_hash": "0287dfe802278b08cc4e7bb389452164e8741b294494f2f89a83a6f1986c2081",
+              "output_hash": "335930a54b354acf1b58d9bd85d6585b344d74b8465d69708ee9116b18ef668f",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "scope": {
+                "ids": [
+                  "calibration"
+                ],
+                "role": "calibration"
+              },
+              "step_id": "filter"
+            },
+            {
+              "branch": "fit",
+              "input_hash": "335930a54b354acf1b58d9bd85d6585b344d74b8465d69708ee9116b18ef668f",
+              "output_hash": "299137dcb1f839f0ac5378b873c9270a62d5b3174f295639ff5fb36e4859bf68",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "scope": {
+                "ids": [
+                  "calibration"
+                ],
+                "role": "calibration"
+              },
+              "step_id": "reference"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "299137dcb1f839f0ac5378b873c9270a62d5b3174f295639ff5fb36e4859bf68",
+              "model_binding": null,
+              "op": "eog_fit",
+              "output_hash": "299137dcb1f839f0ac5378b873c9270a62d5b3174f295639ff5fb36e4859bf68",
+              "parameters": {
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ],
+                "picks_artifact": [
+                  "VEOG"
+                ],
+                "reference_id": "average",
+                "scope": {
+                  "ids": [
+                    "calibration"
+                  ],
+                  "role": "calibration"
+                }
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  4000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "fit",
+              "unit_id": "EEG-EOG-REGRESSION"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "a81c32bd149a2cfce901d58f90fc3832cdfed095f93acdf0acd85431de8ebf2c",
+              "model_binding": {
+                "file": "fit/eog-model.h5",
+                "fit_data_hash": "299137dcb1f839f0ac5378b873c9270a62d5b3174f295639ff5fb36e4859bf68",
+                "intervals": [
+                  {
+                    "id": "calibration",
+                    "role": "calibration",
+                    "start": 0,
+                    "stop": 4000
+                  }
+                ],
+                "reference_id": "average",
+                "scope": {
+                  "ids": [
+                    "calibration"
+                  ],
+                  "role": "calibration"
+                },
+                "sha256": "5443f42d8469318a24da434f166637cebc7ad1ed97315f56603327c6b2ea2aa2",
+                "signature": [
+                  [
+                    "C3",
+                    "C4",
+                    "Cz",
+                    "Pz",
+                    "VEOG"
+                  ],
+                  [
+                    "eeg",
+                    "eeg",
+                    "eeg",
+                    "eeg",
+                    "eog"
+                  ],
+                  [],
+                  1,
+                  []
+                ]
+              },
+              "op": "eog_apply",
+              "output_hash": "e09f4a9cc65bf44e08afd2ea541de52ec9642c632a9b93d24c53a33b7e8e6f51",
+              "parameters": {
+                "reference_id": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "correct",
+              "unit_id": "EEG-EOG-REGRESSION"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "e09f4a9cc65bf44e08afd2ea541de52ec9642c632a9b93d24c53a33b7e8e6f51",
+              "model_binding": null,
+              "op": "epoch",
+              "output_hash": "626fec4402c9e61534574760dfa7dbe40a4a532e0a55f5049268a0343617deff",
+              "parameters": {
+                "event_id": {
+                  "left": 1,
+                  "right": 2
+                },
+                "events": {
+                  "dtype": "int32",
+                  "file": "parameters_1.npy",
+                  "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19",
+                  "shape": [
+                    8,
+                    3
+                  ]
+                },
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "tmax": 0.5,
+                "tmin": -0.2
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "epochs",
+              "unit_id": "EEG-EPOCH"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "626fec4402c9e61534574760dfa7dbe40a4a532e0a55f5049268a0343617deff",
+              "model_binding": null,
+              "op": "baseline",
+              "output_hash": "4db669311ee727dda79e57bcd03b8cf807c0fbc3e455e819f70ad434667140fe",
+              "parameters": {
+                "baseline": [
+                  -0.2,
+                  0.0
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "baseline",
+              "unit_id": "EEG-BASELINE"
+            }
+          ]
+        },
+        "baseline/artifacts.json": {},
+        "correct/artifacts.json": {
+          "removed": {
+            "dtype": "float64",
+            "file": "artifacts_0.npy",
+            "sha256": "228951bcd9d39d61efd0d1d430be8ee04d2ca656947dbe2e30340fcac2eac758",
+            "shape": [
+              5,
+              8000
+            ]
+          }
+        },
+        "epochs/artifacts.json": {
+          "boundary_annotations": [],
+          "drop_log": [
+            [
+              "NO_DATA"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "kept": {
+            "dtype": "int64",
+            "file": "artifacts_0.npy",
+            "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7",
+            "shape": [
+              7
+            ]
+          }
+        },
+        "filter/artifacts.json": {
+          "array_filter_preserves_info": false,
+          "input_hash": "3a1e8af9b13ce5b6196ed826aecc71711010a02332e7e1defc62c0c233bfbdb4",
+          "output_hash": "84290f016fb31d600ef27da2dbc13a3de30c3317755be8e004a69f27ffdb3e99",
+          "parameters": {
+            "annotation_policy": "raw",
+            "filter_length": "auto",
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "h_freq": 35.0,
+            "h_trans_bandwidth": "auto",
+            "l_freq": 1.0,
+            "l_trans_bandwidth": "auto",
+            "method": "iir",
+            "nonfinite": "reject",
+            "pad": "reflect_limited",
+            "phase": "zero",
+            "picks": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz"
+            ],
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ]
+          },
+          "warnings": []
+        },
+        "fit/artifacts.json": {},
+        "fit/model-binding.json": {
+          "file": "fit/eog-model.h5",
+          "fit_data_hash": "299137dcb1f839f0ac5378b873c9270a62d5b3174f295639ff5fb36e4859bf68",
+          "intervals": [
+            {
+              "id": "calibration",
+              "role": "calibration",
+              "start": 0,
+              "stop": 4000
+            }
+          ],
+          "reference_id": "average",
+          "scope": {
+            "ids": [
+              "calibration"
+            ],
+            "role": "calibration"
+          },
+          "sha256": "5443f42d8469318a24da434f166637cebc7ad1ed97315f56603327c6b2ea2aa2",
+          "signature": [
+            [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            [],
+            1,
+            []
+          ]
+        },
+        "reference/artifacts.json": {
+          "representation": "potential",
+          "unit": "V"
+        }
+      }
+    },
+    {
+      "record_id": "sub-02",
+      "method_id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+      "verified_now": true,
+      "result_directory": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911/output/runs/a60955810e4649aa8f1b5854208c409b/r0003/a1",
+      "json_artifacts": {
+        "delta.json": {
+          "after": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "epoch_selection": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "first_sample": null,
+            "highpass": 1.0,
+            "kind": "epochs",
+            "lowpass": 35.0,
+            "rank": 3,
+            "sfreq": 200.0,
+            "shape": [
+              7,
+              5,
+              141
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "before": {
+            "bads": [],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 0,
+            "epoch_selection": null,
+            "first_sample": 0,
+            "highpass": 0.0,
+            "kind": "raw",
+            "lowpass": 100.0,
+            "rank": 4,
+            "sfreq": 200.0,
+            "shape": [
+              5,
+              8000
+            ],
+            "types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "unit": "V"
+          },
+          "channels_removed": [],
+          "duration_after_s": 4.935,
+          "duration_basis": "sum of epoch sample durations (may overlap)",
+          "duration_before_s": 40.0,
+          "events_before": 8,
+          "events_retained": 7,
+          "scope": "Survey target events in the Collection recording; declared context events remain in the standardized input",
+          "trials_before": 8,
+          "trials_fully_retained": 7,
+          "trials_partly_retained": 0
+        },
+        "events.json": [
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": null,
+            "event_id": "sub-02:event:0",
+            "label": "left",
+            "original_onset_s": 0.05,
+            "original_sample": 10,
+            "output_onset_s": 0.05,
+            "output_sample": 10,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [
+              "NO_DATA"
+            ],
+            "resampling_error_s": 0.0,
+            "retained": false,
+            "source_row": 2,
+            "trial_id": "sub-02:event:0"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 0,
+            "event_id": "sub-02:event:1",
+            "label": "right",
+            "original_onset_s": 3.0,
+            "original_sample": 600,
+            "output_onset_s": 3.0,
+            "output_sample": 600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 3,
+            "trial_id": "sub-02:event:1"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 1,
+            "event_id": "sub-02:event:2",
+            "label": "left",
+            "original_onset_s": 8.0,
+            "original_sample": 1600,
+            "output_onset_s": 8.0,
+            "output_sample": 1600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 4,
+            "trial_id": "sub-02:event:2"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 2,
+            "event_id": "sub-02:event:3",
+            "label": "right",
+            "original_onset_s": 13.0,
+            "original_sample": 2600,
+            "output_onset_s": 13.0,
+            "output_sample": 2600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 5,
+            "trial_id": "sub-02:event:3"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 3,
+            "event_id": "sub-02:event:4",
+            "label": "left",
+            "original_onset_s": 23.0,
+            "original_sample": 4600,
+            "output_onset_s": 23.0,
+            "output_sample": 4600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 6,
+            "trial_id": "sub-02:event:4"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 4,
+            "event_id": "sub-02:event:5",
+            "label": "right",
+            "original_onset_s": 28.0,
+            "original_sample": 5600,
+            "output_onset_s": 28.0,
+            "output_sample": 5600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 7,
+            "trial_id": "sub-02:event:5"
+          },
+          {
+            "code": 1,
+            "duration_s": 0.0,
+            "epoch_index": 5,
+            "event_id": "sub-02:event:6",
+            "label": "left",
+            "original_onset_s": 33.0,
+            "original_sample": 6600,
+            "output_onset_s": 33.0,
+            "output_sample": 6600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 8,
+            "trial_id": "sub-02:event:6"
+          },
+          {
+            "code": 2,
+            "duration_s": 0.0,
+            "epoch_index": 6,
+            "event_id": "sub-02:event:7",
+            "label": "right",
+            "original_onset_s": 38.0,
+            "original_sample": 7600,
+            "output_onset_s": 38.0,
+            "output_sample": 7600,
+            "output_sfreq": 200.0,
+            "quantization_error_s": 0.0,
+            "reason": [],
+            "resampling_error_s": 0.0,
+            "retained": true,
+            "source_row": 9,
+            "trial_id": "sub-02:event:7"
+          }
+        ],
+        "provenance.json": {
+          "continuous_raw": {
+            "applied_through": "correct",
+            "bads": [],
+            "before_epoch_step_id": "epochs",
+            "bytes": 322325,
+            "channel_types": [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            "channels": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            "custom_ref_applied": 1,
+            "event_origin": 0,
+            "file": "continuous-raw.fif",
+            "first_sample": 0,
+            "format": "FIFF double",
+            "highpass": 1.0,
+            "lowpass": 35.0,
+            "main_chain_step_ids": [
+              "filter",
+              "reference",
+              "correct"
+            ],
+            "path": "runs/a60955810e4649aa8f1b5854208c409b/r0003/a1/continuous-raw.fif",
+            "pipeline_index": 4,
+            "post_epoch_operations_applied": false,
+            "post_epoch_step_ids": [
+              "baseline"
+            ],
+            "post_epoch_steps": [
+              {
+                "decision_from": null,
+                "evidence_indices": [
+                  0
+                ],
+                "fit_scope": null,
+                "id": "baseline",
+                "implementation_version": "1",
+                "input": "epochs",
+                "model_from": null,
+                "op": "baseline",
+                "params": {
+                  "baseline": [
+                    -0.2,
+                    0.0
+                  ]
+                },
+                "profile": "source",
+                "unit_id": "EEG-BASELINE"
+              }
+            ],
+            "pre_epoch_step_ids": [
+              "filter",
+              "reference",
+              "correct"
+            ],
+            "roundtrip_max_error_V": 1.0430812843239406e-12,
+            "sfreq": 200.0,
+            "sha256": "3329d3c420d50768e02b2a9b872af01b483abda37fab985405b24b5cc422c873",
+            "shape": [
+              5,
+              8000
+            ],
+            "source_data_hash": "1425d2f5f0b1f4ed2ebe7364ac4d81fe533079eebf0922632b982dda458154e1",
+            "source_node_id": "correct",
+            "target_events": [
+              [
+                10,
+                0,
+                1
+              ],
+              [
+                600,
+                0,
+                2
+              ],
+              [
+                1600,
+                0,
+                1
+              ],
+              [
+                2600,
+                0,
+                2
+              ],
+              [
+                4600,
+                0,
+                1
+              ],
+              [
+                5600,
+                0,
+                2
+              ],
+              [
+                6600,
+                0,
+                1
+              ],
+              [
+                7600,
+                0,
+                2
+              ]
+            ],
+            "unit": "V"
+          },
+          "engine_sha256": "fd14c631d9911b0e92a193a77d96ec304f24e73ff62d75f807cf1a2924547d91",
+          "environment": {
+            "asrpy": "0.0.8",
+            "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+            "h5io": "0.2.5",
+            "h5py": "3.13.0",
+            "mne": "1.10.2",
+            "mne-bids": "0.17.0",
+            "numpy": "1.26.4",
+            "pandas": "2.2.3",
+            "pybv": "0.7.6",
+            "python": "3.12.14",
+            "scikit-learn": "1.6.1",
+            "scipy": "1.15.3",
+            "threadpoolctl": "3.6.0"
+          },
+          "input_ref": {
+            "id": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526",
+            "sha256": "ff0aac9918e3e0c22e4a198f23c4340686e2a3643244e1fddb8592039dde8526"
+          },
+          "method_ref": {
+            "id": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880",
+            "sha256": "9685df91bcf2fe1cdd7863ceaf1d978950036af663ac28fd278b8a5cc344c880"
+          },
+          "mode": "validation",
+          "steps": [
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "4c30d1b6ad7ec0130bae1059d45fc09fa2d9998a7d4b22aa4d98274151aa1b17",
+              "model_binding": null,
+              "op": "filter",
+              "output_hash": "3ef2a9565b87a3d88e4cd66946a58b60691f00a53dc7ae5c71cbd33b851f7fa5",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 0,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 4,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "filter",
+              "unit_id": "EEG-FILTER"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "3ef2a9565b87a3d88e4cd66946a58b60691f00a53dc7ae5c71cbd33b851f7fa5",
+              "model_binding": null,
+              "op": "reference",
+              "output_hash": "4405b5e2009021b7823dc19410da3fa5a665d10483fcf0f86aaedde13f242814",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "reference",
+              "unit_id": "EEG-REREFERENCE"
+            },
+            {
+              "branch": "fit",
+              "input_hash": "a59d759521c436528f24222c697a8af86de9fbbb5023f7ea8201b02d62be47ad",
+              "output_hash": "0f0e0a974053287057687caaec8c4c8351a23dcbf3f434184a22bf8edd5edd82",
+              "parameters": {
+                "h_freq": 35.0,
+                "l_freq": 1.0,
+                "method": "iir",
+                "phase": "zero",
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ]
+              },
+              "scope": {
+                "ids": [
+                  "calibration"
+                ],
+                "role": "calibration"
+              },
+              "step_id": "filter"
+            },
+            {
+              "branch": "fit",
+              "input_hash": "0f0e0a974053287057687caaec8c4c8351a23dcbf3f434184a22bf8edd5edd82",
+              "output_hash": "b3005f889a5633a4a64e05dfcc26cabc58fec0f63ca5ac118a86ad2db93eb773",
+              "parameters": {
+                "ref_channels": "average"
+              },
+              "scope": {
+                "ids": [
+                  "calibration"
+                ],
+                "role": "calibration"
+              },
+              "step_id": "reference"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "b3005f889a5633a4a64e05dfcc26cabc58fec0f63ca5ac118a86ad2db93eb773",
+              "model_binding": null,
+              "op": "eog_fit",
+              "output_hash": "b3005f889a5633a4a64e05dfcc26cabc58fec0f63ca5ac118a86ad2db93eb773",
+              "parameters": {
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz"
+                ],
+                "picks_artifact": [
+                  "VEOG"
+                ],
+                "reference_id": "average",
+                "scope": {
+                  "ids": [
+                    "calibration"
+                  ],
+                  "role": "calibration"
+                }
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  4000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "fit",
+              "unit_id": "EEG-EOG-REGRESSION"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "4405b5e2009021b7823dc19410da3fa5a665d10483fcf0f86aaedde13f242814",
+              "model_binding": {
+                "file": "fit/eog-model.h5",
+                "fit_data_hash": "b3005f889a5633a4a64e05dfcc26cabc58fec0f63ca5ac118a86ad2db93eb773",
+                "intervals": [
+                  {
+                    "id": "calibration",
+                    "role": "calibration",
+                    "start": 0,
+                    "stop": 4000
+                  }
+                ],
+                "reference_id": "average",
+                "scope": {
+                  "ids": [
+                    "calibration"
+                  ],
+                  "role": "calibration"
+                },
+                "sha256": "59d4991b21cb6b690413b6511696b9e49c64ba84caec5495bd7168668431c067",
+                "signature": [
+                  [
+                    "C3",
+                    "C4",
+                    "Cz",
+                    "Pz",
+                    "VEOG"
+                  ],
+                  [
+                    "eeg",
+                    "eeg",
+                    "eeg",
+                    "eeg",
+                    "eog"
+                  ],
+                  [],
+                  1,
+                  []
+                ]
+              },
+              "op": "eog_apply",
+              "output_hash": "1425d2f5f0b1f4ed2ebe7364ac4d81fe533079eebf0922632b982dda458154e1",
+              "parameters": {
+                "reference_id": "average"
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": null,
+                "first_sample": 0,
+                "highpass": 1.0,
+                "kind": "raw",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  5,
+                  8000
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "correct",
+              "unit_id": "EEG-EOG-REGRESSION"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "1425d2f5f0b1f4ed2ebe7364ac4d81fe533079eebf0922632b982dda458154e1",
+              "model_binding": null,
+              "op": "epoch",
+              "output_hash": "f51e1ee606c7ea03bf78c667591f1ccb76f7b0343542768742dfa2400036543f",
+              "parameters": {
+                "event_id": {
+                  "left": 1,
+                  "right": 2
+                },
+                "events": {
+                  "dtype": "int32",
+                  "file": "parameters_1.npy",
+                  "sha256": "74a3e57161870e638cf19b4747f23b14fb906d48f6ed8344a6c14a900a077e19",
+                  "shape": [
+                    8,
+                    3
+                  ]
+                },
+                "picks": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "tmax": 0.5,
+                "tmin": -0.2
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "epochs",
+              "unit_id": "EEG-EPOCH"
+            },
+            {
+              "branch": "main",
+              "implementation_version": "1",
+              "input_hash": "f51e1ee606c7ea03bf78c667591f1ccb76f7b0343542768742dfa2400036543f",
+              "model_binding": null,
+              "op": "baseline",
+              "output_hash": "85fbda2fedd9297be93950f347532eeb140b26fdc0d38bc0215658dc0b62be4a",
+              "parameters": {
+                "baseline": [
+                  -0.2,
+                  0.0
+                ]
+              },
+              "profile": "source",
+              "state": {
+                "bads": [],
+                "channels": [
+                  "C3",
+                  "C4",
+                  "Cz",
+                  "Pz",
+                  "VEOG"
+                ],
+                "custom_ref_applied": 1,
+                "epoch_selection": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5,
+                  6,
+                  7
+                ],
+                "first_sample": null,
+                "highpass": 1.0,
+                "kind": "epochs",
+                "lowpass": 35.0,
+                "rank": 3,
+                "sfreq": 200.0,
+                "shape": [
+                  7,
+                  5,
+                  141
+                ],
+                "types": [
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eeg",
+                  "eog"
+                ],
+                "unit": "V"
+              },
+              "step_id": "baseline",
+              "unit_id": "EEG-BASELINE"
+            }
+          ]
+        },
+        "baseline/artifacts.json": {},
+        "correct/artifacts.json": {
+          "removed": {
+            "dtype": "float64",
+            "file": "artifacts_0.npy",
+            "sha256": "9ceb61e5a8e92105a577c498adfcd297098aa5c262b4d4137bb27856141d1a7d",
+            "shape": [
+              5,
+              8000
+            ]
+          }
+        },
+        "epochs/artifacts.json": {
+          "boundary_annotations": [],
+          "drop_log": [
+            [
+              "NO_DATA"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "kept": {
+            "dtype": "int64",
+            "file": "artifacts_0.npy",
+            "sha256": "030f7db8c0eb472f60ac56fdf3bea7c1a4292e720204e40f72e87131766461c7",
+            "shape": [
+              7
+            ]
+          }
+        },
+        "filter/artifacts.json": {
+          "array_filter_preserves_info": false,
+          "input_hash": "a8cb48a0388754b1f1e7fb756f0f8958d9d9a56846cb859cad7027c8b17248d0",
+          "output_hash": "943fa9176438e849617c564afe356e538f29bd4e6a32265c8de80e1184094660",
+          "parameters": {
+            "annotation_policy": "raw",
+            "filter_length": "auto",
+            "fir_design": "firwin",
+            "fir_window": "hamming",
+            "h_freq": 35.0,
+            "h_trans_bandwidth": "auto",
+            "l_freq": 1.0,
+            "l_trans_bandwidth": "auto",
+            "method": "iir",
+            "nonfinite": "reject",
+            "pad": "reflect_limited",
+            "phase": "zero",
+            "picks": [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz"
+            ],
+            "skip_by_annotation": [
+              "edge",
+              "bad_acq_skip",
+              "boundary"
+            ]
+          },
+          "warnings": []
+        },
+        "fit/artifacts.json": {},
+        "fit/model-binding.json": {
+          "file": "fit/eog-model.h5",
+          "fit_data_hash": "b3005f889a5633a4a64e05dfcc26cabc58fec0f63ca5ac118a86ad2db93eb773",
+          "intervals": [
+            {
+              "id": "calibration",
+              "role": "calibration",
+              "start": 0,
+              "stop": 4000
+            }
+          ],
+          "reference_id": "average",
+          "scope": {
+            "ids": [
+              "calibration"
+            ],
+            "role": "calibration"
+          },
+          "sha256": "59d4991b21cb6b690413b6511696b9e49c64ba84caec5495bd7168668431c067",
+          "signature": [
+            [
+              "C3",
+              "C4",
+              "Cz",
+              "Pz",
+              "VEOG"
+            ],
+            [
+              "eeg",
+              "eeg",
+              "eeg",
+              "eeg",
+              "eog"
+            ],
+            [],
+            1,
+            []
+          ]
+        },
+        "reference/artifacts.json": {
+          "representation": "potential",
+          "unit": "V"
+        }
+      }
+    }
+  ],
+  "engine_matches_current": true,
+  "environment_matches_current": true,
+  "source_folder": "E:/work/BrainAgent/backend/workspace/unit-flow-explanation-20260911"
+}

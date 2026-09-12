@@ -18,9 +18,6 @@ Delta = Annotated[float, Field(ge=-1, le=1)]
 Hash = Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
 Role = Literal["train", "development"]
 EvaluationMode = Literal["group_cross_validation", "subject_holdout"]
-Adaptation = Literal[
-    "none", "subject_scale", "euclidean_alignment", "conditional_alignment"
-]
 
 
 class EvaluationContract(BaseModel):
@@ -311,21 +308,23 @@ class EvaluationDiagnostics(EvaluationContract):
         return self
 
 
-class AlignmentPolicy(EvaluationContract):
-    adaptation: Adaptation = "none"
-    alignment_threshold: float = Field(default=10.0, ge=1)
 
 
-class SubjectRepresentation(EvaluationContract):
-    applied_adaptation: Literal["none", "scale_only", "euclidean_alignment"]
-    gate_passed: bool
-    fallback_reason: str | None = None
-    covariance_anisotropy: float = Field(ge=1)
-    gate_metric_value: float = Field(ge=1)
-    fit_trials: Count
-    transform_path: str | None = None
-    transform_sha256: Hash | None = None
-    unit: Literal["V", "dimensionless"]
+
+
+class EvaluationRepresentation(EvaluationContract):
+    version: Literal["2"] = "2"
+    unit: Literal["V"] = "V"
+    channels: list[str] = Field(min_length=1)
+    records: dict[str, "RecordRepresentation"]
+
+    @model_validator(mode="after")
+    def physical_records(self):
+        if not self.records or len(self.channels) != len(set(self.channels)):
+            raise ValueError("physical representation requires unique channels and records")
+        if any(len(r.shape) != 3 or r.shape[1] != len(self.channels) or r.unit != "V" for r in self.records.values()):
+            raise ValueError("physical representation shape/unit mismatch")
+        return self
 
 
 class RecordRepresentation(EvaluationContract):
@@ -333,26 +332,9 @@ class RecordRepresentation(EvaluationContract):
     array_path: str
     array_sha256: Hash
     shape: list[Count]
-    unit: Literal["V", "dimensionless"]
+    unit: Literal["V"]
 
 
-class GateMetricMetadata(EvaluationContract):
-    name: Literal["normalized_shrunk_spectrum_q90_q10"] = (
-        "normalized_shrunk_spectrum_q90_q10"
-    )
-    normalization: Literal["covariance_divided_by_mean_channel_variance"] = (
-        "covariance_divided_by_mean_channel_variance"
-    )
-    shrinkage: Literal[0.1] = 0.1
-    lower_quantile: Literal[0.1] = 0.1
-    upper_quantile: Literal[0.9] = 0.9
-    quantile_method: Literal["linear"] = "linear"
-    comparison: Literal["greater_than_or_equal"] = "greater_than_or_equal"
-    threshold_origin: Literal["predeclared_engineering_parameter"] = (
-        "predeclared_engineering_parameter"
-    )
-    fraction_denominator: Literal["all_selected_subjects"] = "all_selected_subjects"
-    zero_covariance_value: Literal[1.0] = 1.0
 
 
 class CoreLearnerMetadata(EvaluationContract):
@@ -424,85 +406,6 @@ class LearnerMetadata(CoreLearnerMetadata):
     logistic_random_state: int = Field(ge=0, lt=2**32)
 
 
-class EvaluationRepresentation(EvaluationContract):
-    policy: AlignmentPolicy
-    unit: Literal["V", "dimensionless"]
-    transductive: bool
-    channels: list[str]
-    covariance_regularization: Literal[0.1] = 0.1
-    gate_metric: GateMetricMetadata = Field(default_factory=GateMetricMetadata)
-    gate_subject_count: Count
-    gate_passed_subject_count: Count
-    gate_fraction: Score | None
-    fit_scope: Literal["subject_whole_batch_label_free"] = (
-        "subject_whole_batch_label_free"
-    )
-    subjects: dict[str, SubjectRepresentation]
-    records: dict[str, RecordRepresentation]
-
-    @model_validator(mode="after")
-    def common_unit(self):
-        conditional = self.policy.adaptation == "conditional_alignment"
-        count = len(self.subjects) if conditional else 0
-        passed = (
-            sum(s.gate_passed for s in self.subjects.values()) if conditional else 0
-        )
-        if (
-            not self.subjects
-            or self.gate_subject_count != count
-            or self.gate_passed_subject_count != passed
-            or (
-                conditional
-                and (
-                    self.gate_fraction is None
-                    or not math.isclose(
-                        self.gate_fraction, passed / count, abs_tol=1e-12
-                    )
-                )
-            )
-            or (not conditional and self.gate_fraction is not None)
-        ):
-            raise ValueError(
-                "gate fraction must use actual conditional decisions over all selected subjects"
-            )
-        for subject in self.subjects.values():
-            expected_gate = self.policy.adaptation == "euclidean_alignment" or (
-                conditional
-                and subject.gate_metric_value >= self.policy.alignment_threshold
-            )
-            expected_adaptation = (
-                "euclidean_alignment"
-                if expected_gate
-                else ("none" if self.policy.adaptation == "none" else "scale_only")
-            )
-            if (
-                subject.gate_passed != expected_gate
-                or subject.applied_adaptation != expected_adaptation
-            ):
-                raise ValueError(
-                    "subject gate must use the predeclared spectrum metric and threshold"
-                )
-        expected = "V" if self.policy.adaptation == "none" else "dimensionless"
-        if (
-            self.unit != expected
-            or self.transductive != (self.policy.adaptation != "none")
-            or any(s.unit != expected for s in self.subjects.values())
-            or any(
-                r.unit != expected or r.subject not in self.subjects
-                for r in self.records.values()
-            )
-        ):
-            raise ValueError(
-                "all delivered records must share the policy's declared unit"
-            )
-        if self.policy.adaptation != "none" and any(
-            not s.transform_path
-            or not s.transform_sha256
-            or s.applied_adaptation == "none"
-            for s in self.subjects.values()
-        ):
-            raise ValueError("adapted subjects require fitted transform provenance")
-        return self
 
 
 class PairedSubjectCI(EvaluationContract):
@@ -552,7 +455,7 @@ class EvaluationVersions(EvaluationContract):
 
 class EvaluationReceipt(EvaluationContract):
     operator_usage: OperatorUsage | None = None
-    evaluator_version: Literal[2, 3] = 2
+    evaluator_version: Literal[2, 3, 4] = 2
     assessment: AssessmentSummary | None = None
     assessment_path: str | None = Field(default=None, pattern=r"^assessment/a[0-9]+$")
     core_receipt_path: str | None = Field(default=None, pattern=r"^core-receipts/a[0-9]+\.json$")
@@ -565,7 +468,7 @@ class EvaluationReceipt(EvaluationContract):
     secondary_macro_ba: Score | None = None
     secondary_subjects: dict[str, Score] = Field(default_factory=dict)
     paired_subject_ci: PairedSubjectCI | None = None
-    representation: EvaluationRepresentation | None = None
+    representation: dict | None = None
     learner_metadata: LearnerMetadata | CoreLearnerMetadata | None = None
     status: Literal[
         "evaluated",
@@ -607,13 +510,13 @@ class EvaluationReceipt(EvaluationContract):
             and "stop_search" not in value
         ):
             value = {**value, "stop_search": True}
-        if isinstance(value, dict) and value.get("evaluator_version") == 3:
+        if isinstance(value, dict) and value.get("evaluator_version") in (3, 4):
             return {"secondary_learner": None, **value}
         return value
 
     @model_validator(mode="after")
     def outcome(self):
-        if self.evaluator_version == 3:
+        if self.evaluator_version in (3, 4):
             if (
                 self.secondary_learner is not None
                 or self.secondary_macro_ba is not None
@@ -641,14 +544,13 @@ class EvaluationReceipt(EvaluationContract):
                 or not self.folds
                 or self.representation is None
                 or self.learner_metadata is None
-                or self.diagnostics.summary is None
                 or (self.evaluator_version == 2 and self.secondary_macro_ba is None)
             ):
                 raise ValueError(
                     "evaluated receipt requires complete development metrics"
                 )
             if self.learner_metadata.csp_components != min(
-                4, len(self.representation.channels)
+                4, len(self.representation["channels"])
             ):
                 raise ValueError("CSP component metadata must match common channel cap")
             if self.evaluator_version == 2 and (
@@ -719,27 +621,8 @@ class EvaluationReceipt(EvaluationContract):
                     getattr(s, field) for s in self.subjects.values()
                 ):
                     raise ValueError("development coverage must equal subject totals")
-        if self.diagnostics.summary is not None:
-            if self.representation is None or set(self.diagnostics.subjects) != set(
-                self.representation.subjects
-            ):
-                raise ValueError(
-                    "numeric summary requires complete representation subject coverage"
-                )
-            expected = sum(
-                s.gate_metric_value for s in self.representation.subjects.values()
-            ) / len(self.representation.subjects)
-            if (
-                self.diagnostics.summary.gate_fraction
-                != self.representation.gate_fraction
-                or not math.isclose(
-                    self.diagnostics.summary.mean_anisotropy,
-                    expected,
-                    rel_tol=1e-12,
-                    abs_tol=0,
-                )
-            ):
-                raise ValueError(
-                    "numeric summary gate values must match actual subject decisions"
-                )
+        if self.evaluator_version == 4 and self.representation is not None:
+            EvaluationRepresentation.model_validate(self.representation)
+            if self.diagnostics.subjects or self.diagnostics.summary is not None:
+                raise ValueError("v4 diagnostics use physical quality measurements")
         return self

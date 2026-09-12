@@ -1,0 +1,368 @@
+{
+  "reviewed_at": "2026-09-12",
+  "search_id": "3d6d5daa63f24565a3bf46f5a416584a",
+  "scope": "Human spot-check of numbers, units, stage, missing reasons and inference scope; not independent expert validation.",
+  "cases": [
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "numerical_rank",
+        "language": "zh"
+      },
+      "input_hash": "844f1e5b798a8e5dfd971018494e0f5d96c3a6274b142f9e6e273b3d976ba64a",
+      "created_at": "2026-09-12T02:41:54.487004+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "descriptive",
+        "claims": [
+          {
+            "text": "在64通道、平均参考且带通8–30 Hz的执行条件下，数值秩为63，等于通道数减一，符合平均参考消除一个公共维度、使协方差奇异的理论预期；条件数也因12条记录协方差奇异而不可计算，与这一秩亏结构一致。因此该结果说明在当前参考与处理约束下达到最大可分辨线性维度，含义限于维度结构，不涉及信号内容或伪迹水平。",
+            "evidence_ids": [
+              "metric:numerical_rank",
+              "execution",
+              "metric:covariance_condition"
+            ],
+            "card_ids": [
+              "rank"
+            ],
+            "source_ids": [
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "peak_to_peak",
+        "language": "zh"
+      },
+      "input_hash": "1d31c131aac51ba1922ba75fa7694ea9a793676d8245e77dcc14bdda8f55611f",
+      "created_at": "2026-09-12T02:41:37.237332+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "descriptive",
+        "claims": [
+          {
+            "text": "处理阶段峰峰值均值为 52.7 µV，但逐被试均值从约 29.6 到 68.6 µV 不等，该总均值掩盖了被试间差异，不能反推每位被试都处于同一水平。执行记录显示数据经 8–30 Hz 带通与平均参考处理；按幅度卡的条件，跨处理对比须共享参考、带宽和通道，因此该值只描述当前处理链下的幅度散布，可能受低频衰减与参考方式影响。",
+            "evidence_ids": [
+              "metric:peak_to_peak",
+              "subjects",
+              "execution"
+            ],
+            "card_ids": [
+              "amplitude"
+            ],
+            "source_ids": [
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "flat_fraction",
+        "language": "zh"
+      },
+      "input_hash": "9589d03ce72d91e8547392d47247ae6fa529ad2bdacd5f963341c7425118f71e",
+      "created_at": "2026-09-12T02:41:54.228214+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "insufficient",
+        "claims": [
+          {
+            "text": "处理时已将数据切为0–2秒任务试次，而平坦比例按0.1 µV差分持续至少5秒定义，需要连续物理信号。所有已检查记录均没有可用的连续5秒片段，因此该指标缺少可用成员，无法判断是否存在持续低变化片段，也不能把缺失视作平坦或电极异常。",
+            "evidence_ids": [
+              "metric:flat_fraction",
+              "execution",
+              "missing"
+            ],
+            "card_ids": [
+              "flat"
+            ],
+            "source_ids": [
+              "skill"
+            ]
+          }
+        ],
+        "next_check": "核查同一批原始连续记录或非任务段是否存在≥5秒连续片段；若有，按相同阈值计算平坦比例。"
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "line_ratio_50hz",
+        "language": "zh"
+      },
+      "input_hash": "8ff59e809dfa1f5745a062226123396b634367ab90592f92081dce3c56580d70",
+      "created_at": "2026-09-12T02:42:22.435132+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "insufficient",
+        "claims": [
+          {
+            "text": "处理后数据已应用 8–30 Hz 带通，50 Hz 工频及其邻带不在通带内；同时全部受检记录的采集端滤波史不完整，无法确认这些频段在采集时的既往处理。知识卡要求目标频带与两侧邻带完整可用、既往陷波和低通历史已核对，两者均未满足，因此 50 Hz 工频比值不可计算，当前证据不能对工频残留作任何数值判断。",
+            "evidence_ids": [
+              "metric:line_ratio_50hz",
+              "execution",
+              "missing"
+            ],
+            "card_ids": [
+              "mains"
+            ],
+            "source_ids": [
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "welch",
+        "skill",
+        "whitham"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "psd",
+        "language": "zh"
+      },
+      "input_hash": "f4c4dd34b5f35ff6a819d8f60afd4a77d18d2f70467cf6d9b58d0b7b0be3494e",
+      "created_at": "2026-09-12T02:42:32.592943+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "descriptive",
+        "claims": [
+          {
+            "text": "在160 Hz、8–30 Hz带通、平均参考与0–2秒分段下，功率谱密度成功输出；μ频带均值9.56高于β频带2.57 µV²/Hz。按知识卡，频带均值含背景功率，不等同于μ/β振荡峰更强；中位数Welch可能掩盖短暂高幅污染，带通也会机械削弱边界频带。因12条记录均无完整4秒窗，窗分位数缺测，无法评估逐窗瞬态或验证每个被试/窗口都稳定。",
+            "evidence_ids": [
+              "metric:psd",
+              "metric:mu_mean_psd",
+              "metric:beta_mean_psd",
+              "metric:psd_window_quantiles",
+              "execution"
+            ],
+            "card_ids": [
+              "spectrum"
+            ],
+            "source_ids": [
+              "welch",
+              "spectral",
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "welch",
+        "spectral",
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "erds_mu",
+        "language": "zh"
+      },
+      "input_hash": "8ecbbf0622e09f9317e138a09a0790577356b954a120a109f8bd6d4e20e68975",
+      "created_at": "2026-09-12T02:42:49.857398+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "descriptive",
+        "claims": [
+          {
+            "text": "按已核验执行条件（8–30 Hz 零相位带通、平均参考、真实 precue 基线与任务同试次同处理），mu 频带 ERDS 均值 +37.5%，按知识卡正值表示任务段频带功率高于基线。但四名被试均值含负值，聚合均值不能反推每名被试都同向；结果也可能受基线污染、参考与带宽影响，故不能认证神经保留或整体质量，也不能推断 TFR 与侧化。",
+            "evidence_ids": [
+              "metric:erds_mu",
+              "execution",
+              "subjects"
+            ],
+            "card_ids": [
+              "task"
+            ],
+            "source_ids": [
+              "erds",
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "erds",
+        "physionet",
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "channel_correlation",
+        "language": "zh"
+      },
+      "input_hash": "2d009d8e5d1379ea9b00295b516dde630ca395d2eaf0cf500d239c6757f08622",
+      "created_at": "2026-09-12T02:42:59.291170+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "descriptive",
+        "claims": [
+          {
+            "text": "在8–30 Hz带通、平均参考、160 Hz重采样和0–2 s试次窗口下，每通道对其他通道绝对相关的第98百分位在受试者间平均约0.78，低于0.4的有限通道窗口比例约1.2%。按知识卡，这仅描述空间同步结构：相关越高不等于质量越好，高相关可能来自共同噪声或平均参考，且该0.4低相关判据的条件不同于PREP的1 s、低通50 Hz坏道检测设置。",
+            "evidence_ids": [
+              "metric:channel_correlation",
+              "metric:low_correlation_fraction",
+              "execution"
+            ],
+            "card_ids": [
+              "correlation"
+            ],
+            "source_ids": [
+              "prep",
+              "skill"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    },
+    {
+      "request": {
+        "candidate_id": "bp8-30-average",
+        "stage": "processed_task",
+        "metric_id": "covariance_condition",
+        "language": "zh"
+      },
+      "input_hash": "7f1ec2c3e65cf1af9ac3ccb78c5c8af8af4cc9c36fd2912131b9941cd37f1d96",
+      "created_at": "2026-09-12T02:43:10.987185+00:00",
+      "model": {
+        "name": "deepseek-v4-flash",
+        "provider": "https://api.deepseek.com",
+        "reasoning_effort": "low"
+      },
+      "reading": {
+        "assessment": "insufficient",
+        "claims": [
+          {
+            "text": "该阶段条件数不可计算：12条记录均因协方差奇异而无最大与最小特征值之比，结果为空。按秩与协方差结构卡，条件数在协方差奇异时应缺失；在8–30 Hz带通、平均参考和分段执行下出现这一模式，符合平均参考可能降低一个维度、导致矩阵秩不足的预期。因而当前证据不足以评估协方差病态程度。",
+            "evidence_ids": [
+              "metric:covariance_condition",
+              "missing",
+              "execution"
+            ],
+            "card_ids": [
+              "rank"
+            ],
+            "source_ids": [
+              "skill",
+              "prep"
+            ]
+          }
+        ],
+        "next_check": null
+      },
+      "guide": {
+        "schema_version": "interpretation-2",
+        "sha256": "aad46de63c17e78eecacacccd96860dd1d2e6b69a1cabd89d0ea75364d4ba7ae",
+        "path": "interpretation-guide.json"
+      },
+      "source_ids": [
+        "prep",
+        "skill"
+      ]
+    }
+  ]
+}

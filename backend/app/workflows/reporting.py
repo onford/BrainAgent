@@ -221,8 +221,8 @@ def render_report(folder):
         "behavior_records": "行为记录数",
     }
     operations = {
-        "filter": "带通滤波",
-        "reference": "平均参考",
+        "filter": "频率滤波",
+        "reference": "重参考",
         "epoch": "事件分段",
         "resample": "重采样",
     }
@@ -231,14 +231,13 @@ def render_report(folder):
         p = step.params
         if step.op == "filter":
             description = f"低频界 {p['l_freq']} / 高频界 {p['h_freq']} Hz；method={p.get('method', 'fir')}"
-            if p.get("method") == "iir":
-                description += "；四阶 Butterworth 零相位"
+            description += f"；phase={p.get('phase', '未记录')}"
         elif step.op == "reference":
             description = f"参考通道：{p.get('ref_channels')}"
         elif step.op == "epoch":
             description = f"任务开始后 {p['tmin']:g}–{p['tmax']:g} 秒；保留左右手标签"
         elif step.op == "resample":
-            description = f"统一至 {p['sfreq']:g} Hz；polyphase 抗混叠；同步事件样点并保留原始事件对应"
+            description = f"统一至 {p['sfreq']:g} Hz；具体实现及事件映射见执行计划与逐记录输出"
         else:
             description = "; ".join(f"{k}={v}" for k, v in p.items())
         recipe.append([i + 1, operations.get(step.op, step.op), description])
@@ -248,6 +247,8 @@ def render_report(folder):
         + "。参数见上表；候选按冻结开发评价选择，未进行独立确认。"
     )
     selection = data.selection
+    if selection and selection.literature_participation:
+        method_reasoning += " " + selection.literature_participation["statement"]
     representation = selection.representation if selection else None
     if representation:
         method_reasoning += (
@@ -375,6 +376,7 @@ def render_report(folder):
         dataset_version=escape(data.dataset_version),
         subjects=data.after.subjects,
         recordings=data.after.recordings,
+        evaluated_recordings=len(selection.panel.get("records", {})) if selection else "未评价",
         trials=data.after.trials,
         source_rows=rows(
             [
@@ -432,28 +434,9 @@ def render_report(folder):
             if selection
             else []
         ),
-        adaptation_rows=rows(
-            [
-                [
-                    subject,
-                    entry["applied_adaptation"],
-                    entry["gate_passed"],
-                    entry["fit_trials"],
-                    entry["unit"],
-                    entry.get("fallback_reason") or "—",
-                ]
-                for subject, entry in sorted(representation.get("subjects", {}).items())
-            ]
-            if representation
-            else []
-        ),
         representation_summary=escape(
             f"X 按 Epoch × 空间坐标 × 时间点组织，单位：{unit}。"
-            + (
-                "EA 或 scale-only 为无量纲变换坐标，不再代表原电极位置的伏特测量。"
-                if unit == "dimensionless"
-                else "空间轴为预处理后的 EEG 通道。"
-            )
+            + "空间轴为预处理后的 EEG 通道。"
             + "y 为从 0 开始的类别编号。分组 CV 导出时全部被试标为 train，折成员另存；"
             "显式训练/开发划分映射为 train/validation。test 为空，不生成独立测试集。"
         ),

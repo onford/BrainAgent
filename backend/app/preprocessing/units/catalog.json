@@ -108,7 +108,7 @@
     "source": {
       "version": "feishu-2026-09-06",
       "snapshot_sha256": "12e4b3e18ebdab8e2d935b9bab2283d0b4331340eafaebd017fc8de420603004",
-      "code_sha256": "9d4069f21ce91b35daac03ceb7997d9363afa7a6a3100910f410a8f58d747a10",
+      "code_sha256": "498eb4f912cab208bf521829620e166db251b45e3e912bb659a6446f588d36a3",
       "fields": {
         "输入合同": "Raw 电位（V）。spectrum_fit：显式 EEG picks，对整个数组处理，注释不分段。cleanline：有限且未标坏的 EEG picks；已按采集断点拆为连续段，窗口不跨断点。",
         "输出合同": "同形 Raw 电位（V），所选正弦估计被扣除；未选通道、时间轴、事件和频带元数据保持。cleanline 保留末个完整窗后的尾段。",
@@ -628,7 +628,7 @@
     "source": {
       "version": "feishu-2026-09-06",
       "snapshot_sha256": "12e4b3e18ebdab8e2d935b9bab2283d0b4331340eafaebd017fc8de420603004",
-      "code_sha256": "422be0e9d79439dcbe24b536dbc2eabb791e9fb3b1ecad2b1ab06192510f7fc6",
+      "code_sha256": "b1256feb471f89cb4bfbbba669a4353bc5c3bd37bb421718f16717d05c5248b1",
       "fields": {
         "输入合同": "连续 MNE Raw，整数 sfreq>120 Hz，≥5 个未标坏 EEG picks，时长≥16秒；采集断点先拆段。",
         "输出合同": "同形 Raw 副本，仅更新 picks；保留辅助道、时间和事件。",
@@ -638,7 +638,9 @@
         "完成条件": "源码与依赖匹配；自适应/固定块覆盖全部样点；输出有限、同形。source_root 哈希锁定作者算法；分块带通、峰规则和 Welch 配置由本 profile 固定。",
         "验证": "已实际运行自适应与固定分块、成分/σ迭代及重放；Welch 与独立 SciPy 公式一致。60秒非平稳线噪试件自适应分为4块，50 Hz 带功率下降36.80 dB；保留10 Hz功率比0.885。",
         "父记录": ""
-      }
+      },
+      "upstream_code_sha256": "422be0e9d79439dcbe24b536dbc2eabb791e9fb3b1ecad2b1ab06192510f7fc6",
+      "engineering_revision": "windows-command-quoting-v2; DSP callback unchanged"
     },
     "implementation": {
       "module": "eeg_zapline",
@@ -810,7 +812,7 @@
     "source": {
       "version": "feishu-2026-09-06",
       "snapshot_sha256": "12e4b3e18ebdab8e2d935b9bab2283d0b4331340eafaebd017fc8de420603004",
-      "code_sha256": "f7a07f94bb8077592e9c41e5947d82a97ccc3ec53644849987ea9a5b6dacbb56",
+      "code_sha256": "19ef8e273bc5992561206e980130ed1e8f78e05c51fb755d10a2706af495bf71",
       "fields": {
         "输入合同": "Raw/Epochs 电位（V）和兼容 ICA（noise_cov=None）；标准头皮通道名、MNE head 坐标；≥30秒信号，采样率≥100 Hz、低通≥40 Hz。",
         "输出合同": "波形与 ICA model 保持；返回每 IC 的伪迹后验、六个标准化特征及候选。",
@@ -820,7 +822,9 @@
         "完成条件": "六特征及后验逐 IC 有限；后验在 [0,1]；候选索引有效、分类身份和来源冻结。",
         "验证": "真实作者函数输出通过；原训练资产后验与独立 Gaussian LDA 计算一致；MATLAB兼容 Welch 与独立 SciPy 明确参数结果一致；波形/model 保持。",
         "父记录": ""
-      }
+      },
+      "upstream_code_sha256": "f7a07f94bb8077592e9c41e5947d82a97ccc3ec53644849987ea9a5b6dacbb56",
+      "engineering_revision": "native-user-preference-isolation-v2; author algorithm unchanged"
     },
     "implementation": {
       "module": "eeg_mara",
@@ -836,7 +840,7 @@
     "source": {
       "version": "feishu-2026-09-06",
       "snapshot_sha256": "12e4b3e18ebdab8e2d935b9bab2283d0b4331340eafaebd017fc8de420603004",
-      "code_sha256": "668b5a1fa5c1f8f21074a2da8633ffcd644bff6f4d20ae103c1555802a01e2ef",
+      "code_sha256": "18f9924a1ded93ac2453be045b11131fe04b2cd7952e054209157a022c4e6c39",
       "fields": {
         "输入合同": "已加载 Epochs 电位（V）及兼容 ICA（noise_cov=None）；至少2个Epoch、4个IC、11个好电极，MNE head 坐标覆盖左右眼区、额区与后区。",
         "输出合同": "波形与 ICA model 保持；返回眼动、眨眼、间断伪迹的候选和实际 EM 阈值。",
@@ -846,7 +850,9 @@
         "完成条件": "头皮区域覆盖及邻居数满足，特征和阈值有限；四类候选并集与总候选一致。",
         "验证": "真实作者函数六特征和五阈值通过；MEV 与独立最大/平均 Epoch 方差公式一致；候选并集、波形/model 保持。",
         "父记录": ""
-      }
+      },
+      "upstream_code_sha256": "668b5a1fa5c1f8f21074a2da8633ffcd644bff6f4d20ae103c1555802a01e2ef",
+      "engineering_revision": "native-user-preference-isolation-v2; author algorithm unchanged"
     },
     "implementation": {
       "module": "eeg_adjust",
@@ -1329,7 +1335,7 @@
     "id": "EEG-AUTO-BAD-CHANNEL",
     "source": {
       "version": "brainagent-engineering-adapter-3",
-      "code_sha256": "076a4cf36391cc4dabca33e65d5726009adfa87175149b199b61ae60dbba7097",
+      "code_sha256": "8ed4d5e733f5cbafc19fdacc1dffc55b862f77e5323a1a5a1793eb914ddc9e5b",
       "references": [
         {
           "directURL": "https://www.frontiersin.org/journals/neuroinformatics/articles/10.3389/fninf.2015.00016/full",
@@ -1420,7 +1426,7 @@
     "id": "EEG-ASR-AUTO",
     "source": {
       "version": "brainagent-engineering-adapter-3",
-      "code_sha256": "076a4cf36391cc4dabca33e65d5726009adfa87175149b199b61ae60dbba7097",
+      "code_sha256": "8ed4d5e733f5cbafc19fdacc1dffc55b862f77e5323a1a5a1793eb914ddc9e5b",
       "references": [
         {
           "directURL": "https://pypi.org/project/asrpy/0.0.8/",
@@ -1531,6 +1537,46 @@
       "integration": "enabled_bounded_domain",
       "source_syntax": "passed",
       "algorithm_claim": "engineering adapter, not full pipeline reproduction"
+    }
+  },
+  {
+    "id": "EEG-CLASSIC-NATIVE",
+    "source": {
+      "version": "brainagent-native-bridge-1",
+      "code_sha256": "0db4f156fded0cab6ec7786ddaf50e12ed33ea6e413369f3af890a042e299c77",
+      "references": [
+        {
+          "directURL": "https://raw.githubusercontent.com/VisLab/EEG-Clean-Tools/0914132081ea7d534ee19f96973791fd81825755/PrepPipeline/prepPipeline.m",
+          "locator": "0914132081ea7d534ee19f96973791fd81825755",
+          "reliability": "pinned complete author entrypoint"
+        },
+        {
+          "directURL": "https://raw.githubusercontent.com/methlabUZH/automagic/1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f/preprocessing/preprocess.m",
+          "locator": "1a11f16bab0f4f7f13dab67d2500615fcc1d2a7f",
+          "reliability": "pinned complete author entrypoint"
+        }
+      ],
+      "fields": {
+        "描述": "Complete PREP/Automagic entrypoints, explicit shared configuration and record-local fitting.",
+        "输入合同": "Finite continuous EEG Raw in V with electrode coordinates; explicit mains frequency and native dependency roots.",
+        "输出合同": "Original EEG grid in V. Full native channels, QC and MAT object preserved. Added reference-channel projection is project-derived.",
+        "验证": "Adapter added; numerical and real-record verification must be established for the current engine."
+      }
+    },
+    "implementation": {
+      "module": "eeg_classic_native",
+      "entry": "eeg_classic_native",
+      "constraints": {
+        "units": "V",
+        "sample_grid": "preserved",
+        "channel_grid": "original ordered EEG",
+        "events": "preserved",
+        "fit_permissions": "record_unlabeled"
+      }
+    },
+    "validation": {
+      "integration": "requires_current_native_verification",
+      "source_syntax": "passed"
     }
   }
 ]

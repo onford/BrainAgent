@@ -1,0 +1,11 @@
+{
+  "observed_date": "2026-09-12",
+  "tool": "mcp__codex_apps__sites_get_site",
+  "project_id": "appgprj_6aa3fc339a3881918b9f7cbedaa9f13c",
+  "status": "active",
+  "access_mode": "public",
+  "latest_version_number": 3,
+  "updated_at": "2026-09-11T14:21:12.517382+00:00",
+  "current_live_url": "https://brain-agent-eeg-workbench.shrewd-root-6935.chatgpt.site",
+  "interpretation": "管理端状态；不等同于本轮真实浏览器及完整EEG业务验证。未更改访问权限或部署。"
+}

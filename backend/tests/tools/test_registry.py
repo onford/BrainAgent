@@ -40,9 +40,7 @@ async def test_tool_registry_executes_local_tool_through_unified_api() -> None:
     )
 
     catalog = await registry.catalog(context)
-    result = await registry.execute(
-        "python_runner", context, expression="(2 + 3) * 4"
-    )
+    result = await registry.execute("python_runner", context, expression="(2 + 3) * 4")
 
     assert catalog == [
         {
@@ -71,3 +69,57 @@ async def test_tool_registry_returns_safe_external_error() -> None:
     assert result.error == "外部服务暂时不可用，请稍后重试。"
     assert result.metadata["error_code"] == "service_unavailable"
     assert "internal provider detail" not in result.error
+
+
+@pytest.mark.asyncio
+async def test_external_limit_reaches_agent_without_silent_five_hit_truncation():
+    class Client:
+        async def search(self, query, **kwargs):
+            assert kwargs["limit"] == 12
+            return {
+                "data": [
+                    {"title": f"Candidate {i}", "url": f"https://example.org/{i}"}
+                    for i in range(12)
+                ]
+            }
+
+    class External:
+        async def get_client(self, name, context):
+            return Client()
+
+    result = await ToolRegistry(External()).execute(
+        "semantic_scholar",
+        AgentContext(owner_id="test", session_id="test", user_message="EEG"),
+        query="EEG",
+        limit=12,
+    )
+    assert result.success and result.output["result_count"] == 12
+    assert result.output["items"][-1]["title"] == "Candidate 11"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("query", [None, "", "   "])
+async def test_registry_rejects_blank_query_before_accessing_provider(query):
+    result = await ToolRegistry(UnavailableExternalRegistry()).execute(
+        "arxiv",
+        AgentContext(owner_id="test", session_id="test", user_message="EEG"),
+        query=query,
+    )
+    assert not result.success and result.metadata["error_code"] == "invalid_arguments"
+
+
+@pytest.mark.asyncio
+async def test_malformed_xml_is_a_failed_tool_call():
+    class External:
+        async def get_client(self, name, context):
+            return self
+
+        async def search(self, query, **kwargs):
+            return "<feed>malformed"
+
+    result = await ToolRegistry(External()).execute(
+        "arxiv",
+        AgentContext(owner_id="test", session_id="test", user_message="EEG"),
+        query="EEG",
+    )
+    assert not result.success and result.metadata["error_code"] == "service_unavailable"

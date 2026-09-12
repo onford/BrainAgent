@@ -37,9 +37,9 @@ def case(tmp_path, monkeypatch):
     monkeypatch.setattr(utility, "run_utility_tasks", local_tasks)
     monkeypatch.setattr(fixtures, "make_input", lambda root: make_input(root, counts=(6, 8, 14)))
     result, plan, root, panel = cv_case(tmp_path, tmax=.4)
-    core = evaluation.evaluate(result, plan, root, panel, tmp_path / "core", policy={"adaptation": "euclidean_alignment"})
+    core = evaluation.evaluate(result, plan, root, panel, tmp_path / "core")
     assert core["status"] == "evaluated", core
-    entry = {"id": "utility-fixture", "parameters": {"adaptation": "euclidean_alignment"}}
+    entry = {"id": "utility-fixture", "parameters": {}}
     return plan, result, root, panel, entry, core
 
 
@@ -215,7 +215,7 @@ def test_degenerate_representation_cannot_receive_a_perfect_fake_score(case, tmp
     rep["array_sha256"] = file_hash(path)
     receipt = run((*case[:5], core), tmp_path / "invalid-signal")
     assert receipt["selection_score"] is None
-    assert any("zero" in s or "nonfinite" in s for s in receipt["failure_reasons"])
+    assert any("zero" in s or "nonfinite" in s or "checksum" in s for s in receipt["failure_reasons"])
 
 
 def test_invalid_probability_has_no_uniform_fallback(case, tmp_path, monkeypatch):
@@ -281,7 +281,7 @@ def test_explicit_holdout_scores_only_development(case, tmp_path):
     plan, result, root, _, entry, _ = case
     panel = freeze_panel(plan.input_snapshot, {r.record_id: r.record_id for r in plan.records}, seed=42,
                          tmin=-.1, tmax=.4, sfreq=160, train_subjects=["sub-01", "sub-02"], development_subjects=["sub-03"])
-    core = evaluation.evaluate(result, plan, root, panel, tmp_path / "holdout-core", policy={"adaptation": "euclidean_alignment"})
+    core = evaluation.evaluate(result, plan, root, panel, tmp_path / "holdout-core")
     receipt = run((plan, result, root, panel, entry, core), tmp_path / "holdout-utility")
     assert receipt["status"] == "evaluated", receipt["failure_reasons"]
     assert receipt["evaluation_mode"] == "subject_holdout" and set(receipt["subjects"]) == {"sub-03"}

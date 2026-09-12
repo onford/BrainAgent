@@ -115,18 +115,87 @@ class PreprocessInput(Contract):
         return self
 
 
+class ParameterSource(Contract):
+    origin: Literal["paper", "target_binding", "engineering", "unresolved"]
+    evidence_indices: list[int] = Field(default_factory=list)
+    rationale: str = Field(min_length=1)
+
+
+class MethodIssue(Contract):
+    severity: Literal["blocking", "validation", "limitation"]
+    code: str
+    message: str
+    step_id: str | None = None
+    evidence_indices: list[int] = Field(default_factory=list)
+
+
+class ArtifactPort(Contract):
+    step: str
+    port: Literal["artifacts", "data", "model"] = "artifacts"
+    path: list[str] = Field(default_factory=list)
+    transpose: list[int] | None = None
+
+
+class ArtifactValue(Contract):
+    kind: Literal['literal','port','object','array','digest','equal','greater','less','nonzero']
+    value: Any = None
+    source: ArtifactPort | None = None
+    fields: dict[str,'ArtifactValue'] = Field(default_factory=dict)
+    items: list['ArtifactValue'] = Field(default_factory=list)
+
+    @model_validator(mode='after')
+    def closed_expression(self):
+        if self.kind=='port' and self.source is None:raise ValueError('port expression requires a source')
+        if self.kind!='port' and self.source is not None:raise ValueError('unexpected expression source')
+        if self.kind!='object' and self.fields:raise ValueError('unexpected expression fields')
+        if self.kind not in ('array','digest','equal','greater','less','nonzero') and self.items:raise ValueError('unexpected expression items')
+        if self.kind in ('equal','greater','less') and len(self.items)!=2:raise ValueError('comparison requires exactly two operands')
+        if self.kind=='nonzero' and len(self.items)!=1:raise ValueError('nonzero requires one boolean mask')
+        if self.kind!='literal' and self.value is not None:raise ValueError('unexpected expression literal')
+        return self
+
+
+class DecisionPolicy(Contract):
+    mode: Literal["manual", "accept_candidates"]
+    status: Literal["pending", "confirmed"] = "pending"
+    reason: str = Field(min_length=1)
+    # Confirmation is tied to an observed signal/model, not a free-standing flag.
+    input_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    model_sha256: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+
+
 class Step(Contract):
     id: str = Field(pattern=r"^[a-z][a-z0-9_]*$")
     unit_id: str
     op: str
-    profile: Literal["source"] = "source"
-    implementation_version: Literal["1"] = "1"
+    profile: str = Field(default="source", min_length=1)
+    implementation_version: Literal["1", "2"] = "1"
     input: str = "raw"
     model_from: str | None = None
     decision_from: str | None = None
     params: dict[str, Any] = Field(default_factory=dict)
     fit_scope: Scope | None = None
     evidence_indices: list[int] = Field(min_length=1)
+    parameter_sources: dict[str, ParameterSource] = Field(default_factory=dict)
+    optional: bool = False
+    artifact_inputs: dict[str, ArtifactPort] = Field(default_factory=dict)
+    parameter_inputs: dict[str,ArtifactValue] = Field(default_factory=dict)
+    asset_inputs: dict[str, Ref] = Field(default_factory=dict)
+    decision: DecisionPolicy | None = None
+    adaptation_scope: Literal["none", "train", "calibration", "record_unlabeled"] = "none"
+    input_representation: Literal["native", "array"] = "native"
+    input_channels: list[str] | Literal['$eeg_channels','$all_channels'] | None = Field(default=None,min_length=1)
+    record_decisions: dict[str,DecisionPolicy] = Field(default_factory=dict)
+    decision_target: Literal['input','output'] = 'input'
+
+    @model_validator(mode="after")
+    def versioned_ports(self):
+        if self.implementation_version == "1" and (
+            self.profile != "source" or self.artifact_inputs or self.parameter_inputs or self.asset_inputs or self.decision is not None or self.decision_target!='input'
+            or self.adaptation_scope != "none" or self.input_representation != "native" or self.input_channels is not None or self.record_decisions
+        ):
+            raise ValueError("extended ports and profiles require implementation_version=2")
+        return self
 
 
 class MethodDraft(Contract):
@@ -140,16 +209,37 @@ class MethodDraft(Contract):
     mechanism: str = Field(min_length=1)
     recipe: list[Step] = Field(min_length=1)
     output: str
+    output_roles: dict[str, str] = Field(default_factory=dict)
     applicability: dict[str, Any] = Field(default_factory=dict)
     adaptations: list[str] = Field(default_factory=list)
     checks: list[str] = Field(default_factory=list)
     validation: list[Ref] = Field(default_factory=list)
     # Exact parameter profiles actually exercised by validation runs.
     validated_profiles: list[str] = Field(default_factory=list)
+    issues: list[MethodIssue] = Field(default_factory=list)
+    lineage: dict[str, Any] = Field(default_factory=dict)
+
+
+class EvaluationWindow(Contract):
+    tmin: float
+    tmax: float
+
+    @model_validator(mode='after')
+    def ordered(self):
+        if self.tmin >= self.tmax:
+            raise ValueError('evaluation window must be ordered')
+        return self
 
 
 class MethodSpec(MethodDraft):
     evidence: list[Evidence] = Field(min_length=1)
+    evaluation_window: EvaluationWindow | None = None
+
+    @model_validator(mode='after')
+    def projection_contract(self):
+        if self.evaluation_window and any(s.implementation_version!='2' for s in self.recipe):
+            raise ValueError('explicit scoring projection requires a v2 graph')
+        return self
 
 
 class RepositoryEvidence(Contract):
@@ -186,6 +276,8 @@ class SurveyLiteratureBundle(Contract):
     dataset_id: str
     dataset_version: str
     papers: list[Paper]
+    input_ref: Ref | None = None
+    shared_output: dict[str, float] = Field(default_factory=lambda: {"sfreq": 160., "tmin": 0., "tmax": 2.})
 
 
 class PlanRequest(Contract):
@@ -207,6 +299,10 @@ class Screening(Contract):
 
 
 class RecordPlan(Contract):
+    evaluation_window: EvaluationWindow | None = None
+    output_roles: dict[str, str] = Field(default_factory=dict)
+    asset_snapshots: dict[str,dict] = Field(default_factory=dict)
+    native_files: dict[str,str] = Field(default_factory=dict)
     method_ref: Ref
     record_id: str
     steps: list[Step]
@@ -226,7 +322,7 @@ class ResourceBudget(Contract):
 
 
 class ExecutionPlan(Contract):
-    schema_version: Literal["1"] = "1"
+    schema_version: Literal["1", "2"] = "1"
     request: PlanRequest
     input_snapshot: PreprocessInput
     screening: list[Screening]
@@ -256,6 +352,7 @@ class RunResult(Contract):
         "failed",
         "interrupted",
         "cancelled",
+        "waiting_decision",
     ]
     records: list[dict[str, Any]]
     completed: int

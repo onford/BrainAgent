@@ -358,19 +358,13 @@ def _verify_candidate(root, store, entry, data, panel):
                 or file_hash(path) != record["array_sha256"]
             ):
                 raise RuntimeError(f"{identity}: representation array checksum differs")
-        for subject in representation["subjects"].values():
-            if subject.get("transform_path"):
-                path = Path(subject["transform_path"]).resolve()
-                if (
-                    not path.is_relative_to(output)
-                    or file_hash(path) != subject["transform_sha256"]
-                ):
-                    raise RuntimeError(
-                        f"{identity}: subject transform checksum differs"
-                    )
 
-        method = MethodSpec.model_validate(read_json(output / "method.json"))
+    method = MethodSpec.model_validate(read_json(output / "method.json"))
     _check_catalog_method(method, identity, panel, root)
+    from .source_evidence import source_objects
+    for source_id, value in source_objects(root, method).items():
+        if store.get(OWNER, Ref(id=source_id, sha256=source_id), "evidence") != value:
+            raise RuntimeError(f"{identity}: engine source evidence differs")
     # Mirror register_method's deterministic mapping checks without registering.
     method.checks = sorted(set(method.checks + check_mapping(method)))
     method_hash = digest(method.model_dump(mode="json"))
@@ -589,6 +583,8 @@ def candidate(root: Path, candidate_id: str) -> dict:
                 )
             method = MethodSpec.model_validate(read_json(output / "method.json"))
             _check_catalog_method(method, candidate_id, panel, root)
+            from .source_evidence import import_evidence
+            import_evidence(root, method, service.store, OWNER)
             method_ref = service.register_method(OWNER, method)
         except ValueError as exc:
             raise CandidateInvalid(str(exc)) from exc

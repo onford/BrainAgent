@@ -1,0 +1,50 @@
+{
+  "scope": "Same naturally discovered Gwon source, independent real-model intake vs actual workflow extraction. Source-level parameters compared before scoring adaptation.",
+  "entries": [
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/live-6/workflows/b9e0a521dafa470aaaa1bfba45f8bcc7/preprocessing/literature-methods/2ec59061779310e1cb5f/resolved-extraction.json",
+      "sha256": "849b5f7cdce64497047a841b24b3a01a82425a3c1335168229b33f09556a5246",
+      "source_parameters": {
+        "reference": {
+          "ref_channels": "average"
+        },
+        "filter": {
+          "h_freq": 35.0,
+          "l_freq": 8.0
+        },
+        "epoch": {
+          "tmax": 3.0,
+          "tmin": 0.5
+        }
+      },
+      "ops": [
+        "reference",
+        "filter",
+        "epoch"
+      ]
+    },
+    {
+      "path": "E:/work/BrainAgent/.local/section-a-20260912/natural-library-replay/methods/intake/dda27ffe57557ca7421fdfad31957a0c885ab3443901bcc1a27b378e1f09cbdf/d790591f98291dc89ecd/resolved-extraction.json",
+      "sha256": "a6861e9149b951491022f6a18963ec29318b50ec4e9e16cfcaff3e695e5aba7b",
+      "source_parameters": {
+        "reference": {
+          "ref_channels": "average"
+        },
+        "filter": {
+          "h_freq": 35.0,
+          "l_freq": 8.0
+        },
+        "epoch": {
+          "tmax": 3.0,
+          "tmin": 0.5
+        }
+      },
+      "ops": [
+        "reference",
+        "filter",
+        "epoch"
+      ]
+    }
+  ],
+  "same_author_parameters": true
+}

@@ -354,7 +354,7 @@ describe('SearchesView', () => {
     expect(folds).toHaveLength(3)
     expect(folds[0]!.get('td').text()).toBe('fold-01')
     expect(folds[0]!.findAll('summary').map(summary => summary.text())).toEqual(['2 人', '1 人'])
-    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('CSP 与分类器在每折训练被试上拟合')
+    expect(wrapper.get('[aria-label="评分含义"]').text()).toContain('CSP 与分类器在每折训练被试上拟合')
     expect(wrapper.text()).toContain('不是独立测试结果')
     expect(wrapper.find('form').exists()).toBe(false)
   })
@@ -370,7 +370,7 @@ describe('SearchesView', () => {
     expect(wrapper.get('h1').text()).toContain('预算搜索记录')
     expect(wrapper.get('.run-controls').text()).toContain('只读记录')
     expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
-    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('对数方差 + 标准化 + 逻辑回归')
+    expect(wrapper.get('[aria-label="评分含义"]').text()).toContain('对数方差 + 标准化 + 逻辑回归')
     expect(wrapper.text()).not.toContain('CSP')
     await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('72.5%')
@@ -388,7 +388,7 @@ describe('SearchesView', () => {
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
     expect(wrapper.get('.run-controls').findAll('button')).toHaveLength(0)
-    expect(wrapper.get('[aria-label="评分与适配含义"]').text()).toContain('保存的评价器')
+    expect(wrapper.get('[aria-label="评分含义"]').text()).toContain('保存的评价器')
     await button(wrapper, '候选比较').trigger('click')
     expect(wrapper.get('tr.selected').text()).toContain('62.0%')
     expect(wrapper.text()).not.toContain('CSP')
@@ -442,63 +442,17 @@ describe('SearchesView', () => {
     expect(wrapper.get('.timeline').findAll('pre')).toHaveLength(0)
   })
 
-  it('displays numeric signal diagnostics, secondary scores, development intervals and dimensionless gate-off adaptation', async () => {
-    const latest = state({ candidates: [{ id: 'c1', status: 'evaluated', parameters: { adaptation: 'conditional_alignment', alignment_threshold: 10 },
-      receipt: { macro_ba: .75, secondary_macro_ba: .6, mean_delta: .05, paired_subject_ci: { low: -.02, high: .1, n_subjects: 2 },
-        subjects: { S003: { ba: .75, delta: .05, predicted_trials: 40, eligible_trials: 40 } }, secondary_subjects: { S003: .6 },
-        diagnostics: { subjects: { S003: { covariance_condition: 8, covariance_condition_before: 8, covariance_condition_after: 8, mean_channel_variance_before: 1.5e-12, mean_channel_variance_after: 1, effective_rank_before: 1, effective_rank_after: 2, channel_variance: [1e-12, 2e-12], channel_flat_fraction: [0, .25] } }, summary: { mean_condition_before: 8, mean_condition_after: 8, mean_variance_before: 1.5e-12, mean_variance_after: 1, gate_fraction: 0, mean_effective_rank: 1, mean_anisotropy: 2 } },
-        representation: { policy: { adaptation: 'conditional_alignment', alignment_threshold: 10 }, unit: 'dimensionless', transductive: true, gate_subject_count: 1, gate_passed_subject_count: 0, gate_fraction: 0,
-          channels: ['C3', 'C4'], covariance_regularization: .1, fit_scope: 'subject_whole_batch_label_free', records: {},
-          subjects: { S003: { applied_adaptation: 'scale_only', gate_passed: false, fallback_reason: '未达到条件阈值', covariance_anisotropy: 8, gate_metric_value: 2, fit_trials: 40, transform_path: null, transform_sha256: null, unit: 'dimensionless' } } } } }] })
-    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
-    const { wrapper } = await open('/searches?id=search-1')
-    await button(wrapper, '候选比较').trigger('click')
-    expect(wrapper.get('tr.selected').text()).toContain('60.0%')
-    expect(wrapper.get('tr.selected').text()).toContain('描述性区间 -2.0 pp ～ +10.0 pp')
-    expect(wrapper.get('tr.selected').text()).toContain('2 名配对被试 · 开发比较')
-    await button(wrapper, '开发被试').trigger('click')
-    const diagnostics = wrapper.get('[aria-label="信号诊断"]')
-    expect(diagnostics.text()).toContain('S003')
-    expect(diagnostics.text()).toContain('8 → 8')
-    expect(diagnostics.text()).toContain('1.50e-12 → 1.00e+0')
-    expect(diagnostics.text()).toContain('C3 · 方差 1.00e-12 · 平坦比例 0.0%')
-    expect(diagnostics.text()).toContain('C4 · 方差 2.00e-12 · 平坦比例 25.0%')
-    const adaptation = wrapper.get('[aria-label="逐被试适配"]')
-    expect(adaptation.text()).toContain('保持空间结构，仅统一尺度')
-    expect(adaptation.text()).toContain('Q90/Q10，达到阈值 10 时触发')
-    expect(adaptation.get('[aria-label="条件触发比例"]').text()).toContain('0.0% · 0 / 1 名被试')
-    expect(adaptation.findAll('tbody td').slice(2, 5).map(cell => cell.text())).toEqual(['8', '2', '否'])
-    const summary = diagnostics.get('[aria-label="诊断总体均值"]')
-    expect(summary.text()).toContain('平均条件数 8 → 8')
-    expect(summary.text()).toContain('平均通道方差 1.50e-12 → 1.00e+0')
-    expect(summary.text()).toContain('平均有效秩（适配前） 1')
-    expect(summary.text()).toContain('平均谱 Q90/Q10 2')
-    expect(summary.text()).toContain('条件触发比例 0.0%')
-    expect(diagnostics.findAll('tbody td')[3]!.text()).toBe('1 → 2')
-    expect(adaptation.text()).toContain('无量纲')
-    expect(adaptation.text()).toContain('未达到条件阈值')
-    expect(adaptation.text()).not.toContain('none · 不对齐')
-    expect(wrapper.get('[aria-label="开发被试明细"]').text()).toContain('60.0%')
-  })
-
-  it.each(['none', 'euclidean_alignment', 'conditional_alignment'] as const)('distinguishes unavailable or inapplicable gate metrics for %s', async adaptation => {
+  it('shows subject evaluation without retired subject fitting panels', async () => {
     const latest = state({ candidates: [{ id: 'c1', status: 'evaluated', receipt: {
-      representation: { policy: { adaptation, alignment_threshold: 10 }, unit: adaptation === 'none' ? 'V' : 'dimensionless', transductive: adaptation !== 'none',
-        channels: ['C3'], covariance_regularization: .1, fit_scope: 'subject_whole_batch_label_free', records: {},
-        ...(adaptation === 'conditional_alignment' ? {} : { gate_subject_count: 0, gate_passed_subject_count: 0, gate_fraction: null }),
-        subjects: { S003: { applied_adaptation: adaptation === 'none' ? 'none' : 'euclidean_alignment', gate_passed: true, fallback_reason: null,
-          covariance_anisotropy: 123, fit_trials: 40, transform_path: null, transform_sha256: null, unit: adaptation === 'none' ? 'V' : 'dimensionless' } } },
+      macro_ba: .75, subjects: { S003: { ba: .75, predicted_trials: 40, eligible_trials: 40 } },
+      representation: { version: '2', unit: 'V', channels: ['C3', 'C4'], records: {} },
     } }] })
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
     await button(wrapper, '开发被试').trigger('click')
-    const panel = wrapper.get('[aria-label="逐被试适配"]')
-    const fraction = panel.get('[aria-label="条件触发比例"]')
-    expect(fraction.text()).toContain(adaptation === 'conditional_alignment' ? '— · — / —' : '不适用')
-    expect(fraction.text()).not.toContain('0.0%')
-    expect(panel.findAll('tbody td')[2]!.text()).toBe('123')
-    expect(panel.findAll('tbody td')[3]!.text()).toBe('—')
-    expect(wrapper.find('[aria-label="诊断总体均值"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('S003')
+    expect(wrapper.text()).toContain('75.0%')
+    expect(wrapper.find('[aria-label="逐被试适配"]').exists()).toBe(false)
   })
 
   it.each([5, 109])('keeps five folds compact for %i subjects and expands complete lists independently across polling', async total => {

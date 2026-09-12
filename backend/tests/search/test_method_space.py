@@ -80,9 +80,9 @@ def test_registry_rebuilds_lineage_and_rejects_tampering():
         verify_registry(protocol, registry + [edited])
 
 
-def test_unused_adaptation_gate_does_not_create_a_new_candidate():
+def test_removed_adaptation_edit_is_rejected():
     space = basic_space()
-    with pytest.raises(ValueError, match="do not change"):
+    with pytest.raises(ValueError, match="does not match"):
         edited_entry(
             seed_entries(space)[0],
             [
@@ -160,13 +160,13 @@ def test_filter_domain_still_rejects_invalid_band():
         ], space, title="invalid band", order=3)
 
 
-def test_selection_tie_counts_adaptation_as_an_operator():
+def test_selection_tie_counts_actual_operators():
     from app.search.catalog import select
 
     common = {"status": "evaluated", "receipt": {"status": "evaluated", "assessment": {"selection_score": .7}}}
     assert select([
-        {**common, "id": "a-aligned", "parameters": {"operators": [{}, {}, {}], "adaptation": "euclidean_alignment"}},
-        {**common, "id": "z-simple", "parameters": {"operators": [{}, {}, {}], "adaptation": "none"}},
+        {**common, "id": "a-longer", "parameters": {"operators": [{}, {}, {}, {}]}},
+        {**common, "id": "z-simple", "parameters": {"operators": [{}, {}, {}]}},
     ]) == "z-simple"
 
 

@@ -8,6 +8,16 @@ from .space_contracts import ExplorationSpace
 
 
 def compile_recipe(entry, space, panel, context=None):
+    if entry.get('schema_version')=='unit_graph_v2':
+        from .unit_graph_space import candidates
+        resolved=candidates(MethodSpec.model_validate(entry['method']),entry.get('grid',{}),1)
+        if panel:
+            from .graph_evaluation import check_method
+            from app.preprocessing.schemas import PreprocessInput
+            if not context or 'preprocess_input' not in context:
+                raise ValueError('graph evaluation requires the frozen target input for alignment')
+            check_method(resolved[0], PreprocessInput.model_validate(context['preprocess_input']), panel['output_contract'])
+        return resolved[0]
     space = ExplorationSpace.model_validate(space)
     recipe, warnings = validate_recipe(entry["recipe"], space, context)
     operators = {o.id: o for o in space.operators}
@@ -15,6 +25,7 @@ def compile_recipe(entry, space, panel, context=None):
         dict.fromkeys(
             entry.get("evidence_ids", [])
             + [e for n in recipe.nodes for e in operators[n.operator].evidence_ids]
+            + [e for n in recipe.nodes for trace in n.trace for e in trace.get("evidence_ids", [])]
         )
     )
     evidence = [space.evidence[key] for key in evidence_ids]
@@ -39,22 +50,45 @@ def compile_recipe(entry, space, panel, context=None):
         return deepcopy(value)
 
     steps, previous = [], "raw"
+    names = {"raw": "raw", **{node.id: f"s{i:02d}" for i, node in enumerate(recipe.nodes)}}
     for i, node in enumerate(recipe.nodes):
         operator = operators[node.operator]
         # Executable IDs are canonical and do not depend on cosmetic edit handles.
         identity = f"s{i:02d}"
-        indices = [evidence_ids.index(e) for e in operator.evidence_ids]
+        indices = list(dict.fromkeys(evidence_ids.index(e) for e in
+            [*operator.evidence_ids, *[e for trace in node.trace for e in trace.get("evidence_ids", [])]]))
+        parameter_sources = {}
+        for trace in node.trace:
+            for key, source in trace.get("parameter_sources", {}).items():
+                source = deepcopy(source)
+                source["evidence_indices"] = [evidence_ids.index(e) for e in source.pop("evidence_ids", [])]
+                parameter_sources[key] = source
+        parameters = {**bind(operator.bindings), **deepcopy(node.parameters)}
+        # Derived parameter values cannot retain a parent's published-value label.
+        for key, value in parameters.items():
+            originals = [t.get("parameters", {}).get(key) for t in node.trace if key in t.get("parameters", {})]
+            if key not in parameter_sources or originals and all(v != value for v in originals):
+                parameter_sources[key] = {"origin": "target_binding" if str(operator.bindings.get(key, "")).startswith("$") else "engineering",
+                    "evidence_indices": [], "rationale": "冻结输出绑定或受约束配方参数；不声明为原论文值。"}
         steps.append(
             Step(
+                **({k: v for k, v in node.graph.model_dump(mode='json').items() if k in {
+                    'profile','implementation_version','artifact_inputs','parameter_inputs','asset_inputs',
+                    'decision','adaptation_scope','input_representation','input_channels','record_decisions','decision_target'}} if node.graph else {}),
                 id=identity,
                 unit_id=operator.unit_id,
                 op=operator.op,
-                input=previous,
-                params={**bind(operator.bindings), **deepcopy(node.parameters)},
+                input=names[node.input_from] if node.input_from else previous,
+                model_from=names[node.model_from] if node.model_from else None,
+                decision_from=names[node.decision_from] if node.decision_from else None,
+                fit_scope=node.fit_scope,
+                params=parameters,
                 evidence_indices=indices or [fallback],
+                parameter_sources=parameter_sources,
+                optional=node.optional,
             )
         )
-        if operator.op == "detect_bad_channels":
+        if operator.op == "detect_bad_channels" and operator.emit_mark and operator.implementation_version == '1':
             # The exploration operator is diagnosis AND marking. Bind the
             # decision to the exact signal on which detection was performed.
             cap = next(
@@ -70,20 +104,30 @@ def compile_recipe(entry, space, panel, context=None):
             ))
             previous = mark_id
             continue
-        previous = identity
+        if operator.op != "eog_fit":
+            previous = identity
+    from .graph_evaluation import graph_method, promote
+    from .graph_recipe import rename_ports
+    for step in steps:
+        rename_ports(step, names)
+    if graph_method(steps):
+        steps = promote(steps)
     return MethodSpec(
         id=entry["id"],
         version="3",
         title=entry["title"],
-        source="classic" if entry.get("origin") == "basic" else "survey_literature",
+        source="survey_literature" if any(t.get("kind") == "literature" for t in entry.get("lineage", [])) or entry.get("origin") in {"literature", "literature_adaptation"} else "classic",
         mechanism=" -> ".join(n.operator for n in recipe.nodes),
         recipe=steps,
-        output=previous,
+        output=names[recipe.output] if recipe.output else previous,
+        evaluation_window=recipe.evaluation_window,
+        output_roles={role:names[node] for role,node in recipe.output_roles.items()},
         evidence=evidence,
         applicability={"dataset_id": "eegmmidb", "task": "left_right_motor_imagery"},
         adaptations=entry.get("deviations", [])
-        + [
-            "个体无标签适配在数值配方后执行，保存实际评分表示和拟合产物。",
-        ]
         + [w["reason"] for w in warnings],
+        lineage={"kind": entry.get("origin"), "sources": entry.get("lineage", []),
+                 "parent_ids": entry.get("parent_ids", []), "edits": entry.get("edits", []),
+                 "candidate_id": entry["id"], "recipe_hash": entry.get("recipe_hash")},
+        issues=entry.get("issues", []),
     )

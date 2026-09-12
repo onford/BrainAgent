@@ -1,0 +1,12 @@
+{
+  "head": "5d6ebaca513f36029e24c5b3ed85aae0d4638c62",
+  "files": {
+    "backend/app/search/service.py": "0232b8aa4303fd606f1da360f392591f7a91e34ae2d04c049241995866516cec",
+    "backend/app/search/literature_space.py": "905dd53a90a655f8579e9a28908d6c2aa848056f3d89983ed85b23681cfc334b",
+    "backend/app/search/method_provenance.py": "71bc40b3369d66efc2ffb23b9b3a6effd4aaf21b5c75658f2f8be15c5e41ea9d",
+    "backend/app/workflows/literature_methods.py": "5a5e6695f77a12c109f4c7ab59fccf0e699eb27c7b2475da643b6be048d8f60c",
+    "backend/app/preprocessing/literature.py": "0229dfc9937f06d3f425e366a8b929aa369d331cbbf1a567bec8c72c891c3098",
+    "backend/app/search/reasoning.py": "2de3a3bbac6e51d3a3310fafd8144a9326b98ae7b254c22c5ed66c1f60790ace"
+  },
+  "scope": "initial working tree includes other tasks changes; not a clean HEAD baseline"
+}

@@ -60,23 +60,7 @@ def selection_case(tmp_path, monkeypatch):
         secondary_macro_ba=0.5,
         secondary_subjects={"S002": 0.5},
         representation=dict(
-            policy={"adaptation": "none"},
-            unit="V",
-            transductive=False,
-            channels=["C3", "C4"],
-            gate_subject_count=0,
-            gate_passed_subject_count=0,
-            gate_fraction=None,
-            subjects={
-                "S002": dict(
-                    applied_adaptation="none",
-                    gate_passed=False,
-                    covariance_anisotropy=1.0,
-                    gate_metric_value=1.0,
-                    fit_trials=2,
-                    unit="V",
-                )
-            },
+            version="2", unit="V", channels=["C3", "C4"],
             records={
                 "r1": dict(
                     subject="S002",
@@ -240,120 +224,30 @@ def test_selection_rejects_unverified_or_inconsistent_results(
         outputs.choose(c.search, c.plan, c.store)
 
 
-def adapted_case(case):
-    selection = case.state["outputs"]["data_evaluation"]
-    space = basic_space()
-    seeds = seed_entries(space)
-    entry = edited_entry(seeds[2], [{"action": "set_adaptation", "policy": {"adaptation": "conditional_alignment", "alignment_threshold": 3.0}}],
-                         space, title="Measured adaptation", order=len(seeds))
-    (case.store.root.parent / "registry.json").write_text(json.dumps([*seeds, entry]), encoding="utf-8")
-    selection["selected_candidate_id"] = entry["id"]
-    selection["selected_receipt"]["candidate_id"] = selection["selected_candidate_id"]
-    selection["candidate_summary"][0]["candidate_id"] = selection["selected_candidate_id"]
-    freeze_evidence(case.store, selection)
-    directory = (
-        case.store.root.parent / "candidates" / selection["selected_candidate_id"]
-    )
-    (directory / "adaptation").mkdir(parents=True)
-    subjects, records = {}, {}
-    for record in case.records:
-        rid = record["record_id"]
-        subject = rid[:4]
-        path = directory / "adaptation" / f"{rid}.npy"
-        values = case.expected[rid].astype(np.float64) * 1e6
-        np.save(path, values)
-        case.expected[rid] = values.astype(np.float32)
-        records[rid] = dict(
-            subject=subject,
-            array_path=str(path),
-            array_sha256=file_hash(path),
-            shape=list(values.shape),
-            unit="dimensionless",
-        )
-        if subject not in subjects:
-            transform = directory / "adaptation" / f"{subject}-transform.npy"
-            np.save(transform, np.eye(2) * 1e6)
-            subjects[subject] = dict(
-                applied_adaptation="scale_only",
-                gate_passed=False,
-                covariance_anisotropy=1.0,
-                gate_metric_value=1.0,
-                fit_trials=0,
-                transform_path=str(transform),
-                transform_sha256=file_hash(transform),
-                unit="dimensionless",
-            )
-        subjects[subject]["fit_trials"] += len(values)
-    representation = dict(
-        policy={"adaptation": "conditional_alignment", "alignment_threshold": 3.0},
-        unit="dimensionless",
-        transductive=True,
-        channels=["C3", "C4"],
-        gate_subject_count=len(subjects),
-        gate_passed_subject_count=0,
-        gate_fraction=0.0,
-        subjects=subjects,
-        records=records,
-    )
-    selection["representation"] = representation
-    selection["selected_receipt"]["representation"] = copy.deepcopy(representation)
-    numeric_metadata(selection["selected_receipt"], copy.deepcopy(representation))
-    return case
 
 
-def test_adapted_delivery_exports_scored_arrays_gate_off_transforms_and_folds(
-    delivery_case,
-):
-    case = adapted_case(delivery_case())
-    result = outputs.deliver(case.state, case.folder, case.store)
-    actual = np.load(case.folder / "X.npy", allow_pickle=False)
-    np.testing.assert_array_equal(
-        actual, np.concatenate([case.expected[k] for k in sorted(case.expected)])
-    )
-    channels = json.loads((case.folder / "channels.json").read_text())
-    assert channels["unit"] == result["unit"] == "dimensionless"
-    assert "not physical electrodes" in channels["spatial_semantics"]
-    assert result["split_counts"] == {"train": len(actual), "validation": 0, "test": 0}
-    with zipfile.ZipFile(case.folder.parent / "training-data.zip") as archive:
-        assert (
-            json.loads(archive.read("evaluation/folds.json"))
-            == case.state["outputs"]["data_evaluation"]["panel"]["folds"]
-        )
-        receipt = json.loads(archive.read("evaluation/receipt.json"))
-        assert all(
-            s["applied_adaptation"] == "scale_only"
-            for s in receipt["representation"]["subjects"].values()
-        )
-        assert (
-            len([p for p in archive.namelist() if p.startswith("representation/")]) == 3
-        )
 
 
 @pytest.mark.parametrize(
     "problem",
     [
         "array_hash",
-        "transform_hash",
         "shape",
         "subject",
         "channels",
         "missing",
         "escape",
         "mixed",
-        "missing_transform",
         "receipt",
     ],
 )
-def test_adapted_delivery_never_falls_back_to_raw_arrays(delivery_case, problem):
-    case = adapted_case(delivery_case())
+def test_shared_delivery_rejects_mismatched_physical_arrays(delivery_case, problem):
+    case = delivery_case()
     selection = case.state["outputs"]["data_evaluation"]
     rep = selection["representation"]
     entry = next(iter(rep["records"].values()))
-    subject = next(iter(rep["subjects"].values()))
     if problem == "array_hash":
         Path(entry["array_path"]).write_bytes(b"corrupt")
-    elif problem == "transform_hash":
-        Path(subject["transform_path"]).write_bytes(b"corrupt")
     elif problem == "shape":
         entry["shape"][2] += 1
     elif problem == "subject":
@@ -366,8 +260,6 @@ def test_adapted_delivery_never_falls_back_to_raw_arrays(delivery_case, problem)
         entry["array_path"] = "../../escape.npy"
     elif problem == "mixed":
         rep["unit"] = "mixed"
-    elif problem == "missing_transform":
-        subject["transform_path"] = None
     elif problem == "receipt":
         selection["representation"] = None
     if problem != "receipt":
@@ -385,14 +277,14 @@ def test_invalid_fold_membership_cannot_be_exported_as_train(delivery_case):
         outputs.deliver(case.state, case.folder, case.store)
 
 
-def test_report_describes_measured_policy_and_dimensionless_representation(
+def test_report_describes_shared_physical_representation(
     delivery_case, monkeypatch
 ):
     from app.preprocessing.methods import baseline_methods
     from app.workflows.contracts import ReportData
     from app.workflows import reporting
 
-    case = adapted_case(delivery_case())
+    case = delivery_case()
     selection = case.state["outputs"]["data_evaluation"]
     stats = dict(
         subjects=3, recordings=4, trials=19, duration_s=1.0, unknown_recordings=0
@@ -428,8 +320,8 @@ def test_report_describes_measured_policy_and_dimensionless_representation(
     result = reporting.render_report(folder)
     document = (folder / "report.html").read_text(encoding="utf-8")
     assert "&lt;script&gt;dataset&lt;/script&gt;" in document
-    assert "0.7500" in document and "dimensionless" in document
-    assert "伏特测量" in document and "独立确认" in document
+    assert "0.7500" in document and "单位：V" in document
+    assert "EEG 通道" in document and "独立确认" in document
     assert "随机" not in document and "未进行质量排名" not in document
     assert result["quality_evaluated"] is True
     assert result["independent_confirmation"] is False

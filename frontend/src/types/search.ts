@@ -15,7 +15,6 @@ export interface OperatorUsage {
 }
 export type SearchStatus = 'preparing' | 'running' | 'completed' | 'stopped' | 'failed' | 'cancelled' | 'interrupted'
 export type SearchEvaluationMode = 'group_cross_validation' | 'subject_holdout'
-export type SearchAdaptation = 'none' | 'subject_scale' | 'euclidean_alignment' | 'conditional_alignment'
 
 export interface SearchFold {
   id: string
@@ -45,30 +44,11 @@ export interface SearchDiagnosticsSummary {
   mean_anisotropy: number
 }
 
-export interface SearchSubjectRepresentation {
-  applied_adaptation: 'none' | 'scale_only' | 'euclidean_alignment'
-  gate_passed: boolean
-  fallback_reason: string | null
-  covariance_anisotropy: number
-  gate_metric_value?: number
-  fit_trials: number
-  transform_path: string | null
-  transform_sha256: string | null
-  unit: 'V' | 'dimensionless'
-}
-
 export interface SearchRepresentation {
-  policy: { adaptation: SearchAdaptation; alignment_threshold: number }
-  unit: 'V' | 'dimensionless'
-  transductive: boolean
+  version: '2'
+  unit: 'V'
   channels: string[]
-  covariance_regularization: number
-  gate_subject_count?: number
-  gate_passed_subject_count?: number
-  gate_fraction?: number | null
-  fit_scope: 'subject_whole_batch_label_free'
-  subjects: Record<string, SearchSubjectRepresentation>
-  records: Record<string, { subject: string; array_path: string; array_sha256: string; shape: number[]; unit: 'V' | 'dimensionless' }>
+  records: Record<string, { subject: string; array_path: string; array_sha256: string; shape: number[]; unit: 'V' }>
 }
 
 export interface WorkflowEvaluation {
@@ -161,7 +141,7 @@ export interface SearchCoverage {
 export interface SearchCandidate {
   id: string
   title?: string
-  parameters?: { l_freq?: number; h_freq?: number; reference?: 'average' | 'original'; adaptation?: SearchAdaptation; alignment_threshold?: number }
+  parameters?: { l_freq?: number; h_freq?: number; reference?: 'average' | 'original' }
   status: string
   job_id?: string | null
   receipt?: {
@@ -252,6 +232,9 @@ export interface SearchPanel {
 }
 
 export interface SearchState extends SearchSummary {
+  candidate_contrasts_to_reference?: Record<string, { removed_operations: string[]; added_operations: string[]; parameter_changes: { operation: string; parameter: string; before: unknown; after: unknown }[]; shared_operation_order_changed: boolean; scope_changes: string[]; interpretation: string }>
+  literature_participation?: { status: string; statement: string; evaluated_candidate_ids: string[]; distinct_from_controls_evaluated_ids: string[] }
+  diagnostics?: Record<string, any>[]
   schema_version?: string
   protocol?: { version?: string; evaluator?: string; space?: SearchOperatorSpace; [key: string]: unknown }
   registry?: SearchRecipeEntry[]
@@ -269,10 +252,13 @@ export interface SearchState extends SearchSummary {
 export interface SearchRecipeEntry {
   id: string
   title: string
-  origin: 'basic' | 'literature' | 'literature_adaptation'
+  origin: 'basic' | 'literature' | 'literature_adaptation' | 'derived'
+  lineage?: { kind?: string; source_url?: string; source_id?: string; branch_id?: string; analysis?: string; method_id?: string; version?: string; method_ref?: { id: string }; [key: string]: unknown }[]
+  parent_ids?: string[]
+  issues?: { severity: string; code: string; message: string }[]
   seed_id: string
   parent_id: string | null
-  recipe: { nodes: { id: string; operator: string; parameters: Record<string, unknown> }[]; adaptation: { adaptation: SearchAdaptation; alignment_threshold: number } }
+  recipe: { nodes: { id: string; operator: string; parameters: Record<string, unknown> }[] }
   edits: { action: string; [key: string]: unknown }[]
   deviations: string[]
   evidence_ids: string[]

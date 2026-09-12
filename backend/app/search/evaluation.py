@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .graph_evaluation import check_log
+
 from collections import Counter
 from contextlib import contextmanager
 import csv
@@ -18,7 +20,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 from app.preprocessing.schemas import ExecutionPlan, RunResult
 from app.preprocessing.storage import digest, file_hash, within, write_json
-from .evaluation_contracts import AlignmentPolicy, CoreLearnerMetadata, EvaluationReceipt
+from .evaluation_contracts import CoreLearnerMetadata, EvaluationReceipt
 from .evaluation_numeric import (
     StableShrinkageCovariance,
     VARIANCE_FLOOR,
@@ -26,13 +28,13 @@ from .evaluation_numeric import (
     csp_features,
     fit_csp,
     paired_ci,
-    prepare_representation,
+    signal_manifest,
 )
 from .panel import DataUnevaluable, validate_panel
 
 
 # Core learner receipts evolve independently of the frozen panel contract.
-EVALUATOR_VERSION = 3
+EVALUATOR_VERSION = 4
 
 
 class CandidateInvalid(ValueError):
@@ -104,6 +106,11 @@ def _check_plan(result, plan, panel):
         "asr_clean": "EEG-ASR-AUTO",
     }
     for config in plan.records:
+        from .graph_evaluation import graph_method, check_config
+        if graph_method(config.steps):
+            record = next(r for r in plan.input_snapshot.collection.records if r.id == config.record_id)
+            check_config(config, record, contract)
+            continue
         predecessor, resamples, epochs = "raw", 0, 0
         diagnoses = {}
         rate = panel["records"][config.record_id]["sfreq"]
@@ -211,11 +218,7 @@ def _check_record(paths, item, config, plan, panel, observed):
             "artifact operation differs",
         )
         _require(
-            all(
-                log["parameters"].get(k) == v
-                for k, v in step.params.items()
-                if k != "events"
-            ),
+            check_log(log, step),
             "artifact parameters differ",
         )
     after = delta["after"]
@@ -423,9 +426,6 @@ def evaluate(
     Missing means eligible - available, NOT eligible - predicted. Before candidate
     validation finishes, available counts only inspected matching trials.
     Resource errors propagate to the supervising worker, which owns budgets.
-    ``policy`` accepts frozen catalog parameters; only adaptation and the
-    predeclared alignment_threshold are used here. Subject adaptation is
-    transductive and label-free; all supervised fitting uses fold training only.
     """
     receipt = {
         "status": "execution_failure",
@@ -450,17 +450,8 @@ def evaluate(
         validate_panel(panel)
         panel_valid = True
         receipt.update(evaluation_mode=panel["evaluation_mode"], folds=panel["folds"])
-        # Catalog filter/reference keys are allowed; only declared alignment keys
-        # are interpreted here. Never infer adaptation from candidate scores.
-        if policy is not None and not isinstance(policy, dict):
-            raise CandidateInvalid("policy must be a dict or None")
-        alignment_policy = AlignmentPolicy.model_validate(
-            {
-                k: v
-                for k, v in (policy or {}).items()
-                if k in AlignmentPolicy.model_fields
-            }
-        ).model_dump(mode="json")
+        if policy is not None and (not isinstance(policy, dict) or set(policy) - {"operators"}):
+            raise CandidateInvalid("only shared operation recipes are supported")
         baseline_scores = _baseline(baseline, panel)
         _check_plan(result, plan, panel)
         if result.status != "completed" or any(
@@ -487,32 +478,7 @@ def evaluate(
         stage, started = "feature", perf_counter()
         output = Path(output)
         output.mkdir(parents=True, exist_ok=True)
-        sources, numeric_diagnostics, representation = prepare_representation(
-            sources, panel, output, alignment_policy, _mapped
-        )
-        receipt["representation"] = representation
-        receipt["diagnostics"]["subjects"] = numeric_diagnostics
-        receipt["diagnostics"]["summary"] = {
-            **{
-                key: float(np.mean([s[field] for s in numeric_diagnostics.values()]))
-                for key, field in {
-                    "mean_condition_before": "covariance_condition_before",
-                    "mean_condition_after": "covariance_condition_after",
-                    "mean_variance_before": "mean_channel_variance_before",
-                    "mean_variance_after": "mean_channel_variance_after",
-                    "mean_effective_rank": "effective_rank_before",
-                }.items()
-            },
-            "gate_fraction": representation["gate_fraction"],
-            "mean_anisotropy": float(
-                np.mean(
-                    [
-                        s["gate_metric_value"]
-                        for s in representation["subjects"].values()
-                    ]
-                )
-            ),
-        }
+        receipt["representation"] = signal_manifest(sources, panel)
         identities = [r["event_id"] for _, rows, _, _ in sources for r in rows]
         n_channels = len(panel["output_contract"]["channels"])
         receipt["learner_metadata"] = CoreLearnerMetadata(

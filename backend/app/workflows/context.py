@@ -1,6 +1,7 @@
 """Lossless grouping for repeated measurements sent to the reasoning model."""
 
 import json
+from collections import Counter
 
 
 def _assessment_context(value):
@@ -29,6 +30,7 @@ def evaluation_context(data):
                 "selected_method_ref",
                 "reason",
                 "candidate_summary",
+                "literature_participation",
             )
             if key in data
         },
@@ -78,20 +80,7 @@ def evaluation_context(data):
                         "role": "CSP/LDA anchor; selection uses assessment.selection_score"},
         "assessment": _assessment_context(receipt.get("assessment") or {}),
         "diagnostics": (receipt.get("diagnostics") or {}).get("summary"),
-        "representation": {
-            key: representation[key]
-            for key in (
-                "policy",
-                "unit",
-                "transductive",
-                "fit_scope",
-                "gate_metric",
-                "gate_subject_count",
-                "gate_passed_subject_count",
-                "gate_fraction",
-            )
-            if key in representation
-        },
+        "representation": {key: representation[key] for key in ("version", "unit", "channels") if key in representation},
     }
 
 

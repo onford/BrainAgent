@@ -163,7 +163,7 @@ def _quality_section(part):
     result += ("<p>以下为适配前物理电压的 processed_task 阶段摘要；先在被试内汇总记录，再对被试等权汇总。"
                "曲线预览不折算为质量总分，完整曲线和其他阶段见原生产物。频带、工频、漂移与肌电量为代理观测；"
                "滤波本身可以机械性降低这些值。ERD/ERS 仅在同处理 precue 和 task 配对验证通过时可计算。"
-               "无量纲 EA 表示不能直接套用物理电压阈值。</p>")
+               "当前评分使用物理电压，阈值须匹配单位和信号阶段。</p>")
     summary = part.get("summary")
     if summary is None:
         return result + "<p>未取得质量摘要；未记为零分。</p>"
@@ -303,6 +303,15 @@ def render(root: Path, state):
         raise ValueError("selected candidate lacks a complete measured selection score")
     assessment_html = _assessment_sections(root, state)
     operator_usage_html = _operator_usage_sections(root, state)
+    from .method_provenance import method_status
+    provenance = method_status(state)
+    provenance_html = '<h2>方法来源与执行状态</h2><p>' + escape(provenance['literature_participation']['statement']) + '</p>' + _notes(provenance['absence_reasons'])
+    provenance_html += _table(['方法', '来源', '父方法', '状态', '原因', '来源分支及适配'], [
+        [r['title'], r['origin'], r.get('parent_ids', []), r['status'], r.get('reason') or r.get('reasons', []),
+         {'lineage': r.get('lineage'), 'adaptations': r.get('adaptations', [])}] for r in provenance['methods']])
+    provenance_html += '<p>' + _link(state['id'], 'method-status.json', '完整方法谱系与产物路径') + ' · ' + _link(state['id'], 'method-intake.json', '文献方法检查及编译结果') + '</p>'
+    write(root / 'method-status.json', provenance)
+    write(root / 'method-intake.json', state['protocol'].get('method_intake', {'methods': [], 'absence_reasons': []}))
     selection = {
         "schema_version": "3",
         "protocol_version": state["protocol"].get("version"),
@@ -332,6 +341,7 @@ def render(root: Path, state):
             "结论限于冻结算子空间、共同模型和离线信息权限；物理质量及半合成重建指标不能证明神经真值或实时部署能力。",
         ],
     }
+    selection['method_provenance'] = next((r for r in provenance['methods'] if r.get('candidate_id') == state['selected_candidate_id']), None)
     write(root / "selection.json", selection)
     rows = []
     for c in state["candidates"]:
@@ -405,40 +415,13 @@ def render(root: Path, state):
             + "</details>"
         )
     per_subject = []
-    representation_rows = []
     if selected:
         for subject, row in (selected.get("receipt") or {}).get("subjects", {}).items():
             per_subject.append(
                 f"<tr><td>{escape(subject)}</td><td>{score(row.get('ba'))}</td><td>{delta(row.get('delta'))}</td></tr>"
             )
-        for subject, row in (
-            ((selected.get("receipt") or {}).get("representation") or {})
-            .get("subjects", {})
-            .items()
-        ):
-            representation_rows.append(
-                "<tr>"
-                + "".join(
-                    f"<td>{escape(str(v))}</td>"
-                    for v in (
-                        subject,
-                        row.get("applied_adaptation"),
-                        round(row["gate_metric_value"], 3),
-                        row.get("fit_trials"),
-                        row.get("unit"),
-                        row.get("fallback_reason") or "",
-                    )
-                )
-                + "</tr>"
-            )
     panel = state.get("panel") or {}
     representation = ((selected or {}).get("receipt") or {}).get("representation") or {}
-    gate_fraction = representation.get("gate_fraction")
-    gate_note = (
-        f"本次条件对齐触发 {representation['gate_passed_subject_count']}/{representation['gate_subject_count']} 位被试（{score(gate_fraction)}）。"
-        if gate_fraction is not None
-        else "本候选不使用条件门控。"
-    )
     evaluation_mode = (
         "按被试分组交叉验证"
         if panel.get("evaluation_mode") == "group_cross_validation"
@@ -464,6 +447,7 @@ main{{max-width:1100px;margin:auto;background:white;padding:36px;border-radius:1
 details{{border-bottom:1px solid #e0e8e9;padding:12px 0}}summary{{cursor:pointer}}.scroll{{overflow:auto;max-height:520px}}a{{color:#127e79}}
 </style><main><p class="muted">离线预处理搜索 · 开发评价</p><h1>在指定学习器和开发面板下选出的候选方案</h1>
 <p>暂选：<strong>{escape(selected["title"] if selected else "未得到可评价候选")}</strong></p>
+{provenance_html}
 <p class="muted">{escape(reasons.get(state["stop_reason"], state["stop_reason"] or ""))} · 累计 {state["usage"]["elapsed_seconds"]:.1f} 秒 ·
 候选 {state["usage"]["candidates"]}/{state["budget"]["max_candidates"]} · 提案 {state["usage"]["proposals"]}/{state["budget"]["max_proposals"]} · 阅读 {state["usage"]["evidence_reads"]}/{state["budget"]["max_evidence_reads"]}</p>
 <p>本结果用于当前开发条件下的流程选择。开发集被反复查看，没有进行独立确认，也不证明神经信号质量。</p>
@@ -471,9 +455,7 @@ details{{border-bottom:1px solid #e0e8e9;padding:12px 0}}summary{{cursor:pointer
 {multidimensional}
 {operator_usage_html}
 <h2>逐轮决定</h2>{"".join(actions)}<h2>{subject_heading}</h2><div class="scroll"><table><tr><th>被试</th><th>CSP BA</th><th>CSP 相对参考</th></tr>{"".join(per_subject)}</table></div>
-<h2>逐被试处理</h2><p>{gate_note} 条件指标为归一化协方差经 0.1 收缩后的特征值 Q90/Q10；阈值是预先声明的工程参数。</p><div class="scroll"><table><tr><th>被试</th><th>实际适配</th><th>条件指标</th><th>无标签拟合试次</th><th>单位</th><th>选择依据</th></tr>{"".join(representation_rows)}</table></div>
 <h2>数据与评价协议</h2><p>{evaluation_mode}，共 {len(panel.get("folds", []))} 折。完整 trial 清单见 panel.json；每折训练与开发被试隔离。{metric_note}</p>
-<p>适配仅使用当前被试的无标签整批信号。条件策略未触发空间对齐时，只统一尺度；不按个人评分标签选方案。适配后的维度为原通道坐标中的线性表示，单位无量纲，不能当作原电极电压解释。</p>
 <p>只有完整覆盖同一开发清单的候选可被选择；分数精确相同时优先参考，再按算子数和候选编号决定。无效候选、执行故障和资源不足分别记录。</p>
 <h2>可下载文件</h2><p>{artifact_index}</p>
 </main></html>"""

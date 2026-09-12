@@ -9,7 +9,7 @@ from tests.fakes import ScriptedLLMClient, delegate, finish, full_workflow_respo
 TEST_CREDENTIAL_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 
 
-def test_chat_stops_before_evaluation_without_real_preprocessing_inputs(tmp_path: Path) -> None:
+def test_chat_stops_before_downstream_without_real_survey_evidence(tmp_path: Path) -> None:
     settings = Settings(
         database_url_override=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}",
         brain_agent_credential_encryption_key=TEST_CREDENTIAL_KEY,
@@ -39,15 +39,12 @@ def test_chat_stops_before_evaluation_without_real_preprocessing_inputs(tmp_path
         assert body["status"] == "completed"
         assert [step["agent"] for step in body["plan"]["steps"]] == [
             "data_survey",
-            "data_collection",
-            "data_preprocessing",
         ]
         assert [result["agent_name"] for result in body["results"]] == [
             "data_survey",
-            "data_collection",
-            "data_preprocessing",
         ]
-        assert body["results"][-1]["output"]["execution_status"] == "needs_input"
+        assert body["results"][-1]["metadata"]["execution_status"] == "partial"
+        assert body["results"][-1]["output"]["evidence_status"] == "not_collected"
         assert body["plan"]["steps"][-1]["status"] == "blocked"
         assert "尚未完成" in body["final_answer"]
 
@@ -102,7 +99,8 @@ def test_stream_chat_returns_react_events(tmp_path: Path) -> None:
         assert response.status_code == 200
         assert '"event_type":"thought"' in body
         assert '"agent_name":"data_survey"' in body
-        assert '"agent_name":"data_report"' in body
+        assert '"agent_name":"data_report"' not in body
+        assert "尚未完成" in body
         assert '"event_type":"stream_completed"' in body
 
         restored = client.get(f"/api/sessions/{session_id}").json()
@@ -112,14 +110,9 @@ def test_stream_chat_returns_react_events(tmp_path: Path) -> None:
             "thought",
             "agent_started",
             "observation",
-            "thought",
-            "agent_started",
-            "observation",
-            "thought",
             "run_completed",
         ]
         assert assistant["activities"][3]["agent_name"] == "data_survey"
-        assert assistant["activities"][6]["agent_name"] == "data_report"
 
 
 def test_session_list_is_most_recent_first_and_contains_conversation(tmp_path: Path) -> None:

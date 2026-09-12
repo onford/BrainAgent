@@ -14,40 +14,35 @@ from app.search.evaluation_contracts import EvaluationReceipt, EvaluationReprese
 from tests.search.test_evaluation_v2 import cv_case
 
 
-@pytest.mark.parametrize(
-    "adaptation",
-    ["none", "subject_scale", "euclidean_alignment", "conditional_alignment"],
-)
 def test_core_preserves_representation_and_exact_csp_predictions(
-    tmp_path, monkeypatch, adaptation
+    tmp_path, monkeypatch
 ):
     result, plan, root, panel = cv_case(tmp_path)
     prepared = []
-    original_prepare = evaluation.prepare_representation
+    original_prepare = evaluation.signal_manifest
 
     def prepare(*args):
         value = original_prepare(*args)
-        prepared.append(deepcopy(value))
+        prepared.append(deepcopy((args[0], value)))
         return value
 
     def forbidden(*args, **kwargs):
         pytest.fail("v3 core fitted LogisticRegression")
 
-    monkeypatch.setattr(evaluation, "prepare_representation", prepare)
+    monkeypatch.setattr(evaluation, "signal_manifest", prepare)
     monkeypatch.setattr(LogisticRegression, "fit", forbidden)
     receipt = evaluation.evaluate(
         result, plan, root, panel, tmp_path / "core",
-        policy={"adaptation": adaptation, "alignment_threshold": 3.0},
     )
     core_evaluated = EvaluationReceipt.model_validate(receipt)
     assert core_evaluated.status == "evaluated", receipt
     assert core_evaluated.macro_ba == receipt["macro_ba"]
     assert len(prepared) == 1
-    sources, diagnostics, representation = prepared[0]
+    sources, representation = prepared[0]
     assert receipt["representation"] == EvaluationRepresentation.model_validate(
         representation
     ).model_dump(mode="json")
-    assert receipt["diagnostics"]["subjects"] == diagnostics
+    assert receipt["diagnostics"]["subjects"] == {}
 
     # Replay the v2 primary branch using exactly the delivered representation.
     # There is no secondary learner in this reference or the evaluator.

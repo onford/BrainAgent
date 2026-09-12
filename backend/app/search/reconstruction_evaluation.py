@@ -45,7 +45,7 @@ from .reconstruction import (
 )
 
 
-VERSION = "dataset-reconstruction-v3"
+VERSION = "dataset-reconstruction-v4"
 METRICS = (
     "input_nrmse",
     "paired_nrmse",
@@ -204,6 +204,7 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
         "primary_evaluation_subject_count": len(subjects),
         "primary_evaluation_panel_unchanged": True,
         "comparison": {
+            "representation": "completed_physical_epochs_then_common_reference_band",
             "reference": "average",
             "unit": "V",
             "band_hz": [1.0, 70.0],
@@ -224,6 +225,20 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
 
 def _lineage(config):
     """Only a data chain with adjacent detect/mark side branches is executable."""
+    if any(s.get('implementation_version')=='2' for s in config['steps']):
+        from app.preprocessing.schemas import Step
+        from app.preprocessing.ports import sources
+        seen={'raw'}
+        for value in config['steps']:
+            step=Step.model_validate(value)
+            dependencies=[step.input,step.model_from,step.decision_from]
+            dependencies += [p.step for p in step.artifact_inputs.values()]
+            dependencies += [p.step for e in step.parameter_inputs.values() for p in sources(e)]
+            _require(step.implementation_version=='2' and step.id not in seen and all(d is None or d in seen for d in dependencies),
+                'GRAPH_DEPENDENCY_MISMATCH','graph probe requires a closed topological graph')
+            seen.add(step.id)
+        _require(config['output'] in seen,'GRAPH_OUTPUT_MISSING','graph output is missing')
+        return
     previous, pending, ended, seen = "raw", None, False, {"raw"}
     for step in config["steps"]:
         if (
@@ -270,14 +285,14 @@ def _supported(config, contract, event_codes):
         if step["op"] == "epoch":
             epoch_count += 1
             _require(
-                all(step["params"].get(k) == contract[k] for k in ("tmin", "tmax"))
+                all((config.get('evaluation_window') or step["params"]).get(k) == contract[k] for k in ("tmin", "tmax"))
                 and step["params"].get("picks") == contract["channels"]
                 and step["params"].get("event_id") == event_codes,
                 "GRID_MISMATCH",
                 "candidate epoch contract differs from frozen panel",
             )
     _require(
-        epoch_count == 1 and config["output"] == config["steps"][-1]["id"],
+        epoch_count == 1 and (config["output"] == config["steps"][-1]["id"] or all(s.get('implementation_version')=='2' for s in config['steps'])),
         "GRID_MISMATCH",
             "one frozen epoch grid followed only by reference operations required",
     )
@@ -344,6 +359,9 @@ def _decision_input_hash(raw, events, *, bads=None):
 def _replay(raw, events, config):
     """Replay fresh model=None, retaining the data node across detect/mark."""
     _lineage(config)
+    if any(s.get('implementation_version')=='2' for s in config['steps']):
+        from .graph_replay import replay
+        return replay(raw, events, config)
     x, current = raw.copy(), events.copy()
     continuous, trace = None, []
     decision = None
@@ -481,7 +499,7 @@ def _replay(raw, events, config):
             x = y
             decision = None
         # No persisted Raw or fitted objects; next invocation independently fits.
-    return x, continuous, current, trace
+    return x, x.copy(), current, trace
 
 
 def _aligned_epoch_ids(epochs, current, mapping, trials, contract):
@@ -565,14 +583,12 @@ def _artifact_signal(store_root, item, config, plan, trials, contract):
         "artifact recipe length differs",
     )
     for log, step in zip(logs, config["steps"], strict=True):
+        from .graph_evaluation import check_log
+        from app.preprocessing.schemas import Step
         _require(
             all(log[k] == step[k] for k in ("unit_id", "op"))
             and log["step_id"] == step["id"]
-            and all(
-                log["parameters"].get(k) == v
-                for k, v in step["params"].items()
-                if k != "events"
-            ),
+            and check_log(log, Step.model_validate(step)),
             "ARTIFACT_MISMATCH",
             "artifact executed recipe differs",
         )
@@ -662,8 +678,23 @@ def _comparison(raw, events, mapping, trials, probe):
         "PHYSICAL_V_REQUIRED",
         "EEG must be SI voltage before parent EA",
     )
+    positions = {row["event_id"]: i for i, row in enumerate(mapping)}
+    if isinstance(raw,mne.BaseEpochs):
+        selected={int(v):i for i,v in enumerate(raw.selection)}
+        requested=[positions[t['event_id']] for t in trials]
+        _require(all(i in selected for i in requested),'GRID_MISMATCH','completed graph output dropped a frozen trial')
+        data=raw.get_data(picks=channels)[[selected[i] for i in requested]]
+    else:
+        segments=[]
+        for trial in trials:
+            sample=int(events[positions[trial['event_id']],0])-raw.first_samp
+            _require(sample==trial['output_sample'],'GRID_MISMATCH','resampled event differs from frozen grid')
+            start,stop=sample+contract['epoch_start_offset'],sample+contract['epoch_end_offset']+1
+            _require(0<=start<stop<=raw.n_times,'GRID_MISMATCH','frozen trial outside comparison input')
+            segments.append(raw.get_data(picks=channels,start=start,stop=stop))
+        data=np.stack(segments)
     values, space = align_fair_targets(
-        {"data": raw.get_data(picks=channels)[None]},
+        {"data": data},
         contract["sfreq"],
         channels=channels,
         input_unit="V",
@@ -672,27 +703,8 @@ def _comparison(raw, events, mapping, trials, probe):
         reference="average",
         band_hz=tuple(probe["comparison"]["band_hz"]),
     )
-    positions = {row["event_id"]: i for i, row in enumerate(mapping)}
-    epochs = []
-    for trial in trials:
-        i = positions[trial["event_id"]]
-        sample = int(events[i, 0]) - raw.first_samp
-        _require(
-            sample == trial["output_sample"],
-            "GRID_MISMATCH",
-            "resampled event differs from frozen grid",
-        )
-        start, stop = (
-            sample + contract["epoch_start_offset"],
-            sample + contract["epoch_end_offset"] + 1,
-        )
-        _require(
-            0 <= start < stop <= raw.n_times,
-            "GRID_MISMATCH",
-            "eligible trial falls outside replay",
-        )
-        epochs.append(values["data"][0, :, start:stop])
-    return np.stack(epochs), space
+    space['comparison_representation']='completed_physical_epochs_then_common_reference_band'
+    return values['data'], space
 
 
 def _noise(raw, case, subject, record_id, probe):
@@ -805,6 +817,7 @@ def _subject(
     subject, frozen, config, item, record, plan, source, store, panel, probe, resources
 ):
     contract = panel["output_contract"]
+    config = {**config, '_record':record.model_dump(mode='json'), '_storage_root':str(store)}
     _supported(config, contract, panel["event_codes"])
     trials = sorted(
         (t for t in panel["trials"] if t["event_id"] in set(frozen["trial_ids"])),
@@ -858,7 +871,7 @@ def _subject(
     epochs, clean_continuous, clean_events, trace = _replay(raw, events, config)
     logs_by_id = {log["step_id"]: log for log in saved_logs}
     for replayed in trace:
-        if replayed["op"] == "mark_channels":
+        if replayed["op"] == "mark_channels" and replayed.get('implementation_version') != '2':
             log = logs_by_id[replayed["step_id"]]
             detection = logs_by_id[replayed["decision_binding"]["source_step"]]
             _require(
