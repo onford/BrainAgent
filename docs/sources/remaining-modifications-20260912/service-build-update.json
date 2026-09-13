@@ -1,0 +1,60 @@
+{
+  "status": "runtime_updated_read_endpoints_passed",
+  "frozen_commit": "8d991112fef80239af1a7e33c8cb83c38a8db502",
+  "source_sha256": "10d0ea55ca0149ee50e998dbfd2271d990bb040b6b72de14c97675d16c57c256",
+  "execution_build": {
+    "schema_version": "1",
+    "source_sha256": "10d0ea55ca0149ee50e998dbfd2271d990bb040b6b72de14c97675d16c57c256",
+    "dependencies_sha256": "7f6dfa0fbb0a8f63a830c45c22e0701eff77b175f48a94a2ccd4f460d526181c",
+    "python": "3.12.14",
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "capabilities_counts": {
+    "units": 54,
+    "operations": 91,
+    "profiles": 310
+  },
+  "http_statuses": {
+    "/health": 200,
+    "/api/build-info": 200,
+    "/api/preprocessing/capabilities": 200,
+    "/api/workflows": 200,
+    "/api/searches": 200,
+    "/api/workflows/sources": 200
+  },
+  "pre_update_scope": {
+    "workflows": 0,
+    "searches": 0,
+    "sessions": 0,
+    "numeric_jobs": 0
+  },
+  "active_formal_10_untouched": true,
+  "port_8000_untouched": true,
+  "public_frontend_updated": false,
+  "full_execution_delivery_browser_accepted": false,
+  "audit_files": {
+    "http-after.json": "1dac802ccb6039b5000e7af5b8224ea13c8580e79625f2960847808501c90d3f",
+    "capabilities.json": "78f7d1e6ba52e382ab8308155b1589bdd8363673605d3f2047569b08958a89ff",
+    "old-processes.json": "a138cbb6229b77dad5d6285a2f416250bd6141239c6869729058a14d9ed48144",
+    "backend-state-original.json": "bf27669a0ca957f2b5e0febb021096e83ecee92b3c0d6e4e89cc579e885b9ac3",
+    "narrow-dialog-dom.txt": "e45bc7552b47540954fbc53d992fd0de10de16a8c69a84b040b28e8955852e21",
+    "narrow-dialog.png": "d7de9431efbf85c6262f02e208468e27ca636882cfd67b85ccb9d366da3404cc"
+  },
+  "browser": {
+    "preview_url": "http://127.0.0.1:8901/workflows",
+    "backend_port": 8001,
+    "source_commit": "8d991112fef80239af1a7e33c8cb83c38a8db502",
+    "english_and_chinese_empty_workspace": "passed",
+    "narrow_dialog": {
+      "width": 390,
+      "height": 844,
+      "controls_visible": true
+    },
+    "full_chain": "pending formal winner",
+    "remaining_ui_findings": [
+      "Untranslated NEW WORKFLOW eyebrow",
+      "Creation form has no budget fields"
+    ]
+  }
+}

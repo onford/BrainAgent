@@ -962,7 +962,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "已为整条工作流绑定源码、登记依赖版本和Python平台；启动/重试/恢复/直接阶段执行前检查，升级或运行期间修改后拒绝继续，历史查看保持。28项后端及166项前端测试、构建通过；固定提交启动脚本已修改，实际公开服务仍待更新。"
+      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。"
     },
     {
       "id": "I47",
@@ -985,7 +985,8 @@
         "D12"
       ],
       "historical_status": "尚未验证",
-      "status": "pending"
+      "status": "in_progress",
+      "implementation_update": "8d99111静态预览连接真实8001后端，Browser实际检查中英文空工作区、配置的数据源与390×844新建对话框；完整来源到最终包的页面链仍待正式赢家。发现中文小标题和预算入口待I48处理。"
     },
     {
       "id": "I48",
@@ -2123,6 +2124,14 @@
       "backend": "28 passed, 2 warnings, 238.86 s",
       "frontend": "166 passed; production and Sites builds passed",
       "scope": "Source, registered dependency versions and Python platform binding; cross-build workflows read-only. Real service update pending."
+    },
+    "service_build_update": {
+      "commit": "8d991112fef80239af1a7e33c8cb83c38a8db502",
+      "api_port": 8001,
+      "health_build_capabilities": "200",
+      "api_worker_same_source_root": true,
+      "public_frontend_updated": false,
+      "audit": "service-build-update.json"
     }
   }
 }
