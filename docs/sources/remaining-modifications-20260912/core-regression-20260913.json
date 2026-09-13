@@ -1,0 +1,62 @@
+{
+  "schema_version": "1",
+  "status": "passed",
+  "source_commit": "722fe95640761fc36e5da176a9e34255208bc51a",
+  "backend_full": {
+    "passed": 1426,
+    "warnings": 109,
+    "seconds": 2457.44,
+    "exit_code": 0
+  },
+  "frontend_frozen": {
+    "tests_passed": 168,
+    "typecheck": "passed",
+    "build": "passed"
+  },
+  "frontend_creation_description": {
+    "commit": "66a815c",
+    "related_tests_passed": 22,
+    "updated_live_bundle_verified": false
+  },
+  "log_bindings": {
+    "backend-full.log": {
+      "path": ".local\\core-delivery-20260913\\backend-full.log",
+      "sha256": "d0b53472985c85c2e0192ca5ac7a61911c4176072dfe804adfcdba7c715b86a7"
+    },
+    "frontend-tests.log": {
+      "path": ".local\\core-delivery-20260913\\frontend-tests.log",
+      "sha256": "01a8261cb089828cb1a78500d34c1a3879b268e84fd8ad8d2e022dc1a049b03a"
+    },
+    "frontend-typecheck.log": {
+      "path": ".local\\core-delivery-20260913\\frontend-typecheck.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "frontend-build.log": {
+      "path": ".local\\core-delivery-20260913\\frontend-build.log",
+      "sha256": "67f1028f00f4b7a5d20d80dc5a0404428908216cca2924a2700c1c3c0a7fc828"
+    },
+    "frontend-create-tests.log": {
+      "path": ".local\\core-delivery-20260913\\frontend-create-tests.log",
+      "sha256": "8e28a2f597e4ae7a17f3e4e4f51f70039dbc196af418fa0a9c54b2802a447cc6"
+    }
+  },
+  "counts_overlap_not_summed": true,
+  "closed_issues": [
+    "I13",
+    "I19",
+    "I22",
+    "I37"
+  ],
+  "final_numerical_delivery_accepted": false,
+  "prior_evidence": [
+    "research-request-recovery-20260913.json",
+    "native-lifecycle-3-audit.json",
+    "worker-recovery-live-2-audit.json",
+    "autonomy-retirement.json"
+  ],
+  "limits": [
+    "Controlled local HTTP/process recovery is not external-provider outage testing",
+    "Native lifecycle tested on Windows/MATLAB/RELAX shared recipe only",
+    "Complete numerical delivery and current frontend result/download pending"
+  ]
+}

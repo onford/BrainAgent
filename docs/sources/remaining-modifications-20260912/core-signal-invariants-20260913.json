@@ -1,0 +1,121 @@
+{
+  "status": "passed",
+  "execution_build": {
+    "schema_version": "1",
+    "source_sha256": "ca32addc59be32c7230c64e5ea68e54d93af3f39be2592ba7e34d6a95658f81e",
+    "dependencies_sha256": "5be837f97b255d8c06b97b17085d72a8f9a40d404c49db79fad26def87a444f1",
+    "python": "3.12.14",
+    "system": "Windows",
+    "machine": "AMD64"
+  },
+  "scientific_effectiveness_validated": false,
+  "scope": "Registered 7–30 Hz FIR, 8–30/1–40 Hz IIR, average reference, 128/160→160 Hz synchronized resampling, and 0–2 s epoch; interior analytic signals only.",
+  "cases": [
+    {
+      "input_sfreq": 128.0,
+      "tone_frequencies": [
+        1.0,
+        15.0,
+        55.0
+      ],
+      "fir_amplitude_gains": [
+        0.0016937699922437476,
+        0.9984833670328368,
+        5.03241221162812e-05
+      ],
+      "iir_analytic_checks": [
+        {
+          "band": [
+            8.0,
+            30.0
+          ],
+          "measured_gains": [
+            7.615362358517717e-09,
+            0.9999999685873316,
+            4.3635669645870874e-07
+          ],
+          "analytic_gains": [
+            7.615362358603096e-09,
+            0.999999968587331,
+            4.3635669650515325e-07
+          ]
+        },
+        {
+          "band": [
+            1.0,
+            40.0
+          ],
+          "measured_gains": [
+            0.5000000000000133,
+            0.9999976998544065,
+            0.00014467645251738014
+          ],
+          "analytic_gains": [
+            0.5,
+            0.9999976998544018,
+            0.0001446764525172363
+          ]
+        }
+      ],
+      "average_reference_projection_verified": true,
+      "passband_phase_radians": -4.861931344312077e-16,
+      "resample_relative_max_error": 0.0006505165814362734,
+      "epoch_samples": 321,
+      "events_and_input_unchanged": true
+    },
+    {
+      "input_sfreq": 160.0,
+      "tone_frequencies": [
+        1.0,
+        15.0,
+        55.0
+      ],
+      "fir_amplitude_gains": [
+        0.0016773706902681025,
+        0.9985206608840428,
+        5.0001231267472754e-05
+      ],
+      "iir_analytic_checks": [
+        {
+          "band": [
+            8.0,
+            30.0
+          ],
+          "measured_gains": [
+            6.6021785892957866e-09,
+            0.9999999959556521,
+            3.8856743428941185e-05
+          ],
+          "analytic_gains": [
+            6.602178589443139e-09,
+            0.9999999959556529,
+            3.8856743429011564e-05
+          ]
+        },
+        {
+          "band": [
+            1.0,
+            40.0
+          ],
+          "measured_gains": [
+            0.49999999999999434,
+            0.9999876854417256,
+            0.005911806851011507
+          ],
+          "analytic_gains": [
+            0.5000000000000004,
+            0.9999876854417216,
+            0.00591180685101037
+          ]
+        }
+      ],
+      "average_reference_projection_verified": true,
+      "passband_phase_radians": 1.3962287874815218e-16,
+      "resample_relative_max_error": 0.0,
+      "epoch_samples": 321,
+      "events_and_input_unchanged": true
+    }
+  ],
+  "runtime_unchanged": true,
+  "driver_sha256": "fffadae12e8191f5e7680077add15759c3fadbde8afd4d603f5c8b1df1b42543"
+}

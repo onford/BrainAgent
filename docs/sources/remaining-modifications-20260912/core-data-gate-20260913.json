@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "workflow_id": "ea709a3bf4ad48a7af3373494cde6957",
+  "search_id": "ea876b4c46b142a29f0cb0aba9228f34",
+  "scope": "Complete local collection and frozen MI target panel; no claim of numerical evaluation or final delivery acceptance.",
+  "subjects": 109,
+  "collection_records": 1526,
+  "target_records": 327,
+  "target_trials": 4918,
+  "source_events": 39569,
+  "standardized_files": 11013,
+  "validator_errors": 0,
+  "validator_warnings": 70743,
+  "warning_dispositions_complete": true,
+  "exclusions": 0,
+  "read_files_unchanged": true,
+  "files": {
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\input.json": "b322b216c40cf7cbda7cf13b99390b86aa2f4170c8acab442ba9c4b7e4d04484",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\collection.json": "12bd93b9b5e41f6f2d8bac5779b09b426cd4d97c1f20be98d60bb4656d02f4df",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\standardization.json": "eb6d85b183052a55ba1860db7cbe6045ba719b01a19e61a74c1fbc1edc81f83d",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\source-integrity.json": "285269fd63df1f1dcdbd3495c7598335b0144be1c2440bb851681dc7794d0cf2",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\pre-screen.json": "7e959f5ce59a2b9f536631e1843812d10dac5e712087d7035cf51769958bcca1",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\post-screen.json": "7e959f5ce59a2b9f536631e1843812d10dac5e712087d7035cf51769958bcca1",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\panel.json": "5ced4c0f0097c3493305f308290a229969ee97acd98cee7333939c6825fd0372",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\official-validator\\ff74d14b2b494a1ab4b289ba8bcd15dd\\receipt.json": "d26fcb292e17549c40dc1ae1ee020e87590b35b42be872ff12b2df5402d6ec91"
+  },
+  "as_of": "2026-09-13T10:54:44.567618+00:00",
+  "driver_sha256": "c2ec95a4def017e663e43355a35f8de482dc2925f94febe2845e4b62cf7974e7"
+}

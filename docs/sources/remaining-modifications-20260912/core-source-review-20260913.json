@@ -1,0 +1,42 @@
+{
+  "as_of": "2026-09-13T11:17:14.425725+00:00",
+  "status": "source_parameters_verified_execution_pending",
+  "candidate_id": "paper-668bf4f9eac0ff4849811e6f",
+  "source_url": "https://api.github.com/repos/jacksangster03/eeg-motor-imagery-decoding/readme",
+  "source_kind": "repository_readme",
+  "read_entire_repository_code": false,
+  "recorded_response_sha256": "bb1105c43929b229b80ce8d1b197c33221dd701de7bc41862c058fb39793d668",
+  "decoded_text_sha256": "32ab968a4772c64265318f6c29e8b99678e17a28e826f2bb670a5fde500b3237",
+  "response_hash_independently_recomputed": false,
+  "source_band_hz": [
+    7,
+    30
+  ],
+  "original_window_s": [
+    1,
+    4
+  ],
+  "execution_window_s": [
+    0,
+    2
+  ],
+  "fidelity": "engineering_adaptation",
+  "source_methods_injected": false,
+  "subject_specific_preprocessing_or_fit": false,
+  "numerical_effect_review_passed": false,
+  "notes": [
+    "Original source window is preserved in lineage; the executed 0–2 s window is an explicit engineering adaptation.",
+    "The README specifies band and epoch window, not detailed filter design. FIR settings are implementation choices.",
+    "README per-subject classifier validation was excluded from preprocessing; it does not authorize individualized preprocessing.",
+    "The initial model reason says the reference has already executed. Persisted recommendation and execution records establish that the recommendation froze first; the model wording is not timing evidence.",
+    "One engineering rationale describes zero-phase FIR as bidirectional. The actual method=fir, phase=zero uses delay-compensated symmetric FIR, not zero-double. This review corrects the description while preserving the original rationale."
+  ],
+  "filter_semantics_reference": "https://mne.tools/1.11/generated/mne.io.Raw.html",
+  "audit_setup_correction": "The first check incorrectly equated decoded README text hash to HTTP JSON response hash and failed. SourceReader hashes HTTP body bytes; this review separately records the decoded text hash, source/lineage response-hash binding, and retained source-file hash.",
+  "files": {
+    ".local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\registry.json": "ad71b4dbd36b994dbdabf0cf9d2f660ce2a9f6330a62242204f3772754cf5ca6",
+    ".local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\initial-recommendation.json": "7559af1798bb90d28a7b94c42de75515e79c9aa3ca62a3eb5306288a1c0b650a",
+    ".local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\sources.json": "89b435cffcc386fa7d3888627670780c315d52a505ca9e2edc129e1edb6a5e66"
+  },
+  "historical_evidence_unchanged": true
+}

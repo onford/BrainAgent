@@ -8,7 +8,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一两种文献提取入口",
-      "current": "工作流与独立方法库共用完整 v2 方法提取输入（91 操作/310 profiles），源合同重复内容无损合并；全量回归通过，fresh真实闭环待完成。",
+      "current": "两入口共享完整操作合同和目标事实；本轮独立 API 真实提取及幂等复用通过。来源频带和窗口相同；数值步骤经默认参数/本轮全 EEG 通道绑定后一致，附加有限性复核条件差异保留。完整数值交付仍在运行。",
       "solution_and_acceptance": "共享分支提取服务、目标合同和能力注册；两入口对同一来源输出一致的分支、参数出处、端口与阻塞原因，再通过真实模型实测。",
       "dependencies": [
         "I45"
@@ -25,7 +25,11 @@
       "historical_current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。",
       "delivery_priority": "core",
       "delivery_group": "C3",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-direct-intake-20260913.json",
+        "core-dual-entry-20260913.json"
+      ]
     },
     {
       "id": "I02",
@@ -314,13 +318,20 @@
         "C5"
       ],
       "historical_status": "待复核风险",
-      "status": "implemented_targeted_process_recovery_passed",
+      "status": "completed",
       "historical_current": "历史子任务复现过预算重置与重复成功查询。当前 retrieve 仍从 remaining=budget 开始；筛选失败跳过重复检索已有修复，但检索中途崩溃后的全局计费与幂等未充分证明。",
       "implementation_update": "Workflow 与 MethodLibrary 共用补读结果日志；完成结果跨重启复用，明确失败可显式重试，不确定请求不自动重发。Collection 补充核对也纳入持久动作预算。",
       "implementation": "docs/research-request-recovery.md",
       "delivery_priority": "core",
       "delivery_group": "C1",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "implemented_targeted_process_recovery_passed",
+      "closure": {
+        "as_of": "2026-09-13",
+        "scope": "持久动作账本的受控真实 HTTP/独立进程三路径恢复及重复请求不增发；本轮完整回归通过。外部供应商故障不在此结论内。",
+        "receipt": "docs/sources/remaining-modifications-20260912/core-regression-20260913.json",
+        "not_claimed": "不代表完整数值评价、最终交付或所有平台/方法科学验证通过。"
+      }
     },
     {
       "id": "I14",
@@ -456,7 +467,7 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "read_only_measurements_retained",
+      "status": "completed",
       "implementation": "docs/diagnostic-registry.md",
       "before_autonomy_retirement": {
         "title": "动态诊断的能力范围",
@@ -466,7 +477,14 @@
       },
       "delivery_priority": "core",
       "delivery_group": "C4",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "read_only_measurements_retained",
+      "closure": {
+        "as_of": "2026-09-13",
+        "scope": "保留受信任只读测量；旧模型诊断请求、分支和后续改写均拒绝。本轮全量包含固定推荐和诊断回归。",
+        "receipt": "docs/sources/remaining-modifications-20260912/core-regression-20260913.json",
+        "not_claimed": "不代表完整数值评价、最终交付或所有平台/方法科学验证通过。"
+      }
     },
     {
       "id": "I20",
@@ -541,7 +559,7 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "manual_only",
+      "status": "completed",
       "implementation": "docs/step-review-and-shadow.md",
       "before_autonomy_retirement": {
         "title": "运行中复核与局部回退",
@@ -551,7 +569,14 @@
       },
       "delivery_priority": "core",
       "delivery_group": "C4",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "manual_only",
+      "closure": {
+        "as_of": "2026-09-13",
+        "scope": "检查点读取和用户显式 REST 共享替代计划保留；模型 shadow_plan 与评价后重规划拒绝。完整回归通过。",
+        "receipt": "docs/sources/remaining-modifications-20260912/core-regression-20260913.json",
+        "not_claimed": "不代表完整数值评价、最终交付或所有平台/方法科学验证通过。"
+      }
     },
     {
       "id": "I23",
@@ -905,12 +930,19 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "implemented_targeted_native_lifecycle_passed",
+      "status": "completed",
       "historical_current": "图取消在步骤边界生效，长时间作者调用仅靠自身 timeout；已有搜索进程树控制不等于每个 v2 原生调用可立即停止。",
       "implementation": "docs/native-lifecycle-and-recovery.md",
       "delivery_priority": "core",
       "delivery_group": "C1",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "implemented_targeted_native_lifecycle_passed",
+      "closure": {
+        "as_of": "2026-09-13",
+        "scope": "本机 Windows/MATLAB R2025b/RELAX 取消、超时、父进程退出和两记录 worker 恢复实测通过；本轮完整回归通过。",
+        "receipt": "docs/sources/remaining-modifications-20260912/core-regression-20260913.json",
+        "not_claimed": "不代表完整数值评价、最终交付或所有平台/方法科学验证通过。"
+      }
     },
     {
       "id": "I38",
@@ -1000,11 +1032,18 @@
         "C7"
       ],
       "historical_status": "未完成",
-      "status": "implemented_full_eegmmidb_validation_passed",
+      "status": "completed",
       "implementation": "docs/official-bids-validation.md",
       "delivery_priority": "core",
       "delivery_group": "C2",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "implemented_full_eegmmidb_validation_passed",
+      "closure": {
+        "as_of": "2026-09-13",
+        "scope": "完整 EEGMMIDB BIDS 官方验证：本轮1526记录、11013文件、39569事件及4918训练试次；0错误，70743警告全部保留具体处置。",
+        "receipt": "docs/sources/remaining-modifications-20260912/core-data-gate-20260913.json",
+        "not_claimed": "不表示完整数值评价、最终模型交付或更广科学验证已通过。"
+      }
     },
     {
       "id": "I42",
@@ -1862,7 +1901,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "继续完成检索迟到结果恢复与论文身份合同修复；29项恢复、51项相关集成、25项论文身份测试通过（覆盖有重叠），恢复及论文身份在干净提交上分别复验通过。8001 API/Worker已恢复到f8d2960，旧失败工作流未重试且文件未变。外部供应商故障、当前版本全集评价和正式交付继续待验收。",
+  "active_step": "C4/C5：四个首次冻结流程的全量数值评价运行中；随后验收模型、ZIP、来源实际影响及用户入口。",
   "execution_order": [
     "I13",
     "I14",
@@ -2472,6 +2511,68 @@
       "receipt": "service-build-update-6.json",
       "commit": "f8d296063dbb84907cd88cd7f5edd49c25bdf7ca",
       "failed_workflow_unchanged": true
+    },
+    "core_regression_20260913": {
+      "schema_version": "1",
+      "status": "passed",
+      "source_commit": "722fe95640761fc36e5da176a9e34255208bc51a",
+      "backend_full": {
+        "passed": 1426,
+        "warnings": 109,
+        "seconds": 2457.44,
+        "exit_code": 0
+      },
+      "frontend_frozen": {
+        "tests_passed": 168,
+        "typecheck": "passed",
+        "build": "passed"
+      },
+      "frontend_creation_description": {
+        "commit": "66a815c",
+        "related_tests_passed": 22,
+        "updated_live_bundle_verified": false
+      },
+      "log_bindings": {
+        "backend-full.log": {
+          "path": ".local\\core-delivery-20260913\\backend-full.log",
+          "sha256": "d0b53472985c85c2e0192ca5ac7a61911c4176072dfe804adfcdba7c715b86a7"
+        },
+        "frontend-tests.log": {
+          "path": ".local\\core-delivery-20260913\\frontend-tests.log",
+          "sha256": "01a8261cb089828cb1a78500d34c1a3879b268e84fd8ad8d2e022dc1a049b03a"
+        },
+        "frontend-typecheck.log": {
+          "path": ".local\\core-delivery-20260913\\frontend-typecheck.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "frontend-build.log": {
+          "path": ".local\\core-delivery-20260913\\frontend-build.log",
+          "sha256": "67f1028f00f4b7a5d20d80dc5a0404428908216cca2924a2700c1c3c0a7fc828"
+        },
+        "frontend-create-tests.log": {
+          "path": ".local\\core-delivery-20260913\\frontend-create-tests.log",
+          "sha256": "8e28a2f597e4ae7a17f3e4e4f51f70039dbc196af418fa0a9c54b2802a447cc6"
+        }
+      },
+      "counts_overlap_not_summed": true,
+      "closed_issues": [
+        "I13",
+        "I19",
+        "I22",
+        "I37"
+      ],
+      "final_numerical_delivery_accepted": false,
+      "prior_evidence": [
+        "research-request-recovery-20260913.json",
+        "native-lifecycle-3-audit.json",
+        "worker-recovery-live-2-audit.json",
+        "autonomy-retirement.json"
+      ],
+      "limits": [
+        "Controlled local HTTP/process recovery is not external-provider outage testing",
+        "Native lifecycle tested on Windows/MATLAB/RELAX shared recipe only",
+        "Complete numerical delivery and current frontend result/download pending"
+      ]
     }
   },
   "scope_update_20260913": {
@@ -2623,6 +2724,25 @@
       "status": "core_delivery_in_progress",
       "receipt": "docs/sources/remaining-modifications-20260912/core-delivery-start-20260913.json",
       "accepted": false
+    },
+    "progress": {
+      "core_total_at_prioritization": 34,
+      "core_formally_closed": [
+        "I13",
+        "I19",
+        "I22",
+        "I37",
+        "I41"
+      ],
+      "core_remaining": 29,
+      "all_unclosed_remaining": 45,
+      "numerical_status": "reference_eegnet_evaluation_running",
+      "source_parameter_review": "passed_with_two_archived_narrative_corrections; numerical_effect_pending",
+      "data_gate": "passed",
+      "signal_invariants": "passed",
+      "frontend_creation_description": "fixed; 22 related tests passed; updated live preview still pending",
+      "backend_full_regression": "1426 passed; 109 warnings; 2457.44 s",
+      "direct_intake": "real extraction and idempotent replay passed; target-bound numerical equivalence with review differences recorded"
     }
   }
 }
