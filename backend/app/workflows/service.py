@@ -44,6 +44,8 @@ class WorkflowService:
         self.searches = None
         self.tasks = {}
         self.artifact_cache = {}
+        from app.build_info import snapshot
+        self.execution_build = dict(snapshot()["execution_build"])
         self.root.mkdir(parents=True, exist_ok=True)
         if self.root not in preprocessing.allowed_roots:
             preprocessing.allowed_roots.append(self.root)
@@ -103,6 +105,11 @@ class WorkflowService:
 
     def describe(self, owner, identity):
         state = self.get(owner, identity)
+        try:
+            self.require_current(state)
+            state["execution_control"] = {"allowed": True}
+        except (ValueError, OSError, KeyError):
+            state["execution_control"] = {"allowed": False}
         store, execution_owner = self.execution_store(state)
         # Inventory retains previously published hashes.
         known = {a["name"]: a for a in self.artifact_cache.get(identity, [])}
@@ -167,12 +174,14 @@ class WorkflowService:
         return sorted(records, key=lambda s: s["created_at"], reverse=True)
 
     def create(self, owner, request, *, start=True):
+        self.require_loaded_build()
         dataset.allowed_source(
             request, self.input_roots, [self.root, self.preprocessing.store.root]
         )
         state = {
             "schema_version": "1",
             "engine": "diagnostic-policy-search-v2",
+            "execution_build": dict(self.execution_build),
             "id": uuid4().hex,
             "owner": owner,
             "status": "queued",
@@ -205,10 +214,18 @@ class WorkflowService:
             raise ValueError(
                 "此运行的执行协议与当前版本不同，请新建运行；已有产物保持只读"
             )
+        if state.get("execution_build") != self.execution_build:
+            raise ValueError("此运行缺少当前构建绑定或使用其他构建，请新建运行；已有产物保持只读")
+        self.require_loaded_build()
         check_format(self.folder(state["id"]))
         if state.get('search_id'):
             searches = self.search_service()
             searches.require_current(searches.get(state['owner'], state['search_id']))
+
+    def require_loaded_build(self):
+        from app.build_info import execution_identity, runtime_snapshot
+        if execution_identity(runtime_snapshot()) != self.execution_build:
+            raise ValueError("服务启动后代码或环境已改变，请从固定构建重新启动；已有运行保持只读")
 
     async def resume(self):
         for path in self.root.glob("*/workflow.json"):
@@ -288,6 +305,7 @@ class WorkflowService:
                 if stage["status"] == "completed":
                     context.shared_memory[name] = state["outputs"][name]
                     continue
+                self.require_current(state)
                 stage.update(status="running", started_at=now(), error=None)
                 # Files from a failed attempt may be replaced by this stage.
                 prefix = artifacts.STAGE_FOLDERS[name] + "/"
@@ -312,6 +330,7 @@ class WorkflowService:
                 )
                 if not result.success:
                     raise ValueError(result.error or f"{name} failed")
+                self.require_current(state)
                 # Validate every agent result at the orchestration boundary too.
                 # Invalid/missing fields cannot enter shared memory or complete a stage.
                 result.output = publish_stage(
@@ -366,6 +385,7 @@ class WorkflowService:
 
     async def execute_stage(self, name, owner, identity):
         state = self.get(owner, identity)
+        self.require_current(state)
         folder = self.folder(identity)
         check_format(folder)
         request = WorkflowRequest.model_validate(state["request"])

@@ -1,5 +1,6 @@
 // English is the source language. Message text also serves as its typed key.
 export const en = [
+  "This run is available for viewing. Create a new run to execute with this service version.",
   "Scoring definitions",
   "Scoring",
   "Evaluation completeness",

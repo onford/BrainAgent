@@ -30,7 +30,7 @@ def filter_proposal(context):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("historical", ["engine", "missing_format"])
+@pytest.mark.parametrize("historical", ["engine", "missing_format", "missing_build", "source_build", "dependency_build"])
 async def test_historical_execution_is_read_only(source, tmp_path, historical):
     prep = PreprocessingService(tmp_path / "prep")
     service = WorkflowService(tmp_path / "runs", [source], prep)
@@ -38,6 +38,11 @@ async def test_historical_execution_is_read_only(source, tmp_path, historical):
     state.update(status="interrupted")
     if historical == "engine":
         state["engine"] = "previous-engine"
+    if historical == "missing_build":
+        state.pop("execution_build")
+    if historical in {"source_build", "dependency_build"}:
+        key = "source_sha256" if historical == "source_build" else "dependencies_sha256"
+        state["execution_build"][key] = "0" * 64
     service.save(state)
     root = service.folder(state["id"])
     if historical == "missing_format":
@@ -49,11 +54,38 @@ async def test_historical_execution_is_read_only(source, tmp_path, historical):
         service.retry(OWNER, state["id"])
     with pytest.raises(ValueError, match="只读"):
         await service.run(OWNER, state["id"])
+    with pytest.raises(ValueError, match="只读"):
+        await service.execute_stage("data_survey", OWNER, state["id"])
+    assert service.describe(OWNER, state["id"])["execution_control"] == {"allowed": False}
     await service.resume()
     assert not service.tasks
     assert before == {
         p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()
     }
+
+
+@pytest.mark.asyncio
+async def test_loaded_service_rejects_changed_runtime_before_new_or_resumed_work(source, tmp_path, monkeypatch):
+    from app import build_info
+    service = WorkflowService(tmp_path / "runs", [source], PreprocessingService(tmp_path / "prep"))
+    request = WorkflowRequest(source_root=str(source))
+    state = service.create(OWNER, request, start=False)
+    root = service.folder(state["id"])
+    before = {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    changed = build_info.runtime_snapshot()
+    changed["source_sha256"] = "0" * 64
+    monkeypatch.setattr(build_info, "runtime_snapshot", lambda: changed)
+    with pytest.raises(ValueError, match="启动后"):
+        service.create(OWNER, request, start=False)
+    with pytest.raises(ValueError, match="启动后"):
+        service.retry(OWNER, state["id"])
+    with pytest.raises(ValueError, match="启动后"):
+        await service.run(OWNER, state["id"])
+    await service.resume()
+    assert not service.tasks
+    assert len(service.list(OWNER)) == 1
+    assert service.describe(OWNER, state["id"])["execution_control"] == {"allowed": False}
+    assert before == {p: p.read_bytes() for p in root.rglob("*") if p.is_file()}
 
 
 @pytest.mark.asyncio

@@ -12,7 +12,7 @@ vi.mock('vue-router', () => ({
 
 function workflow(status: string) {
   return {
-    id: 'abc123', schema_version: '1', engine: 'diagnostic-policy-search-v2', status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
+    id: 'abc123', schema_version: '1', engine: 'diagnostic-policy-search-v2', execution_control: { allowed: true }, status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
     request: { source_root: 'E:/dataset/eeg/EEGMMIDB' }, error: null,
     artifacts: status === 'completed' ? [{name:'report/report.html',bytes:500,sha256:'abc'}] : [], events: [],
     stages: ['数据调研', '数据接入', '数据预处理', '结果选择', '数据报告', '数据交付'].map((label, i) => ({
@@ -27,6 +27,20 @@ describe('WorkflowsView', () => {
     request.mockReset(); replace.mockReset().mockResolvedValue(undefined)
     HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open','') }
     HTMLDialogElement.prototype.close = function() { this.removeAttribute('open') }
+  })
+
+  it.each([undefined, { allowed: false }])('keeps another build readable without retry controls: %j', async execution_control => {
+    const state = { ...workflow('failed'), execution_control }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      expect(wrapper.find('.retry-button').exists()).toBe(false)
+      expect(wrapper.text()).toContain('此运行可查看')
+      await wrapper.get('.stages button').trigger('click'); await flushPromises()
+      expect(wrapper.findAll('button').some(button => button.text().includes('重试未完成步骤'))).toBe(false)
+      expect(request.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+    } finally { wrapper.unmount() }
   })
 
   it.each([
@@ -116,6 +130,49 @@ describe('WorkflowsView', () => {
       expect(panel.text()).toContain('所选候选 chosen-1')
       expect(request.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
     } finally { wrapper.unmount(); vi.useRealTimers() }
+  })
+
+  it('reconnects after the first status read fails without submitting a second workflow', async () => {
+    vi.useFakeTimers()
+    const state = workflow('running')
+    let reads = 0
+    request.mockImplementation(async (path: string, options?: RequestInit) => {
+      if (path.endsWith('/sources')) return { allowed_roots: ['E:/dataset/eeg/EEGMMIDB'] }
+      if (path === '/api/workflows') return options?.method === 'POST' ? state : []
+      if (path !== '/api/workflows/abc123') return []
+      if (++reads === 1) throw new Error('Connection interrupted')
+      return state
+    })
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      await wrapper.get('form').trigger('submit'); await flushPromises()
+      expect(wrapper.find('.create-dialog').attributes('open')).toBeUndefined()
+      expect(wrapper.text()).toContain('Connection interrupted')
+      await vi.advanceTimersByTimeAsync(5000); await flushPromises()
+      expect(wrapper.text()).not.toContain('Connection interrupted')
+      expect(wrapper.find('.progress-panel').exists()).toBe(true)
+      expect(reads).toBe(2)
+      expect(request.mock.calls.filter(([, options]) => options?.method === 'POST')).toHaveLength(1)
+    } finally { wrapper.unmount(); vi.useRealTimers() }
+  })
+
+  it('stops reconnecting when the workflow page is closed', async () => {
+    vi.useFakeTimers()
+    const state = workflow('running')
+    request.mockImplementation(async (path: string) => {
+      if (path.endsWith('/sources')) return { allowed_roots: [] }
+      if (path === '/api/workflows') return [state]
+      throw new Error('Connection interrupted')
+    })
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      wrapper.unmount()
+      const calls = request.mock.calls.length
+      await vi.advanceTimersByTimeAsync(10000)
+      expect(request).toHaveBeenCalledTimes(calls)
+    } finally { vi.useRealTimers() }
   })
 
   it('starts the configured training workflow and exposes completed downloads and report', async () => {

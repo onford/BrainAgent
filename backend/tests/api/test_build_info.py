@@ -19,6 +19,8 @@ def test_build_identity_is_public_stable_and_contains_no_settings(tmp_path):
         assert len(body["source_sha256"]) == 64
         assert body["core_evaluator_version"] == 4
         assert body["preprocessing_scope"] == "shared_recipe_all_records"
+        assert body["execution_build"]["source_sha256"] == body["source_sha256"]
+        assert body["execution_build"]["dependencies_sha256"] == body["dependencies_sha256"]
         assert client.get("/api/build-info").json() == body
         assert "private-test-value" not in response.text
         assert "database_url" not in response.text

@@ -26,6 +26,8 @@ Sites 项目标识保存在 `frontend/.openai/hosting.json`。访问权限设为
 - 公开站点使用 `127.0.0.1:8001` 的独立 API 和 EEG Worker，数据库为 `.local/sites-connection/public.db`，任务目录为该目录下的 `workflows`、`preprocessing` 和 `offline-search`。原本 8000 端口的开发服务及其数据库保持独立。
 - 连接网关监听 `127.0.0.1:8788`，只允许持有服务间密钥的 Sites Worker 访问；匿名直接访问隧道会返回 401。网关始终固定 owner 为 `sites-public`。
 - `scripts/start-sites-connection.ps1` 启动网关和隧道，必要时调用 `scripts/start-sites-backend.ps1` 启动公开后端。连接前需准备官方 cloudflared Windows 可执行文件至 `.local/sites-connection/cloudflared.exe`。
+- 后端启动脚本将本地提交检出至 `.local/service-builds/<完整提交>`，API 与 Worker 显式从同一干净副本导入；默认使用 HEAD，也可传入 `-Commit`。凭据继续在原本的本地环境文件读取，不复制进构建。构建目录不可在运行期间编辑，状态文件保存实际提交和路径。
+- 新工作流记录执行构建绑定：全部登记应用源码/模板、登记依赖版本及 Python 平台。其他构建或缺少绑定的历史流程只读；开始、重试、自动恢复及直接阶段执行均在写锁前核对，阶段间再次检查。Git 文档提交和进程启动时间不单独改变执行身份；运行时配置、第三方原生工具和数据仍由各自原有合同约束。这不支持把活动进程热升级到另一构建。
 - `scripts/stop-sites-connection.ps1` 只停止网关和隧道。公开后端进程记录在 `.local/sites-connection/backend-state.json`；停止前核对 PID、创建时间和可执行路径，避免终止复用 PID 的其他进程。
 - 密钥保存在被 Git 忽略的 `.local/sites-connection/secret.json`，并保存为 Sites secret。不要把该文件或日志提交到源码。
 - 当前采用临时 Quick Tunnel：保持电脑开机、联网、不休眠以及后台进程运行。隧道重新启动后会得到新的 HTTPS origin，需要让 Codex 更新 Sites 的 `BRAIN_AGENT_BACKEND_URL` 并重新部署已有版本。不是开机自启服务。

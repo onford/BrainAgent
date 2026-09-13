@@ -961,7 +961,8 @@
         "E1"
       ],
       "historical_status": "实测未接入",
-      "status": "pending"
+      "status": "in_progress",
+      "implementation_update": "已为整条工作流绑定源码、登记依赖版本和Python平台；启动/重试/恢复/直接阶段执行前检查，升级或运行期间修改后拒绝继续，历史查看保持。28项后端及166项前端测试、构建通过；固定提交启动脚本已修改，实际公开服务仍待更新。"
     },
     {
       "id": "I47",
@@ -1981,7 +1982,7 @@
       "seconds": 910.3
     },
     "remote_sync": {
-      "verified_commit": "290673142c4251f91e76de30a309a8902fe1037b",
+      "verified_commit": "f6f649ffd0f119e187a062ece42df55e407df37e",
       "branch": "dev-xx"
     },
     "resource_driver": {
@@ -2117,6 +2118,11 @@
       "negative_controls": "2 passed",
       "final_delivery_accepted": false,
       "audit": "training-archive-audit.json"
+    },
+    "workflow_build_binding": {
+      "backend": "28 passed, 2 warnings, 238.86 s",
+      "frontend": "166 passed; production and Sites builds passed",
+      "scope": "Source, registered dependency versions and Python platform binding; cross-build workflows read-only. Real service update pending."
     }
   }
 }

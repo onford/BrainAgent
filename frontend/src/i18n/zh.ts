@@ -1,6 +1,7 @@
 import type { MessageKey } from './en'
 
 export const zh = {
+  "This run is available for viewing. Create a new run to execute with this service version.": "此运行可查看；如需使用当前服务版本执行，请新建运行。",
   "Scoring definitions": "评分含义",
   "Scoring": "评分",
   "Evaluation completeness": "评价完成情况",
