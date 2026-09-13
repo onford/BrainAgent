@@ -1,0 +1,65 @@
+{
+  "status": "passed",
+  "frontend_commit": "c5a6b4bc3d0e049fd0fc117de9b65e21ac3e11ae",
+  "target": "E:\\work\\BrainAgent\\.local\\service-builds\\d5d3702-latest\\frontend\\dist",
+  "source": "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\frontend-release-c5a6b4b\\frontend\\dist",
+  "backup": "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\frontend-before-c5a6b4b",
+  "previous_files": {
+    "favicon.svg": "9decddef5a1a998da09ddc4a96b5d2a549d31edf7a6a148730d541cfdad06332",
+    "index.html": "cabcbcc5873e767e0e5e70941fa5a808d51f558e54c5486b4aa3b834249fc4ff",
+    ".openai/hosting.json": "a715ffa721d2ffcf91cc56a058bcb2f16f69473a1bd9679a4ebe0f2d931ef1ec",
+    "assets/AgentsView-cs7kKoke.js": "2fd9e5cf411d7ce9540a4602ae54f70a75173c33d16adb540b1605df0bd3995e",
+    "assets/index-Bgc82t2K.js": "45020f4acf87eb375b4183b7d8c9cac45f250ff4733fa34742b0927f1c4cb686",
+    "assets/index-DE7oYIfU.css": "e1e70410c026c0ead6e5bbf2897243ca3121787e2c4fb5b3c8c11ca1f766e345",
+    "assets/IntegrationsView-BrPfiWDV.js": "78954a89e790c1fae26bda135d635ae180e1998202fdd91ff1965d333f038b9b",
+    "assets/PreprocessingUnitsView-BCPxsECh.js": "094523aa3dedfcb99457041bbf8ac0fb97e5f550309578d00937fbba62430333",
+    "assets/PreprocessingUnitsView-WozJQXPg.css": "68cbb412fa3a2f97683cd53a3aa5f3b1739b48658c13443b1e340449e5f9ad42",
+    "assets/searches-Dp7s7s2C.js": "0900d43af1da70849ae38d27d12c660c88c2b37db2e49720849369531d328a71",
+    "assets/SearchesView-BGz1s5sW.css": "f221e722514aa4a48b1ad0b58837ff6a51187a5c45bb53ceb9617c03ce392c2c",
+    "assets/SearchesView-DqNO08I3.js": "12f25e652b49d362a4159dc9fefe2fa3340d7903d92c091cae032332710c3e94",
+    "assets/WorkflowsView-BcmQkzXB.css": "fea12d6b376ee5c848af9f04e3a4d466408d2b6c7008a7362d808d84aef55fcd",
+    "assets/WorkflowsView-CvXD73v9.js": "c7d0012ecbd75381878625dfaf5e0cce524c4fe15666c40fa5a061d568ec1b1d",
+    "server/index.js": "31eb87a98e4d4939c70958f2a2fa675e6f02801e98c5435e3bb2e00a8867b5c3",
+    "server/worker.js": "413ba3ad9b55f72112e82027d2565684f6119d0008edfdb2e4c3c286edf4da0f"
+  },
+  "new_files": {
+    "favicon.svg": "9decddef5a1a998da09ddc4a96b5d2a549d31edf7a6a148730d541cfdad06332",
+    "index.html": "6701e84f984531c0a69a4b936d882b2a031ddca1917233a739ba3df85a3ed12a",
+    "assets/AgentsView-LxaArWqk.js": "c8694eb95c0bd5a05f3173e881fc2d160f5be0c46d007323ec4e3ed776dcd442",
+    "assets/index-Bqjs8DSX.js": "59c977b53108254bbcc19d383a849e80febce4abf9b81d0fe4efb4b25a765953",
+    "assets/index-DE7oYIfU.css": "e1e70410c026c0ead6e5bbf2897243ca3121787e2c4fb5b3c8c11ca1f766e345",
+    "assets/IntegrationsView-Ityr9l8B.js": "f7c37af28099d9d0fe4e74ded07fa0cb98b10cdcc5a0fed0e9a516afc965daee",
+    "assets/PreprocessingUnitsView-DkRzSxgU.js": "6a8f47e7ede8589fb37cdee1ebf08ba565b51934eb56cd19528fbae8b333cd8f",
+    "assets/PreprocessingUnitsView-WozJQXPg.css": "68cbb412fa3a2f97683cd53a3aa5f3b1739b48658c13443b1e340449e5f9ad42",
+    "assets/searches-CUtjkuRl.js": "22ad1c07d21f0f847942a65f974c9302af5272e7a8ca7083e5ee01f9291c5949",
+    "assets/SearchesView-BGz1s5sW.css": "f221e722514aa4a48b1ad0b58837ff6a51187a5c45bb53ceb9617c03ce392c2c",
+    "assets/SearchesView-BMQQyqu9.js": "e654a73b734d5ea1dff416076610a8092cc9617e9bbe129ccf1fedb3e0440f2e",
+    "assets/WorkflowsView-B0G-N5lA.css": "002047e33d1e5133bdeb3f2fbe4b29a17fa3a2609e2389701334564302be7442",
+    "assets/WorkflowsView-IS294kP8.js": "eb1dbd596c56ebb68bdc77e4ba6339fc839b1fd13fbde55b50d8dfeeac4c9211"
+  },
+  "old_assets_retained": true,
+  "new_process_started": false,
+  "existing_server_restarted": false,
+  "api_or_numeric_code_changed": false,
+  "sites_published": false,
+  "checks": {
+    "typecheck": 0,
+    "tests": 168,
+    "build": 0
+  },
+  "prior_typecheck_failure": "66a815c lacked the matching English typed key; c5a6b4b fixes it",
+  "browser": {
+    "url": "http://127.0.0.1:5173/workflows",
+    "chinese_creation_description_verified": true,
+    "english_creation_description_verified": true,
+    "console_errors": [],
+    "new_workflow_submitted": false,
+    "language_restored": "zh-CN",
+    "agent_created_tab_closed": true,
+    "dom_hashes": {
+      "frontend-live-zh.txt": "42ebf77b66ad80d4b5c8ad730bd04f6fe9ed8d3cebad65921a49f3b4b566bc97",
+      "frontend-live-en.txt": "167cbdbf65cff7db8a846140a206b032865a47a59600f558114e7892082c6069"
+    }
+  },
+  "full_result_and_download_verified": false
+}

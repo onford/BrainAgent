@@ -1901,7 +1901,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "C4/C5：四个首次冻结流程的全量数值评价运行中；随后验收模型、ZIP、来源实际影响及用户入口。",
+  "active_step": "按用户要求，当前前端小任务完成后暂停后续修改；保留当前全量计算及已挂接的模型/ZIP核验。最终结果接入与页面验收尚未执行。",
   "execution_order": [
     "I13",
     "I14",
@@ -2573,6 +2573,21 @@
         "Native lifecycle tested on Windows/MATLAB/RELAX shared recipe only",
         "Complete numerical delivery and current frontend result/download pending"
       ]
+    },
+    "core_frontend_release_20260913": {
+      "receipt": "core-frontend-release-20260913.json",
+      "status": "passed",
+      "frontend_commit": "c5a6b4bc3d0e049fd0fc117de9b65e21ac3e11ae",
+      "tests": 168,
+      "typecheck": "passed",
+      "build": "passed",
+      "actual_browser": [
+        "zh-CN",
+        "en"
+      ],
+      "new_process_started": false,
+      "sites_published": false,
+      "full_result_and_download_verified": false
     }
   },
   "scope_update_20260913": {
@@ -2740,9 +2755,24 @@
       "source_parameter_review": "passed_with_two_archived_narrative_corrections; numerical_effect_pending",
       "data_gate": "passed",
       "signal_invariants": "passed",
-      "frontend_creation_description": "fixed; 22 related tests passed; updated live preview still pending",
+      "frontend_creation_description": "completed; c5a6b4b; 168 frozen frontend tests, typecheck/build and actual 5173 zh/en browser checks passed",
       "backend_full_regression": "1426 passed; 109 warnings; 2457.44 s",
       "direct_intake": "real extraction and idempotent replay passed; target-bound numerical equivalence with review differences recorded"
+    },
+    "pause": {
+      "requested_by_user": "在完成当前小任务后暂停并报告完成情况；保留当前计算，仅暂停后续修改",
+      "current_small_task": "completed_frontend_creation_description_release",
+      "further_modifications": "paused",
+      "numerical_run": "continues_under_original_frozen_scope_and_budgets",
+      "existing_checkpoint_and_zip_audits": "continue",
+      "new_import_or_release_work": "not_started",
+      "snapshot": {
+        "search_status": "running",
+        "phase": "candidate",
+        "candidate_message": "执行并评价：基本运动频带 · 平均参考",
+        "reference_saved_eegnet_checkpoints": 13,
+        "reference_expected_eegnet_checkpoints": 15
+      }
     }
   }
 }
