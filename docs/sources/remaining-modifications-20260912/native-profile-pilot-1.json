@@ -1,0 +1,116 @@
+{
+  "as_of": "2026-09-13T15:00:00.702356+08:00",
+  "code_commit": "58da1f8f56c4619793dbf0534804f562ed7b798f",
+  "input_record": "S001R04",
+  "inventory_denominator": 310,
+  "attempted": 4,
+  "passed": 2,
+  "failed": 2,
+  "profiles": [
+    {
+      "identity": "EEG-CLASSIC-NATIVE/prep_native/source",
+      "status": "passed",
+      "elapsed_seconds": 130.5093743801117,
+      "error": null,
+      "exception": null,
+      "max_abs_error": 0.0,
+      "shape": [
+        64,
+        20000
+      ],
+      "event_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "real_verified": true,
+      "engine_sha256": "f89e1dece770f383a90ed2a7c457c0a335230a7a1baa4eb54f65827445c274c6",
+      "validation_script_sha256": "7b4bc1c11fc6bd7786b384e75e44737170cbce0503bc9081d58f0c7f096bd132",
+      "validation_helpers": {
+        "validate_native_profiles.py": "059b7d8c4ff29376c9c1ce2d761218d7b407b18a9cae8ad84b18b3392208e357"
+      }
+    },
+    {
+      "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=author_clock",
+      "status": "failed",
+      "elapsed_seconds": 333.0428431034088,
+      "error": "\nNot equal to tolerance rtol=1e-11, atol=1e-16\n\nMismatched elements: 1280000 / 1280000 (100%)\nMax absolute difference: 6.12166067e-05\nMax relative difference: 115409.92879648\n x: array([[ 1.271801e-06,  1.009935e-05, -5.565968e-05, ...,  3.640038e-07,\n         1.577989e-06, -2.588008e-06],\n       [ 6.010611e-06, -4.196855e-06, -6.510041e-05, ...,  3.483993e-07,...\n y: array([[ 7.459140e-06,  1.522248e-05, -5.137099e-05, ...,  1.688856e-07,\n         1.600055e-06, -2.420568e-06],\n       [ 1.311443e-05,  2.900866e-06, -6.000907e-05, ...,  1.096048e-07,...",
+      "exception": "AssertionError",
+      "max_abs_error": null,
+      "shape": null,
+      "event_indices": null,
+      "real_verified": null,
+      "engine_sha256": "f89e1dece770f383a90ed2a7c457c0a335230a7a1baa4eb54f65827445c274c6",
+      "validation_script_sha256": "7b4bc1c11fc6bd7786b384e75e44737170cbce0503bc9081d58f0c7f096bd132",
+      "validation_helpers": {
+        "validate_native_profiles.py": "059b7d8c4ff29376c9c1ce2d761218d7b407b18a9cae8ad84b18b3392208e357"
+      }
+    },
+    {
+      "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=fixed_loop_seed_zero",
+      "status": "failed",
+      "elapsed_seconds": 314.3162000179291,
+      "error": "Please use HDF reader for matlab v7.3 files, e.g. h5py",
+      "exception": "NotImplementedError",
+      "max_abs_error": null,
+      "shape": null,
+      "event_indices": null,
+      "real_verified": null,
+      "engine_sha256": "f89e1dece770f383a90ed2a7c457c0a335230a7a1baa4eb54f65827445c274c6",
+      "validation_script_sha256": "7b4bc1c11fc6bd7786b384e75e44737170cbce0503bc9081d58f0c7f096bd132",
+      "validation_helpers": {
+        "validate_native_profiles.py": "059b7d8c4ff29376c9c1ce2d761218d7b407b18a9cae8ad84b18b3392208e357"
+      }
+    },
+    {
+      "identity": "EEG-RELAX-NATIVE/relax_native/compatibility_policy=eegrej_scalar_row_bound",
+      "status": "passed",
+      "elapsed_seconds": 259.4308159351349,
+      "error": null,
+      "exception": null,
+      "max_abs_error": 0.0,
+      "shape": [
+        62,
+        18240
+      ],
+      "event_indices": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "real_verified": true,
+      "engine_sha256": "f89e1dece770f383a90ed2a7c457c0a335230a7a1baa4eb54f65827445c274c6",
+      "validation_script_sha256": "7b4bc1c11fc6bd7786b384e75e44737170cbce0503bc9081d58f0c7f096bd132",
+      "validation_helpers": {
+        "validate_native_profiles.py": "059b7d8c4ff29376c9c1ce2d761218d7b407b18a9cae8ad84b18b3392208e357"
+      }
+    }
+  ],
+  "results_path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\native-profiles-1\\profiles\\results.json",
+  "results_sha256": "b12289cbd026eac380898b70cda3b432ac85188c91690479f0c036ecf8336867",
+  "source": "real native entrypoint/graph comparisons; not fixed-panel utility or independent scientific validity",
+  "service_registry_updated": false,
+  "followup": "Author-clock numeric disagreement retained. Fixed-seed output/MNE comparison completed, then SciPy rejected v7.3 all-stages MAT. HDF reader added to the audit helper with 10 targeted tests passed; real-container read and rerun pending. Original receipts unchanged."
+}

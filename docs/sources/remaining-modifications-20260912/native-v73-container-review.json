@@ -1,0 +1,47 @@
+{
+  "scope": "Read-only forensic container comparison from retained failed run. Both exact decoded fingerprints agree; this does not replace its failed receipt or complete fresh native acceptance.",
+  "results": [
+    {
+      "directory": "graph/native",
+      "filename": "v00472.npy",
+      "field": "native_output_mat",
+      "decoded_sha256": "86cbe1a3cd69fb9b5ab1d77d6e0c4b3d89b150626250f31d5d983e667bcb6dca",
+      "elapsed_seconds": 0.1990370750427246,
+      "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\native-profiles-1\\profiles\\308-automagic_native\\graph\\native\\v00472.npy",
+      "file_sha256": "0377469726b7189f77ebddcc9b93262c727a4f00837a4935f26f41b2ed6b43fb"
+    },
+    {
+      "directory": "graph/native",
+      "filename": "v00473.npy",
+      "field": "native_all_stages_mat",
+      "decoded_sha256": "4c1488e87330f77d5ae2d5731d77cb276d6e78e08fc5217a9884781641204a59",
+      "elapsed_seconds": 5.084082841873169,
+      "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\native-profiles-1\\profiles\\308-automagic_native\\graph\\native\\v00473.npy",
+      "file_sha256": "fbeb3a32d70f16d814ddb92e1d5181b5d830d35d9be27498554c639380aae76b"
+    },
+    {
+      "directory": "direct-source",
+      "filename": "v00472.npy",
+      "field": "native_output_mat",
+      "decoded_sha256": "86cbe1a3cd69fb9b5ab1d77d6e0c4b3d89b150626250f31d5d983e667bcb6dca",
+      "elapsed_seconds": 0.1887056827545166,
+      "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\native-profiles-1\\profiles\\308-automagic_native\\direct-source\\v00472.npy",
+      "file_sha256": "e590fc8a63129e8584fcd9ebb875c517ae711fc5ee18cc2cc65829c36275c5df"
+    },
+    {
+      "directory": "direct-source",
+      "filename": "v00473.npy",
+      "field": "native_all_stages_mat",
+      "decoded_sha256": "4c1488e87330f77d5ae2d5731d77cb276d6e78e08fc5217a9884781641204a59",
+      "elapsed_seconds": 5.043184518814087,
+      "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\native-profiles-1\\profiles\\308-automagic_native\\direct-source\\v00473.npy",
+      "file_sha256": "ca84861ed94505f8011489aff134f518f0534b1304fd74f5aec8059e880e7879"
+    }
+  ],
+  "tests": {
+    "passed": 10,
+    "elapsed_seconds": 0.53,
+    "command": "python -m pytest tests/test_native_profile_audit.py -q"
+  },
+  "helper_sha256": "d991bc6c132d0dbf0660bd56c1bc9bd529029243a0727ee827d3ab878e56ff77"
+}

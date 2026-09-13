@@ -25,10 +25,69 @@ OPERATIONS = {'prep_native', 'automagic_native', 'relax_native'}
 _TEMPORARY_ROOT = re.compile(r"[A-Za-z]:[/\\][^\r\n'\"]*?[/\\](ba-native-pipeline-|ba-relax-)[A-Za-z0-9_]+")
 
 
+def hdf_mat(payload):
+    """Read v7.3 content, retaining fields, attributes and reference targets.
+
+    HDF object addresses, compression and its user-block timestamp are storage
+    details. Region references and external links are not silently discarded.
+    """
+    import h5py
+
+    with h5py.File(BytesIO(payload), 'r') as handle:
+        # Resolving .name separately for each object reference repeatedly walks
+        # MATLAB's large #refs# table. Index all targets once instead.
+        reference_names = {h5py.h5o.get_info(handle.id).addr: '/'}
+        handle.visititems(lambda name, obj: reference_names.__setitem__(h5py.h5o.get_info(obj.id).addr, '/' + name))
+
+        def value(item):
+            if isinstance(item, h5py.RegionReference):
+                raise ValueError('Unsupported MATLAB HDF region reference')
+            if isinstance(item, h5py.Reference):
+                return {'object_reference': reference_names[h5py.h5o.get_info(handle[item].id).addr] if item else None}
+            if isinstance(item, np.ndarray) and item.dtype.hasobject:
+                return {'shape': list(item.shape), 'items': [value(v) for v in item.flat]}
+            if isinstance(item, np.ndarray) and item.dtype.names:
+                return {'shape': list(item.shape), 'fields': {n: value(item[n]) for n in item.dtype.names}}
+            return item
+
+        def node(item, ancestors=()):
+            address = h5py.h5o.get_info(item.id).addr
+            if address in ancestors:
+                raise ValueError('Unsupported cyclic MATLAB HDF group')
+            result = {'attributes': {k: value(v) for k, v in item.attrs.items()}}
+            if isinstance(item, h5py.Dataset):
+                data = item[()]
+                if item.attrs.get('MATLAB_class') == b'char' and isinstance(data, np.ndarray) and data.ndim == 2 and 1 in data.shape:
+                    # MATLAB character vectors can contain generated work paths.
+                    # Keep orientation; string normalization below only removes
+                    # the declared temporary root, preserving the remaining text.
+                    result.update(kind='char', orientation='column' if data.shape[1] == 1 else 'row',
+                                  data=np.asarray(data.T, dtype='<u2').tobytes().decode('utf-16-le'))
+                else:
+                    result.update(kind='dataset', dtype=str(item.dtype), shape=item.shape, data=value(data))
+            elif isinstance(item, h5py.Group):
+                children = {}
+                for name in item:
+                    if not isinstance(item.get(name, getlink=True), h5py.HardLink):
+                        raise ValueError('Unsupported linked MATLAB HDF content')
+                    children[name] = node(item[name], (*ancestors, address))
+                result.update(kind='group', children=children)
+            else:
+                raise ValueError('Unsupported MATLAB HDF object')
+            return result
+
+        return node(handle)
+
+
 def comparable(value, key=None):
     if key in {'native_output_mat', 'native_all_stages_mat'}:
-        value = loadmat(BytesIO(np.asarray(value, dtype=np.uint8).tobytes()), simplify_cells=True)
-        value = {k:v for k,v in value.items() if k != '__header__'}
+        payload = np.asarray(value, dtype=np.uint8).tobytes()
+        try:
+            value = loadmat(BytesIO(payload), simplify_cells=True)
+        except NotImplementedError:
+            value = hdf_mat(payload)
+        else:
+            value = {k:v for k,v in value.items() if k != '__header__'}
     if isinstance(value, dict):
         # This hash covers the raw MAT container, including its timestamp.
         # The decoded container itself is compared recursively instead.

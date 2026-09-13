@@ -50,7 +50,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "实质文献方法自主参与闭环",
-      "current": "第6次fresh流程在81ac1a1完成调研至交付六阶段，6个控制/派生候选被评价；实质文献候选因宽窗丢Trial不可比，文献闭环门槛仍失败。数据与代码未变化，预算耗尽后已完成结果正常保留。评分窗修订7401c8f的第7次fresh流程进行中。",
+      "current": "第7/8次fresh流程已结束且实质文献验收失败，旧结果保留。第10次覆盖109人/327目标记录/4918试次，已自然接入7–30Hz与1–4秒窗的来源分支；状态文件锁导致中断后在原冻结版本、原预算下恢复，尚未完成实质文献评价、反馈与赢家核验。",
       "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。",
       "dependencies": [
         "I01",
@@ -178,7 +178,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "完整经典流程库",
-      "current": "54 单元/91 操作/310 profiles。完整 PREP、Automagic、RELAX 原生图接口已接入。RELAX 显式工程派生配置在 S001R04 与独立原生输出逐值一致，62×18240，保留13/15目标事件，原样本映射与Codec验证通过；不算固定面板效用。HAPPE 缺少 Optimization Toolbox，当前全 profile 数值矩阵仍待更新。",
+      "current": "54单元/91操作/310配置，完整PREP、Automagic、RELAX原生图接口已接入。本轮S001R04完整对比PREP与RELAX通过；Automagic作者时钟数值不同，固定种子的数据/MNE一致但核验器未能读取v7.3中间容器，正在补齐核验。HAPPE缺少Optimization Toolbox；这些结果不算固定面板效用。",
       "solution_and_acceptance": "以固定作者版本整理完整方法配方及适用条件；逐步核对所有必需操作、默认值、交互决定与输出。工程近似单独命名；完整原方法的声明须有整套数值与适用真实数据证据。",
       "dependencies": [
         "I01",
@@ -552,7 +552,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "新协议全集搜索",
-      "current": "第10次全集流程完成数据调研/接入及基线15个EEGNet检查点，质量评价期间于14:07:58因轮询search.json短暂PermissionError返回422，验收驱动退出、流程中断；首轮acceptance=false，原数据/代码/驱动哈希不变。正在原冻结2906731环境下核对并恢复，原预算不续期。",
+      "current": "第10次全集流程在14:07:58因状态轮询search.json短暂PermissionError中断，首轮acceptance=false，原数据/代码/驱动哈希不变。现已在原冻结2906731环境下恢复，仍处于基线评价；保留原15个检查点，恢复创建独立a2评价尝试，预算不续期。",
       "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。",
       "dependencies": [
         "I03",
@@ -781,7 +781,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "真实 EEG 的 profile 覆盖",
-      "current": "首轮冻结f209b40完整310项矩阵结束：305通过、5失败。偏移降采样已修复并单项复验0差通过；另外4个完整原生流程此前缺少专门用例。已新增显式真实记录与资产绑定验证入口，实际原生执行待进行；修复版本完整矩阵仍待重跑。",
+      "current": "首轮f209b40完整310项为305通过、5失败；降采样修复后单项0差通过。原生专项4项已执行，PREP/RELAX通过，Automagic作者时钟数值不同、固定种子核验遇v7.3容器格式缺口。第二轮457bfe6完整310项已启动；不能把旧版或专项结果相加为当前全矩阵通过。",
       "solution_and_acceptance": "按 EOG/ECG/几何/资产/任务适用性建立代表性数据矩阵，逐类验证；不强迫 EEGMMIDB 验证无 EOG 方法，也不要求无限连续参数笛卡尔积。",
       "dependencies": [
         "I09",
@@ -796,7 +796,7 @@
       "historical_status": "尚未验证",
       "status": "in_progress",
       "historical_current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
-      "implementation_update": "新增audit_unit_matrix只读汇总器核对完整分母、结果索引、逐项回执、源码/引擎/运行环境、验证脚本与全部产物哈希，失败与未执行项保留；不写服务注册表，不借用历史真实EEG通过状态。11项专项测试通过。正式矩阵尚在运行，未发布通过结论。 首轮矩阵发现decimate偏移时间轴在FIF整数起点量化后被Codec误拒绝；修复后44项测试通过，原失败配置实际复验最大数值差0、98.431秒。旧失败保留；修复版本的全矩阵仍待重新验证。"
+      "implementation_update": "audit_unit_matrix已完成首轮证据汇总并保留全部失败；原生专项证据见native-profile-pilot-1.json。固定种子失败已定位核验器的MATLAB v7.3读取支持；新HDF读取器10项专项测试通过，真实容器与重新执行待核验。原有数值容差与作者时钟失败不变，服务注册表尚未发布本轮通过状态。"
     },
     {
       "id": "I39",
@@ -931,7 +931,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一源码及可复现发布版本",
-      "current": "十五批已提交并推送至d7c734f；该固定版本全量1222过1败，失败为测试GBK读取UTF-8计划，显式编码修复后进程守护等80项回归通过。第十六批准备提交；公开服务与最新全量仍待完成。",
+      "current": "应用、验证脚本与服务分别使用有哈希的固定副本，当前本地提交457bfe6，8001服务加载58da1f8。远端最近已确认651367e；后续本地提交的推送因GitHub 443连接失败尚未同步。完整回归1391通过、3项超时在同版复验通过，原始结果均保留。",
       "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
       "dependencies": [],
       "sources": [
@@ -944,7 +944,7 @@
       "historical_status": "未完成",
       "status": "in_progress",
       "historical_current": "起始工作区620文件已建立本地内容快照；共享处理范围已修订，服务版本快照接口已实现，整体回归及提交仍未完成。",
-      "implementation_update": "远端连接恢复；第十三次push已确认30b9f1c..6849f96。失败验收与旧回归记录只读保留。"
+      "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。"
     },
     {
       "id": "I46",
@@ -965,7 +965,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "启动前核对公开工作流、搜索、会话、数值任务均为空；固定同版API/Worker与Python路径写入runtime.json。源码203ce6f3c1606af59f1d46b7e20c8bef49f2426c996e880f3e4e9eedcd336ea0。Sites访问和发布按用户要求暂缓。 状态读取重试修复已随58da1f8加载到API/Worker，四接口复核200；最新证据service-build-update-4.json。",
+      "implementation_update": "8001当前固定58da1f8源码SHA256为08d3582859ef6db2bf9db579d45a214e71d8b9f59b980ee5eed1cb42a620793e，API/Worker使用完整独立环境，四接口复核200；最新证据service-build-update-4.json。旧版源码哈希和回归结果保留在对应历史证据中。Sites访问和发布按用户要求暂缓。",
       "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
     },
     {

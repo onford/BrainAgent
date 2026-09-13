@@ -18,3 +18,5 @@ python -m scripts.audit_unit_matrix `
 常规配置采用固定合成输入。完整原生流程通过`validate_units_v2`的`--native-input`、`--native-record`、`--native-bindings`显式指定真实记录和资产；辅助脚本版本也写入并核对回执。PREP、Automagic、RELAX比较完整数据、MNE状态、诊断和解码后的MAT内容，仅归一化MAT文件头时间戳和临时工作目录名称，原始容器分别无损留存。作者时钟随机配置若实际不一致会保留为失败，不放宽数值容差以声称确定性复现。
 
 这些对比是适配一致性证据，不证明作者算法科学正确、真实神经活动得到保护或最终agent已通过验收。本汇总器仍不直接发布真实EEG覆盖声明；真实数据回执需要另行核验。
+
+MATLAB v7.3中间容器按HDF5内容读取，保留数据集、属性、维度和对象引用目标；MATLAB字符向量仅按同一临时路径规则归一化。对象引用先建立地址到路径索引，避免对大型引用表反复遍历。未支持的区域引用、外部链接和循环组明确失败。实现依据见[h5py对象引用文档](https://docs.h5py.org/en/stable/refs.html)与[文件对象文档](https://docs.h5py.org/en/stable/high/file.html)。不改变数据容差，不抹去诊断或处理时长。
