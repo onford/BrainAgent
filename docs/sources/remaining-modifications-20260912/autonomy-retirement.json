@@ -1,6 +1,6 @@
 {
   "date": "2026-09-13",
-  "status": "code_and_tests_verified_local_service_update_pending",
+  "status": "completed_code_tests_and_local_service_verified",
   "user_scope": "保留首次推荐，移除后续自主调整",
   "archive": {
     "branch": "codex/archive-autonomous-preprocessing-20260913",
@@ -83,5 +83,38 @@
     }
   },
   "sites": "deferred by user",
-  "other_modifications": "not started during retirement"
+  "other_modifications": "not started during retirement",
+  "code_commit": "67b2564db5d0c4cbb719b7a0f6519eef8d37b696",
+  "local_service": {
+    "status": "updated_and_http_verified",
+    "source_commit": "67b2564db5d0c4cbb719b7a0f6519eef8d37b696",
+    "source_sha256": "97f91b2015db1424df352739e421dd3ff17844ca394eda0e32489e96411c8912",
+    "runtime": "backend/.venv-service-20260913",
+    "scope": "Local API and preprocessing worker on port 8001 use the fixed initial recommendation code; Sites remains deferred.",
+    "counts": {
+      "units": 54,
+      "operations": 91,
+      "profiles": 310
+    },
+    "missing_python_dependencies": 0,
+    "profiles_requiring_explicit_assets": 20,
+    "http_evidence": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/service-update/http-after.json",
+      "sha256": "498bd371db4f25507369aec375cf075f64d6afb586a98a197da778984cb29a14"
+    },
+    "capabilities_evidence": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/service-update/capabilities-after.json",
+      "sha256": "1a4b2b72740bcf0041df43e12226b3067bdbce515a5ba39efd82f88a12913543"
+    },
+    "committed_boundary_tests": {
+      "passed": 21,
+      "failed": 0,
+      "evidence": {
+        "path": ".local/autonomous-preprocessing-retirement-20260913/committed-boundaries.txt",
+        "sha256": "06a70663bd85364016caaa4485bf8028c9ba2acfc3d308411dd173643630487f"
+      }
+    },
+    "update_note": "Stopping the API child also exited its launcher. The script stopped on the already-exited launcher; remaining recorded process identities were rechecked before completing the restart.",
+    "numerical_jobs_created": 0
+  }
 }
