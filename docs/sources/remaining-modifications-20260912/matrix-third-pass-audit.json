@@ -1,0 +1,180 @@
+{
+  "date": "2026-09-13",
+  "status": "partial",
+  "auditor_build": "96f89a2e102cb5550ea7c4f0f3c0cfb90e79fbb4",
+  "engine_sha256": "f89e1dece770f383a90ed2a7c457c0a335230a7a1baa4eb54f65827445c274c6",
+  "matrix": {
+    "counts": {
+      "attempted": 310,
+      "failed": 1,
+      "not_executed": 0,
+      "passed": 309,
+      "profiles": 310,
+      "real_data_verified": 0
+    },
+    "read_file_count": 51135,
+    "read_files_unchanged": true,
+    "evidence": {
+      "path": ".local/remaining-modifications-20260912/matrix-current-audit-3/matrix/audit.json",
+      "sha256": "d6ce90e3d03471f3fbe1a0019b836abf659f051b9cf865f2147da22e6b23e616"
+    }
+  },
+  "native": {
+    "profiles": 4,
+    "real_data_verified": 3,
+    "record_id": "S001R04",
+    "profiles_details": [
+      {
+        "identity": "EEG-CLASSIC-NATIVE/prep_native/source",
+        "max_abs_error": 0.0,
+        "output_sha256": "e446b7a30936f51d49e17b3753b405d234219df721b45cac4f0bb014e17e1003",
+        "real_data_passed": true,
+        "receipt_sha256": "0b74254c929c0c58eae023db8e9a64fc70483caa40738054be84c6d0d106dbcf",
+        "record_id": "S001R04",
+        "retained_event_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "retained_trial_ids": [
+          "S001R04:event:1",
+          "S001R04:event:3",
+          "S001R04:event:5",
+          "S001R04:event:7",
+          "S001R04:event:9",
+          "S001R04:event:11",
+          "S001R04:event:13",
+          "S001R04:event:15",
+          "S001R04:event:17",
+          "S001R04:event:19",
+          "S001R04:event:21",
+          "S001R04:event:23",
+          "S001R04:event:25",
+          "S001R04:event:27",
+          "S001R04:event:29"
+        ],
+        "shape": [
+          64,
+          20000
+        ],
+        "status": "passed"
+      },
+      {
+        "failure": "\nNot equal to tolerance rtol=1e-11, atol=1e-16\n\nMismatched elements: 1280000 / 1280000 (100%)\nMax absolute difference: 4.15062775e-05\nMax relative difference: 54823.58740414\n x: array([[ 7.138472e-06,  1.543676e-05, -5.009521e-05, ...,  3.308485e-07,\n         1.583779e-06, -2.563137e-06],\n       [ 1.138108e-05,  3.641897e-07, -5.959228e-05, ...,  3.288248e-07,...\n y: array([[ 6.364078e-06,  1.417351e-05, -5.182339e-05, ...,  2.961604e-07,\n         1.405433e-06, -2.275844e-06],\n       [ 1.058633e-05, -3.344320e-07, -6.181335e-05, ...,  2.507740e-07,...",
+        "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=author_clock",
+        "real_data_passed": false,
+        "status": "failed"
+      },
+      {
+        "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=fixed_loop_seed_zero",
+        "max_abs_error": 0.0,
+        "output_sha256": "a219f7b6ae0be32012ff7f891efcbd30a297f91a183ad945469f18d08dd67585",
+        "real_data_passed": true,
+        "receipt_sha256": "75d679ceadfe0c825fa8f10ac7d314b828af04383f9405da4bef1e7995a9d044",
+        "record_id": "S001R04",
+        "retained_event_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "retained_trial_ids": [
+          "S001R04:event:1",
+          "S001R04:event:3",
+          "S001R04:event:5",
+          "S001R04:event:7",
+          "S001R04:event:9",
+          "S001R04:event:11",
+          "S001R04:event:13",
+          "S001R04:event:15",
+          "S001R04:event:17",
+          "S001R04:event:19",
+          "S001R04:event:21",
+          "S001R04:event:23",
+          "S001R04:event:25",
+          "S001R04:event:27",
+          "S001R04:event:29"
+        ],
+        "shape": [
+          64,
+          20000
+        ],
+        "status": "passed"
+      },
+      {
+        "identity": "EEG-RELAX-NATIVE/relax_native/compatibility_policy=eegrej_scalar_row_bound",
+        "max_abs_error": 0.0,
+        "output_sha256": "5016d6e6640d759ed49aedb59ca5b1ff0a498db59c3ca4917320d5a480090fe6",
+        "real_data_passed": true,
+        "receipt_sha256": "64cc23b29c5d2e3ec38b4ab32b2fc4d3603b1d761b0800831eea154b26685473",
+        "record_id": "S001R04",
+        "retained_event_indices": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "retained_trial_ids": [
+          "S001R04:event:3",
+          "S001R04:event:5",
+          "S001R04:event:7",
+          "S001R04:event:9",
+          "S001R04:event:11",
+          "S001R04:event:13",
+          "S001R04:event:15",
+          "S001R04:event:17",
+          "S001R04:event:19",
+          "S001R04:event:21",
+          "S001R04:event:23",
+          "S001R04:event:25",
+          "S001R04:event:27"
+        ],
+        "shape": [
+          62,
+          18240
+        ],
+        "status": "passed"
+      }
+    ],
+    "source_data_unchanged": true,
+    "native_dependencies_unchanged": true,
+    "evidence": {
+      "path": ".local/remaining-modifications-20260912/matrix-current-audit-3/native-audit.json",
+      "sha256": "04d786072c0a31440e326e6cb7d95a2a824821b1cd06476c82d69a27b0f3c713"
+    }
+  },
+  "scope": "Read-only audit of completed matrix-current-3 at its matching frozen numerical engine and validator. No autonomous search resumed. No claim that all profiles used real EEG, or that later application builds have complete numerical verification.",
+  "registry_updated": false
+}

@@ -1,0 +1,34 @@
+{
+  "date": "2026-09-13",
+  "status": "targeted_validation_passed",
+  "code_commit": "d6888c8f93f36d74bf578990a7f2064aaa01a754",
+  "tests": {
+    "intake_and_related": {
+      "passed": 34,
+      "failed": 0,
+      "log": {
+        "path": ".local/intake-recovery-20260913/regression-3.txt",
+        "sha256": "f1175e5a748f9d2ca1c44ad38783b4806588092592948485ae0dc91432936fbb"
+      }
+    },
+    "fixed_recommendation_boundaries": {
+      "passed": 21,
+      "failed": 0,
+      "log": {
+        "path": ".local/intake-recovery-20260913/fixed-boundaries.txt",
+        "sha256": "10780a1b4caa4f60f96af1c7690ec30b8ba7f16d1afddfeafe3fc5a7f71fee67"
+      }
+    },
+    "prior_invocation_error": {
+      "tests_run": 0,
+      "reason": "Wrong test working directory; corrected without changing tests",
+      "log": {
+        "path": ".local/intake-recovery-20260913/regression-2.txt",
+        "sha256": "5306087d897a06148af7f29c79feae4894ddd987dced5ef87d625dac422fd14c"
+      }
+    }
+  },
+  "scope": "Independent MethodLibrary duplicate intake serialization, immutable completed-result reuse, source and build binding. Source recovery budgets remain unchanged. Scripted model integration, not live provider failure validation.",
+  "service_restarted": false,
+  "sites": "deferred_by_user"
+}

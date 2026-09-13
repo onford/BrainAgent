@@ -190,7 +190,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "完整经典流程库",
-      "current": "54单元/91操作/310配置，完整PREP、Automagic、RELAX原生图接口已接入。本轮S001R04完整对比PREP与RELAX通过；Automagic作者时钟数值不同，固定种子的数据/MNE一致但核验器未能读取v7.3中间容器，正在补齐核验。HAPPE缺少Optimization Toolbox；这些结果不算固定面板效用。",
+      "current": "54单元/91操作/310配置。Automagic v7.3容器核验缺口已修复；与原固定引擎匹配的第三轮矩阵已完成并只读核验309通过/1失败。PREP、固定种子Automagic、RELAX在S001R04的保存输出、诊断及事件谱系复核通过；作者时钟Automagic两次输出不同，保留失败。HAPPE仍缺Optimization Toolbox。上述不是新版全集效用验收。",
       "solution_and_acceptance": "以固定作者版本整理完整方法配方及适用条件；逐步核对所有必需操作、默认值、交互决定与输出。工程近似单独命名；完整原方法的声明须有整套数值与适用真实数据证据。",
       "dependencies": [
         "I01",
@@ -272,7 +272,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "检索中断的预算及幂等恢复",
-      "current": "检索动作在外部调用前原子预留；已完成结果先写独立账本再汇总，崩溃后可恢复；不确定请求不自动重复发出。动作数和绝对截止时间跨恢复保留。23 项相关回归通过，等待全量冻结回归。 独立 MethodLibrary 恢复动作的结果幂等性仍待统一审查。",
+      "current": "独立MethodLibrary新增跨实例文件锁、不可变完成回执、文献包及完整应用/依赖/平台绑定。并发重复请求与重试复用完成结果；旧无构建绑定缓存拒绝混用，未补齐信息不冻结为完成，原动作预算和截止时间保留。34项相关回归与21项固定推荐边界通过。外部供应商真实故障恢复与统一正式运行验收仍待完成。",
       "solution_and_acceptance": "用持久化 action_id、累计花费和 deadline 约束恢复；在工具已返回而保存未完成等节点注入故障。确认重试不免费恢复预算、不重复记成功；本项是代码风险，非本轮新实测故障。",
       "dependencies": [],
       "sources": [
@@ -282,7 +282,8 @@
       "historical_status": "待复核风险",
       "status": "implemented_pending_live_verification",
       "historical_current": "历史子任务复现过预算重置与重复成功查询。当前 retrieve 仍从 remaining=budget 开始；筛选失败跳过重复检索已有修复，但检索中途崩溃后的全局计费与幂等未充分证明。",
-      "implementation_update": "Workflow 与 MethodLibrary 共用补读结果日志；完成结果跨重启复用，明确失败可显式重试，不确定请求不自动重发。Collection 补充核对也纳入持久动作预算。"
+      "implementation_update": "Workflow 与 MethodLibrary 共用补读结果日志；完成结果跨重启复用，明确失败可显式重试，不确定请求不自动重发。Collection 补充核对也纳入持久动作预算。",
+      "implementation": "docs/literature-intake-recovery.md"
     },
     {
       "id": "I14",
@@ -819,7 +820,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "真实 EEG 的 profile 覆盖",
-      "current": "首轮f209b40完整310项为305通过、5失败；降采样修复后单项0差通过。原生专项4项已执行，PREP/RELAX通过，Automagic作者时钟数值不同、固定种子核验遇v7.3容器格式缺口。第二轮457bfe6完整310项已启动；不能把旧版或专项结果相加为当前全矩阵通过。",
+      "current": "第三轮matrix-current-3已完成。按匹配的旧固定引擎只读核验51135文件，310配置309通过/1失败；作者时钟Automagic输出不同保留失败。PREP、固定种子Automagic、RELAX三个原生配置在S001R04的完整保存输出及事件谱系另行复核通过。其余配置不能借此宣称真实EEG覆盖，后续新应用构建也未借用旧矩阵作为当前全集验收。",
       "solution_and_acceptance": "按 EOG/ECG/几何/资产/任务适用性建立代表性数据矩阵，逐类验证；不强迫 EEGMMIDB 验证无 EOG 方法，也不要求无限连续参数笛卡尔积。",
       "dependencies": [
         "I09",
@@ -1710,7 +1711,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "R01 已完成：保留首次推荐并冻结执行，后续模型自主调整已移除；8001 API/Worker 已切换 67b2564。旧第10次自主搜索已取消，不再续跑。其余修改仍按 execution_order 和依赖推进，已撤回目标不恢复；新版真实全集评价和最终交付尚待验收。",
+  "active_step": "R01已完成。已继续I13独立方法库的并发与完成结果幂等修复，34项相关回归和21项固定推荐边界通过；已核验I09/I38旧固定数值矩阵，310项309通过/1失败，3个原生配置通过S001R04只读重载。真实供应商故障恢复、新版全集评价和正式交付仍待验收。",
   "execution_order": [
     "R01",
     "scope_removal",
@@ -2304,6 +2305,19 @@
         200,
         200
       ]
+    },
+    "intake_recovery_20260913": {
+      "receipt": "intake-recovery-20260913.json",
+      "code_commit": "d6888c8f93f36d74bf578990a7f2064aaa01a754",
+      "related_tests_passed": 34,
+      "fixed_boundary_tests_passed": 21
+    },
+    "unit_matrix_third_pass": {
+      "receipt": "matrix-third-pass-audit.json",
+      "passed": 309,
+      "failed": 1,
+      "native_real_record_verified": 3,
+      "service_registry_updated": false
     }
   },
   "scope_update_20260913": {
