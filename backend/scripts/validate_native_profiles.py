@@ -82,7 +82,8 @@ def one(row, directory, *, input_path, record_id, bindings_path):
     runtime_params = executor.runtime_params(step, packet, None)
     before = identity(packet)
     expected = invoke_source(step.unit_id, step.op, deepcopy(raw), **runtime_params)
-    Codec(directory / 'direct-source').verified_dump(expected)
+    direct = directory / 'direct-source'
+    write_json(direct / 'artifacts.json', Codec(direct).verified_dump(expected))
     actual = executor.execute(step)
     np.testing.assert_allclose(actual.data.get_data(), expected['data'].get_data(), rtol=1e-11, atol=1e-16)
     if fingerprint(actual.data) != fingerprint(expected['data']):

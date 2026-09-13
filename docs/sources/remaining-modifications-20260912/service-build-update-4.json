@@ -1,0 +1,19 @@
+{
+  "status": "updated_and_http_verified",
+  "source_commit": "58da1f8f56c4619793dbf0534804f562ed7b798f",
+  "source_sha256": "08d3582859ef6db2bf9db579d45a214e71d8b9f59b980ee5eed1cb42a620793e",
+  "runtime": "backend/.venv-service-20260913",
+  "scope": "Snapshot read retry fix loaded by fixed API and worker; Sites not published",
+  "route_statuses": {
+    "health": 200,
+    "build": 200,
+    "sources": 200,
+    "capabilities": 200
+  },
+  "missing_python_dependencies": 0,
+  "profiles_requiring_explicit_assets": 20,
+  "evidence": {
+    "path": ".local\\remaining-modifications-20260912\\service-update-4\\http-after.json",
+    "sha256": "b972105915a78b0947a855884b9b9a4ad3b0b8d6447d277db369bb5d225b0b3a"
+  }
+}

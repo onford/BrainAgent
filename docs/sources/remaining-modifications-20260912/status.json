@@ -951,7 +951,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "8001 API与Worker已切换b27fafb固定副本及完整独立环境，健康/版本/数据源/能力接口均200。54单元/91操作/310配置，Python缺包为0，20配置需显式原生资产。完整回归1391通过、3项120秒超时在同版复验均通过；完整页面决定链仍待正式结果。",
+      "current": "8001 API与Worker已切换58da1f8固定副本及完整独立环境，健康/版本/数据源/能力接口均200。54单元/91操作/310配置，Python缺包为0，20配置需显式原生资产。完整回归1391通过、3项120秒超时在同版复验均通过；完整页面决定链仍待正式结果。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -965,7 +965,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "启动前核对公开工作流、搜索、会话、数值任务均为空；固定同版API/Worker与Python路径写入runtime.json。源码203ce6f3c1606af59f1d46b7e20c8bef49f2426c996e880f3e4e9eedcd336ea0。Sites访问和发布按用户要求暂缓。",
+      "implementation_update": "启动前核对公开工作流、搜索、会话、数值任务均为空；固定同版API/Worker与Python路径写入runtime.json。源码203ce6f3c1606af59f1d46b7e20c8bef49f2426c996e880f3e4e9eedcd336ea0。Sites访问和发布按用户要求暂缓。 状态读取重试修复已随58da1f8加载到API/Worker，四接口复核200；最新证据service-build-update-4.json。",
       "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
     },
     {
@@ -2239,8 +2239,18 @@
         "passed": 1,
         "seconds": 0.09
       },
-      "real_execution": "pending",
+      "real_execution": "frozen58da1f8 real S001R04 run in progress; PREP passed, remaining profiles pending",
       "comparison_scope": "all decoded native fields; only MAT header and temporary directory identifiers normalized"
+    },
+    "public_runtime_update_4": {
+      "receipt": "docs\\sources\\remaining-modifications-20260912\\service-build-update-4.json",
+      "source_commit": "58da1f8f56c4619793dbf0534804f562ed7b798f",
+      "route_statuses": [
+        200,
+        200,
+        200,
+        200
+      ]
     }
   }
 }
