@@ -1,7 +1,7 @@
 """Reviewed observations and counter-hypotheses, never scoring rules.
 
-The catalog is frozen with each new search and made available to the existing
-budgeted request_evidence mechanism. Reading historical runs never migrates it.
+The catalog is frozen with each new run for initial recommendation and read-only
+measurement interpretation. Reading historical runs never migrates it.
 """
 
 import json
@@ -79,8 +79,8 @@ def interpretation_context(documents):
     return {"status": "frozen", "schema_version": guide.schema_version,
             "source_id": "interpretation-guide",
             "workflow": ["核对阶段、单位、分母、频带和适用状态", "引用实测数值路径",
-                         "列出机制及竞争解释", "选择能区分解释的合法诊断",
-                         "通过 request_evidence 阅读完整知识卡和来源定位", "登记预测并用实测反例更新解释"],
+                         "列出机制及竞争解释", "查看已保存的诊断测量与缺失状态",
+                         "查看完整知识卡和来源定位", "解释测量的支持范围，不触发流程改写"],
             "cards": [{"id": c.id, "metrics": c.metrics, "reading": c.reading,
                        "alternatives": c.alternatives, "checks": c.checks,
                        "conditions": c.conditions, "forbidden_inference": c.forbidden_inference}

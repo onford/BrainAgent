@@ -3,7 +3,7 @@
 from copy import deepcopy
 
 from app.preprocessing.storage import digest
-from .pipeline_space import apply_edits, recipe_hash, validate_recipe
+from .pipeline_space import recipe_hash, validate_recipe
 from .space_contracts import CandidateRecipe, ExplorationSpace
 
 
@@ -207,11 +207,7 @@ def _entry(
     deviations,
     warnings,
     order,
-    parent_id=None,
-    edits=None,
-    prior_challenges=None,
     lineage=None,
-    parent_ids=None,
     issues=None,
     space=None,
 ):
@@ -226,95 +222,27 @@ def _entry(
             evidence_ids=evidence,
             deviations=deviations,
             prior_warnings=warnings,
-            prior_challenges=prior_challenges or {},
-            parent_id=parent_id,
-            edits=edits or [],
             parameters={
                 "operators": [n.operator for n in recipe.nodes],
             },
             operator_count=len(recipe.nodes),
             order=order,
-            lineage=lineage or [], parent_ids=parent_ids or [], issues=issues or [],
+            lineage=lineage or [], issues=issues or [],
         )
     ).model_dump(mode="json")
 
 
-def edited_entry(
-    parent, edits, space, *, title, order, context=None, prior_challenges=None, donors=None
-):
-    recipe, warnings = apply_edits(parent["recipe"], edits, space, context, donors)
-    parents = [parent] + [(donors or {})[e["donor_id"]] for e in edits if e["action"] == "combine_fragment"]
-    evidence = list(dict.fromkeys(e for p in parents for e in p["evidence_ids"]))
-    lineage = []
-    for p in parents:
-        for trace in p.get("lineage", []):
-            if trace not in lineage:
-                lineage.append(deepcopy(trace))
-    challenges = prior_challenges or {}
-    required = {w["prior_id"] for w in warnings}
-    if required != challenges.keys() or any(
-        not isinstance(v, str) or not v.strip() for v in challenges.values()
-    ):
-        raise ValueError("每条偏离的软先验必须对应一条可检验的挑战理由")
-    identity = "candidate-" + recipe_hash(recipe, space)[:24]
-    return _entry(
-        identity,
-        title,
-        recipe,
-        "derived",
-        parent["seed_id"],
-        evidence,
-        list(dict.fromkeys(d for p in parents for d in p["deviations"])),
-        warnings,
-        order,
-        parent["id"],
-        deepcopy(edits),
-        deepcopy(challenges),
-        lineage=lineage,
-        parent_ids=list(dict.fromkeys(p["id"] for p in parents)),
-        issues=[i for p in parents for i in p.get("issues", [])],
-        space=space,
-    )
-
-
-def verify_entry(entry, space, previous, context=None):
-    """Rebuild a candidate from a frozen seed or a checked parent edit lineage."""
-    if entry.get("parent_id") is None:
-        expected = next(
-            (s for s in seed_entries(space, context) if s["id"] == entry["id"]), None
-        )
-    else:
-        parent = previous.get(entry["parent_id"])
-        if parent is None:
-            raise ValueError("candidate lineage has no verified parent")
-        expected = edited_entry(
-            parent,
-            entry["edits"],
-            space,
-            title=entry["title"],
-            order=entry["order"],
-            context=context,
-            prior_challenges=entry["prior_challenges"],
-            donors=previous,
-        )
+def verify_entry(entry, space, previous=None, context=None):
+    """Only a complete frozen method can enter the execution registry."""
+    expected = next((s for s in seed_entries(space, context) if s['id'] == entry['id']), None)
     if expected is None or digest(entry) != digest(expected):
-        raise ValueError(
-            "candidate differs from its frozen seed or operator edit lineage"
-        )
+        raise ValueError('candidate differs from its frozen method')
     return expected
 
 
 def verify_registry(protocol, registry):
-    space = ExplorationSpace.model_validate(protocol["space"])
-    context = protocol.get("space_context", {})
-    verified, semantics = {}, set()
-    for entry in registry:
-        if entry["id"] in verified or entry["recipe_hash"] in semantics:
-            raise ValueError("duplicate candidate identity or executable semantics")
-        verify_entry(entry, space, verified, context)
-        verified[entry["id"]] = entry
-        semantics.add(entry["recipe_hash"])
-    seeds = seed_entries(space, context)
-    if registry[: len(seeds)] != seeds:
-        raise ValueError("registry must begin with every frozen method seed")
-    return verified
+    space = ExplorationSpace.model_validate(protocol['space'])
+    seeds = seed_entries(space, protocol.get('space_context', {}))
+    if registry != seeds:
+        raise ValueError('registry must equal the complete frozen method catalog')
+    return {entry['id']: entry for entry in registry}

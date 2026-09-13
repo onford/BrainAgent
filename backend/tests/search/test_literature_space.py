@@ -8,9 +8,9 @@ from app.preprocessing.literature import LiteratureExtraction, materialize
 from app.preprocessing.schemas import Evidence, MethodSpec, Ref
 from app.preprocessing.storage import digest
 from app.search.literature_space import build_workflow_space, check_execution
-from app.search.method_space import edited_entry, seed_entries, verify_registry
+from app.search.method_space import seed_entries, verify_registry
 from app.search.recipe_compiler import compile_recipe
-from app.search.method_provenance import validate_stop, method_status
+from app.search.method_provenance import method_status
 from tests.preprocessing.conftest import make_dataset
 
 
@@ -123,43 +123,19 @@ def test_blockers_preserved(data, problem):
     assert methods[0].recipe[0].unit_id == source["method"]["recipe"][0]["unit_id"]
 
 
-def test_edit_and_combination_trace_and_constraints(data):
-    space, context, _ = build_workflow_space(data, OUTPUT, refs(extract(data)))
-    entries = seed_entries(space, context)
-    donor = next(e for e in entries if e["origin"] == "literature")
-    base = next(e for e in entries if e["id"] == "basic-acquisition-reference")
-    registry = {e["id"]: e for e in entries}
-    modified = edited_entry(donor, [{"action": "set_parameter", "node_id": "filter", "parameter": "l_freq", "value": 7.}],
-        space, title="modified", order=len(entries), context=context)
-    assert modified["origin"] == "derived" and modified["parent_ids"] == [donor["id"]]
-    compiled = compile_recipe(modified, space, {"output_contract": OUTPUT}, context)
-    assert next(s for s in compiled.recipe if s.op == "filter").parameter_sources["l_freq"].origin == "engineering"
-    combined = edited_entry(base, [{"action": "combine_fragment", "donor_id": donor["id"], "node_ids": ["car"], "after_node_id": "epochs"}],
-        space, title="combined", order=len(entries), context=context, donors=registry)
-    check_execution(compile_recipe(combined, space, {"output_contract": OUTPUT}, context), data, OUTPUT)
-    assert combined["parent_ids"] == [base["id"], donor["id"]]
-    assert {t["kind"] for t in combined["lineage"]} == {"basic", "literature"}
-    verify_registry({"space": space.model_dump(), "space_context": context}, entries + [combined])
-    with pytest.raises(ValueError, match="required source step"):
-        edited_entry(donor, [{"action": "remove_operator", "node_id": "filter"}], space, title="invalid", order=len(entries), context=context)
-    with pytest.raises(ValueError, match="requires continuous"):
-        edited_entry(donor, [{"action": "swap_adjacent", "first_node_id": "shared_epoch", "second_node_id": "shared_resample"}], space, title="invalid", order=len(entries), context=context)
 
 
-def test_early_stop_accounts_for_both_sources_and_deferred_status(data):
+def test_fixed_schedule_accounts_for_sources_and_deferred_status(data):
     space, context, report = build_workflow_space(data, OUTPUT, refs(extract(data)))
     entries = seed_entries(space, context)
     state = {"registry": entries, "candidates": [], "status": "stopped", "stop_reason": "candidate_budget_exhausted",
              "protocol": {"catalog": entries, "baseline_id": entries[0]["id"], "method_intake": report}}
-    with pytest.raises(ValueError, match="untried_candidate_reasons"):
-        validate_stop(state, {"untried_candidate_reasons": {}})
-    validate_stop(state, {"untried_candidate_reasons": {e["id"]: "Explicit test-only reason" for e in entries}})
+    state['schedule'] = [e['id'] for e in entries]
     assert {e["origin"] for e in entries} >= {"basic", "literature"}
     assert all(r["status"] == "deferred" and r["reason"] == "candidate_budget_exhausted" for r in method_status(state)["methods"])
     assert method_status(state)["literature_participation"]["status"] == "not_evaluated"
-    state["actions"] = [{"action": "finish", "status": "completed", "request": {
-        "untried_candidate_reasons": {e["id"]: "已保留此方向，等待追加预算" for e in entries}}}]
-    assert all(r["reason"] == "已保留此方向，等待追加预算" for r in method_status(state)["methods"])
+    state['schedule'] = []
+    assert all(r['reason'] == '未纳入首次推荐' for r in method_status(state)['methods'] if r['candidate_id'] != entries[0]['id'])
 
 
 def test_dedup_retains_both_literature_sources(data):

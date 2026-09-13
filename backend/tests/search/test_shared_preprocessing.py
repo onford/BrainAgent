@@ -3,8 +3,8 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
-from pydantic import TypeAdapter, ValidationError
-from app.search.space_contracts import PipelineEdit, PipelineRecipe
+from pydantic import ValidationError
+from app.search.space_contracts import PipelineRecipe
 from app.search.evaluation_contracts import EvaluationReceipt
 from app.search.evaluation import evaluate
 from app.preprocessing.schemas import Step
@@ -13,8 +13,6 @@ from tests.search.test_evaluation_v2 import cv_case
 
 @pytest.mark.parametrize("mode", ["none", "subject_scale", "euclidean_alignment", "conditional_alignment"])
 def test_retired_policy_and_edit_rejected(mode):
-    with pytest.raises(ValidationError):
-        TypeAdapter(PipelineEdit).validate_python({"action": "set_adaptation", "policy": {"adaptation": mode}})
     with pytest.raises(ValidationError):
         PipelineRecipe.model_validate({"nodes": [{"id": "epoch", "operator": "epoch"}], "adaptation": {"adaptation": mode}})
 

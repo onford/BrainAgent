@@ -152,7 +152,7 @@ def compile_recipe(entry, space, panel, context=None):
         adaptations=entry.get("deviations", [])
         + [w["reason"] for w in warnings],
         lineage={"kind": entry.get("origin"), "sources": entry.get("lineage", []),
-                 "parent_ids": entry.get("parent_ids", []), "edits": entry.get("edits", []),
+                 "edits": entry.get("edits", []),
                  "candidate_id": entry["id"], "recipe_hash": entry.get("recipe_hash"),
                  "rule_audit": rule_audit},
         issues=entry.get("issues", []),

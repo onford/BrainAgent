@@ -372,46 +372,13 @@ def render(root: Path, state):
             + "</tr>"
         )
     actions = []
-    labels = {
-        "propose_candidate": "候选提案",
-        "request_evidence": "定向阅读",
-        "finish": "结束搜索",
-        "enumerate_remaining": "枚举剩余候选",
-        "initial_schedule": "冻结一次性提案",
-        "invalid_proposal": "提案校验未通过",
-        "model_decision": "模型调用",
-    }
+    labels = {"initial_recommendation": "首次推荐（执行前冻结）"}
     for a in state["actions"]:
-        if a["action"] == "model_decision" and a["status"] == "completed":
-            continue
-        branches = a.get("decision_branches") or {}
-        request, result = a.get("request") or {}, a.get("result") or {}
-        hypothesis = request.get("hypothesis") or {}
-        checks = (result.get("prediction_checks") or {}).get("checks", [])
+        result = a.get("result") or {}
         details = [
-            ("候选", a.get("candidate_id")),
-            ("依据候选", a.get("base_candidate_id")),
-            ("理由", a["reason"] or result.get("reason")),
-            ("预期", a.get("expected_result")),
-            ("若改善", branches.get("improvement")),
-            ("若未改善", branches.get("no_improvement")),
-            ("阅读问题", request.get("question")),
-            ("影响的选择", request.get("affects_choice")),
-            ("来源", result.get("url")),
-            ("摘录", "\n".join(result.get("excerpts", []))),
-            ("候选顺序", ", ".join(result.get("candidate_ids", []))),
-            ("未解决问题", "；".join(request.get("unresolved", []))),
+            ("理由", a.get("reason") or result.get("reason")),
+            ("固定候选顺序", ", ".join(result.get("candidate_ids", []))),
             ("失败原因", a.get("error")),
-            ("解释假设", hypothesis.get("explanation")),
-            ("竞争解释", hypothesis.get("competing_explanation")),
-            ("削弱该解释的结果", hypothesis.get("weakened_by")),
-            (
-                "预测核对",
-                "；".join(
-                    f"{c['metric']}：{ {'matched': '符合预测', 'contradicted': '未满足预测条件', 'unavailable': '未能测量'}.get(c['status'], c['status']) }（{c.get('before')} → {c.get('after')}）"
-                    for c in checks
-                ),
-            ),
         ]
         actions.append(
             f"<details><summary>{a['index']} · {escape(labels.get(a['action'], a['action']))} · {escape(statuses.get(a['status'], a['status']))}</summary>"
@@ -457,7 +424,7 @@ details{{border-bottom:1px solid #e0e8e9;padding:12px 0}}summary{{cursor:pointer
 <p>暂选：<strong>{escape(selected["title"] if selected else "未得到可评价候选")}</strong></p>
 {provenance_html}
 <p class="muted">{escape(reasons.get(state["stop_reason"], state["stop_reason"] or ""))} · 累计 {state["usage"]["elapsed_seconds"]:.1f} 秒 ·
-候选 {state["usage"]["candidates"]}/{state["budget"]["max_candidates"]} · 提案 {state["usage"]["proposals"]}/{state["budget"]["max_proposals"]} · 阅读 {state["usage"]["evidence_reads"]}/{state["budget"]["max_evidence_reads"]}</p>
+候选 {state["usage"]["candidates"]}/{state["budget"]["max_candidates"]} · 首次推荐 {state["usage"].get("recommended_candidates", 0)}</p>
 <p>本结果用于当前开发条件下的流程选择。开发集被反复查看，没有进行独立确认，也不证明神经信号质量。</p>
 {conclusion_html}
 <h2>候选比较</h2><div class="scroll"><table><thead><tr><th>候选</th><th>状态</th><th>{comparison_metric}</th><th>{comparison_anchor}</th><th>CSP 相对参考差值</th><th>实际耗时</th><th>原因</th></tr></thead><tbody>{"".join(rows)}</tbody></table></div>

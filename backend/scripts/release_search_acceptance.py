@@ -38,7 +38,7 @@ async def main(args):
     code = Path(__file__).resolve().parents[1] / "app"
     code_before = hashes([p for p in code.rglob("*") if p.suffix in {".py", ".json"}], code)
     request = {"workflow_id": saved["id"], "budget": {"max_candidates": args.candidates, "max_seconds": args.seconds,
-        "max_proposals": 24, "max_memory_mb": 8192}}
+        "max_memory_mb": 8192}}
     write(root / "design.json", {"entry": "POST /api/searches on the completed current-session survey and intake",
         "upstream": str(upstream), "upstream_hashes": before, "request": request,
         "dependency_overrides": [], "numerical_overrides": [], "model": settings.llm_model,

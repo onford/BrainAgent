@@ -6,95 +6,16 @@ from app.preprocessing.methods import check_mapping
 from app.preprocessing.storage import digest
 from app.search.method_space import (
     basic_space,
-    edited_entry,
     seed_entries,
     verify_registry,
 )
 from app.search.recipe_compiler import compile_recipe
 
 
-def test_seed_and_edited_recipes_compile_to_enabled_engine_operations():
-    space = basic_space()
-    seeds = seed_entries(space)
-    panel = {"output_contract": {"sfreq": 160.0, "tmin": 0.0, "tmax": 2.0}}
-    edited = edited_entry(
-        seeds[0],
-        [
-            {
-                "action": "set_parameter",
-                "node_id": "bandpass",
-                "parameter": "l_freq",
-                "value": 4.0,
-            },
-            {
-                "action": "insert_operator",
-                "after_node_id": None,
-                "node": {
-                    "id": "drift",
-                    "operator": "detrend",
-                    "parameters": {"type": "linear"},
-                },
-            },
-        ],
-        space,
-        title="detrend and wider band",
-        order=len(seeds),
-    )
-    for entry in seeds + [edited]:
-        compiled = compile_recipe(entry, space, panel)
-        assert check_mapping(compiled) == []
-        assert compiled.recipe[-1].op == "epoch"
-        assert compiled.recipe[-1].params["tmax"] == 2.0
-        assert compiled.output == compiled.recipe[-1].id
-    assert seeds[0]["recipe"]["nodes"][1]["parameters"]["l_freq"] == 8
 
 
-def test_registry_rebuilds_lineage_and_rejects_tampering():
-    space = basic_space()
-    seeds = seed_entries(space)
-    protocol = {"space": space.model_dump(mode="json")}
-    edited = edited_entry(
-        seeds[0],
-        [
-            {
-                "action": "set_parameter",
-                "node_id": "bandpass",
-                "parameter": "l_freq",
-                "value": 4.0,
-            },
-        ],
-        space,
-        title="4–30",
-        order=len(seeds),
-    )
-    registry = seeds + [edited]
-    assert len(verify_registry(protocol, registry)) == 4
-    before = digest(registry)
-    verify_registry(protocol, registry)
-    assert digest(registry) == before
-    bad = deepcopy(registry)
-    bad[-1]["recipe"]["nodes"][1]["parameters"]["l_freq"] = 5.0
-    with pytest.raises(ValueError, match="lineage"):
-        verify_registry(protocol, bad)
-    with pytest.raises(ValueError, match="duplicate"):
-        verify_registry(protocol, registry + [edited])
 
 
-def test_removed_adaptation_edit_is_rejected():
-    space = basic_space()
-    with pytest.raises(ValueError, match="does not match"):
-        edited_entry(
-            seed_entries(space)[0],
-            [
-                {
-                    "action": "set_adaptation",
-                    "policy": {"adaptation": "none", "alignment_threshold": 30.0},
-                },
-            ],
-            space,
-            title="no operation",
-            order=3,
-        )
 
 
 def test_unknown_priors_are_rejected_before_execution():
@@ -142,22 +63,8 @@ def test_selection_uses_complete_fixed_utility_not_the_best_single_model():
     assert select(candidates[-1:]) is None
 
 
-def test_filter_domain_accepts_valid_band_narrower_than_old_fbcsp_limit():
-    space = basic_space()
-    entry = edited_entry(seed_entries(space)[0], [
-        {"action": "set_parameter", "node_id": "bandpass", "parameter": "l_freq", "value": 15.0},
-        {"action": "set_parameter", "node_id": "bandpass", "parameter": "h_freq", "value": 20.0},
-    ], space, title="valid narrow band", order=3)
-    band = next(n for n in entry["recipe"]["nodes"] if n["operator"] == "bandpass")
-    assert band["parameters"] == {"l_freq": 15.0, "h_freq": 20.0}
 
 
-def test_filter_domain_still_rejects_invalid_band():
-    space = basic_space()
-    with pytest.raises(ValueError):
-        edited_entry(seed_entries(space)[0], [
-            {"action": "set_parameter", "node_id": "bandpass", "parameter": "h_freq", "value": 10.0},
-        ], space, title="invalid band", order=3)
 
 
 def test_selection_tie_counts_actual_operators():

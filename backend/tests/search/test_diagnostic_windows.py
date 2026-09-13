@@ -24,7 +24,6 @@ def setup_window(diagnostic):
         measurement_frames={'source_raw': dict(status='verified', sha256='f'*64)})]}}
     write(path, q); ref['sha256'] = file_hash(path)
     request.update(kind='spectral_components', stage='source_raw')
-    request['experiment'].update(metric='spectral_components.signed_periodic_fraction.value', threshold=-1.)
     return root, state, request, path, ref, w
 
 
@@ -35,7 +34,6 @@ def test_fixed_window_registered_measurement_and_immutable_snapshot(diagnostic):
     result = run_diagnostic(root, state, request)
     assert result['status'] == 'evaluated'
     assert len(result['input_artifacts']) == 2
-    assert result['decision_effect']['outcome'] == 'condition_met'
     assert result['spectral_components']['signed_periodic_fraction']['available_records'] == 1
     # Label changes cannot alter the descriptive input selection or measurement.
     state['panel']['labels'] = ['held-out']
@@ -62,7 +60,6 @@ def test_changed_or_missing_support_cannot_be_complete_spectral_evidence(diagnos
     write(path, q); ref['sha256'] = file_hash(path)
     if change in ('missing', 'unvisited', 'narrow'):
         r = run_diagnostic(root, state, request)
-        assert r['decision_effect']['outcome'] == 'unavailable'
         assert r['spectral_components']['signed_periodic_fraction']['value'] is None
     else:
         with pytest.raises(ValueError): run_diagnostic(root, state, request)

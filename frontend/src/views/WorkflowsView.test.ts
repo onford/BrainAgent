@@ -156,9 +156,7 @@ describe('WorkflowsView', () => {
       const panel = wrapper.get('[aria-label="关联搜索进度"]')
       expect(panel.text()).toContain('执行中 · 正在核验预测')
       expect(panel.text()).toContain('候选 2 / 6')
-      expect(panel.text()).toContain('提议 3 / 8')
-      expect(panel.text()).toContain('证据读取 1 / 2')
-      expect(panel.text()).toContain('耗时 12.5 / 3,600 秒')
+      expect(panel.text()).toContain('时间 12.5 / 3,600 秒')
       state = { ...state, search_summary: { ...summary, status: 'completed', message: '评估完成', selected_candidate_id: 'chosen-1', usage: { ...summary.usage, candidates: 4 } } }
       await vi.advanceTimersByTimeAsync(2000); await flushPromises()
       expect(panel.text()).toContain('已完成 · 评估完成')

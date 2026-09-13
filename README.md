@@ -4,7 +4,7 @@
 
 EEGMMIDB 工作流将本地调研、资料核对、标准化接入、诊断驱动的预处理策略搜索、报告与训练交付连接起来。LLM 根据实测诊断提出共享策略及实验预测；数值工具按被试隔离计算开发效用，选择规则确定胜者。页面入口为 `/workflows`，见[运行说明](docs/training-workflow.md)。
 
-[预处理策略搜索](docs/offline-preprocessing-search.md)比较应用于全部记录的共享方法，候选来自基础方法、本轮文献及依据反馈的派生组合。默认按被试分组评价；EEGNet 三种子（17、42、2026）被试宏平均 BA 的均值为主指标，CSP＋收缩 LDA 为对照。评分和训练交付使用同一物理电压输出。当前范围、验收与未完成项见[实施状态](docs/current-implementation-status.md)。
+[预处理策略搜索](docs/offline-preprocessing-search.md)比较应用于全部记录的共享方法，候选来自执行前冻结的基础与文献方法目录；模型首次推荐后按固定顺序执行，不再根据反馈改写流程。默认按被试分组评价；EEGNet 三种子（17、42、2026）被试宏平均 BA 的均值为主指标，CSP＋收缩 LDA 为对照。评分和训练交付使用同一物理电压输出。当前范围、验收与未完成项见[实施状态](docs/current-implementation-status.md)及[当前推荐边界](docs/fixed-initial-recommendation.md)。
 
 Data Preprocess 首版已接入真实 EEG 执行。功能范围、上游协议、独立 Worker 和验收脚本见 [实现与运行说明](docs/data-preprocessing-implementation.md)。完整 EEG 工作流使用 Python 3.12，并安装 `--extra eeg --extra inspection`；原有对话开发环境可单独使用。新接入工作副本必须通过固定官方 BIDS 校验，缺少校验依赖时会保留失败回执并停止注册输入。
 

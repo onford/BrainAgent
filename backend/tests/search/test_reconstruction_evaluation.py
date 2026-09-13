@@ -18,7 +18,6 @@ from app.preprocessing.schemas import (
 )
 from app.preprocessing.storage import digest, file_hash, write_json
 from app.search import reconstruction_evaluation as reval
-from app.search.hypotheses import metric as resolve_metric
 from app.search.panel import freeze_panel
 from tests.preprocessing.conftest import make_dataset
 from tests.search.test_panel import make_input
@@ -225,19 +224,6 @@ def test_real_bids_replay_all_cases_source_once_and_no_arrays_written(
     ] == pytest.approx(0.5)
     assert set(detail["array_hashes"]) == set(reval.ARRAY_NAMES)
     assert len(detail["receipt"]["windows"]) == 7
-    # Exercise the actual LLM hypothesis path resolver on every exported condition.
-    envelope = {"assessment": {"reconstruction": result}}
-    for condition_id, row in result["summary"]["by_case"].items():
-        path = f"assessment.reconstruction.summary.by_case.{condition_id}.metrics.input_nrmse.value"
-        if row['metrics']['input_nrmse']['value'] is None:
-            with pytest.raises(ValueError):resolve_metric(envelope,path)
-        else:
-            assert resolve_metric(envelope, path) == row["metrics"]["input_nrmse"]["value"]
-    with pytest.raises(ValueError):
-        resolve_metric(
-            envelope,
-            "assessment.reconstruction.summary.by_case.eog-0.5.metrics.input_nrmse.value",
-        )
     print("integration_resources", result["summary"]["resources"])
 
 

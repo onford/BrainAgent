@@ -119,7 +119,7 @@ def test_shadow_cannot_bypass_identity_guards_or_applicability(tmp_path,change):
 
 
 @pytest.mark.asyncio
-async def test_agent_review_and_shadow_actions_do_not_claim_execution(tmp_path):
+async def test_agent_reviews_but_cannot_compile_a_shadow_plan(tmp_path):
     from app.agents.data_preprocessing.agent import DataPreprocessingAgent
     from app.runtime.context import AgentContext,AgentTask
     svc,data,job,stopped,request=prepare(tmp_path)
@@ -129,7 +129,7 @@ async def test_agent_review_and_shadow_actions_do_not_claim_execution(tmp_path):
     assert result.output['execution_status']=='reviewed' and len(result.output['checkpoints'])==2
     result=await agent.run(AgentTask(instruction='compile',inputs={'action':'shadow_plan','job_id':job.job_id,
         'request':request.model_dump(mode='json')}),context)
-    assert result.output['execution_status']=='planned' and result.output['record_count']==2
+    assert result.output['execution_status']=='needs_input'
     assert 'job_id' not in result.output and svc.store.status('owner',job.job_id)==stopped
 
 

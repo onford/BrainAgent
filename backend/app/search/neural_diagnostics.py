@@ -6,7 +6,7 @@ from pathlib import Path
 
 from app.preprocessing.storage import digest, within
 from .neural_priors import evaluate_priors
-from .diagnostic_registry import DiagnosticInputBudget, validate_request, branch_result, METRICS
+from .diagnostic_registry import DiagnosticInputBudget, validate_request, METRICS
 
 
 def quality_input(root, state, candidate_id, budget=None):
@@ -184,8 +184,6 @@ def run_diagnostic(root, state, request, budget=None):
         'registry_sha256': state['protocol'].get('diagnostic_registry_hash'),
         'input_domain': definition.input_domain, 'label_permission': 'none',
         'numeric_contract': definition.numeric_contract}
-    if request.get('experiment'):
-        result['decision_effect'] = branch_result(result, request['experiment'])
     result["request_sha256"] = digest({"request": {k: v for k, v in request.items() if k not in {"question", "reason", "experiment"}},
                                        "inputs": result["input_artifacts"], "bundle": digest(bundle),
                                        "contract": result['diagnostic_contract']})

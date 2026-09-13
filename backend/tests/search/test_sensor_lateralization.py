@@ -88,10 +88,7 @@ def test_registered_lateralization_uses_frozen_receipt_and_numeric_branch(diagno
     q.update(quality())
     write(path,q); ref['sha256'] = file_hash(path)
     request.update(kind='sensor_lateralization',stage='processed_task')
-    request['experiment'].update(metric='sensor_lateralization.summary.mu.value',comparison='lt',threshold=0.)
     r = run_diagnostic(root,state,request)
-    assert r['decision_effect']['outcome'] == 'condition_met'
-    assert r['decision_effect']['value'] == pytest.approx(-100/3+15)
     assert len(r['input_artifacts']) == 1
 
 

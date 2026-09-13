@@ -8,38 +8,7 @@ from pathlib import Path
 import time
 from typing import Literal
 
-from pydantic import Field, model_validator
-from app.preprocessing.schemas import Contract
 from app.preprocessing.storage import digest
-
-NextAction = Literal['propose_candidate', 'request_evidence', 'request_diagnostic', 'finish']
-
-
-class DiagnosticBranch(Contract):
-    next_action: NextAction
-    reason: str = Field(min_length=1, max_length=2000)
-
-
-class DiagnosticExperiment(Contract):
-    hypothesis: str = Field(min_length=1, max_length=2000)
-    competing_explanation: str = Field(min_length=1, max_length=2000)
-    metric: str = Field(min_length=1, max_length=160)
-    comparison: Literal['gt', 'ge', 'lt', 'le']
-    threshold: float = Field(allow_inf_nan=False)
-    threshold_rationale: str = Field(min_length=1, max_length=2000)
-    branches: dict[Literal['condition_met', 'condition_not_met', 'unavailable'], DiagnosticBranch]
-
-    @model_validator(mode='after')
-    def complete(self):
-        if set(self.branches) != {'condition_met', 'condition_not_met', 'unavailable'}:
-            raise ValueError('诊断必须预登记成立、不成立和不可用三个分支')
-        return self
-
-
-class DiagnosticResponse(Contract):
-    diagnostic_id: str
-    disposition: Literal['follow', 'revise']
-    reason: str = Field(min_length=1, max_length=2000)
 
 
 @dataclass(frozen=True)
@@ -135,7 +104,7 @@ def catalog():
             'stages': list(d.stages),
             'reference_required': d.reference_required, 'label_permission': 'none',
             'numeric_contract': d.numeric_contract, 'scalar_paths': list(d.scalar_paths),
-            'artifacts': ['hashed_diagnostic_json', 'hashed_input_references', 'branch_observation_and_next_action']}
+            'artifacts': ['hashed_diagnostic_json', 'hashed_input_references']}
             for d in _REGISTRY.values()]}
 
 
@@ -153,58 +122,9 @@ def validate_request(protocol, request):
         raise ValueError('冻结诊断注册合同与当前实现不一致')
     if definition.reference_required != bool(request.get('reference_candidate_id')):
         raise ValueError('诊断参考候选要求不满足')
-    experiment = request.get('experiment')
-    if frozen and not experiment:
-        raise ValueError('诊断需先登记竞争假设、数值条件及后续分支')
-    if experiment:
-        parsed = DiagnosticExperiment.model_validate(experiment)
-        if parsed.metric not in definition.scalar_paths:
-            raise ValueError('诊断预测指标不在已注册数值合同内')
+    if request.get('experiment') is not None:
+        raise ValueError('诊断仅返回测量，不接受调整预处理的后续动作分支')
     return definition
-
-
-def branch_result(result, experiment):
-    parsed = DiagnosticExperiment.model_validate(experiment)
-    value = result
-    valid = True
-    for part in parsed.metric.split('.'):
-        if not isinstance(value, dict):
-            valid = False
-            break
-        if value.get('status') not in (None, 'ok', 'evaluated', 'computed'):
-            valid = False
-        value = value.get(part)
-    valid = valid and type(value) in (int, float) and math.isfinite(value)
-    if valid:
-        met = {'gt': value > parsed.threshold, 'ge': value >= parsed.threshold,
-               'lt': value < parsed.threshold, 'le': value <= parsed.threshold}[parsed.comparison]
-        outcome = 'condition_met' if met else 'condition_not_met'
-    else:
-        outcome = 'unavailable'
-    return {'experiment': parsed.model_dump(mode='json'), 'value': value if valid else None,
-        'outcome': outcome, 'selected_branch': parsed.branches[outcome].model_dump(),
-        'interpretation': 'A numeric condition tests a prediction; it does not establish its proposed mechanism.'}
-
-
-def pending_response(state):
-    acknowledged = {((a.get('result') or {}).get('diagnostic_response') or {}).get('diagnostic_id')
-                    for a in state.get('actions', []) if a['action'] == 'model_decision' and a['status'] == 'completed'}
-    return next((d for d in state.get('diagnostics', [])
-                 if d.get('decision_effect') and d['id'] not in acknowledged), None)
-
-
-def validate_response(state, result):
-    pending = pending_response(state)
-    reply = result.get('diagnostic_response')
-    if pending is None:
-        if reply:
-            raise ValueError('没有待响应的诊断，不能伪造诊断影响')
-        return
-    if not reply or reply['diagnostic_id'] != pending['id']:
-        raise ValueError('下一步必须响应待处理诊断的实际结果')
-    parsed = DiagnosticResponse.model_validate(reply)
-    if parsed.disposition == 'follow' and result['decision']['action'] != pending['decision_effect']['selected_branch']['next_action']:
-        raise ValueError('下一动作不符合预登记分支；改变计划须显式说明修订理由')
 
 
 class DiagnosticInputBudget:

@@ -8,7 +8,7 @@ from app.runtime.result import AgentResult, Artifact
 
 class DataPreprocessingAgent(BaseAgent):
     name = "data_preprocessing"
-    description = "Plans/submits shared EEG preprocessing, reports durable status, reviews immutable step checkpoints and compiles explicit shared engineering shadow plans."
+    description = "Plans/submits shared EEG preprocessing, reports durable status, reviews immutable step checkpoints."
 
     def __init__(self, service=None, workflow=None):
         self.service = service
@@ -48,6 +48,12 @@ class DataPreprocessingAgent(BaseAgent):
         owner = context.owner_id
         try:
             action = inputs.get("action", "plan")
+            if action in {"plan", "literature"} and any(
+                r.agent_name == "data_evaluation"
+                or (r.agent_name == self.name and r.metadata.get("execution_status") in {"completed", "reviewed"})
+                for r in context.agent_results
+            ):
+                raise ValueError("评价或检查结果仅供查看，不能据此重新生成预处理流程")
             if action == "plan":
                 ref, plan = await asyncio.to_thread(
                     self.service.plan,
@@ -85,14 +91,6 @@ class DataPreprocessingAgent(BaseAgent):
                 from app.preprocessing.step_review import reviews
                 result=await asyncio.to_thread(reviews,self.service,owner,inputs['job_id'])
                 output={**result,'job_id':inputs['job_id'],'execution_status':'reviewed'}
-            elif action == 'shadow_plan':
-                from app.preprocessing.step_review import ShadowRequest,shadow_plan
-                result=await asyncio.to_thread(shadow_plan,self.service,owner,inputs['job_id'],
-                    ShadowRequest.model_validate(inputs['request']))
-                output={'execution_status':'planned','plan_ref':result['plan_ref'].model_dump(),
-                    'review_ref':result['review_ref'].model_dump(),'parent_job_id':inputs['job_id'],
-                    'screening':[s.model_dump(mode='json') for s in result['plan'].screening],
-                    'record_count':len(result['plan'].records),'recovery':result['recovery']}
             elif action == "literature":
                 bundle = SurveyLiteratureBundle.model_validate(
                     self.service.store.get(
@@ -108,7 +106,7 @@ class DataPreprocessingAgent(BaseAgent):
                     "supplement_requests": result["supplement_requests"],
                 }
             else:
-                raise ValueError("action must be plan, submit, status, literature, step_reviews or shadow_plan")
+                raise ValueError("action must be plan, submit, status, literature, or step_reviews")
             return AgentResult(
                 agent_name=self.name,
                 success=True,

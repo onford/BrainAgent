@@ -1,5 +1,13 @@
 // English is the source language. Message text also serves as its typed key.
 export const en = [
+  "Initial recommendation and fixed evaluation",
+  "Recommend once before evaluation, then execute the frozen recipes in order.",
+  "Initial recommendation",
+  "Frozen recommendation and execution records",
+  "Candidates {0} / {1} · Time {2} / {3} s",
+  "Initial recommendation rationale and fixed execution order.",
+  "No initial recommendation recorded yet.",
+
   "New workflow",
   "Run budgets",
   "These limits are saved with the run. Retrying does not reset them.",

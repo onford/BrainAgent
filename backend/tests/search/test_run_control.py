@@ -149,7 +149,7 @@ async def test_retired_protocol_controls_and_auto_resume_are_read_only(factory, 
 
 @pytest.mark.asyncio
 async def test_terminal_search_is_not_reexecuted_or_republished(factory):
-    service, _, initial = factory(strategy='exhaustive', max_candidates=1)
+    service, _, initial = factory(strategy='one_shot', max_candidates=1)
     identity = initial['id']
     await service.run('owner', identity)
     root = service.folder(identity)

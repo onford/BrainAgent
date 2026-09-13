@@ -5,7 +5,6 @@ import numpy as np
 import pytest
 
 from app.preprocessing.storage import digest, file_hash
-from app.search.contracts import Decision, RequestDiagnostic
 from app.search.interpretation import interpretation_guide
 from app.search.io import write
 from app.search.neural_diagnostics import comparison, quality_input, run_diagnostic
@@ -16,8 +15,6 @@ from app.search.service import SearchService
 from app.search.rule_engine import audit
 from app.search.space_contracts import ExplorationSpace, PipelineRecipe
 from tests.search.test_pipeline_space import space, recipe  # noqa: F401
-from app.search.reasoning import numeric_metric_index
-from app.search.contracts import MechanismHypothesis
 
 
 @pytest.fixture
@@ -59,17 +56,6 @@ def test_unknown_applicability_is_not_false(space, recipe):
     assert audit(candidate, frozen, {'known': False})['decisions'][0]['status'] == 'not_applicable'
 
 
-def test_diagnostic_and_rule_ids_cannot_be_invented(bundle):
-    state = {"protocol": {"neural_priors": bundle}, "diagnostics": []}
-    for proposal in ({"diagnostic_ids": ["fake"]}, {"prior_rule_ids": ["mains50"]}):
-        with pytest.raises(ValueError):
-            SearchService.validate_prior_evidence(state, proposal)
-    d = {"id": "d1", "prior_evaluation": evaluate_priors(bundle, {})}
-    state["diagnostics"].append(d)
-    with pytest.raises(ValueError, match="prior_claims"):
-        SearchService.validate_prior_evidence(state, {"diagnostic_ids": ["d1"], "prior_rule_ids": ["mains50"], "prior_claims": {"mains50": "true"}})
-    trace = SearchService.validate_prior_evidence(state, {"diagnostic_ids": ["d1"], "prior_rule_ids": ["mains50"], "prior_claims": {"mains50": "unknown"}})
-    assert trace["condition_evidence"][0]["condition_state"] == "unknown"
 
 
 def test_verified_receipt_and_duplicate_diagnostic_identity(tmp_path, bundle):
@@ -83,7 +69,7 @@ def test_verified_receipt_and_duplicate_diagnostic_identity(tmp_path, bundle):
         "assessment_path": "assessment", "assessment": {"quality": {"receipt_artifact": ref}}}}],
         "registry": [{"id": "c", "recipe": recipe}], "panel": {"panel_hash": "panel"},
         "protocol": {"neural_priors": bundle, "input_hash": "input"}}
-    request = RequestDiagnostic(action="request_diagnostic", kind="signal_profile", candidate_id="c", question="why", reason="inspect").model_dump()
+    request = dict(kind="signal_profile", candidate_id="c", stage="source_raw", question="why", reason="inspect")
     a = run_diagnostic(tmp_path, state, request)
     b = run_diagnostic(tmp_path, state, {**request, "question": "rephrased", "reason": "other"})
     assert a["id"] == b["id"] and a["prior_evaluation"]["rules"][0]["condition_state"] == "true"
@@ -136,26 +122,8 @@ def test_tfr_preserves_known_change_scale_invariance_and_missing_support():
     assert task_tfr(np.zeros_like(task), np.zeros_like(baseline), **kwargs)["reason"] == "nonpositive_or_nonfinite_baseline_power"
 
 
-def test_diagnostic_schema_enforces_pair_requirements():
-    with pytest.raises(ValueError):
-        Decision.model_validate({"decision": {"action": "request_diagnostic", "kind": "paired_comparison",
-                                "candidate_id": "a", "question": "q", "reason": "r"}})
 
 
-def test_actual_metric_paths_and_scopes_prevent_live_api_path_guessing():
-    receipt = {"assessment": {"selection_score": .5, "core_csp_macro_ba": .6, "quality": {"summary": {
-        "metrics": {"numerical_rank": {"status": "ok", "value": 63}, "line_ratio_50hz": {"status": "not_applicable", "value": None}}}}},
-        "diagnostics": {"summary": {"mean_anisotropy": 10}}}
-    rows = numeric_metric_index(receipt)
-    bypath = {r["path"]: r for r in rows}
-    assert "quality.metrics.numerical_rank.value" not in bypath
-    assert "physical_processed_task" in bypath["assessment.quality.summary.metrics.numerical_rank.value"]["measurement_scope"]
-    assert "saved_physical_signal_diagnostics" in bypath["diagnostics.summary.mean_anisotropy"]["measurement_scope"]
-    assert not any("line_ratio" in r["path"] for r in rows)
-    h = dict(explanation="test", competing_explanation="test", observations=[{"candidate_id": "c", "metric": "assessment.selection_score"}],
-             weakened_by="test", predictions=[{"kind": "utility", "metric": "assessment.core_csp_macro_ba", "direction": "increase", "explanation": "anchor"},
-               {"kind": "signal", "metric": "diagnostics.summary.mean_anisotropy", "direction": "decrease", "explanation": "representation"}])
-    assert MechanismHypothesis.model_validate(h)
 
 
 def test_missing_aggregate_resolves_verified_record_causes(tmp_path):

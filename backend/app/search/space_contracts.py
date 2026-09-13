@@ -1,4 +1,4 @@
-"""Method seeds, executable operators and evidence-bound pipeline edits."""
+"""Complete method recipes, executable operators and source evidence."""
 
 from typing import Any, Annotated, Literal
 
@@ -117,7 +117,7 @@ class PipelineRecipe(Contract):
 class MethodSeed(Contract):
     id: Identifier
     title: str
-    origin: Literal["basic", "literature", "literature_adaptation", "derived"]
+    origin: Literal["basic", "literature", "literature_adaptation"]
     recipe: PipelineRecipe
     evidence_ids: list[str] = Field(default_factory=list)
     applicability: list[str] = Field(default_factory=list)
@@ -199,50 +199,6 @@ class ScientificPrior(Contract):
         return self
 
 
-class ParameterEdit(Contract):
-    action: Literal["set_parameter"]
-    node_id: Identifier
-    parameter: str
-    value: Any
-
-
-class InsertEdit(Contract):
-    action: Literal["insert_operator"]
-    after_node_id: Identifier | None
-    node: PipelineNode
-
-    @model_validator(mode="after")
-    def no_invented_provenance(self):
-        if self.node.trace:
-            raise ValueError("inserted operators cannot invent source traces; use a registered donor fragment")
-        return self
-
-
-class RemoveEdit(Contract):
-    action: Literal["remove_operator"]
-    node_id: Identifier
-
-
-class SwapEdit(Contract):
-    action: Literal["swap_adjacent"]
-    first_node_id: Identifier
-    second_node_id: Identifier
-
-
-
-
-class CombineEdit(Contract):
-    action: Literal["combine_fragment"]
-    donor_id: Identifier
-    node_ids: list[Identifier] = Field(min_length=1, max_length=16)
-    after_node_id: Identifier | None
-
-
-PipelineEdit = Annotated[
-    ParameterEdit | InsertEdit | RemoveEdit | SwapEdit | CombineEdit,
-    Field(discriminator="action"),
-]
-
 
 class PriorWarning(Contract):
     prior_id: str
@@ -259,19 +215,15 @@ class CandidateRecipe(Contract):
     title: str
     recipe: PipelineRecipe
     recipe_hash: str = Field(pattern=r"^[a-f0-9]{64}$")
-    origin: Literal["basic", "literature", "literature_adaptation", "derived"]
+    origin: Literal["basic", "literature", "literature_adaptation"]
     seed_id: Identifier
     evidence_ids: list[str]
     deviations: list[str]
     prior_warnings: list[PriorWarning]
-    prior_challenges: dict[str, str]
-    parent_id: Identifier | None
-    edits: list[PipelineEdit]
     parameters: PolicySummary
     operator_count: int = Field(ge=1)
     order: int = Field(ge=0)
     lineage: list[dict[str, Any]] = Field(default_factory=list)
-    parent_ids: list[str] = Field(default_factory=list)
     issues: list[dict[str, Any]] = Field(default_factory=list)
 
 
@@ -283,7 +235,6 @@ class ExplorationSpace(Contract):
     methods: list[MethodSeed]
     priors: list[ScientificPrior]
     evidence: dict[str, Evidence]
-    max_edits_per_proposal: int = Field(default=3, ge=1, le=8)
 
     @model_validator(mode="after")
     def references(self):

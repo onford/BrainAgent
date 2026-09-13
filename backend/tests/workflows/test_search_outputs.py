@@ -16,7 +16,7 @@ pytest.importorskip("mne_bids")
 from app.preprocessing.schemas import Ref
 from app.preprocessing.storage import digest, file_hash
 from app.search.catalog import BASELINE_ID
-from app.search.method_space import basic_space, seed_entries, edited_entry
+from app.search.method_space import basic_space, seed_entries
 from app.workflows import outputs
 from tests.workflows.test_outputs_scaling import delivery_case  # noqa: F401
 from tests.workflows.test_outputs_scaling import freeze_evidence

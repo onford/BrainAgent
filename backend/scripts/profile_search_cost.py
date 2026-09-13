@@ -142,9 +142,11 @@ async def main(args):
                                 preprocessing=preprocessing, llm=None)
     service_module.ProcessTree = ProfiledTree
     service = service_module.SearchService(ROOT / 'searches', workflows)
-    state = service.create('resource-probe', SearchRequest(workflow_id='f'*32, strategy='exhaustive',
-        budget=SearchBudget(max_candidates=1, max_proposals=0, max_evidence_reads=0,
+    state = service.create('resource-probe', SearchRequest(workflow_id='f'*32, strategy='one_shot',
+        budget=SearchBudget(max_candidates=1,
                             max_seconds=args.seconds, max_memory_mb=args.memory_mb, max_disk_mb=args.disk_mb, max_retries=0)), start=False)
+    service.action(service.get('resource-probe', state['id']), 'initial_recommendation', status='completed',
+        result={'candidate_ids': [], 'reason': 'Directed fixed reference cost probe; not a model recommendation'})
     root = service.folder(state['id'])
     write_json(ROOT / 'probe-request.json', dict(scope='Engineering cost only; no literature search or final-agent acceptance',
         search_id=state['id'], selected_records=327, participants=109, source_input_sha256=source_hash,

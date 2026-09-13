@@ -3,7 +3,6 @@ from app.owned_thread import _owned_thread
 from datetime import datetime, timezone
 import os
 from pathlib import Path
-import random
 import re
 import sys
 import time
@@ -20,18 +19,13 @@ from .catalog import BASELINE_ID, method, search_engine_hash, select
 from .contracts import ActionRecord, Candidate, SearchRequest, SearchState
 from .io import directory_bytes, read, write
 from .processes import ProcessTree
-from .reasoning import decide, read_context_evidence
+from .initial_recommendation import recommend
 from .evaluation_contracts import FrozenPanel, EvaluationReceipt
-from .hypotheses import validate_hypothesis, check_predictions
-from .method_space import seed_entries, edited_entry, verify_registry
+from .method_space import seed_entries, verify_registry
 from .scientific_space import build_space, input_context, knowledge
 from .space_contracts import ExplorationSpace
 from .knowledge_contracts import ScientificKnowledge
-from .exploration_coverage import coverage
 from .neural_priors import freeze_bundle
-from .neural_diagnostics import run_diagnostic
-from .diagnostic_registry import (catalog as diagnostic_catalog, validate_request as validate_diagnostic_request,
-    validate_response as validate_diagnostic_response, DiagnosticInputBudget)
 
 
 def now():
@@ -90,7 +84,6 @@ class SearchService:
         value = SearchState.model_validate(state).model_dump(mode="json")
         write(self.folder(state["id"]) / "search.json", value)
         write(self.folder(state["id"]) / "registry.json", value["registry"])
-        write(self.folder(state["id"]) / "coverage.json", coverage(value))
         from .method_provenance import method_status
         write(self.folder(state["id"]) / "method-status.json", method_status(value))
 
@@ -114,18 +107,17 @@ class SearchService:
             "report.html": "候选比较、逐轮决定与适用范围",
             "selection.json": "按固定开发指标和精确平局规则选择的方案",
             "format.schema.json": "搜索过程文件的结构合同",
-            "sources.json": "定向阅读可用的冻结资料",
+            "sources.json": "首次推荐可用的冻结资料",
             "input.json": "标准化输入及校验清单",
             "files.json": "全部搜索与数值执行产物索引",
             "limits.json": "冻结资源预算",
             "control.json": "跨执行器停止请求与恢复代次历史",
             "space.json": "算子、参数域、方法起点及可检查的科学先验",
-            "registry.json": "候选完整配方、方法来源与算子编辑谱系",
+            "registry.json": "冻结的完整配方与方法来源",
             "method-intake.json": "本轮文献方法的可执行性检查、原始草案及编译结果",
             "method-extraction.json": "本轮来源到多分支方法的拆解清单",
-            "method-status.json": "基础、文献、派生方法的来源关系与执行或预算状态",
-            "coverage.json": "方法家族、算子与编辑类型的探索覆盖情况",
-            "control-design.json": "有限对照邻域、参数与换序提案、排除原因和覆盖范围",
+            "method-status.json": "基础与文献方法的来源关系和固定执行状态",
+            "initial-recommendation.json": "数值评价前冻结的首次推荐、理由和执行顺序",
             "probe-panel.json": "覆盖全部被试的固定重建探针与污染条件分配",
             "scientific-knowledge.json": "顺序、参数及适用条件的来源与证据缺口",
             "knowledge-coverage.json": "研究规则的有限执行绑定、条件建议和未解决议题队列",
@@ -325,13 +317,7 @@ class SearchService:
                 row["compiled_method_hash"] = digest(compiled)
                 write(root / row["compiled_method_path"], compiled)
         seeds = seed_entries(space, space_context)
-        controls = None
         registry = seeds
-        if request.strategy != "adaptive":
-            from .control_design import control_entries
-
-            controls = control_entries(space, space_context, request.seed, max_entries=256)
-            registry = controls["registry"]
         research_text = "\n\n".join(
             f"{r['id']} · {r['claim']}\n"
             + (f"知识状态：{r['status']}；{r.get('status_reason') or ''}\n" if r.get('status','active')!='active' else '')
@@ -368,11 +354,11 @@ class SearchService:
                           "url": "brainagent:evaluation-evidence:1", "text": metric_text, "sha256": digest(metric_text)})
         protocol = {
             "source_evidence": source_evidence,
-            "business_version": "research-execution-2026-09-12.3",
+            "business_version": "fixed-recommendation-2026-09-13.1",
             "literature_adaptation_policy": "shared-final-epoch-window-v1",
             "selection_requires_complete_assessment": True,
-            "scheduling_policy": "measured_information_and_cost; baseline_required; no preset ordering or edit quotas",
-            "version": "3",
+            "scheduling_policy": "initial_recommendation_frozen_before_evaluation; no feedback-driven changes",
+            "version": "4",
             "request": request.model_dump(mode="json"),
             "deadline": started + request.budget.max_seconds,
             "input_hash": digest(data_json),
@@ -410,11 +396,7 @@ class SearchService:
             "method_intake": method_intake,
             "method_extraction": intake,
             "catalog_hash": digest(seeds),
-            "control_design_hash": digest(controls) if controls else None,
-            "control_comparison": (
-                "frozen finite single-edit seed neighbourhood; not exhaustive continuous or multigeneration adaptive search"
-                if controls else "adaptive multigeneration operator editing"
-            ),
+            "registry_hash": digest(registry),
             "space": space.model_dump(mode="json"),
             "space_hash": digest(space.model_dump(mode="json")),
             "space_context": space_context,
@@ -425,8 +407,6 @@ class SearchService:
             "interpretation_guide_hash": digest(guide),
             "neural_priors": neural,
             "neural_priors_hash": digest(neural),
-            "diagnostic_registry": diagnostic_catalog(),
-            "diagnostic_registry_hash": digest(diagnostic_catalog()),
             "environment": environment(),
             "numeric_engine_hash": engine_hash(),
             "search_engine_hash": search_engine_hash(),
@@ -439,7 +419,7 @@ class SearchService:
             "information_permissions": {
                 "target_signals": "record_local_algorithm_input",
                 "target_labels": "scoring_only",
-                "policy_selection": "development_feedback",
+                "policy_selection": "initial_recommendation_before_evaluation",
                 "independent_confirmation": False,
             },
             "parameter_provenance": {
@@ -476,15 +456,12 @@ class SearchService:
         if extraction_root.exists():
             for path in extraction_root.rglob("*.json"):
                 write(root / "literature-methods" / path.relative_to(extraction_root), read(path))
-        if controls is not None:
-            write(root / "control-design.json", controls)
         write(root / "scientific-knowledge.json", research)
         write(root / "knowledge-coverage.json", knowledge_audit)
         write(root / "knowledge-revision.json", knowledge_revision)
         write(root / "evaluation-evidence.json", evaluation_evidence)
         write(root / "interpretation-guide.json", guide)
         write(root / "neural-priors.json", neural)
-        write(root / 'diagnostic-registry.json', state['protocol']['diagnostic_registry'])
         write(root / "space.schema.json", ExplorationSpace.model_json_schema())
         write(
             root / "scientific-knowledge.schema.json",
@@ -519,8 +496,8 @@ class SearchService:
 
     @staticmethod
     def require_current(state):
-        if state.get('protocol', {}).get('version') != '3':
-            raise ValueError('历史搜索协议仅供只读查看；请创建当前共享预处理协议的新搜索')
+        if state.get('protocol', {}).get('version') != '4':
+            raise ValueError('旧版自主搜索仅供只读查看；新流程使用首次推荐后固定执行协议')
 
     async def close(self):
         active = [t for t in self.tasks.values() if not t.done()]
@@ -688,15 +665,17 @@ class SearchService:
         self.save(state)
         return row
 
-    async def model_action(self, state, documents, *, one_shot=False):
+    async def recommend_initial(self, state, documents):
+        if state["candidates"] or state.get("recommendation") is not None:
+            raise IntegrityFailure("首次推荐已冻结或数值评价已开始，不能再次调用推荐模型")
         if self.llm is None:
-            raise RuntimeError("动态搜索和一次性 LLM 对照需要配置模型")
+            raise RuntimeError("首次推荐需要配置模型")
         self.guard(state)
         self.verify_runtime(state)
         state["usage"]["llm_calls"] += 1
         action = self.action(
             state,
-            "initial_schedule" if one_shot else "model_decision",
+            "initial_recommendation",
             status="running",
         )
         folder = self.folder(state["id"]) / "decisions" / f"{action['index']:03}"
@@ -720,11 +699,7 @@ class SearchService:
                 from app.llm.usage import usage_scope
                 with usage_scope(self.folder(state["id"]) / "llm-calls.json", action["action"],
                                  budget_path=self.workflows.folder(state['workflow_id']) / 'llm-budget.json'):
-                    result = await decide(
-                        self.llm, state, documents, one_shot=one_shot, capture=capture
-                    )
-            if not one_shot:
-                validate_diagnostic_response(state, result)
+                    result = await recommend(self.llm, state, documents, capture=capture)
             write(
                 folder / "response.json",
                 {"schema_version": "1", "status": "accepted", "result": result},
@@ -752,77 +727,12 @@ class SearchService:
             state["usage"]["llm_seconds"] += duration
             self.save(state)
 
-    async def diagnostic_action(self, state, proposal):
-        self.guard(state)
-        if not state["protocol"].get("neural_priors"):
-            raise ValueError("历史运行未冻结神经先验，不能回填诊断协议")
-        if state["usage"].get("diagnostics", 0) >= state["budget"].get("max_diagnostics", 0):
-            raise ValueError("诊断预算已用尽")
-        self.verify_runtime(state)
-        validate_diagnostic_request(state['protocol'], proposal)
-        per_call = diagnostic_catalog()['cost_contract']
-        reserved = state['usage'].get('diagnostic_input_bytes_reserved', 0)
-        limit = state['budget'].get('max_diagnostic_input_bytes', 512 * 1024**2)
-        allowance = min(per_call['max_input_bytes_per_call'], limit - reserved)
-        if allowance <= 0:
-            raise ValueError('诊断累计输入预算已用尽')
-        # Reservation survives a crash; uncertain work is never charged as zero.
-        state['usage']['diagnostic_input_bytes_reserved'] = reserved + allowance
-        inputs = DiagnosticInputBudget(allowance, min(per_call['max_seconds_per_call'], max(.001, state['deadline'] - time.time())))
-        state["usage"]["diagnostics"] = state["usage"].get("diagnostics", 0) + 1
-        action = self.action(state, "request_diagnostic", status="running", request=proposal, reason=proposal["reason"])
-        started = time.monotonic()
-        try:
-            result = await _owned_thread(run_diagnostic, self.folder(state["id"]), state, proposal, inputs)
-            self.guard(state)
-            if any(d["id"] == result["id"] for d in state.get("diagnostics", [])):
-                raise ValueError("相同输入和诊断已经计算，不能通过改写问题重复计为新证据")
-            path = "diagnostics/" + result["id"] + ".json"
-            import json
-            result['cost'] = {'input_bytes_observed': inputs.bytes, 'input_files_observed': inputs.files,
-                'input_bytes_reserved': allowance, 'elapsed_seconds': time.monotonic() - started}
-            if len(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2).encode('utf-8')) + 1 > per_call['max_output_bytes_per_call']:
-                raise ValueError('诊断产物预算已用尽')
-            write(self.folder(state["id"]) / path, result)
-            result["artifact"] = {"path": path, "sha256": file_hash(self.folder(state["id"]) / path)}
-            state.setdefault("diagnostics", []).append(result)
-            action.update(status="completed", result={"diagnostic_id": result["id"], "artifact": result["artifact"],
-                                                        "status": result["status"], "prior_counts": result["prior_evaluation"]["counts"]})
-        except Exception as exc:
-            action.update(status="rejected", error=str(exc))
-            raise
-        finally:
-            action["cost_seconds"] = time.monotonic() - started
-            state["usage"]["diagnostic_seconds"] = state["usage"].get("diagnostic_seconds", 0) + action["cost_seconds"]
-            state['usage']['diagnostic_input_bytes_observed'] = state['usage'].get('diagnostic_input_bytes_observed', 0) + inputs.bytes
-            action['diagnostic_input_bytes_reserved'] = allowance
-            action['diagnostic_input_bytes_observed'] = inputs.bytes
-            self.save(state)
-        return result
 
-    @staticmethod
-    def validate_prior_evidence(state, proposal):
-        refs = proposal.get("diagnostic_ids", [])
-        rules = proposal.get("prior_rule_ids", [])
-        diagnostics = {d["id"]: d for d in state.get("diagnostics", [])}
-        known = {r["id"] for r in state["protocol"].get("neural_priors", {}).get("rules", [])}
-        if len(set(refs)) != len(refs) or len(set(rules)) != len(rules) or not set(refs) <= diagnostics.keys() or not set(rules) <= known:
-            raise ValueError("诊断或先验引用未知、重复，不能编造证据")
-        if rules and not refs:
-            raise ValueError("采用条件先验须引用实际诊断回执")
-        evaluated = [{"diagnostic_id": d, "rule_id": r["id"], "condition_state": r["condition_state"],
-                      "reason": r["reason"], "observed": r["observed"]}
-                     for d in refs for r in diagnostics[d]["prior_evaluation"]["rules"] if r["id"] in rules]
-        if set(rules) - {r["rule_id"] for r in evaluated}:
-            raise ValueError("引用的诊断没有包含所声明的规则求值")
-        claims = proposal.get("prior_claims", {})
-        if set(claims) != set(rules) or any(claims[r["rule_id"]] != r["condition_state"] for r in evaluated):
-            raise ValueError("prior_claims 须逐条复制所引用诊断的 condition_state；未知不能声明为成立/不成立，冲突证据须分别处理")
-        return {"diagnostic_ids": refs, "prior_rule_ids": rules, "condition_evidence": evaluated,
-                "status": "cited_by_agent" if refs and rules else "not_cited_by_agent",
-                "interpretation": "引用存在不等于机制被证实；实测预测及反例需继续核验。"}
 
     async def candidate(self, state, identity):
+        self.verify_recommendation(state)
+        if identity not in [BASELINE_ID, *state["schedule"]]:
+            raise IntegrityFailure("候选不在首次冻结推荐中")
         root = self.folder(state["id"])
         entry = verify_registry(state["protocol"], state["registry"])[identity]
         existing = next((c for c in state["candidates"] if c["id"] == identity), None)
@@ -1058,21 +968,8 @@ class SearchService:
             or digest(protocol["neural_priors"]) != protocol["neural_priors_hash"]
         ):
             raise IntegrityFailure("冻结神经先验已改变")
-        if protocol.get('diagnostic_registry_hash') and (
-            digest(read(root / 'diagnostic-registry.json')) != protocol['diagnostic_registry_hash']
-            or digest(protocol.get('diagnostic_registry')) != protocol['diagnostic_registry_hash']
-            or protocol['diagnostic_registry'] != diagnostic_catalog()
-        ):
-            raise IntegrityFailure('冻结诊断注册合同已改变')
-        for diagnostic in state.get("diagnostics", []):
-            ref = diagnostic["artifact"]
-            path = within(root, ref["path"])
-            if file_hash(path) != ref["sha256"] or read(path) != {k: v for k, v in diagnostic.items() if k != "artifact"}:
-                raise IntegrityFailure("诊断回执与冻结记录不一致")
-        if protocol.get("control_design_hash"):
-            controls = read(root / "control-design.json")
-            if digest(controls) != protocol["control_design_hash"] or controls["registry"] != state["registry"]:
-                raise IntegrityFailure("frozen finite control design differs")
+        if digest(state["registry"]) != protocol["registry_hash"]:
+            raise IntegrityFailure("执行目录与首次冻结的完整方法集合不同")
         registry_path = root / "registry.json"
         saved_registry = read(registry_path) if registry_path.exists() else []
         if saved_registry != state["registry"]:
@@ -1110,368 +1007,73 @@ class SearchService:
         self.verified.add(state["id"])
         state.update(status="running", error=None)
         self.save(state)
-        strategy = state["request"]["strategy"]
-        if strategy == "one_shot" and state["schedule"] is None:
-            while True:
-                try:
-                    plan = await self.model_action(state, documents, one_shot=True)
-                    break
-                except (BudgetStop, BudgetExceeded, IntegrityFailure):
-                    raise
-                except RuntimeError:
-                    if state["usage"]["retries"] >= state["budget"]["max_retries"]:
-                        raise
-                    state["usage"]["retries"] += 1
-                    self.save(state)
-            valid = {c["id"] for c in state["registry"]}
-            proposed = plan["candidate_ids"]
-            # The compulsory reference is run once regardless of whether the
-            # initial list includes it. Preserve every other proposed position.
-            ids = [identity for identity in proposed if identity != BASELINE_ID]
-            if (
-                len(proposed) != len(set(proposed))
-                or not set(proposed) <= valid
-                or len(ids) > state["budget"]["max_proposals"]
-            ):
-                state["usage"]["proposals"] += 1
-                raise ValueError("一次性提案包含重复或目录外候选")
-            state["schedule"] = ids
-            state["usage"]["proposals"] += len(ids)
-            self.save(state)
-        baseline = next(
-            (c for c in state["candidates"] if c["id"] == BASELINE_ID), None
-        )
-        if baseline is None or baseline["status"] in {
-            "reserved",
-            "running",
-            "interrupted",
-            "execution_failure",
-        }:
-            baseline = await self.candidate(state, BASELINE_ID)
-        if baseline["status"] != "evaluated":
-            state["error"] = baseline.get("error") or "固定参考流程未能完成共同面板评价"
-            await self.stop(state, "failed", "reference_failed")
-            return
-        # Reconcile the proposal as well as the numerical candidate. A crash can
-        # occur before candidate reservation or after its receipt was saved.
-        for action in state["actions"]:
-            if action["action"] == "propose_candidate" and action["status"] in {
-                "reserved",
-                "running",
-                "interrupted",
-            }:
-                await self.candidate_action(state, action, recovering=True)
-        # Retain support for reserved numerical work without a proposal record.
-        for pending in state["candidates"]:
-            if pending["id"] != BASELINE_ID and pending["status"] in {
-                "reserved",
-                "running",
-                "interrupted",
-            }:
-                await self.candidate(state, pending["id"])
-        while True:
+        await self.freeze_recommendation(state, documents)
+        scheduled = [BASELINE_ID, *state['schedule']]
+        for identity in scheduled:
             self.guard(state)
-            state["selected_candidate_id"] = select(state["candidates"], require_complete_assessment=bool(state["protocol"].get("selection_requires_complete_assessment") and state["protocol"].get("assessment")))
-            attempted = {c["id"] for c in state["candidates"]}
-            remaining = [c["id"] for c in state["registry"] if c["id"] not in attempted]
-            if not remaining and strategy != "adaptive":
-                await self.stop(state, "completed", "catalog_exhausted")
+            self.verify_recommendation(state)
+            previous = next((c for c in state['candidates'] if c['id'] == identity), None)
+            if previous and previous['status'] == 'evaluated':
+                continue
+            if previous is None and state['usage']['candidates'] >= state['budget']['max_candidates']:
+                await self.stop(state, 'stopped', 'candidate_budget_exhausted')
                 return
-            # Guarantee actual opportunity for both source classes before free search.
-            # Keep a third of a sufficient budget for feedback-driven derivations.
-            if state["usage"]["candidates"] >= state["budget"]["max_candidates"]:
-                await self.stop(state, "stopped", "candidate_budget_exhausted")
-                return
-            if (
-                strategy != "one_shot"
-                and state["usage"]["proposals"] >= state["budget"]["max_proposals"]
-            ):
-                await self.stop(state, "stopped", "proposal_budget_exhausted")
-                return
-            state.update(phase="decision", message="根据开发评价与剩余预算选择下一步")
+            state.update(phase='candidate', message='按首次冻结推荐执行并评价固定流程')
             self.save(state)
-            if strategy in {"random", "exhaustive", "one_shot"}:
-                if state["schedule"] is None:
-                    ids = [c["id"] for c in state["registry"] if c["id"] != BASELINE_ID]
-                    if strategy == "random":
-                        random.Random(state["request"]["seed"]).shuffle(ids)
-                    state["schedule"] = ids
-                available = [i for i in state["schedule"] if i not in attempted]
-                if not available:
-                    await self.stop(state, "completed", "schedule_exhausted")
-                    return
-                proposal = {
-                    "action": "propose_candidate",
-                    "candidate_id": available[0],
-                    "base_candidate_id": BASELINE_ID,
-                    "reason": f"冻结的 {strategy} 对照顺序",
-                    "expected_result": "按共同面板测量开发效用",
-                    "decision_branches": {
-                        "improvement": "保持冻结顺序",
-                        "no_improvement": "保持冻结顺序",
-                    },
-                }
+            candidate = await self.candidate(state, identity)
+            if identity == BASELINE_ID and candidate['status'] != 'evaluated':
+                state['error'] = candidate.get('error') or '固定参考未能完成共同面板评价'
+                await self.stop(state, 'failed', 'reference_failed')
+                return
+        await self.stop(state, 'completed', 'schedule_exhausted')
+
+    async def freeze_recommendation(self, state, documents):
+        if state.get('recommendation') is None:
+            if state['candidates']:
+                raise IntegrityFailure('数值评价已开始但缺少首次冻结推荐')
+            completed = [a['result'] for a in state['actions']
+                         if a['action'] == 'initial_recommendation' and a['status'] == 'completed']
+            if len(completed) > 1:
+                raise IntegrityFailure('首次推荐出现多个已完成结果')
+            if completed:
+                plan = completed[0]
             else:
-                try:
-                    proposal = (await self.model_action(state, documents))["decision"]
-                except ValueError as exc:
-                    state["usage"]["proposals"] += 1
-                    self.action(
-                        state,
-                        "invalid_proposal",
-                        status="rejected",
-                        error=str(exc)[:2000],
-                    )
-                    continue
-                except (BudgetStop, BudgetExceeded, IntegrityFailure):
-                    raise
-                except RuntimeError:
-                    if state["usage"]["retries"] >= state["budget"]["max_retries"]:
+                while True:
+                    try:
+                        plan = await self.recommend_initial(state, documents)
+                        break
+                    except (BudgetStop, BudgetExceeded, IntegrityFailure):
                         raise
-                    state["usage"]["retries"] += 1
-                    self.save(state)
-                    continue
-            if proposal["action"] == "finish":
-                from .method_provenance import validate_stop
-                try:
-                    validate_stop(state, proposal)
-                except ValueError as exc:
-                    state["usage"]["proposals"] += 1
-                    self.action(state, "finish", status="rejected", request=proposal, error=str(exc))
-                    continue
-                self.action(
-                    state,
-                    "finish",
-                    status="completed",
-                    reason=proposal["reason"],
-                    request=proposal,
-                )
-                state["unresolved"] = proposal["unresolved"]
-                await self.stop(state, "completed", "model_finished")
-                return
-            if proposal["action"] == "request_diagnostic":
-                state["usage"]["proposals"] += 1
-                try:
-                    await self.diagnostic_action(state, proposal)
-                except ValueError as exc:
-                    self.action(state, "invalid_diagnostic", status="rejected", request=proposal, error=str(exc))
-                continue
-            if proposal["action"] == "request_evidence":
-                if (
-                    state["usage"]["evidence_reads"]
-                    >= state["budget"]["max_evidence_reads"]
-                ):
-                    state["usage"]["proposals"] += 1
-                    self.action(
-                        state,
-                        "request_evidence",
-                        status="rejected",
-                        request=proposal,
-                        error="补充阅读预算已用尽",
-                    )
-                    continue
-                state["usage"]["evidence_reads"] += 1
-                action = self.action(
-                    state,
-                    "request_evidence",
-                    status="running",
-                    reason=proposal["reason"],
-                    request=proposal,
-                )
-                started = time.monotonic()
-                try:
-                    reading = read_context_evidence(proposal, state, documents)
-                    if any(
-                        a["index"] != action["index"]
-                        and a.get("request", {}).get("source_id")
-                        == proposal["source_id"]
-                        and a.get("request", {}).get("query") == proposal["query"]
-                        and a.get("status") == "completed"
-                        and (a.get("result") or {}).get("source_sha256") == reading.get("source_sha256")
-                        for a in state["actions"]
-                        if a.get("request")
-                    ):
-                        raise ValueError("该来源和查询已读取，重复动作不产生新信息")
-                    action.update(
-                        status="completed", result=reading
-                    )
-                except ValueError as exc:
-                    action.update(status="rejected", error=str(exc))
-                action["cost_seconds"] = time.monotonic() - started
-                self.save(state)
-                continue
-            if strategy != "one_shot":
-                state["usage"]["proposals"] += 1
-            try:
-                parent_id = proposal["base_candidate_id"]
-                if parent_id not in {
-                    c["id"] for c in state["candidates"] if c["status"] == "evaluated"
-                }:
-                    raise ValueError("父候选没有有效评价")
-                if strategy == "adaptive":
-                    validate_hypothesis(proposal, state["candidates"])
-                    prior_trace = self.validate_prior_evidence(state, proposal)
-                else:
-                    prior_trace = {"status": "control_strategy"}
-                if proposal.get("edits"):
-                    entries = verify_registry(protocol, state["registry"])
-                    entry = edited_entry(
-                        entries[parent_id],
-                        proposal["edits"],
-                        protocol["space"],
-                        title=proposal["title"],
-                        order=len(entries),
-                        context=protocol.get("space_context"),
-                        prior_challenges=proposal.get("prior_challenges"),
-                        donors=entries,
-                    )
-                    if entry["recipe_hash"] in {
-                        e["recipe_hash"] for e in entries.values()
-                    }:
-                        raise ValueError("该执行配方已经存在，请选择未试方法或不同编辑")
-                    # Compile before reservation so structural failures do not consume a numerical trial.
-                    compiled_method = method(
-                        entry,
-                        state["panel"],
-                        protocol["space"],
-                        protocol.get("space_context"),
-                    )
-                    from .literature_space import check_execution
-                    check_execution(compiled_method, PreprocessInput.model_validate(read(self.folder(state["id"]) / "input.json")),
-                                    state["panel"]["output_contract"])
-                    proposal["candidate_id"] = entry["id"]
-                    state["registry"].append(entry)
-                    remaining.append(entry["id"])
-                elif proposal["candidate_id"] not in remaining:
-                    raise ValueError("方法起点重复或不存在")
-                elif strategy == "adaptive":
-                    entries = {e["id"]: e for e in state["registry"]}
-            except (ValueError, KeyError) as exc:
-                self.action(
-                    state,
-                    "invalid_proposal",
-                    status="rejected",
-                    request=proposal,
-                    error=str(exc),
-                )
-                continue
-            action = self.action(
-                state,
-                "propose_candidate",
-                status="reserved",
-                request=proposal,
-                result={"prior_evidence": prior_trace},
-                **{
-                    k: proposal[k]
-                    for k in (
-                        "candidate_id",
-                        "base_candidate_id",
-                        "reason",
-                        "expected_result",
-                        "decision_branches",
-                    )
-                },
-            )
-            await self.candidate_action(state, action)
-
-    async def candidate_action(self, state, action, *, recovering=False):
-        proposal = action.get("request") or {}
-        if (
-            proposal.get("candidate_id") != action["candidate_id"]
-            or proposal.get("base_candidate_id") != action["base_candidate_id"]
-        ):
-            raise IntegrityFailure("候选动作与保存的原提案不一致")
-        parent = next(
-            (c for c in state["candidates"] if c["id"] == action["base_candidate_id"]),
-            None,
-        )
-        if parent is None or parent["status"] != "evaluated":
-            raise IntegrityFailure("候选动作缺少已验证的父候选评价")
-        if recovering and proposal.get("hypothesis"):
-            validate_hypothesis(proposal, state["candidates"])
-
-        def candidate_record():
-            return next(
-                (c for c in state["candidates"] if c["id"] == action["candidate_id"]),
-                None,
-            )
-
-        if recovering:
-            previous = candidate_record()
-            result = dict(action.get("result") or {})
-            result["recovery_history"] = [
-                *result.get("recovery_history", []),
-                {
-                    "status": action["status"],
-                    "error": action.get("error"),
-                    "candidate_status": previous["status"] if previous else None,
-                    "candidate_attempts": previous["attempts"] if previous else 0,
-                    "retries_used": state["usage"]["retries"],
-                    "resumed_at": now(),
-                },
-            ]
-            action["result"] = result
-        action.update(status="running", error=None)
-        self.save(state)
-
-        def finish(result, error=None, *, interrupted=False):
-            status = result["status"] if result else "interrupted"
-            if status in {"reserved", "running", "interrupted"}:
-                status = "interrupted"
-            receipt = (result.get("receipt") or {}) if result else {}
-            # A failed/retried worker can leave an older receipt on the record.
-            # Only a normally returned, evaluated candidate supplies measurements.
-            measured = (
-                error is None
-                and status == "evaluated"
-                and receipt.get("status") == "evaluated"
-            )
-            action.update(
-                status="interrupted"
-                if interrupted or status == "interrupted"
-                else "completed"
-                if measured
-                else "failed",
-                error=error or (result.get("error") if result else None),
-                result={
-                    **(action.get("result") or {}),
-                    "candidate_id": action["candidate_id"],
-                    "status": status,
-                    "prediction_checks": check_predictions(
-                        proposal,
-                        parent.get("receipt") or {},
-                        receipt if measured else {},
-                    ),
-                },
-            )
+                    except (ValueError, RuntimeError):
+                        if state['usage']['retries'] >= state['budget']['max_retries']:
+                            raise
+                        state['usage']['retries'] += 1
+                        self.save(state)
+            proposed = plan['candidate_ids']
+            available = {c['id'] for c in state['registry']}
+            ids = [i for i in proposed if i != BASELINE_ID]
+            if (len(proposed) != len(set(proposed)) or not set(proposed) <= available
+                    or len(ids) > state['budget']['max_candidates'] - 1):
+                raise ValueError('首次推荐须为预算内、不重复的冻结目录候选')
+            state['schedule'] = ids
+            state['recommendation'] = dict(schema_version='fixed-recommendation-1', candidate_ids=ids,
+                reason=plan['reason'], registry_hash=digest(state['registry']), recommended_at=now())
+            state['usage']['recommended_candidates'] = len(ids)
             self.save(state)
+        path = self.folder(state['id']) / 'initial-recommendation.json'
+        if not path.exists():
+            if state['candidates']:
+                raise IntegrityFailure('已执行流程的冻结推荐文件缺失')
+            write(path, state['recommendation'])
+        self.verify_recommendation(state)
 
-        try:
-            result = candidate_record()
-            if result is None or result["status"] in {
-                "reserved",
-                "running",
-                "interrupted",
-                "execution_failure",
-            }:
-                result = await self.candidate(state, action["candidate_id"])
-            elif result["status"] == "resource_failure":
-                raise BudgetStop("resource_unavailable")
-            elif result["status"] == "data_unevaluable":
-                raise IntegrityFailure(result.get("error") or "共同输入不可评价")
-        except (asyncio.CancelledError, Exception) as exc:
-            reason = (
-                "搜索已中断，尚未产生完整评价"
-                if isinstance(exc, asyncio.CancelledError)
-                else str(exc)
-            )
-            finish(
-                candidate_record(),
-                error=reason,
-                interrupted=isinstance(exc, asyncio.CancelledError),
-            )
-            raise
-        finish(result)
+    def verify_recommendation(self, state):
+        recommendation = state.get('recommendation')
+        if (not recommendation or state['schedule'] != recommendation['candidate_ids']
+                or digest(state['registry']) != recommendation['registry_hash']
+                or digest(state['registry']) != state['protocol']['registry_hash']
+                or read(self.folder(state['id']) / 'initial-recommendation.json') != recommendation):
+            raise IntegrityFailure('首次推荐、固定配方或执行顺序已改变')
 
     @staticmethod
     def interrupt_pending(state, reason):
@@ -1496,7 +1098,7 @@ class SearchService:
             stop_reason=reason,
             selected_candidate_id=select(state["candidates"], require_complete_assessment=bool(state["protocol"].get("selection_requires_complete_assessment") and state["protocol"].get("assessment"))) if verified else None,
         )
-        state["message"] = "搜索结束，开发候选与完整记录已保存"
+        state["message"] = "固定流程评价结束，首次推荐与测量记录已保存"
         from .reporting import render
 
         try:

@@ -30,15 +30,15 @@ describe('neural evidence provenance', () => {
     expect(wrapper.text()).toContain('2 个偏移不可辨识')
     expect(wrapper.text()).toContain('不能证明神经信息无损')
   })
-  it('distinguishes unavailable measurements, planned branches and revised decisions', () => {
+  it('does not revive retired adjustment branches from historical data', () => {
     const wrapper = mount(SearchNeuralEvidence, { props: { searchId: 'run', protocol: { neural_priors: { capabilities: {} } },
       diagnostics: [{ id: 'd', decision_effect: { experiment: { hypothesis: '频谱峰值较高', competing_explanation: '峰值较低', threshold_rationale: '待验证预测' },
         outcome: 'unavailable', value: null, selected_branch: { next_action: 'request_diagnostic', reason: '需补充测量' } } }],
       actions: [{ index: 2, action: 'model_decision', status: 'completed', result: { decision: { action: 'finish' },
         diagnostic_response: { diagnostic_id: 'd', disposition: 'revise', reason: '没有剩余测量预算' } } }] } })
-    expect(wrapper.text()).toContain('测量不可用；观测值 不可用')
-    expect(wrapper.text()).toContain('预登记下一步：请求诊断')
-    expect(wrapper.text()).toContain('实际决定：结束搜索 · 修订计划 · 没有剩余测量预算')
+    expect(wrapper.text()).toContain('不触发流程改写')
+    expect(wrapper.text()).not.toContain('预登记下一步')
+    expect(wrapper.text()).not.toContain('修订计划')
     expect(wrapper.text()).not.toContain('尚未记录后续决定')
   })
   it('does not imply historical or unexecuted use', () => {
@@ -56,7 +56,7 @@ describe('neural evidence provenance', () => {
       actions: [{ index: 1, result: { prior_evidence: { status: 'cited_by_agent', diagnostic_ids: ['d'], prior_rule_ids: ['r'] } } }] } })
     expect(wrapper.text()).toContain('工频：未知')
     expect(wrapper.text()).toContain('神经窄带活动')
-    expect(wrapper.text()).toContain('1 个决策')
+    expect(wrapper.text()).toContain('已执行 1 项诊断')
     expect(wrapper.findAll('a').some(a => a.attributes('href')?.includes('diagnostics/d.json'))).toBe(true)
   })
 })

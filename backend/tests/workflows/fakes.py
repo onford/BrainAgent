@@ -354,22 +354,12 @@ class WorkflowLLM(LLMClient):
                     for run in data["training_runs"]
                 ],
             }
-        elif model.__name__ == "Decision":
-            if self.invalid_design and not getattr(self, "invalid_sent", False):
+        elif model.__name__ == "InitialSchedule":
+            if self.invalid_design and not getattr(self, 'invalid_sent', False):
                 self.invalid_sent = True
-                raise ValueError("hypothesis is required")
-            if any(r["id"] != data["reference_candidate"] for r in data["results"]):
-                value = {
-                    "decision": {
-                        "action": "finish",
-                        "reason": "已比较公共与个体适配",
-                        "unresolved": ["独立确认尚未进行"],
-                        "untried_candidate_reasons": {identity: "此夹具只验证一次实测派生及交付" for identity in data["untried"]},
-                    }
-                }
-            else:
-                from tests.workflows.test_cognition import filter_proposal
-                value = filter_proposal(data)
+                raise ValueError('initial recommendation schema required')
+            value = {'candidate_ids': ['basic-broadband'] if data['budget']['max_candidates'] > 1 else [],
+                     'reason': 'Initial fixed comparison within the frozen budget'}
         elif model.__name__ == "ReportNarrative":
             value = {
                 "overview": "完成资料调研与真实数据处理。",

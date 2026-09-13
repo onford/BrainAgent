@@ -1,33 +1,13 @@
 from copy import deepcopy
 import pytest
 from app.search.literature_space import build_workflow_space, check_execution
-from app.search.method_space import seed_entries, edited_entry, verify_registry
+from app.search.method_space import seed_entries, verify_registry
 from app.search.recipe_compiler import compile_recipe
 from app.preprocessing.schemas import MethodSpec
 from tests.search.test_literature_space import branch, extract, refs, OUTPUT
 from tests.preprocessing.conftest import make_dataset
 
 
-def test_graph_compositions_retain_source_parents_and_ports(tmp_path):
-    data=make_dataset(tmp_path/'bids', subjects=3)
-    a=branch(); b=branch('erp',1,.5,20.)
-    for source in (a,b):
-        for step in source['method']['recipe']:step['implementation_version']='2'
-    space,context,report=build_workflow_space(data,OUTPUT,refs(extract(data,[a,b])))
-    assert all(r['status']=='eligible' for r in report['methods']),report
-    entries=seed_entries(space,context);donors={e['id']:e for e in entries}
-    papers=[e for e in entries if e['origin']=='literature']
-    basic=next(e for e in entries if e['id']=='basic-acquisition-reference')
-    for parent in (basic,papers[1]):
-        anchor=parent['recipe'].get('output') or parent['recipe']['nodes'][-1]['id']
-        combined=edited_entry(parent,[dict(action='combine_fragment',donor_id=papers[0]['id'],node_ids=['car'],after_node_id=anchor)],
-            space,title='Test-only source composition',order=len(entries),context=context,donors=donors)
-        method=compile_recipe(combined,space,{'output_contract':OUTPUT},context)
-        check_execution(method,data,OUTPUT)
-        assert method.recipe[-1].id==method.output
-        assert len(combined['parent_ids'])==2
-        assert all(s.implementation_version=='2' for s in method.recipe)
-        verify_registry({'space':space.model_dump(),'space_context':context},entries+[combined])
 
 
 def test_csd_units_never_enter_voltage_panel(tmp_path):

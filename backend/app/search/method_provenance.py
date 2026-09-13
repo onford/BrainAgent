@@ -5,14 +5,6 @@ def is_current_literature(entry):
     return any(t.get("kind") == "literature" and t.get("workflow_id") for t in entry.get("lineage", []))
 
 
-def validate_stop(state, proposal):
-    attempted = {c["id"] for c in state["candidates"]}
-    pending = {e["id"] for e in state["registry"] if e["id"] not in attempted}
-    reasons = proposal.get("untried_candidate_reasons", {})
-    if set(reasons) != pending or any(not r.strip() for r in reasons.values()):
-        raise ValueError("提前停止必须用 untried_candidate_reasons 逐一说明尚未执行候选为何不值得当前预算；不得用固定尝试次数代替理由。待说明：" + ", ".join(sorted(pending)))
-
-
 def participation(state):
     outcomes = {c["id"]: c for c in state["candidates"]}
     current = [e for e in state.get("registry", []) if is_current_literature(e)]
@@ -36,18 +28,16 @@ def participation(state):
 def method_status(state):
     outcomes = {c["id"]: c for c in state["candidates"]}
     terminal = state.get("status", "completed") in {"completed", "stopped", "failed", "cancelled"}
-    stop_reasons = next(((a.get("request") or {}).get("untried_candidate_reasons", {})
-                         for a in reversed(state.get("actions", []))
-                         if a["action"] == "finish" and a["status"] == "completed"), {})
+    scheduled = {state.get('protocol', {}).get('baseline_id', 'bp8-30-average'), *(state.get('schedule') or [])}
     rows = []
     for entry in state.get("registry", []):
         outcome = outcomes.get(entry["id"])
         rows.append({"candidate_id": entry["id"], "title": entry["title"], "origin": entry["origin"],
-            "parent_ids": entry.get("parent_ids", []), "lineage": entry.get("lineage", []),
+            "lineage": entry.get("lineage", []),
             "adaptations": entry["deviations"], "issues": entry.get("issues", []),
             "status": outcome["status"] if outcome else "deferred" if terminal else "pending",
-            "reason": outcome.get("error") if outcome else stop_reasons.get(entry["id"], state.get("stop_reason")) if terminal else "等待候选调度",
-            "recipe_hash": entry["recipe_hash"], "edits": entry["edits"],
+            "reason": outcome.get("error") if outcome else state.get("stop_reason") if terminal and entry['id'] in scheduled else "等待固定执行" if entry['id'] in scheduled else "未纳入首次推荐",
+            "recipe_hash": entry["recipe_hash"],
             "artifacts": {"policy": f"candidates/{entry['id']}/policy.json",
                           "method": f"candidates/{entry['id']}/method.json",
                           "plan": f"candidates/{entry['id']}/plan.json",

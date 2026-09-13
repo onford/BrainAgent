@@ -21,7 +21,7 @@ from app.search.assessment import assess_candidate
 from app.search.evaluation import evaluate
 from app.search.evaluation_contracts import EvaluationReceipt
 from app.search.evaluation_numeric import covariance, csp_features
-from app.search.method_space import basic_space, seed_entries, edited_entry
+from app.search.method_space import basic_space, seed_entries
 from app.search.panel import freeze_panel
 from app.search.recipe_compiler import compile_recipe
 from app.search.reconstruction_evaluation import freeze_probe_panel
@@ -75,14 +75,13 @@ def real_delivery(tmp_path_factory):
     store = Storage(base / "search/engine")
     space = basic_space()
     seeds = seed_entries(space)
-    entry = edited_entry(seeds[2], [dict(action="set_parameter", node_id="bandpass", parameter="l_freq", value=9.0)],
-                         space, title="Dynamic nine Hz recipe", order=len(seeds))
+    entry = seeds[2]
     execution = {"eegnet_training": {"max_epochs": 2, "patience": 1, "batch_size": 8}}
     protocol = dict(version=3, space=space.model_dump(mode="json"), space_hash=digest(space.model_dump(mode="json")),
                     assessment=dict(primary_suite=["eegnet"], reconstruction_design="balanced"),
                     utility_execution=execution, utility_protocol=utility_protocol(execution=execution))
     write_json(store.root.parent / "protocol.json", protocol)
-    write_json(store.root.parent / "registry.json", [*seeds, entry])
+    write_json(store.root.parent / "registry.json", seeds)
     write_json(store.root.parent / "panel.json", panel)
     probe = freeze_probe_panel(panel, design="balanced")
     write_json(store.root.parent / "probe-panel.json", probe)
@@ -135,9 +134,9 @@ def real_delivery(tmp_path_factory):
         source_hashes=inventory)
 
 
-def test_real_dynamic_recipe_selected_and_all_models_downloadable(real_delivery):
+def test_real_frozen_recipe_selected_and_all_models_downloadable(real_delivery):
     c = real_delivery
-    assert c.entry["id"].startswith("candidate-")
+    assert c.entry["id"] == "basic-acquisition-reference"
     assert c.selection["score"] == c.assessment["selection_score"]
     with zipfile.ZipFile(c.folder.parent / "training-data.zip") as archive:
         manifest = json.loads(archive.read("manifest.json"))
@@ -269,7 +268,7 @@ def test_conclusion_projection_cannot_promote_or_detach_evidence(real_delivery, 
         EvaluationOutput.model_validate(selected)
 
 
-def test_dynamic_registry_and_required_assessment_cannot_be_bypassed(real_delivery):
+def test_frozen_registry_and_required_assessment_cannot_be_bypassed(real_delivery):
     c = real_delivery
     for change in ("missing_assessment", "wrong_parameters", "wrong_winner"):
         search = deepcopy(c.search)

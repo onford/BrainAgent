@@ -11,11 +11,7 @@ const blocked = computed(() => intake.value?.methods?.filter(m => m.status === '
 const terminal = computed(() => ['completed', 'stopped', 'failed', 'cancelled'].includes(props.state.status))
 const label = (origin: string) => ({ basic: '基础方法', literature: '本轮文献', literature_adaptation: '文献适配', derived: '派生方法' }[origin] ?? origin)
 const outcome = (id: string) => props.state.candidates?.find(c => c.id === id)
-const deferredReason = (id: string) => {
-  const finished = [...(props.state.actions ?? [])].reverse().find(a => a.action === 'finish' && a.status === 'completed')
-  const reasons = finished?.request?.untried_candidate_reasons as Record<string, string> | undefined
-  return reasons?.[id] ?? props.state.stop_reason
-}
+const deferredReason = (id: string) => props.state.schedule?.includes(id) ? props.state.stop_reason : '未纳入首次推荐'
 const status = (id: string) => {
   const value = outcome(id)?.status
   return value ? ({ evaluated: '已评价', running: '执行中', reserved: '待执行', candidate_invalid: '候选无效', execution_failure: '执行失败', interrupted: '已中断' }[value] ?? value) : terminal.value ? '已推迟' : '待执行'
@@ -55,7 +51,6 @@ const link = (path: string) => `/api/searches/${props.state.id}/artifacts/${path
         <p v-if="state.candidate_contrasts_to_reference[entry.id]!.scope_changes?.length">拟合范围或端口变化：{{ state.candidate_contrasts_to_reference[entry.id]!.scope_changes.join('、') }}；完整连线见配方。</p>
         <p>{{ state.candidate_contrasts_to_reference[entry.id]!.interpretation }}</p>
       </details>
-      <details v-if="entry.edits.length"><summary>修改与组合记录</summary><pre>{{ JSON.stringify(entry.edits, null, 2) }}</pre></details>
       <p v-if="outcome(entry.id)">
         <a :href="link(`candidates/${entry.id}/method.json`)">编译方法</a> ·
         <a :href="link(`candidates/${entry.id}/plan.json`)">实际参数与执行计划</a> ·

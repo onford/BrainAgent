@@ -180,7 +180,7 @@ class WorkflowService:
         )
         state = {
             "schema_version": "1",
-            "engine": "diagnostic-policy-search-v2",
+            "engine": "fixed-recommendation-v1",
             "execution_build": dict(self.execution_build),
             "id": uuid4().hex,
             "owner": owner,
@@ -210,7 +210,7 @@ class WorkflowService:
             self.tasks[identity] = asyncio.create_task(self.run(owner, identity))
 
     def require_current(self, state):
-        if state.get("engine") != "diagnostic-policy-search-v2":
+        if state.get("engine") != "fixed-recommendation-v1":
             raise ValueError(
                 "此运行的执行协议与当前版本不同，请新建运行；已有产物保持只读"
             )

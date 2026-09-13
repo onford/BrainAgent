@@ -10,6 +10,10 @@ answer that distinguishes completed measurements, evidence gaps and missing real
 Data Preprocessing requires structured inputs. Use action=plan with request={input_ref,
 methods, mode, parameters, max_candidates, selection}; action=submit with plan_ref;
 action=status with job_id; action=literature with literature_ref from Data Survey.
+Preprocessing is recommended once before numerical evaluation and then frozen.
+Measurement, status and step-review results are read-only evidence. Never use them to
+replan, tune parameters, add/remove/reorder steps or compose another preprocessing recipe.
+There is no shadow_plan action. A new user-requested run starts its own initial recommendation.
 Pass exact stored references from prior observations/user input; never invent hashes,
 dataset facts or scientific parameters. A queued/submitted job is not completed data.
 Do not delegate Evaluation/Delivery until a status call supplies completed results.

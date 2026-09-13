@@ -1,15 +1,13 @@
-"""Deterministic, bounded edits of method recipes; no generated code execution."""
+"""Canonical validation and hashing of fixed preprocessing recipes."""
 
 from copy import deepcopy
 import math
 
-from pydantic import TypeAdapter
 
 from app.preprocessing.storage import digest
-from .space_contracts import ExplorationSpace, PipelineEdit, PipelineRecipe
+from .space_contracts import ExplorationSpace, PipelineRecipe
 
 
-_EDIT = TypeAdapter(PipelineEdit)
 
 
 def _check_value(value, domain, location):
@@ -165,90 +163,3 @@ def recipe_hash(recipe, space=None):
             ],
         }
     )
-
-
-def apply_edits(recipe, edits, space, context=None, donors=None):
-    space = (
-        space
-        if isinstance(space, ExplorationSpace)
-        else ExplorationSpace.model_validate(space)
-    )
-    if not 1 <= len(edits) <= space.max_edits_per_proposal:
-        raise ValueError("edit count outside frozen proposal bounds")
-    base, _ = validate_recipe(recipe, space, context)
-    value = base.model_dump(mode="json")
-    for raw_edit in edits:
-        edit = _EDIT.validate_python(raw_edit)
-        by_id = {node["id"]: i for i, node in enumerate(value["nodes"])}
-
-        def locate(identity):
-            if identity not in by_id:
-                raise ValueError(f"edit references an unknown node: {identity}")
-            return by_id[identity]
-
-        if edit.action == "set_parameter":
-            node = value["nodes"][locate(edit.node_id)]
-            node["parameters"][edit.parameter] = deepcopy(edit.value)
-        elif edit.action == "insert_operator":
-            index = (
-                locate(edit.after_node_id) + 1 if edit.after_node_id is not None else 0
-            )
-            value["nodes"].insert(index, edit.node.model_dump(mode="json"))
-            if value.get('output') is not None and value['output'] == edit.after_node_id:
-                value['output'] = edit.node.id
-        elif edit.action == "remove_operator":
-            node = value["nodes"][locate(edit.node_id)]
-            if not node.get("optional", True):
-                raise ValueError("cannot remove a required source step")
-            if edit.node_id in value.get('output_roles', {}).values():
-                raise ValueError('cannot remove a named source output')
-            if edit.node_id == (value.get('evaluation_window') or {}).get('source_output'):
-                raise ValueError('cannot remove the scoring projection source output')
-            if value.get('output') == edit.node_id:
-                index = locate(edit.node_id)
-                previous = node.get('input_from') or (value['nodes'][index - 1]['id'] if index else 'raw')
-                value['output'] = previous
-            value["nodes"].pop(locate(edit.node_id))
-        elif edit.action == "swap_adjacent":
-            a, b = locate(edit.first_node_id), locate(edit.second_node_id)
-            if abs(a - b) != 1:
-                raise ValueError("order edits must swap adjacent operators")
-            value["nodes"][a], value["nodes"][b] = value["nodes"][b], value["nodes"][a]
-        elif edit.action == "combine_fragment":
-            donor = (donors or {}).get(edit.donor_id)
-            if donor is None:
-                raise ValueError("combination requires a registered donor method")
-            original = donor["recipe"]["nodes"]
-            selected = [n for n in original if n["id"] in edit.node_ids]
-            if [n["id"] for n in selected] != edit.node_ids:
-                raise ValueError("fragment must preserve donor order and use existing nodes")
-            prefix = "fragment_" + digest([edit.donor_id, edit.node_ids, len(value["nodes"])])[:8] + "_"
-            names = {n["id"]: prefix + n["id"] for n in selected}
-            fragment = deepcopy(selected)
-            for node in fragment:
-                node["id"] = names[node["id"]]
-                for key in ("input_from", "model_from", "decision_from"):
-                    ref = node.get(key)
-                    if ref is not None:
-                        if ref not in names:
-                            raise ValueError("fragment has external data/model/decision dependencies; include its prerequisite nodes")
-                        node[key] = names[ref]
-                if node.get('graph'):
-                    from app.preprocessing.schemas import Step
-                    from .graph_recipe import rename_ports
-                    graph = Step.model_validate(node['graph'])
-                    rename_ports(graph, names)
-                    node['graph'] = graph.model_dump(mode='json')
-            index = locate(edit.after_node_id) + 1 if edit.after_node_id is not None else 0
-            value["nodes"][index:index] = fragment
-            if value.get('output') is not None and value['output'] == edit.after_node_id:
-                value['output'] = fragment[-1]['id']
-            for role, node_id in donor['recipe'].get('output_roles', {}).items():
-                if node_id in names:
-                    value.setdefault('output_roles', {})[prefix + role] = names[node_id]
-        else:
-            raise ValueError("unsupported recipe edit")
-    result, warnings = validate_recipe(value, space, context)
-    if recipe_hash(result, space) == recipe_hash(base, space):
-        raise ValueError("edits do not change the executable recipe")
-    return result, warnings

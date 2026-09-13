@@ -1,4 +1,5 @@
 # 当前实施范围与进度
+> 2026-09-13 范围更新：保留首次推荐，移除后续模型自主调整。当前规则见[首次推荐与固定执行](fixed-initial-recommendation.md)。本文中的历史自主调整验收不再作为当前目标。
 
 最新能力、实际服务及尚未验收范围见[现行入口](current-capabilities.md)，逐项状态见[实施台账](sources/remaining-modifications-20260912/status.json)。以下按发生顺序保留历次记录；后续记录取代此前的“当前”状态，不重算历史测量。
 

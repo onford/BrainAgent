@@ -17,13 +17,11 @@ def main():
     parser.add_argument("--owner", default="local-development-user")
     parser.add_argument(
         "--strategy",
-        choices=("adaptive", "one_shot", "random", "exhaustive"),
-        default="adaptive",
+        choices=("one_shot",),
+        default="one_shot",
     )
     defaults = SearchBudget()
     parser.add_argument("--max-candidates", type=int, default=defaults.max_candidates)
-    parser.add_argument("--max-proposals", type=int, default=defaults.max_proposals)
-    parser.add_argument("--max-evidence-reads", type=int, default=defaults.max_evidence_reads)
     parser.add_argument("--max-seconds", type=float, default=defaults.max_seconds)
     parser.add_argument("--max-memory-mb", type=int)
     parser.add_argument("--max-disk-mb", type=int)
@@ -51,8 +49,6 @@ def main():
                 development_subjects=args.development_subjects,
                 budget=SearchBudget(
                     max_candidates=args.max_candidates,
-                    max_proposals=args.max_proposals,
-                    max_evidence_reads=args.max_evidence_reads,
                     max_seconds=args.max_seconds,
                     max_memory_mb=args.max_memory_mb,
                     max_disk_mb=args.max_disk_mb,
@@ -72,7 +68,7 @@ def main():
                 state["status"],
                 state["message"],
                 state["usage"]["candidates"],
-                state["usage"]["proposals"],
+                state["usage"]["recommended_candidates"],
             )
             if progress != last:
                 print(*progress, flush=True)

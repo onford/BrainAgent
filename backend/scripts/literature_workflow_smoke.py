@@ -101,9 +101,9 @@ async def main(args):
         return
     search = workflows.search_service()
     created = search.create("literature-smoke", SearchRequest(workflow_id=state["id"],
-        strategy="one_shot" if args.verify_literature else "adaptive",
-        budget={"max_candidates": args.candidates, "max_seconds": args.seconds, "max_proposals": 20,
-                "max_diagnostics": 6, "max_retries": 1}), start=False)
+        strategy="one_shot",
+        budget={"max_candidates": args.candidates, "max_seconds": args.seconds,
+                "max_retries": 1}), start=False)
     identity = created["id"]
     write(active, {"workflow_id": state["id"], "search_id": identity, "search_root": str(search.folder(identity))})
     intake = created["protocol"]["method_intake"]
@@ -117,10 +117,9 @@ async def main(args):
         from app.search.method_space import BASELINE_ID
         verified = search.get("literature-smoke", identity)
         ids = list(dict.fromkeys(m["candidate_id"] for m in intake["methods"] if m["status"] == "eligible"))
-        verified["schedule"] = [i for i in ids if i != BASELINE_ID][:max(0, args.candidates - 1)]
-        verified["usage"]["proposals"] = len(verified["schedule"])
-        search.action(verified, "initial_schedule", status="completed", reason="定向文献方法验收；不是模型调度结果",
-            result={"candidate_ids": verified["schedule"], "selection_origin": "directed_acceptance"})
+        schedule = [i for i in ids if i != BASELINE_ID][:max(0, args.candidates - 1)]
+        search.action(verified, "initial_recommendation", status="completed", reason="定向文献方法验收；不是模型推荐结果",
+            result={"candidate_ids": schedule, "reason": "Directed acceptance, not model recommendation", "selection_origin": "directed_acceptance"})
     search.start("literature-smoke", identity)
     task = search.tasks[identity]
     while not task.done():
@@ -130,7 +129,7 @@ async def main(args):
     await task
     result = search.get("literature-smoke", identity)
     write(root / ("result-verification.json" if args.verify_literature else "result.json"), {
-        "scheduling": "directed_acceptance" if args.verify_literature else "real_model_adaptive",
+        "scheduling": "directed_acceptance" if args.verify_literature else "real_model_initial_recommendation",
         "status": result["status"], "stop_reason": result["stop_reason"],
         "eligible_literature_methods": sum(m["status"] == "eligible" for m in intake["methods"]),
         "search_id": identity, "selected_candidate_id": result["selected_candidate_id"],

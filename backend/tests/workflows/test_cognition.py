@@ -17,16 +17,6 @@ from app.workflows.planning_contracts import survey_plan_contract
 source = source_fixture
 
 
-def filter_proposal(context):
-    from tests.search.test_controller import propose
-
-    value = propose(None, context["reference_candidate"])
-    value["decision"].update(title="Test measured-parent shared filter derivation", edits=[{
-        "action": "set_parameter", "node_id": "bandpass", "parameter": "l_freq", "value": 7.0}])
-    hypothesis = value["decision"]["hypothesis"]
-    hypothesis["observations"][0]["metric"] = "assessment.selection_score"
-    next(p for p in hypothesis["predictions"] if p["kind"] == "utility")["metric"] = "assessment.selection_score"
-    return value
 
 
 @pytest.mark.asyncio
@@ -218,37 +208,30 @@ async def test_research_retry_cannot_mix_changed_local_bytes_with_saved_observat
 
 
 @pytest.mark.asyncio
-async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
+async def test_invalid_initial_edits_are_rejected_before_fixed_execution(
     source, tmp_path
 ):
     class PolicyLLM(WorkflowLLM):
         async def structured_output(self, messages, model):
-            if model.__name__ != "Decision":
+            if model.__name__ != 'InitialSchedule':
                 return await super().structured_output(messages, model)
-            self.calls.append("Decision")
-            context = json.loads(messages[-1]["content"])
-            value = filter_proposal(context)
-            self.policy_id = value["decision"]["candidate_id"]
-            if self.calls.count("Decision") == 1:
-                # Exercise the real Decision validator, rather than raising a
-                # synthetic exception in place of an invalid model response.
-                value["decision"].pop("hypothesis")
-            else:
-                assert self.calls.count("Decision") == 2
+            self.calls.append('InitialSchedule')
+            value = {'candidate_ids': ['basic-broadband'], 'reason': 'Frozen before evaluation'}
+            if self.calls.count('InitialSchedule') == 1:
+                value['edits'] = [{'action': 'set_parameter'}]
             return model.model_validate(value)
 
     prep = PreprocessingService(tmp_path / "prep")
     llm = PolicyLLM()
     service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    # This test exercises one rejected proposal and one executed policy, not
-    # the full-space coverage required for an adaptive model's early finish.
+    # Invalid first-call output is rejected before any numerical execution.
     state = service.create(OWNER, WorkflowRequest(
-        source_root=str(source), search_budget={"max_candidates": 2, "max_proposals": 3}
+        source_root=str(source), search_budget={"max_candidates": 2}
     ))
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
-    assert llm.calls.count("Decision") == 2
+    assert llm.calls.count("InitialSchedule") == 2
     assert {
         "SurveyPlan",
         "ResearchBatch",
@@ -259,19 +242,14 @@ async def test_invalid_search_hypothesis_is_rejected_and_policy_executes(
     } <= set(llm.calls)
     folder = service.folder(state["id"])
     search = service.search_service().get(OWNER, result["search_id"])
-    rejected = [a for a in search["actions"] if a["action"] == "invalid_proposal"]
-    assert len(rejected) == 1 and rejected[0]["status"] == "rejected"
-    assert "hypothesis" in rejected[0]["error"]
-    assert search["usage"]["candidates"] == 2
-    assert search["usage"]["proposals"] == 2
-    assert search["stop_reason"] == "candidate_budget_exhausted"
-    executed = [a for a in search["actions"] if a["action"] == "propose_candidate"]
-    assert len(executed) == 1 and executed[0]["status"] == "completed", executed
-    assert executed[0]["request"]["candidate_id"] == executed[0]["candidate_id"]
-    assert next(e for e in search["registry"] if e["id"] == executed[0]["candidate_id"])["origin"] == "derived"
-    assert executed[0]["request"]["edits"][0]["value"] == 7.0
-    assert rejected[0]["index"] < executed[0]["index"]
-    policy = next(c for c in search["candidates"] if c["id"] == executed[0]["candidate_id"])
+    rejected = [a for a in search['actions'] if a['status'] == 'failed']
+    assert len(rejected) == 1 and 'edits' in rejected[0]['error']
+    assert search['usage']['candidates'] == 2
+    assert search['usage']['recommended_candidates'] == 1
+    assert search['stop_reason'] == 'schedule_exhausted'
+    assert all(a['action'] == 'initial_recommendation' for a in search['actions'])
+    assert search['schedule'] == ['basic-broadband']
+    policy = next(c for c in search['candidates'] if c['id'] == 'basic-broadband')
     assert policy["status"] == "evaluated" and policy["attempts"] == 1
     assert policy["receipt"]["assessment"]["selection_score"] is not None
     representation = policy["receipt"]["representation"]
@@ -340,7 +318,7 @@ async def test_screening_retry_reuses_completed_retrieval(source, tmp_path):
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
     assert llm.calls.count("ResearchBatch") == calls
-    assert "Decision" not in llm.calls
+    assert llm.calls.count("InitialSchedule") == 1
     assert source_path.read_bytes() == original
 
 
@@ -518,54 +496,25 @@ async def test_abstract_cannot_be_claimed_as_full_text():
 
 
 @pytest.mark.asyncio
-async def test_search_reads_frozen_evidence_before_experiment(source, tmp_path):
-    from app.preprocessing.storage import file_hash
-
-    class SupplementLLM(WorkflowLLM):
+async def test_initial_recommendation_reads_frozen_sources_once(source, tmp_path):
+    class InitialLLM(WorkflowLLM):
         async def structured_output(self, messages, model):
-            if model.__name__ != "Decision":
-                return await super().structured_output(messages, model)
-            self.calls.append("Decision")
-            context = json.loads(messages[-1]["content"])
-            if not getattr(self, "read_sent", False):
-                self.read_sent = True
-                self.survey_hash = file_hash(folder / "survey/research.json")
-                return model.model_validate(
-                    {
-                        "decision": {
-                            "action": "request_evidence",
-                            "source_id": context["sources"][0]["id"],
-                            "query": "160 Hz",
-                            "question": "核对采样率",
-                            "affects_choice": "候选频带适用性",
-                            "reason": "先确认测量条件",
-                        }
-                    }
-                )
-            assert self.calls.count("Decision") == 2
-            return model.model_validate(filter_proposal(context))
-
-    llm = SupplementLLM()
-    prep = PreprocessingService(tmp_path / "prep")
-    service = workflow_service(tmp_path / "runs", [source], prep, llm=llm)
+            if model.__name__ == 'InitialSchedule':
+                data = json.loads(messages[-1]['content'])
+                assert data['source_index']
+                assert 'results' not in data
+            return await super().structured_output(messages, model)
+    llm = InitialLLM()
+    prep = PreprocessingService(tmp_path / 'prep')
+    service = workflow_service(tmp_path / 'runs', [source], prep, llm=llm)
     service.registry = build_agent_registry(preprocessing=prep, workflow=service)
-    state = service.create(OWNER, WorkflowRequest(
-        source_root=str(source), search_budget={"max_candidates": 2, "max_proposals": 2}
-    ), start=False)
-    folder = service.folder(state["id"])
-    service.start(OWNER, state["id"])
-    result = await finish(service, state["id"])
-    assert result["status"] == "completed", result["error"]
-    search = service.search_service().get(OWNER, result["search_id"])
-    reads = [a for a in search["actions"] if a["action"] == "request_evidence"]
-    assert len(reads) == 1 and reads[0]["result"]["status"] == "read"
-    assert search["usage"]["evidence_reads"] == 1
-    executed = [a for a in search["actions"] if a["action"] == "propose_candidate"]
-    assert len(executed) == 1 and executed[0]["status"] == "completed", executed
-    assert reads[0]["index"] < executed[0]["index"]
-    assert search["usage"]["proposals"] == 1
-    assert search["stop_reason"] == "candidate_budget_exhausted"
-    assert file_hash(folder / "survey/research.json") == llm.survey_hash
+    state = service.create(OWNER, WorkflowRequest(source_root=str(source), search_budget={'max_candidates': 2}))
+    result = await finish(service, state['id'])
+    assert result['status'] == 'completed', result['error']
+    search = service.search_service().get(OWNER, result['search_id'])
+    assert llm.calls.count('InitialSchedule') == 1
+    assert [a['action'] for a in search['actions']] == ['initial_recommendation']
+    assert search['schedule'] == ['basic-broadband']
 
 
 @pytest.mark.asyncio
@@ -618,7 +567,7 @@ async def test_collection_uncertainty_triggers_read_and_recheck(source, tmp_path
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
     assert llm.calls.count("CollectionReview") == 3
-    assert "Decision" not in llm.calls
+    assert llm.calls.count("InitialSchedule") == 1
     assert (folder / "collection/research.json").exists()
     assert file_hash(folder / "survey/research.json") == llm.survey_hash
 
@@ -648,7 +597,7 @@ async def test_nonblocking_metadata_conflict_is_corrected_before_collection(
     result = await finish(service, state["id"])
     assert result["status"] == "completed", result["error"]
     assert llm.calls.count("CollectionReview") == 2
-    assert "Decision" not in llm.calls
+    assert llm.calls.count("InitialSchedule") == 1
     decisions = json.loads(
         (service.folder(state["id"]) / "collection/decisions.json").read_text(
             encoding="utf-8"

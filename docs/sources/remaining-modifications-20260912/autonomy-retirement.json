@@ -1,0 +1,87 @@
+{
+  "date": "2026-09-13",
+  "status": "code_and_tests_verified_local_service_update_pending",
+  "user_scope": "保留首次推荐，移除后续自主调整",
+  "archive": {
+    "branch": "codex/archive-autonomous-preprocessing-20260913",
+    "commit": "96f89a2"
+  },
+  "protocol": {
+    "search_version": "4",
+    "workflow_engine": "fixed-recommendation-v1"
+  },
+  "frontend": {
+    "passed": 174,
+    "files": 28,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "browser_languages": [
+      "en",
+      "zh"
+    ],
+    "log": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/frontend-full.txt",
+      "sha256": "1eafea9c82faa9c8014faf913adfe21a7a3f0149dcc33d7b333d8dbf9403ebe2"
+    }
+  },
+  "backend": {
+    "rounds": [
+      {
+        "passed": 1363,
+        "failed": 22,
+        "scope": "full suite before fixture updates and final initial-budget validation",
+        "log": {
+          "path": ".local/autonomous-preprocessing-retirement-20260913/backend-full.txt",
+          "sha256": "edc9c7892d1a3bf704ab20d0b07b92986f4a1de792329a7bc7c586aeab8b9aec"
+        }
+      },
+      {
+        "passed": 151,
+        "failed": 4,
+        "scope": "affected modules and real workflow recheck; remaining old assertions and one test registry fixture",
+        "log": {
+          "path": ".local/autonomous-preprocessing-retirement-20260913/recheck2.txt",
+          "sha256": "1b05bb04f734a962924f37b86c978a5c9db51a4cbb4798cac87308052b98b40b"
+        }
+      },
+      {
+        "passed": 77,
+        "failed": 0,
+        "scope": "final changed modules, initial-budget validation and every remaining failed workflow path",
+        "log": {
+          "path": ".local/autonomous-preprocessing-retirement-20260913/final-recheck.txt",
+          "sha256": "4075b59bbec91f9a252d104cc4f652b02f015a87b6735dc72cfa1811aa297a0a"
+        }
+      }
+    ],
+    "interpretation": "Counts overlap and must not be added. This is full regression followed by targeted rechecks, not a claim that the final tree had a second full-suite run."
+  },
+  "real_initial": {
+    "status": "passed_contract_checks",
+    "calls_in_successful_probe": 1,
+    "numerical_candidates": 0,
+    "state_unchanged": true,
+    "log": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/real-initial-2.log",
+      "sha256": "6c8e3c8f86299df4f87880ed0012f49cec863193fb4e3eebecdd13d43efd034f"
+    },
+    "result": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/real-initial-result-2.json",
+      "sha256": "3bddee757249c7a036aa7f166f080cb894a271059a6b75a156ec9add7628acb4"
+    },
+    "prior_attempt": "First harness attempt rejected excess recommendations; no numerical execution.",
+    "scope": "Basic fixed methods only. Rationale is model text, not execution evidence; its reference-already-executed wording is not a verified event."
+  },
+  "old_run": {
+    "search_id": "9bf10c0075a149fbba9d48e86524216c",
+    "status": "cancelled",
+    "stop_reason": "cancelled_by_user",
+    "original_data_and_checkpoints_unchanged": true,
+    "receipt": {
+      "path": ".local/autonomous-preprocessing-retirement-20260913/old-search-stop-request.json",
+      "sha256": "db3e900a4d613f67befbbe93e111dbef7e4f83ebb2ade9d8f45178ef652534eb"
+    }
+  },
+  "sites": "deferred by user",
+  "other_modifications": "not started during retirement"
+}

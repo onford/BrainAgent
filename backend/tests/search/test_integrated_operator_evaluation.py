@@ -24,7 +24,7 @@ from app.preprocessing.storage import digest, file_hash, write_json
 from app.preprocessing.units import engine_hash, environment, specification
 from app.search.assessment import assess_candidate, verify_assessment
 from app.search.evaluation import evaluate
-from app.search.method_space import edited_entry, seed_entries
+from app.search.method_space import seed_entries
 from app.search.panel import freeze_panel
 from app.search.recipe_compiler import compile_recipe
 from app.search.reconstruction_evaluation import freeze_probe_panel
@@ -198,13 +198,16 @@ def test_notch_detrend_postepoch_reference_full_assessment(corpus):
     base = next(s for s in seeds if not any(n["operator"] == "average_reference" for n in s["recipe"]["nodes"])
                 and not any(n["operator"] == "asr" for n in s["recipe"]["nodes"]))
     epoch = next(n["id"] for n in base["recipe"]["nodes"] if n["operator"] == "epoch")
-    edits = [
-        {"action": "insert_operator", "after_node_id": None, "node": {"id": "drift", "operator": "detrend", "parameters": {"type": "linear"}}},
-        {"action": "insert_operator", "after_node_id": "drift", "node": {"id": "line", "operator": "notch", "parameters": {"freqs": [50.]}}},
-        {"action": "insert_operator", "after_node_id": epoch, "node": {"id": "postref", "operator": "average_reference", "parameters": {}}},
-    ]
-    entry = edited_entry(deepcopy(base), edits, space, title="integration: notch+detrend+postepoch average reference",
-                         order=len(seeds), context=context)
+    # Fixed fixture authored before execution; no controller edits.
+    from app.search.pipeline_space import validate_recipe, recipe_hash
+    entry = deepcopy(base)
+    entry['recipe']['nodes'] = [
+        {'id': 'drift', 'operator': 'detrend', 'parameters': {'type': 'linear'}},
+        {'id': 'line', 'operator': 'notch', 'parameters': {'freqs': [50.]}},
+        *entry['recipe']['nodes'],
+        {'id': 'postref', 'operator': 'average_reference', 'parameters': {}}]
+    recipe, _ = validate_recipe(entry['recipe'], space, context)
+    entry.update(recipe=recipe.model_dump(mode='json'), recipe_hash=recipe_hash(recipe, space))
     run = _execute(corpus, entry)
     for config in run[0].records:
         assert {"notch", "detrend"} <= {s.op for s in config.steps}

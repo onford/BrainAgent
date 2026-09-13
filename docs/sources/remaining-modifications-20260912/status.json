@@ -49,9 +49,9 @@
       "id": "I03",
       "priority": "P0",
       "scope": "正式版",
-      "title": "实质文献方法自主参与闭环",
-      "current": "第7/8次fresh流程已结束且实质文献验收失败，旧结果保留。第10次覆盖109人/327目标记录/4918试次，已自然接入7–30Hz与1–4秒窗的来源分支；状态文件锁导致中断后在原冻结版本、原预算下恢复，尚未完成实质文献评价、反馈与赢家核验。",
-      "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。",
+      "title": "实质文献方法参与首次推荐与固定评价",
+      "current": "保留真实来源提取、首次推荐和固定文献流程数值执行；反馈推动派生候选的验收撤回。",
+      "solution_and_acceptance": "保留真实来源提取、首次推荐和固定文献流程数值执行；反馈推动派生候选的验收撤回。",
       "dependencies": [
         "I01",
         "I02",
@@ -68,17 +68,23 @@
         "D3"
       ],
       "historical_status": "实测失败",
-      "status": "partial",
+      "status": "pending_fixed_recommendation_validation",
       "implementation_note": "e7590f4 fresh 运行 893e028f964f4d67b42849a18304c2f2 完成真实调研、接入和基础候选完整评价，随后累计模型输入预算耗尽；实质文献候选未评价，不能计为闭环成功。已无损合并重复算子合同、压缩导航上下文并修复预算终止处理，等待新运行。",
-      "implementation_update": "第7/8次fresh六阶段交付均结束且验收失败。第8次选中MOABB事件/窗口方法，仅公共适配不算实质文献处理，substantive列表为空，预算耗尽后保留结果；不改写门槛。"
+      "implementation_update": "第7/8次fresh六阶段交付均结束且验收失败。第8次选中MOABB事件/窗口方法，仅公共适配不算实质文献处理，substantive列表为空，预算耗尽后保留结果；不改写门槛。",
+      "before_autonomy_retirement": {
+        "title": "实质文献方法自主参与闭环",
+        "status": "partial",
+        "current": "第7/8次fresh流程已结束且实质文献验收失败，旧结果保留。第10次覆盖109人/327目标记录/4918试次，已自然接入7–30Hz与1–4秒窗的来源分支；状态文件锁导致中断后在原冻结版本、原预算下恢复，尚未完成实质文献评价、反馈与赢家核验。",
+        "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。"
+      }
     },
     {
       "id": "I04",
       "priority": "P1",
       "scope": "正式版",
       "title": "真实模型自主组合两类来源",
-      "current": "兼容片段组合及谱系已有实现/回归，尚无真实模型自主完成双来源组合并评价的充分证据。",
-      "solution_and_acceptance": "在自然形成的候选池中验证基础＋文献、文献＋文献组合；每个片段保留父方法、差异、拟合依赖和证据，编译、实际执行与评价一致。",
+      "current": "用户撤回后续模型组合与改写；实现仅保留于旧版本。",
+      "solution_and_acceptance": "用户撤回后续模型组合与改写；实现仅保留于旧版本。",
       "dependencies": [
         "I01",
         "I02",
@@ -89,7 +95,13 @@
         "D3"
       ],
       "historical_status": "尚未验证",
-      "status": "previously_verified_requires_regression"
+      "status": "withdrawn",
+      "before_autonomy_retirement": {
+        "title": "真实模型自主组合两类来源",
+        "status": "previously_verified_requires_regression",
+        "current": "兼容片段组合及谱系已有实现/回归，尚无真实模型自主完成双来源组合并评价的充分证据。",
+        "solution_and_acceptance": "在自然形成的候选池中验证基础＋文献、文献＋文献组合；每个片段保留父方法、差异、拟合依赖和证据，编译、实际执行与评价一致。"
+      }
     },
     {
       "id": "I05",
@@ -377,9 +389,9 @@
       "id": "I19",
       "priority": "P1",
       "scope": "研究终局",
-      "title": "动态诊断的能力范围",
-      "current": "冻结注册表包含输入域、标签权限、成本、数值合同和产物；三项内核含新增PSD频谱分布。竞争假设和三分支执行前登记，后续模型决定校验遵循或显式修订。质量缺测索引避免加载无关波形。真实12记录/180试次历史汇总复核先因输入预算失败，修复后沿用模型预算通过；实际只验证诊断与下一动作提案，科学推断及后续候选效用另行验证。",
-      "solution_and_acceptance": "为新诊断注册输入域、标签权限、成本、数值合同和产物；让模型按竞争假设选择，有预算地执行并改变下一步动作。",
+      "title": "只读诊断与测量覆盖",
+      "current": "保留受信任测量内核和证据；模型请求、诊断分支和后续改写门控已移除。",
+      "solution_and_acceptance": "保留受信任测量内核和证据；模型请求、诊断分支和后续改写门控已移除。",
       "dependencies": [
         "I02",
         "I14",
@@ -391,8 +403,14 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "implemented_targeted_validation_passed",
-      "implementation": "docs/diagnostic-registry.md"
+      "status": "read_only_measurements_retained",
+      "implementation": "docs/diagnostic-registry.md",
+      "before_autonomy_retirement": {
+        "title": "动态诊断的能力范围",
+        "status": "implemented_targeted_validation_passed",
+        "current": "冻结注册表包含输入域、标签权限、成本、数值合同和产物；三项内核含新增PSD频谱分布。竞争假设和三分支执行前登记，后续模型决定校验遵循或显式修订。质量缺测索引避免加载无关波形。真实12记录/180试次历史汇总复核先因输入预算失败，修复后沿用模型预算通过；实际只验证诊断与下一动作提案，科学推断及后续候选效用另行验证。",
+        "solution_and_acceptance": "为新诊断注册输入域、标签权限、成本、数值合同和产物；让模型按竞争假设选择，有预算地执行并改变下一步动作。"
+      }
     },
     {
       "id": "I20",
@@ -445,9 +463,9 @@
       "id": "I22",
       "priority": "P1",
       "scope": "研究终局",
-      "title": "运行中复核与局部回退",
-      "current": "v2每步不可变检查点、5类工程条件与先保存后暂停已实现；API/agent支持绑定原检查点、保留条件与全部原始记录的共享局部替代计划，当前知识和全图适用性重编译，旧状态/产物不变。88项后端及12真实记录恢复验收通过。恢复采用从原数据完整重执行，不移植中间拟合状态。",
-      "solution_and_acceptance": "保存步骤后条件和不可变检查点，显式重编译局部替代分支；原失败和决定不改写，回退本身也须验证适用性。",
+      "title": "检查点复核与用户显式操作",
+      "current": "保留检查点读取及用户显式 REST 影子计划；移除模型 shadow_plan 动作。",
+      "solution_and_acceptance": "保留检查点读取及用户显式 REST 影子计划；移除模型 shadow_plan 动作。",
       "dependencies": [
         "I19",
         "I21",
@@ -461,8 +479,14 @@
         "D5"
       ],
       "historical_status": "部分实现",
-      "status": "implemented_targeted_validation_passed",
-      "implementation": "docs/step-review-and-shadow.md"
+      "status": "manual_only",
+      "implementation": "docs/step-review-and-shadow.md",
+      "before_autonomy_retirement": {
+        "title": "运行中复核与局部回退",
+        "status": "implemented_targeted_validation_passed",
+        "current": "v2每步不可变检查点、5类工程条件与先保存后暂停已实现；API/agent支持绑定原检查点、保留条件与全部原始记录的共享局部替代计划，当前知识和全图适用性重编译，旧状态/产物不变。88项后端及12真实记录恢复验收通过。恢复采用从原数据完整重执行，不移植中间拟合状态。",
+        "solution_and_acceptance": "保存步骤后条件和不可变检查点，显式重编译局部替代分支；原失败和决定不改写，回退本身也须验证适用性。"
+      }
     },
     {
       "id": "I23",
@@ -553,9 +577,9 @@
       "id": "I27",
       "priority": "P0",
       "scope": "正式版",
-      "title": "新协议全集搜索",
-      "current": "第10次全集流程在14:07:58因状态轮询search.json短暂PermissionError中断，首轮acceptance=false，原数据/代码/驱动哈希不变。现已在原冻结2906731环境下恢复，仍处于基线评价；保留原15个检查点，恢复创建独立a2评价尝试，预算不续期。",
-      "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。",
+      "title": "首次推荐后固定流程全集评价",
+      "current": "旧第10次自主运行已请求停止；后续只按首次冻结推荐验收，旧结果不改写。",
+      "solution_and_acceptance": "旧第10次自主运行已请求停止；后续只按首次冻结推荐验收，旧结果不改写。",
       "dependencies": [
         "I03",
         "I32",
@@ -569,8 +593,14 @@
         "D7"
       ],
       "historical_status": "未完成",
-      "status": "in_progress",
-      "implementation_update": "新增独立恢复驱动，原失败result.json、检查点、预算起点/到期时间与既有调用账本保留；新的恢复证据目录单独记录。仅对状态轮询的已知控制文件PermissionError有界重试，无阶段/模型/数值覆盖。完整文献候选、反馈和赢家尚待执行。"
+      "status": "pending_fixed_recommendation_validation",
+      "implementation_update": "新增独立恢复驱动，原失败result.json、检查点、预算起点/到期时间与既有调用账本保留；新的恢复证据目录单独记录。仅对状态轮询的已知控制文件PermissionError有界重试，无阶段/模型/数值覆盖。完整文献候选、反馈和赢家尚待执行。",
+      "before_autonomy_retirement": {
+        "title": "新协议全集搜索",
+        "status": "in_progress",
+        "current": "第10次全集流程在14:07:58因状态轮询search.json短暂PermissionError中断，首轮acceptance=false，原数据/代码/驱动哈希不变。现已在原冻结2906731环境下恢复，仍处于基线评价；保留原15个检查点，恢复创建独立a2评价尝试，预算不续期。",
+        "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。"
+      }
     },
     {
       "id": "I28",
@@ -599,8 +629,8 @@
       "priority": "P1",
       "scope": "研究终局",
       "title": "自动探索及先验本身是否有价值",
-      "current": "random/exhaustive/one_shot 对照入口已有，尚无同预算真实实验表明完整 Agent 比静态/无先验方法更好。",
-      "solution_and_acceptance": "比较无先验、静态先验、动态诊断、完整系统，并保留随机/一次提案基线；用相同信息与计算预算衡量最终效用、有效修复、重复率和成本。",
+      "current": "自主调整及其与随机/穷举策略对照不再作为当前实现与验收目标；初始推荐证据仍可研究。",
+      "solution_and_acceptance": "自主调整及其与随机/穷举策略对照不再作为当前实现与验收目标；初始推荐证据仍可研究。",
       "dependencies": [
         "I27",
         "I28",
@@ -613,7 +643,13 @@
         "D6"
       ],
       "historical_status": "未完成",
-      "status": "pending"
+      "status": "withdrawn",
+      "before_autonomy_retirement": {
+        "title": "自动探索及先验本身是否有价值",
+        "status": "pending",
+        "current": "random/exhaustive/one_shot 对照入口已有，尚无同预算真实实验表明完整 Agent 比静态/无先验方法更好。",
+        "solution_and_acceptance": "比较无先验、静态先验、动态诊断、完整系统，并保留随机/一次提案基线；用相同信息与计算预算衡量最终效用、有效修复、重复率和成本。"
+      }
     },
     {
       "id": "I30",
@@ -974,9 +1010,9 @@
       "id": "I47",
       "priority": "P1",
       "scope": "正式版",
-      "title": "正式界面的完整决策链",
-      "current": "图表和解读在独立真实数据实例已多轮验证；统一发布工作流、图候选与全部来源/失败状态尚无同版浏览器验收。",
-      "solution_and_acceptance": "在正式服务逐项走来源→分支→配方→决定→执行→三轴→赢家→包，覆盖失败/缺失/等待决定、窄屏、双语和下载；字段必须与账本一致。",
+      "title": "正式界面的首次推荐与固定执行记录",
+      "current": "自主策略和调整预算已移除，展示首次推荐、固定候选、评价及原始产物；前端全量174项通过。",
+      "solution_and_acceptance": "自主策略和调整预算已移除，展示首次推荐、固定候选、评价及原始产物；前端全量174项通过。",
       "dependencies": [
         "I02",
         "I23",
@@ -992,7 +1028,13 @@
       ],
       "historical_status": "尚未验证",
       "status": "in_progress",
-      "implementation_update": "8d99111静态预览连接真实8001后端，Browser实际检查中英文空工作区、配置的数据源与390×844新建对话框；完整来源到最终包的页面链仍待正式赢家。发现中文小标题和预算入口待I48处理。"
+      "implementation_update": "8d99111静态预览连接真实8001后端，Browser实际检查中英文空工作区、配置的数据源与390×844新建对话框；完整来源到最终包的页面链仍待正式赢家。发现中文小标题和预算入口待I48处理。",
+      "before_autonomy_retirement": {
+        "title": "正式界面的完整决策链",
+        "status": "in_progress",
+        "current": "图表和解读在独立真实数据实例已多轮验证；统一发布工作流、图候选与全部来源/失败状态尚无同版浏览器验收。",
+        "solution_and_acceptance": "在正式服务逐项走来源→分支→配方→决定→执行→三轴→赢家→包，覆盖失败/缺失/等待决定、窄屏、双语和下载；字段必须与账本一致。"
+      }
     },
     {
       "id": "I48",
@@ -1252,6 +1294,14 @@
       ],
       "historical_status": "未复核",
       "status": "archived_replaced_framework"
+    },
+    {
+      "id": "R01",
+      "priority": "P0",
+      "title": "移除模型后续自主调整，保留首次推荐",
+      "status": "code_verified_service_update_pending",
+      "current": "清理实现及全部剩余失败路径已验证；前端174项、最终后端专项77项通过，真实首荐合同通过。等待更新空闲本地服务。",
+      "solution_and_acceptance": "首次推荐在数值执行前冻结；结果不得改写目录、顺序和配方；旧版不能恢复自主执行。"
     }
   ],
   "sources": {
@@ -2254,5 +2304,12 @@
         200
       ]
     }
+  },
+  "scope_update_20260913": {
+    "user_decision": "保留首次推荐，移除后续自主调整",
+    "archive_branch": "codex/archive-autonomous-preprocessing-20260913",
+    "archive_commit": "96f89a2",
+    "priority": "Finish retirement before resuming other modifications",
+    "sites": "deferred by user"
   }
 }

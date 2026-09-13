@@ -18,7 +18,7 @@ from app.preprocessing.storage import Storage, file_hash, digest
 from app.search import evaluation, worker
 from app.search.catalog import BASELINE_ID, catalog, method
 from app.search.method_space import basic_space
-from app.search.method_space import seed_entries, edited_entry
+from app.search.method_space import seed_entries
 from app.search.evaluation_contracts import EvaluationReceipt
 
 
@@ -53,9 +53,10 @@ def search(tmp_path):
     assert "panel_hash" in panel, panel
     space = basic_space().model_dump(mode="json")
     worker.write_json(
-        root / "protocol.json", {"space": space, "space_hash": digest(space)}
+        root / "protocol.json", {"version": "4", "space": space, "space_hash": digest(space), "registry_hash": digest(catalog())}
     )
     worker.write_json(root / "registry.json", catalog())
+    worker.write_json(root / "initial-recommendation.json", {"registry_hash": digest(catalog()), "candidate_ids": [e["id"] for e in catalog()]})
     for entry in catalog()[:2]:
         worker.write_json(root / "candidates" / entry["id"] / "policy.json", entry)
         worker.write_json(
@@ -139,36 +140,6 @@ def test_real_prepare_candidate_cli_and_full_inventory(search):
     assert '\n  "' in (search / "candidates" / BASELINE_ID / "receipt.json").read_text()
 
 
-def test_bounded_edit_executes_without_static_catalog_membership(search):
-    space = basic_space()
-    seeds = seed_entries(space)
-    entry = edited_entry(
-        seeds[0],
-        [
-            {
-                "action": "set_parameter",
-                "node_id": "bandpass",
-                "parameter": "l_freq",
-                "value": 4.0,
-            },
-        ],
-        space,
-        title="4–30 shared filter",
-        order=len(seeds),
-    )
-    worker.write_json(search / "registry.json", seeds + [entry])
-    output = search / "candidates" / entry["id"]
-    worker.write_json(output / "policy.json", entry)
-    worker.write_json(
-        output / "method.json",
-        method(entry, worker.read_json(search / "panel.json")).model_dump(mode="json"),
-    )
-    reference = worker.candidate(search, BASELINE_ID)
-    assert reference["status"] == "evaluated"
-    result = worker.candidate(search, entry["id"])
-    assert result["status"] == "evaluated", result
-    assert result["representation"]["unit"] == "V"
-    assert result["coverage"]["predicted"] == reference["coverage"]["predicted"]
 
 
 def test_parallel_record_execution_preserves_numerical_predictions(search):
@@ -452,6 +423,7 @@ def test_prepare_failure_receipt_and_nonzero(search, case):
     else:
         search = Path(data["collection"]["root"]) / "search"
         worker.write_json(search / "input.json", data)
+        worker.write_json(search / 'protocol.json', {'version': '4'})
     assert worker.main(["--root", str(search), "--stage", "prepare"]) == 1
     receipt = worker.read_json(search / "prepare-error.json")
     assert receipt["status"] == expected and receipt["error"]
@@ -507,6 +479,7 @@ def test_resource_exception_types(exc):
 
 def test_parent_guard_is_optional_and_wired_before_prepare(tmp_path, monkeypatch):
     calls = []
+    worker.write_json(tmp_path / 'protocol.json', {'version': '4'})
     monkeypatch.setattr(worker, "_start_parent_guard", lambda pid: calls.append(pid))
 
     def prepare(root):

@@ -1,6 +1,14 @@
 import type { MessageKey } from './en'
 
 export const zh = {
+  "Initial recommendation and fixed evaluation": "首次推荐与固定流程评价",
+  "Recommend once before evaluation, then execute the frozen recipes in order.": "评价前完成首次推荐，随后按固定顺序执行冻结流程。",
+  "Initial recommendation": "首次推荐",
+  "Frozen recommendation and execution records": "冻结推荐与执行记录",
+  "Candidates {0} / {1} · Time {2} / {3} s": "候选 {0} / {1} · 时间 {2} / {3} 秒",
+  "Initial recommendation rationale and fixed execution order.": "首次推荐依据与固定执行顺序。",
+  "No initial recommendation recorded yet.": "尚无首次推荐记录。",
+
   "New workflow": "新建流程",
   "Run budgets": "运行预算",
   "These limits are saved with the run. Retrying does not reset them.": "预算随本次运行保存，重试不会重置。",

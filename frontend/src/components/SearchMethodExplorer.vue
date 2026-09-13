@@ -11,7 +11,6 @@ const origin = (value: string) => (({ get basic() { return t('Baseline method') 
 const operator = (id: string) => props.space?.operators.find(o => o.id === id)?.title ?? id
 const value = (v: unknown) => typeof v === 'object' ? JSON.stringify(v) : String(v)
 const stage = (v: string) => (({ get continuous() { return t('Continuous signal') }, get epochs() { return t('Epochs') }, get either() { return t('Continuous signal / epochs') }, get same() { return t('Preserve data representation') } } as Record<string, string>)[v] ?? v)
-const editLabel = (v: string) => (({ get set_parameter() { return t('Adjust parameters') }, get swap_adjacent() { return t('Swap adjacent steps') }, get insert_operator() { return t('Insert operator') }, get remove_operator() { return t('Remove operator') } } as Record<string, string>)[v] ?? v)
 const webLink = (v: string) => /^https?:\/\//i.test(v)
 </script>
 
@@ -27,9 +26,7 @@ const webLink = (v: string) => /^https?:\/\//i.test(v)
         <header><span class="kicker">{{ origin(entry.origin) }}</span><h3>{{ entry.title }}</h3><p class="muted">{{ entry.id }}</p></header>
         <p v-if="entry.parent_id" class="lineage">{{ t('Parent method:') }}<button @click="selected = entry.parent_id; query = ''">{{ props.entries.find(e => e.id === entry?.parent_id)?.title ?? entry.parent_id }}</button></p>
         <ol class="operator-flow"><li v-for="(node, index) in entry.recipe.nodes" :key="node.id"><span class="step-number">{{ index + 1 }}</span><div><strong>{{ operator(node.operator) }}</strong><dl v-if="Object.keys(node.parameters).length"><template v-for="(v, name) in node.parameters" :key="name"><dt>{{ name }}</dt><dd>{{ value(v) }}</dd></template></dl><small v-else class="muted">{{ t('Uses the shared data and output contract') }}</small></div></li></ol>
-        <section v-if="entry.edits.length"><h4>{{ t('Search edits') }}</h4><ul><li v-for="(edit, i) in entry.edits" :key="i"><strong>{{ editLabel(edit.action) }}</strong><span class="muted">{{ Object.entries(edit).filter(([k]) => k !== 'action').map(([k,v]) => `${k}: ${value(v)}`).join(' · ') }}</span></li></ul></section>
         <section v-if="entry.deviations.length"><h4>{{ t('Applicability and method adaptations') }}</h4><ul><li v-for="note in entry.deviations" :key="note">{{ note }}</li></ul></section>
-        <section v-if="Object.keys(entry.prior_challenges).length"><h4>{{ t('Prior challenges requiring experimental evidence') }}</h4><p v-for="(reason, key) in entry.prior_challenges" :key="key"><strong>{{ key }}</strong> {{ reason }}</p></section>
         <section v-if="entry.evidence_ids.length"><h4>{{ t('Method references') }}</h4><p v-for="key in entry.evidence_ids" :key="key"><template v-if="space?.evidence[key]"><a v-if="webLink(space.evidence[key].source_url)" :href="space.evidence[key].source_url" target="_blank" rel="noopener noreferrer">{{ space.evidence[key].locator }} ↗</a><span v-else>{{ space.evidence[key].locator }}</span><small class="muted">{{ space.evidence[key].text }}</small></template></p></section>
       </article>
       <p v-else class="empty">{{ t('No matching recipes.') }}</p>

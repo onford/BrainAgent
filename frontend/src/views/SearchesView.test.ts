@@ -11,10 +11,10 @@ vi.mock('../api/client', () => ({ apiRequest, apiUrl: (path: string) => `https:/
 
 function state(overrides: Partial<SearchState> = {}): SearchState {
   return {
-    schema_version: '1', protocol: { version: '3', evaluator: 'csp-shrinkage-lda-v2' }, id: 'search-1', workflow_id: 'source-1', status: 'completed',
+    schema_version: '1', protocol: { version: '4', evaluator: 'csp-shrinkage-lda-v2' }, id: 'search-1', workflow_id: 'source-1', status: 'completed',
     created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:10:00Z',
-    request: { workflow_id: 'source-1', strategy: 'adaptive', seed: 42,
-      budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } },
+    request: { workflow_id: 'source-1', strategy: 'one_shot', seed: 42,
+      budget: { max_candidates: 6, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } },
     usage: { candidates: 2, proposals: 3, evidence_reads: 1, llm_calls: 4, elapsed_seconds: 125.5, retries: 0 },
     phase: '评估完成', message: '已完成开发面板比较', panel: '训练 2 人，开发 2 人',
     candidates: [
@@ -85,9 +85,9 @@ describe('SearchesView', () => {
     const { wrapper, router } = await open('/searches?workflow=source-1')
     expect((wrapper.get('input[aria-label="来源流程 ID"]').element as HTMLInputElement).value).toBe('source-1')
     expect(wrapper.find('select').exists()).toBe(false)
-    expect(wrapper.findAll('input[name="strategy"]').map(input => input.attributes('value'))).toEqual(['adaptive', 'random', 'exhaustive', 'one_shot'])
-    expect((wrapper.get('input[value="adaptive"]').element as HTMLInputElement).checked).toBe(true)
-    expect(wrapper.get('fieldset').text()).toContain('一次性提案对照')
+    expect(wrapper.findAll('input[name="strategy"]').map(input => input.attributes('value'))).toEqual(['one_shot'])
+    expect((wrapper.get('input[value="one_shot"]').element as HTMLInputElement).checked).toBe(true)
+    expect(wrapper.get('fieldset').text()).toContain('首次推荐')
     expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('最多 5 折')
     expect(wrapper.get('[aria-label="默认评估方式"]').text()).toContain('EEGNet 固定种子 17、42、2026')
     expect(wrapper.get('[aria-label="默认评估方式"]').text()).not.toContain('FBCSP')
@@ -96,8 +96,8 @@ describe('SearchesView', () => {
     await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
     expect(post[0]).toBe('/api/searches')
-    expect(JSON.parse(post[1].body)).toEqual({ workflow_id: 'source-1', strategy: 'adaptive', seed: 42,
-      budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
+    expect(JSON.parse(post[1].body)).toEqual({ workflow_id: 'source-1', strategy: 'one_shot', seed: 42,
+      budget: { max_candidates: 48, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
     expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
     expect(wrapper.get('h1').text()).toContain('准备中')
     expect(wrapper.get('nav[aria-label="选择搜索"]').text()).toContain('search-1')
@@ -105,19 +105,19 @@ describe('SearchesView', () => {
     expect(apiRequest.mock.calls.some(([path]) => path.startsWith('/api/searches/search-1?'))).toBe(false)
   })
 
-  it.each(['random', 'exhaustive', 'one_shot'])('submits edited budgets and optional subject IDs with strategy %s', async selectedStrategy => {
+  it.each(['one_shot'])('submits edited budgets and optional subject IDs with strategy %s', async selectedStrategy => {
     apiRequest.mockImplementation(async (_path: string, init?: RequestInit) => init ? state() : [])
     const { wrapper } = await open('/searches?workflow=source-1')
     await wrapper.get(`input[value="${selectedStrategy}"]`).setValue(true)
     if (selectedStrategy === 'random') expect(wrapper.get('.strategy-hint').text()).toContain('最终仍按开发主评分选择')
-    for (const [name, value] of [['候选数', '9'], ['提议数', '12'], ['证据读取数', '0'], ['时限（秒）', '900'], ['内存上限（MB）', '2048'], ['磁盘上限（MB）', '4096'], ['随机种子', '7'], ['训练被试', 'S001, S002 S001'], ['开发被试', 'S003，S004']]) {
+    for (const [name, value] of [['候选数', '9'], ['时限（秒）', '900'], ['内存上限（MB）', '2048'], ['磁盘上限（MB）', '4096'], ['随机种子', '7'], ['训练被试', 'S001, S002 S001'], ['开发被试', 'S003，S004']]) {
       await wrapper.get(`input[aria-label="${name}"]`).setValue(value)
     }
     await wrapper.get('form').trigger('submit')
     await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
     expect(JSON.parse(post[1].body)).toEqual({ workflow_id: 'source-1', strategy: selectedStrategy, seed: 7,
-      budget: { max_candidates: 9, max_proposals: 12, max_evidence_reads: 0, max_seconds: 900, max_memory_mb: 2048, max_disk_mb: 4096 },
+      budget: { max_candidates: 9, max_seconds: 900, max_memory_mb: 2048, max_disk_mb: 4096 },
       train_subjects: ['S001', 'S002'], development_subjects: ['S003', 'S004'] })
   })
 
@@ -128,9 +128,9 @@ describe('SearchesView', () => {
     expect(wrapper.get('.strategy-hint').text()).toContain('不根据中途评价调整提案')
     await wrapper.get('form').trigger('submit'); await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
-    expect(JSON.parse(post[1].body)).toEqual({ ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
+    expect(JSON.parse(post[1].body)).toEqual({ ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } })
     expect(router.currentRoute.value.query).toEqual({ id: 'search-1' })
-    expect(wrapper.get('.page-heading').text()).toContain('一次性提案对照')
+    expect(wrapper.get('.page-heading').text()).toContain('首次推荐')
   })
 
   it('accepts fractional positive seconds and rejects zero, negative and empty time budgets', async () => {
@@ -184,7 +184,7 @@ describe('SearchesView', () => {
     const { wrapper } = await open('/searches?id=search-1')
     expect(apiRequest).toHaveBeenCalledWith('/api/searches/search-1?include_artifacts=true')
     const meters = wrapper.findAll('[role="progressbar"]')
-    expect(meters.map(meter => meter.attributes('aria-valuetext'))).toEqual(['2 / 6', '3 / 8', '1 / 2', '125.5 / 3,600'])
+    expect(meters.map(meter => meter.attributes('aria-valuetext'))).toEqual(['2 / 6', '125.5 / 3,600'])
     expect(wrapper.text()).toContain('内存 自动')
     expect(wrapper.text()).toContain('LLM 调用 4')
     expect(wrapper.text()).toContain('停止原因：达到候选预算')
@@ -203,10 +203,10 @@ describe('SearchesView', () => {
     await button(wrapper, '窄频原始参考').trigger('click')
     expect(wrapper.text()).toContain('该候选暂无开发被试回执')
     expect(wrapper.text()).toContain('开发评估选中 c1')
-    await button(wrapper, '轮次时间线').trigger('click')
+    await button(wrapper, '冻结推荐与执行记录').trigger('click')
     expect(wrapper.get('.timeline').text()).toContain('比较参考方式')
-    expect(wrapper.get('.timeline').text()).toContain('开发 BA 改善')
-    expect(wrapper.get('.timeline').text()).toContain('继续搜索')
+    expect(wrapper.get('.timeline').text()).not.toContain('开发 BA 改善')
+    expect(wrapper.get('.timeline').text()).not.toContain('继续搜索')
     expect(wrapper.get('.timeline').text()).toContain('参数不可行')
     await button(wrapper, '报告 / 文件').trigger('click')
     expect(wrapper.get('iframe').attributes('src')).toBe('https://api.example.test/api/searches/search-1/artifacts/report/report.html?download=false')
@@ -260,7 +260,7 @@ describe('SearchesView', () => {
   })
 
   it('handles partial states without treating missing metrics as zero and shows structured panel data', async () => {
-    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ usage: undefined, candidates: undefined, actions: undefined, artifacts: undefined, selected_candidate_id: null, panel: { train_subjects: ['S001'], development_subjects: ['S003'] }, budget: { ...state().request.budget, max_evidence_reads: 0, max_memory_mb: 2048, max_disk_mb: 4096 } }))
+    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({ usage: undefined, candidates: undefined, actions: undefined, artifacts: undefined, selected_candidate_id: null, panel: { train_subjects: ['S001'], development_subjects: ['S003'] }, budget: { ...state().request.budget, max_memory_mb: 2048, max_disk_mb: 4096 } }))
     const { wrapper } = await open('/searches?id=search-1')
     expect(wrapper.text()).toContain('暂无候选结果')
     expect(wrapper.text()).toContain('尚未选择')
@@ -268,10 +268,10 @@ describe('SearchesView', () => {
     expect(wrapper.text()).toContain('磁盘 4,096 MB')
     expect(wrapper.get('.panel-summary details').text()).toContain('S003')
     expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBeUndefined()
-    expect(wrapper.findAll('[role="progressbar"]')[2]!.attributes('aria-valuetext')).toBe('— / 0')
+    expect(wrapper.findAll('[role="progressbar"]')).toHaveLength(2)
     expect(wrapper.html()).not.toContain('NaN')
-    await button(wrapper, '轮次时间线').trigger('click')
-    expect(wrapper.text()).toContain('尚无轮次记录')
+    await button(wrapper, '冻结推荐与执行记录').trigger('click')
+    expect(wrapper.text()).toContain('尚无首次推荐记录')
     await button(wrapper, '开发被试').trigger('click')
     expect(wrapper.text()).toContain('候选生成后可查看开发被试')
     await button(wrapper, '报告 / 文件').trigger('click')
@@ -434,36 +434,13 @@ describe('SearchesView', () => {
     expect(panel.text()).not.toContain('每名被试作为开发被试一次')
   })
 
-  it('renders hypotheses and measured prediction checks as readable content, preserving unavailable values and tiny tolerances', async () => {
-    const signal = { kind: 'signal' as const, metric: 'diagnostics.subjects.S003.covariance_condition', direction: 'decrease' as const, tolerance: 1e-9, explanation: '降低协方差病态程度' }
-    const utility = { kind: 'utility' as const, metric: 'macro_ba', direction: 'increase' as const, tolerance: .001, explanation: '改善开发被试分类' }
-    const latest = state({ actions: [{ index: 1, action: 'propose_candidate', status: 'completed', candidate_id: 'c2', base_candidate_id: 'c1',
-      request: { hypothesis: { explanation: '对齐可能降低被试间尺度差异', competing_explanation: '变化可能来自频带而非对齐',
-        observations: [{ candidate_id: 'c1', metric: signal.metric }], predictions: [signal, utility], weakened_by: '条件数未改善会削弱尺度差异解释' } },
-      result: { prediction_checks: { checks: [
-        { ...signal, status: 'contradicted', before: 12, after: 15, difference: 3 },
-        { ...utility, status: 'matched', before: .7, after: .75, difference: .05 },
-        { ...signal, direction: 'unchanged', status: 'unavailable', before: null, after: null, difference: null },
-      ], interpretation: '符合提前预测不构成生理原因确认。' } } }] })
-    apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
+  it('shows the initial recommendation without reviving historical feedback branches', async () => {
+    apiRequest.mockImplementation(async () => state({ actions: [{ index: 1, action: 'initial_recommendation', status: 'completed', result: { candidate_ids: ['c1'], reason: '执行前推荐' } }] }))
     const { wrapper } = await open('/searches?id=search-1')
-    await button(wrapper, '轮次时间线').trigger('click')
-    const hypothesis = wrapper.get('[aria-label="机制假设"]')
-    expect(hypothesis.text()).toContain('对齐可能降低被试间尺度差异')
-    expect(hypothesis.text()).toContain('变化可能来自频带而非对齐')
-    expect(hypothesis.text()).toContain('宽频平均参考 · S003 · 协方差条件数')
-    expect(hypothesis.text()).toContain('信号预测')
-    expect(hypothesis.text()).toContain('效用预测')
-    expect(hypothesis.text()).toContain('条件数未改善会削弱尺度差异解释')
-    const checks = wrapper.get('[aria-label="实测预测核验"]')
-    expect(checks.text()).toContain('与预测不符')
-    expect(checks.text()).toContain('符合预测')
-    expect(checks.text()).toContain('无法核验')
-    expect(checks.text()).toContain('1.000e-9')
-    expect(checks.findAll('tbody tr')[0]!.findAll('td').slice(2, 5).map(cell => cell.text())).toEqual(['12', '15', '3'])
-    expect(checks.findAll('tbody tr')[2]!.findAll('td').slice(2, 5).map(cell => cell.text())).toEqual(['—', '—', '—'])
-    expect(checks.text()).toContain('不构成生理原因确认')
-    expect(wrapper.get('.timeline').findAll('pre')).toHaveLength(0)
+    await button(wrapper, '冻结推荐与执行记录').trigger('click')
+    expect(wrapper.get('.timeline').text()).toContain('执行前推荐')
+    expect(wrapper.get('.timeline').text()).toContain('c1')
+    expect(wrapper.find('[aria-label="机制假设"]').exists()).toBe(false)
   })
 
   it('shows subject evaluation without retired subject fitting panels', async () => {
@@ -510,18 +487,18 @@ describe('SearchesView', () => {
     expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
-  it('accepts backend subject maps and panel summaries and hides successful model-decision wrappers', async () => {
+  it('accepts backend subject maps and preserves initial recommendation attempt history', async () => {
     const latest = state({ status: 'stopped', stop_reason: 'candidate_budget_exhausted',
-      request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } },
+      request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } },
       panel: { trial_count: 200, eligible_count: 180, train_subjects: ['S001', 'S002'], development_subjects: ['S003'], records: {}, output_contract: { sfreq: 160 }, panel_hash: 'hash' },
       candidates: [{ id: 'c1', status: 'evaluated', receipt: { subjects: { S003: { ba: .75, delta: .03, eligible_trials: 40 } }, coverage: { original: 45, eligible: 40, predicted: 40, missing: 0, train: { original: 80, eligible: 75 }, development: { original: 45, eligible: 40, predicted: 40 } } } }],
-      actions: [{ index: 0, action: 'model_decision', status: 'completed', reason: '不重复展示的包装记录', result: { decision: { action: 'propose_candidate' } } },
-        { index: 1, action: 'propose_candidate', status: 'completed', reason: '开发评估后提出候选', result: { candidate_id: 'c1' } },
-        { index: 2, action: 'model_decision', status: 'failed', error: 'LLM 超时' }],
+      actions: [{ index: 0, action: 'initial_recommendation', status: 'completed', reason: '首次推荐记录', result: { decision: { action: 'initial_recommendation' } } },
+        { index: 1, action: 'initial_recommendation', status: 'completed', reason: '评价前冻结推荐', result: { candidate_id: 'c1' } },
+        { index: 2, action: 'initial_recommendation', status: 'failed', error: 'LLM 超时' }],
     })
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : latest)
     const { wrapper } = await open('/searches?id=search-1')
-    expect(wrapper.text()).toContain('一次性提案对照')
+    expect(wrapper.text()).toContain('首次推荐')
     expect(wrapper.text()).toContain('训练被试 2')
     expect(wrapper.text()).toContain('开发被试 1')
     expect(wrapper.text()).toContain('原始 trial 200')
@@ -533,14 +510,14 @@ describe('SearchesView', () => {
     expect(wrapper.get('tbody').text()).toContain('+3.0 pp')
     expect(wrapper.get('section[aria-label="开发被试明细"]').text()).toContain('合格（开发） 40')
     expect(wrapper.text()).toContain('训练 / 开发覆盖明细')
-    await button(wrapper, '轮次时间线').trigger('click')
-    expect(wrapper.findAll('.timeline li')).toHaveLength(2)
-    expect(wrapper.get('.timeline').text()).not.toContain('不重复展示的包装记录')
-    expect(wrapper.get('.timeline').text()).toContain('开发评估后提出候选')
+    await button(wrapper, '冻结推荐与执行记录').trigger('click')
+    expect(wrapper.findAll('.timeline li')).toHaveLength(3)
+    expect(wrapper.get('.timeline').text()).toContain('首次推荐记录')
+    expect(wrapper.get('.timeline').text()).toContain('评价前冻结推荐')
     expect(wrapper.get('.timeline').text()).toContain('LLM 超时')
   })
 
-  it('enforces paired subjects and backend resource limits while allowing zero proposals', async () => {
+  it('enforces paired subjects and backend resource limits without retired proposal budgets', async () => {
     const { wrapper } = await open('/searches?workflow=source-1')
     await wrapper.get('input[aria-label="训练被试"]').setValue('S001')
     await wrapper.get('form').trigger('submit')
@@ -554,11 +531,10 @@ describe('SearchesView', () => {
     await wrapper.get('form').trigger('submit')
     expect(wrapper.get('[role="alert"]').text()).toContain('不能超过 256')
     await wrapper.get('input[aria-label="候选数"]').setValue(6)
-    await wrapper.get('input[aria-label="提议数"]').setValue(0)
     apiRequest.mockResolvedValueOnce(state())
     await wrapper.get('form').trigger('submit'); await flushPromises()
     const post = apiRequest.mock.calls.find(([, init]) => init?.method === 'POST')!
-    expect(JSON.parse(post[1].body).budget.max_proposals).toBe(0)
+    expect(JSON.parse(post[1].body).budget).not.toHaveProperty('max_proposals')
   })
 
   it('still renders legacy subject arrays without changing the official dictionary contract', async () => {
@@ -894,12 +870,12 @@ describe('SearchesView', () => {
   it('falls back to backend elapsed without a deadline and labels a running one-shot initial schedule', async () => {
     let planning = true
     apiRequest.mockImplementation(async (path: string) => path === '/api/searches' ? [] : state({
-      status: 'running', request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_proposals: 128, max_evidence_reads: 32, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } }, phase: 'freeze_panel',
-      usage: { elapsed_seconds: 12.5 }, actions: [{ index: 0, action: 'initial_schedule', status: planning ? 'running' : 'completed' }],
+      status: 'running', request: { ...state().request, strategy: 'one_shot', budget: { max_candidates: 48, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null } }, phase: 'freeze_panel',
+      usage: { elapsed_seconds: 12.5 }, actions: [{ index: 0, action: 'initial_recommendation', status: planning ? 'running' : 'completed' }],
     }))
     const { wrapper } = await open('/searches?id=search-1')
     const phase = () => wrapper.get('[aria-label="进度与预算"] [role="status"]').text()
-    expect(phase()).toContain('制定初始计划')
+    expect(phase()).toContain('首次推荐')
     expect(phase()).not.toContain('冻结开发面板')
     await vi.advanceTimersByTimeAsync(2000); await flushPromises()
     expect(wrapper.get('[role="progressbar"][aria-label="耗时（秒）"]').attributes('aria-valuetext')).toBe('12.5 / 86,400')

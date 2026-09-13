@@ -1,4 +1,4 @@
-export type SearchStrategy = 'adaptive' | 'random' | 'exhaustive' | 'one_shot'
+export type SearchStrategy = 'one_shot'
 export interface OperatorUsage {
   summary: {
     schema_version: string
@@ -84,8 +84,6 @@ export interface WorkflowSearchSummary {
 
 export interface SearchBudget {
   max_candidates: number
-  max_proposals: number
-  max_evidence_reads: number
   max_seconds: number
   max_memory_mb: number | null
   max_disk_mb: number | null
@@ -101,9 +99,8 @@ export interface SearchRequest {
 }
 
 export interface SearchUsage {
+  recommended_candidates?: number
   candidates?: number
-  proposals?: number
-  evidence_reads?: number
   llm_calls?: number
   elapsed_seconds?: number
   retries?: number
@@ -168,42 +165,16 @@ export interface SearchCandidate {
   error?: string | null
 }
 
-export interface SearchPrediction {
-  kind: 'signal' | 'utility'
-  metric: string
-  direction: 'increase' | 'decrease' | 'unchanged'
-  tolerance: number
-  explanation: string
-}
-
-export interface SearchHypothesis {
-  explanation: string
-  competing_explanation: string
-  observations: { candidate_id: string; metric: string }[]
-  predictions: SearchPrediction[]
-  weakened_by: string
-}
-
-export interface SearchPredictionCheck extends SearchPrediction {
-  status: 'matched' | 'contradicted' | 'unavailable'
-  before: number | null
-  after: number | null
-  difference: number | null
-}
-
 export interface SearchAction {
   index: number
   action: string
   status: string
   reason?: string | null
-  expected_result?: unknown
-  decision_branches?: unknown
-  base_candidate_id?: string | null
   candidate_id?: string | null
   cost_seconds?: number | null
   error?: string | null
-  request?: { hypothesis?: SearchHypothesis; [key: string]: unknown } | null
-  result?: { prediction_checks?: { checks: SearchPredictionCheck[]; interpretation: string }; [key: string]: unknown } | null
+  request?: Record<string, unknown> | null
+  result?: Record<string, any> | null
 }
 
 export interface SearchSummary {
@@ -232,6 +203,8 @@ export interface SearchPanel {
 }
 
 export interface SearchState extends SearchSummary {
+  recommendation?: { candidate_ids: string[]; reason: string; registry_hash: string } | null
+  schedule?: string[] | null
   cancellation_requested?: boolean
   candidate_contrasts_to_reference?: Record<string, { removed_operations: string[]; added_operations: string[]; parameter_changes: { operation: string; parameter: string; before: unknown; after: unknown }[]; shared_operation_order_changed: boolean; scope_changes: string[]; interpretation: string }>
   literature_participation?: { status: string; statement: string; evaluated_candidate_ids: string[]; distinct_from_controls_evaluated_ids: string[] }
@@ -253,17 +226,15 @@ export interface SearchState extends SearchSummary {
 export interface SearchRecipeEntry {
   id: string
   title: string
-  origin: 'basic' | 'literature' | 'literature_adaptation' | 'derived'
+  origin: 'basic' | 'literature' | 'literature_adaptation'
   lineage?: { kind?: string; source_url?: string; source_id?: string; branch_id?: string; analysis?: string; method_id?: string; version?: string; method_ref?: { id: string }; [key: string]: unknown }[]
   parent_ids?: string[]
   issues?: { severity: string; code: string; message: string }[]
   seed_id: string
   parent_id: string | null
   recipe: { nodes: { id: string; operator: string; parameters: Record<string, unknown> }[] }
-  edits: { action: string; [key: string]: unknown }[]
   deviations: string[]
   evidence_ids: string[]
-  prior_challenges: Record<string, string>
 }
 
 export interface SearchOperatorSpace {

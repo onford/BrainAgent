@@ -559,6 +559,13 @@ def candidate(root: Path, candidate_id: str) -> dict:
     entries = entries_at(root)
     if candidate_id not in entries:
         raise CandidateInvalid("unknown catalog candidate")
+    protocol = read_json(root / "protocol.json")
+    if str(protocol.get('version')) == '4':
+        recommendation = read_json(root / 'initial-recommendation.json')
+        if (recommendation.get('registry_hash') != digest(list(entries.values()))
+                or recommendation.get('registry_hash') != protocol.get('registry_hash')
+                or candidate_id not in [BASELINE_ID, *recommendation.get('candidate_ids', [])]):
+            raise CandidateInvalid('candidate is outside the frozen initial recommendation')
     output = within(root, f"candidates/{candidate_id}")
     started = time.perf_counter()
     preprocessing_seconds = evaluation_seconds = 0.0
@@ -862,6 +869,8 @@ def main(argv=None) -> int:
         _start_parent_guard(args.parent_pid)
     if args.stage == "verify":
         return 0 if verify(args.root)["status"] == "verified" else 1
+    if str(read_json(args.root / 'protocol.json').get('version')) != '4':
+        parser.error('Retired search protocols are read-only; create a new fixed-recommendation run')
     receipt = (
         prepare(args.root)
         if args.stage == "prepare"
