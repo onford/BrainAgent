@@ -1,0 +1,65 @@
+{
+  "date": "2026-09-13",
+  "status": "targeted_process_recovery_and_publication_contract_verified",
+  "code_commits": {
+    "recovery": "daa5619fcc9b00028dac06d5e784f19e199c37e7",
+    "publication": "f8d296063dbb84907cd88cd7f5edd49c25bdf7ca"
+  },
+  "tests": {
+    "recovery": {
+      "passed": 29,
+      "log": {
+        "path": ".local/research-recovery-20260913/transport-regression-2.txt",
+        "sha256": "43ddf1d429c2f0094aadddca1c0d846e7f0cfd0844cc0da6e376cbe32f59d1b1"
+      }
+    },
+    "recovery_clean_commit": {
+      "passed": 29,
+      "log": {
+        "path": ".local/research-recovery-20260913/committed-regression.txt",
+        "sha256": "0d1ae932760b61c60c89c8fab2df127384e4d94bdb3c6ef6c4f091ae35e7b376"
+      }
+    },
+    "related_integration": {
+      "passed": 51,
+      "log": {
+        "path": ".local/research-recovery-20260913/integration-regression.txt",
+        "sha256": "184fe71f7483b095d76dcd168647cc4151e10e42a5e0bb0aec62f35b2654a647"
+      }
+    },
+    "publication": {
+      "passed": 25,
+      "log": {
+        "path": ".local/research-recovery-20260913/publication-regression.txt",
+        "sha256": "ad9a61c31eb499fc8f9b2d31ac0292a67d650e70fab016fdba0b5ad20ae7fc72"
+      }
+    },
+    "publication_clean_commit": {
+      "passed": 25,
+      "log": {
+        "path": ".local/research-recovery-20260913/committed-publication-regression.txt",
+        "sha256": "524a2949df450d5ae11418793f24076cf4221e93195436b9cd24e3a8ad0ac9e6"
+      }
+    },
+    "prior_failure": {
+      "passed": 26,
+      "failed": 3,
+      "reason": "HTTP fixture text below existing minimum; fixture corrected without weakening source validation",
+      "log": {
+        "path": ".local/research-recovery-20260913/transport-regression.txt",
+        "sha256": "e02ebc81a8d842aa9a612d95292902edeaa2df758d876dab7120df6e1baba663"
+      }
+    }
+  },
+  "counts_overlap": true,
+  "full_suite_rerun": false,
+  "process_validation": "Real loopback HTTP and independently terminated Python processes. One GET per scenario; source outcomes and original budget/deadline preserved. Not external-provider outage validation.",
+  "public_workflow_failure": {
+    "id": "c0adbfa348d549d7a1f08b974701290b",
+    "cause_in_record": "identified acquisition-system publication had source_id=null",
+    "original_unchanged": true,
+    "retried": false
+  },
+  "service": "service-build-update-6.json",
+  "sites": "deferred_by_user"
+}

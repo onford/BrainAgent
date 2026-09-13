@@ -121,7 +121,8 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "historical_current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。"
+      "historical_current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。",
+      "implementation_update": "由真实失败记录补齐论文身份模型合同：已识别角色必须给出实际读过的论文ID；仅有官网引用且未读到论文时保留未确认。原逐字引文及联合证据校验保持，25项相关回归及干净版本复验通过。并非独立科学语义验收全部完成。"
     },
     {
       "id": "I06",
@@ -272,7 +273,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "检索中断的预算及幂等恢复",
-      "current": "独立MethodLibrary新增跨实例文件锁、不可变完成回执、文献包及完整应用/依赖/平台绑定。并发重复请求与重试复用完成结果；旧无构建绑定缓存拒绝混用，未补齐信息不冻结为完成，原动作预算和截止时间保留。34项相关回归与21项固定推荐边界通过。外部供应商真实故障恢复与统一正式运行验收仍待完成。",
+      "current": "独立方法库的互斥、完成结果和构建绑定已实现；检索账本现从最近一次实际请求恢复结果，不再被并发调用的旧未知记录遮住。完成回执校验动作、序号和对应来源。真实本地HTTP与独立进程终止三场景通过，均只发送一次请求，预算与截止时间保留。29项恢复、51项集成通过（不累加为全量）；外部供应商故障与完整正式运行仍待验收。",
       "solution_and_acceptance": "用持久化 action_id、累计花费和 deadline 约束恢复；在工具已返回而保存未完成等节点注入故障。确认重试不免费恢复预算、不重复记成功；本项是代码风险，非本轮新实测故障。",
       "dependencies": [],
       "sources": [
@@ -280,10 +281,10 @@
         "C5"
       ],
       "historical_status": "待复核风险",
-      "status": "implemented_pending_live_verification",
+      "status": "implemented_targeted_process_recovery_passed",
       "historical_current": "历史子任务复现过预算重置与重复成功查询。当前 retrieve 仍从 remaining=budget 开始；筛选失败跳过重复检索已有修复，但检索中途崩溃后的全局计费与幂等未充分证明。",
       "implementation_update": "Workflow 与 MethodLibrary 共用补读结果日志；完成结果跨重启复用，明确失败可显式重试，不确定请求不自动重发。Collection 补充核对也纳入持久动作预算。",
-      "implementation": "docs/literature-intake-recovery.md"
+      "implementation": "docs/research-request-recovery.md"
     },
     {
       "id": "I14",
@@ -970,7 +971,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一源码及可复现发布版本",
-      "current": "本次清理提交67b2564，8001 API/Worker使用同一干净固定副本；旧自主实现归档96f89a2。其他对话的未提交改动保留。远端最近已确认651367e，后续本地提交未确认同步；Sites仍暂缓。",
+      "current": "本次新增daa5619恢复账本与f8d2960论文身份修复；8001 API/Worker运行同一干净f8d2960固定副本。其他对话未提交改动保留，远端后续提交仍未确认同步，Sites仍暂缓。",
       "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
       "dependencies": [],
       "sources": [
@@ -990,7 +991,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "8001 API/Worker 已切换67b2564固定副本及完整独立环境。健康、版本、数据源、能力接口均200；实际接口只允许one_shot，拒绝7项旧自主策略及预算字段。54单元/91操作/310配置；新版真实全集评价与完整交付仍待验收。",
+      "current": "本轮发现8001服务离线，确认记录进程已退出、无数值任务及待恢复搜索后，API/Worker已恢复并更新到f8d2960。6个只读接口均200，7项旧自主请求返回422；一条失败工作流保持原文件哈希，未被重新执行。完整当前版本数值交付仍待验收。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -1004,7 +1005,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "8001源码SHA256为97f91b2015db1424df352739e421dd3ff17844ca394eda0e32489e96411c8912；验证见service-build-update-5.json。前端174项、后端最终专项77项及固定提交边界21项通过；轮次覆盖重叠，不累加。Sites访问与发布按用户要求暂缓。",
+      "implementation_update": "最新服务源码SHA256为ca32addc59be32c7230c64e5ea68e54d93af3f39be2592ba7e34d6a95658f81e；见service-build-update-6.json。Sites继续暂缓。",
       "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
     },
     {
@@ -1088,7 +1089,7 @@
       "priority": "P1",
       "scope": "正式版",
       "title": "本机后端持续可用与隧道恢复",
-      "current": "已按用户要求用本机后端，临时隧道＋WebSocket桥已接通；重启地址变化，需要人工更新Sites，尚非自动启动的持久服务。",
+      "current": "本轮确认旧API/Worker进程退出、8001无监听，退出原因未确定；保留失败工作流后已从f8d2960恢复本地服务并完成HTTP核验。自动启动、长期持续可用及隧道恢复仍未验收；本轮未处理Sites或核验隧道。",
       "solution_and_acceptance": "保留本机计算方式，使用固定连接身份与受控服务启动/恢复，增加只读健康及版本检查；演练重启、断网、休眠后恢复和长响应。",
       "dependencies": [
         "I33",
@@ -1711,7 +1712,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "R01已完成。已继续I13独立方法库的并发与完成结果幂等修复，34项相关回归和21项固定推荐边界通过；已核验I09/I38旧固定数值矩阵，310项309通过/1失败，3个原生配置通过S001R04只读重载。真实供应商故障恢复、新版全集评价和正式交付仍待验收。",
+  "active_step": "继续完成检索迟到结果恢复与论文身份合同修复；29项恢复、51项相关集成、25项论文身份测试通过（覆盖有重叠），恢复及论文身份在干净提交上分别复验通过。8001 API/Worker已恢复到f8d2960，旧失败工作流未重试且文件未变。外部供应商故障、当前版本全集评价和正式交付继续待验收。",
   "execution_order": [
     "R01",
     "scope_removal",
@@ -2318,6 +2319,19 @@
       "failed": 1,
       "native_real_record_verified": 3,
       "service_registry_updated": false
+    },
+    "research_request_recovery_20260913": {
+      "receipt": "research-request-recovery-20260913.json",
+      "recovery_passed": 29,
+      "integration_passed": 51,
+      "publication_passed": 25,
+      "counts_overlap": true,
+      "external_provider_outage_verified": false
+    },
+    "public_runtime_update_6": {
+      "receipt": "service-build-update-6.json",
+      "commit": "f8d296063dbb84907cd88cd7f5edd49c25bdf7ca",
+      "failed_workflow_unchanged": true
     }
   },
   "scope_update_20260913": {

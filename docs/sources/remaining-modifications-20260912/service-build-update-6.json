@@ -1,0 +1,30 @@
+{
+  "status": "restored_updated_and_http_verified",
+  "source_commit": "f8d296063dbb84907cd88cd7f5edd49c25bdf7ca",
+  "source_sha256": "ca32addc59be32c7230c64e5ea68e54d93af3f39be2592ba7e34d6a95658f81e",
+  "runtime": "backend/.venv-service-20260913",
+  "route_statuses": {
+    "/health": 200,
+    "/api/build-info": 200,
+    "/api/workflows/sources": 200,
+    "/api/preprocessing/capabilities": 200,
+    "/api/workflows": 200,
+    "/api/searches": 200
+  },
+  "old_requests_rejected": {
+    "adaptive": 422,
+    "random": 422,
+    "exhaustive": 422,
+    "max_proposals": 422,
+    "max_evidence_reads": 422,
+    "max_diagnostics": 422,
+    "max_diagnostic_input_bytes": 422
+  },
+  "old_failed_workflow_unchanged": true,
+  "workflows_resumed": 0,
+  "evidence": {
+    "path": ".local/research-recovery-20260913/service-update-final/http-after.json",
+    "sha256": "bec7870781accac1f142e0d5e104e5e93cba782a425ceba991ce534bc989c2bd"
+  },
+  "scope": "Local 8001 API and worker restored and updated; process exit cause unknown; no automatic-start or tunnel-availability claim; Sites remains deferred."
+}
