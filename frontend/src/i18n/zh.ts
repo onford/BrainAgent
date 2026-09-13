@@ -1210,7 +1210,7 @@ export const zh = {
   "Create a data workflow": "新建数据流程",
   "Start a data workflow": "开始数据流程",
   "Close new workflow dialog": "关闭新建流程",
-  "Choose local data for research, diagnostic strategy search, development evaluation, and delivery.": "选择本地数据，Agent 将完成调研、诊断策略搜索、开发评估与交付。",
+  "Choose local data for research, an initial recommendation, fixed execution, evaluation, and delivery.": "选择本地数据，Agent 将完成调研、首次推荐、固定执行、评价与交付。",
   "Local data directory": "本地数据目录",
   "Choose a configured EEGMMIDB directory": "选择已配置的 EEGMMIDB 目录",
   "Scans all subjects and runs in the directory. Subject and record counts appear during data research.": "自动扫描该目录，使用发现的全部被试和全部 Run。被试和记录数量将在数据调研中显示。",
