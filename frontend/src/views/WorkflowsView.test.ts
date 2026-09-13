@@ -37,8 +37,53 @@ describe('WorkflowsView', () => {
     HTMLDialogElement.prototype.close = function() { this.removeAttribute('open') }
   })
 
+  it('mounts reports and files on demand and keeps the selected report across tabs', async () => {
+    const state = { ...workflow('completed'), artifacts: ['report/report.html', 'survey/reports/dataset-basic.html'].map(name => ({ name, bytes: 500, sha256: 'abc' })) }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      expect(request).toHaveBeenCalledWith('/api/workflows?summary=true')
+      expect(request).toHaveBeenCalledWith('/api/workflows/abc123?include_artifacts=false')
+      expect(request).toHaveBeenCalledWith('/api/workflows?summary=true')
+      expect(request).toHaveBeenCalledWith('/api/workflows/abc123?include_artifacts=false')
+      expect(wrapper.find('iframe').exists()).toBe(false)
+      expect(wrapper.find('.files-panel').exists()).toBe(false)
+      expect(wrapper.find('.logs-panel').exists()).toBe(false)
+      await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
+      await wrapper.get('[data-report-name="survey/reports/dataset-basic.html"]').trigger('click')
+      const frame = wrapper.get('iframe').element
+      await wrapper.findAll('.workspace-tabs button')[2]!.trigger('click')
+      await flushPromises()
+      expect(request).toHaveBeenCalledWith('/api/workflows/abc123?include_artifacts=true')
+      await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
+      expect(wrapper.get('iframe').element).toBe(frame)
+      expect(wrapper.get('iframe').attributes('src')).toContain('dataset-basic.html')
+    } finally { wrapper.unmount() }
+  })
+
+  it('bounds log DOM size and searches all records beyond the current page', async () => {
+    const state = { ...workflow('completed'), events: Array.from({ length: 2500 }, (_, index) => ({ time: '2026-09-08T08:00:00Z', agent: 'data_survey', message: `record-${index}` })) }
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      expect(wrapper.findAll('.event-list li')).toHaveLength(0)
+      await wrapper.findAll('.workspace-tabs button')[3]!.trigger('click')
+      expect(wrapper.findAll('.event-list li')).toHaveLength(100)
+      expect(wrapper.get('.event-list').text()).toContain('record-2499')
+      await wrapper.findAll('.log-pagination button')[1]!.trigger('click')
+      expect(wrapper.get('.event-list').text()).toContain('record-2399')
+      await wrapper.get('.logs-panel input').setValue('record-0')
+      expect(wrapper.findAll('.event-list li')).toHaveLength(1)
+      expect(wrapper.get('.event-list').text()).toContain('record-0')
+      await wrapper.get('.logs-panel input').setValue('')
+      expect(wrapper.get('.log-pagination [role="status"]').text()).toBe('1 / 25')
+    } finally { wrapper.unmount() }
+  })
+
   it('submits explicit budgets while preserving server defaults and the full data scope', async () => {
-    request.mockImplementation(async (path: string, options?: RequestInit) => path.endsWith('/sources') ? sourceSettings(['E:/dataset/eeg/EEGMMIDB']) : path === '/api/workflows' ? options?.method === 'POST' ? workflow('completed') : [] : workflow('completed'))
+    request.mockImplementation(async (path: string, options?: RequestInit) => path.endsWith('/sources') ? sourceSettings(['E:/dataset/eeg/EEGMMIDB']) : path.split('?')[0] === '/api/workflows' ? options?.method === 'POST' ? workflow('completed') : [] : workflow('completed'))
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -67,7 +112,7 @@ describe('WorkflowsView', () => {
 
   it.each([undefined, { allowed: false }])('keeps another build readable without retry controls: %j', async execution_control => {
     const state = { ...workflow('failed'), execution_control }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -90,7 +135,7 @@ describe('WorkflowsView', () => {
       data_evaluation: { selection_policy: 'random', quality_evaluated: false, score: .99, selected_method_ref: { id: 'saved-method' } },
     }, artifacts: [{ name: 'evaluation/selection.json', bytes: 500, sha256: null }, { name: 'report/report.html', bytes: 500, sha256: null }],
       stages: [{ name: 'data_evaluation', label: '结果选择', status: 'failed' }] }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -99,7 +144,9 @@ describe('WorkflowsView', () => {
       expect(wrapper.get('.delivery-panel').text()).toContain('saved-method')
       expect(wrapper.get('.delivery-panel').text()).toContain('方法与分组信息以保存的交付记录为准')
       expect(wrapper.get('.delivery-panel').text()).not.toContain('开发 BA')
+      await wrapper.findAll('.workspace-tabs button')[2]!.trigger('click')
       expect(wrapper.get('.files-panel').text()).not.toContain('开发评估')
+      await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
       expect(wrapper.get('iframe').attributes('src')).toContain('report/report.html?download=false')
       await wrapper.get('.stages button').trigger('click'); await flushPromises()
       expect(wrapper.get('.stage-dialog').text()).toContain('保存的记录')
@@ -116,7 +163,7 @@ describe('WorkflowsView', () => {
     { selection_policy: 'development_score', quality_evaluated: true, evaluation_scope: undefined },
   ])('does not infer measured evaluation from a numeric score alone: %j', async evaluation => {
     const state = { ...workflow('completed'), outputs: { data_delivery: { shape: [90, 64, 321] }, data_evaluation: { ...evaluation, score: .9 } } }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     expect(wrapper.get('.delivery-panel').text()).not.toContain('开发 BA')
@@ -130,11 +177,13 @@ describe('WorkflowsView', () => {
       { name: 'preprocessing/search/unsafe.html', bytes: 0, sha256: null, url: 'javascript:alert(1)' },
       { name: 'report/report.html', bytes: 500, sha256: null, url: 'https://reports.example.test/report.html?v=saved&download=true#summary', description: '保存的流程报告' },
     ] }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
+    await wrapper.findAll('.workspace-tabs button')[2]!.trigger('click')
     const link = wrapper.findAll('.file-row a').find(a => a.text() === 'preprocessing/search/report.html')!
     expect(link.attributes('href')).toBe('/api/searches/search-1/artifacts/report.html?v=abc&download=true#details')
+    await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
     expect(wrapper.get('iframe').attributes('src')).toBe('https://reports.example.test/report.html?v=saved&download=false#summary')
     expect(wrapper.findAll('.file-row a').some(a => a.text().includes('unsafe'))).toBe(false)
     await wrapper.get('input[aria-label="查找文件"]').setValue('实测预测核验')
@@ -149,7 +198,7 @@ describe('WorkflowsView', () => {
       usage: { candidates: 2, proposals: 3, evidence_reads: 1, elapsed_seconds: 12.5 },
       budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } }
     let state = { ...workflow('running'), search_id: 'search-1', search_summary: summary }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -172,8 +221,8 @@ describe('WorkflowsView', () => {
     let reads = 0
     request.mockImplementation(async (path: string, options?: RequestInit) => {
       if (path.endsWith('/sources')) return sourceSettings(['E:/dataset/eeg/EEGMMIDB'])
-      if (path === '/api/workflows') return options?.method === 'POST' ? state : []
-      if (path !== '/api/workflows/abc123') return []
+      if (path.split('?')[0] === '/api/workflows') return options?.method === 'POST' ? state : []
+      if (path.split('?')[0] !== '/api/workflows/abc123') return []
       if (++reads === 1) throw new Error('Connection interrupted')
       return state
     })
@@ -196,7 +245,7 @@ describe('WorkflowsView', () => {
     const state = workflow('running')
     request.mockImplementation(async (path: string) => {
       if (path.endsWith('/sources')) return sourceSettings([])
-      if (path === '/api/workflows') return [state]
+      if (path.split('?')[0] === '/api/workflows') return [state]
       throw new Error('Connection interrupted')
     })
     const wrapper = mount(WorkflowsView)
@@ -213,7 +262,7 @@ describe('WorkflowsView', () => {
     const completed = workflow('completed')
     request.mockImplementation(async (path: string, options?: RequestInit) => {
       if (path.endsWith('/sources')) return sourceSettings(['E:/dataset/eeg/EEGMMIDB'])
-      if (path === '/api/workflows' && !options) return []
+      if (path.split('?')[0] === '/api/workflows' && !options) return []
       return completed
     })
     const wrapper = mount(WorkflowsView)
@@ -229,6 +278,7 @@ describe('WorkflowsView', () => {
     expect(wrapper.find('input[aria-label="被试数量"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('6 / 6 个模块已完成')
     expect(wrapper.text()).toContain('训练数据已就绪')
+    await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
     expect(wrapper.get('iframe').attributes('src')).toContain('report/report.html?download=false')
     expect(wrapper.get('a.primary').attributes('href')).toContain('training-data.zip')
     expect(wrapper.text()).toContain('方法与分组信息以保存的交付记录为准')
@@ -240,7 +290,7 @@ describe('WorkflowsView', () => {
     let state = workflow('failed')
     request.mockImplementation(async (path: string) => {
       if (path.endsWith('/sources')) return sourceSettings([])
-      if (path === '/api/workflows') return [state]
+      if (path.split('?')[0] === '/api/workflows') return [state]
       if (path.endsWith('/retry')) state = workflow('completed')
       return state
     })
@@ -258,9 +308,10 @@ describe('WorkflowsView', () => {
     const state = { ...workflow('failed'), artifacts: [
       'survey/reports/dataset-basic.html', 'survey/reports/literature-usage.html',
     ].map(name => ({ name, bytes: 500, sha256: 'abc' })) }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
+    await wrapper.findAll('.workspace-tabs button')[1]!.trigger('click')
     const choices = wrapper.findAll('nav[aria-label="选择报告"] button')
     expect(choices).toHaveLength(2)
     expect(choices[0]!.text()).toContain('数据集基本信息')
@@ -279,7 +330,7 @@ describe('WorkflowsView', () => {
     const state = workflow('failed')
     const message = 'quote must occur verbatim in its retrieved source; '.repeat(30)
     Object.assign(state.stages[4], { error: message })
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path.split('?')[0] === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     expect(wrapper.get('.stage-dialog').attributes('open')).toBeUndefined()
@@ -301,11 +352,12 @@ describe('WorkflowsView', () => {
     }
     request.mockImplementation(async (path: string) => {
       if (path.endsWith('/sources')) return sourceSettings([])
-      if (path === '/api/workflows') return [state]
+      if (path.split('?')[0] === '/api/workflows') return [state]
       return state
     })
     const wrapper = mount(WorkflowsView)
     await flushPromises()
+    await wrapper.findAll('.workspace-tabs button')[2]!.trigger('click')
     const links = wrapper.findAll('.file-group a')
     expect(links).toHaveLength(state.artifacts.length)
     expect(links.map(link => link.text()).sort()).toEqual(state.artifacts.map(a => a.name).sort())
@@ -329,12 +381,13 @@ describe('WorkflowsView', () => {
     let state = {...workflow('running'), artifacts: [file('04'), file('08')]}
     request.mockImplementation(async (path: string) => {
       if (path.endsWith('/sources')) return sourceSettings([])
-      if (path === '/api/workflows') return [state]
+      if (path.split('?')[0] === '/api/workflows') return [state]
       return state
     })
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
+      await wrapper.findAll('.workspace-tabs button')[2]!.trigger('click')
       const group = wrapper.get('.file-family')
       expect(group.attributes('open')).toBeUndefined()
       expect(group.get('summary').text()).toContain('2 个文件')

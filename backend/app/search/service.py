@@ -639,7 +639,10 @@ class SearchService:
                         if used > state["protocol"]["limits"]["disk_limit_bytes"]:
                             raise BudgetStop("disk_budget_exhausted")
                         last_disk = time.monotonic()
-                        self.save(state)
+                        # Durable writes may stall on busy storage. Keep API
+                        # requests responsive while retaining execution ownership
+                        # until the checkpoint has finished, including cancellation.
+                        await _owned_thread(self.save, state)
                     try:
                         await asyncio.wait_for(
                             asyncio.shield(waiter),

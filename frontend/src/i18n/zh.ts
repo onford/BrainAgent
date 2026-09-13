@@ -1144,7 +1144,7 @@ export const zh = {
   "Final processing report": "最终处理报告",
   "Cross-check local files, official sources, and papers; gather statistics and references for subsequent steps.": "核对本地文件、官网与论文，整理统计和后续操作需要的文献。",
   "Check ingestion requirements and task labels, then create a standardized data copy.": "检查数据接入条件、核对任务标签，并生成标准数据副本。",
-  "Run a diagnosis-driven budgeted search comparing shared preprocessing recipes.": "自动运行诊断驱动的预算搜索，比较共享预处理方法。",
+  "Execute the initially recommended shared recipes in their frozen order, then evaluate them.": "按首次推荐时冻结的顺序执行共享预处理流程，再进行评价。",
   "Select preprocessing using this run's fixed primary metric. See the linked search for the protocol, completeness, and selection rationale.": "按本运行冻结的主指标选择预处理方法；评分协议、完整性与选择依据见关联搜索。",
   "Organize verified process records into a readable report.": "将已验证的过程数据组织为可阅读的处理报告。",
   "Export training arrays, labels, subject groups, and reproducibility records.": "导出训练数组、标签、被试分组和复现记录。",

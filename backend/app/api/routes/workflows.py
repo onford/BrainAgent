@@ -29,8 +29,8 @@ def sources(request: Request, user=Depends(get_current_user)):
 
 
 @router.get("")
-def index(request: Request, user=Depends(get_current_user)):
-    return request.app.state.workflows.list(user.owner_id)
+def index(request: Request, summary: bool = False, user=Depends(get_current_user)):
+    return request.app.state.workflows.list(user.owner_id, summary=summary)
 
 
 @router.post("", status_code=202)
@@ -41,8 +41,8 @@ async def create(
 
 
 @router.get("/{identity}")
-def get(identity: str, request: Request, user=Depends(get_current_user)):
-    return checked(request.app.state.workflows.describe, user.owner_id, identity)
+def get(identity: str, request: Request, include_artifacts: bool = True, user=Depends(get_current_user)):
+    return checked(request.app.state.workflows.describe, user.owner_id, identity, include_artifacts)
 
 
 @router.post("/{identity}/retry")

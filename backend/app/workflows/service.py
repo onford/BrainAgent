@@ -103,13 +103,24 @@ class WorkflowService:
             }
         write_json(self.folder(state["id"]) / "workflow.json", snapshot)
 
-    def describe(self, owner, identity):
+    def describe(self, owner, identity, include_artifacts=True):
         state = self.get(owner, identity)
         try:
             self.require_current(state)
             state["execution_control"] = {"allowed": True}
         except (ValueError, OSError, KeyError):
             state["execution_control"] = {"allowed": False}
+        if not include_artifacts:
+            # Saved metadata is sufficient for progress and report navigation.
+            # Traverse live worker trees only when the file browser requests them.
+            if state.get("search_id"):
+                search = self.search_service().describe(owner, state["search_id"], False)
+                state["search_summary"] = {
+                    key: search[key] for key in (
+                        "id", "status", "message", "usage", "budget", "selected_candidate_id"
+                    )
+                }
+            return state
         store, execution_owner = self.execution_store(state)
         # Inventory retains previously published hashes.
         known = {a["name"]: a for a in self.artifact_cache.get(identity, [])}
@@ -165,12 +176,15 @@ class WorkflowService:
             )
         return state
 
-    def list(self, owner):
+    def list(self, owner, summary=False):
         records = []
         for path in self.root.glob("*/workflow.json"):
             state = json.loads(path.read_text(encoding="utf-8"))
             if state["owner"] == owner:
-                records.append(self.get(owner, state["id"]))
+                records.append(
+                    {key: state.get(key) for key in ("id", "status", "created_at", "updated_at")}
+                    if summary else self.get(owner, state["id"])
+                )
         return sorted(records, key=lambda s: s["created_at"], reverse=True)
 
     def create(self, owner, request, *, start=True):

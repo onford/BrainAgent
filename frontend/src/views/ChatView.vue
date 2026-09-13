@@ -4,16 +4,9 @@ import { t, formatLocale } from '../i18n'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useChatStore } from '../stores/chat'
-import type { ChatMessage, Session, StreamActivity } from '../types/session'
-import { renderMarkdown } from '../utils/markdown'
-import PreprocessingCard from '../components/PreprocessingCard.vue'
-
-function preprocessingOutputs(message: ChatMessage) {
-  return (message.activities ?? []).flatMap((activity) => {
-    const result = activity.data?.result as { agent_name?: string; output?: Record<string, unknown> } | undefined
-    return activity.event_type === 'observation' && result?.agent_name === 'data_preprocessing' && result.output ? [result.output] : []
-  })
-}
+import type { ChatMessage, Session } from '../types/session'
+import { agentLabel } from '../utils/chatLabels'
+import ChatMessageRow from '../components/ChatMessageRow.vue'
 
 const store = useChatStore()
 const draft = ref('')
@@ -22,6 +15,7 @@ const conversation = ref<HTMLElement | null>(null)
 const textarea = ref<HTMLTextAreaElement | null>(null)
 const copiedMessageId = ref<string | null>(null)
 let copyResetTimer: ReturnType<typeof setTimeout> | undefined
+let disposed = false
 
 const currentTitle = computed(() =>
   store.activeSession ? sessionTitle(store.activeSession) : t('New conversation'),
@@ -46,27 +40,12 @@ function timeLabel(value: string): string {
   return new Intl.DateTimeFormat(formatLocale.value, { month: 'numeric', day: 'numeric' }).format(date)
 }
 
-function agentLabel(name: string | null | undefined) {
-  return ({ get orchestrator() { return t('Assistant') }, get data_survey() { return t('Data research') }, get data_preprocessing() { return t('Data preprocessing') }, get data_collection() { return t('Data ingestion') }, get data_evaluation() { return t('Performance evaluation') }, get data_report() { return t('Report generation') }, get data_delivery() { return t('Data delivery') } } as Record<string,string>)[name ?? 'orchestrator'] || name
-}
-
-function activityLabel(activity: StreamActivity): string {
-  const labels: Record<string, string> = {
-    get run_started() { return t('Starting analysis') },
-    get thought() { return t('Planning next step') },
-    get agent_started() { return t('Calling agent') },
-    get observation() { return t('Result received') },
-    get run_completed() { return t('Response complete') },
-    get run_failed() { return t('Run failed') },
-  }
-  return activity.agent_name
-    ? `${agentLabel(activity.agent_name)} · ${labels[activity.event_type] ?? activity.event_type}`
-    : labels[activity.event_type] ?? activity.event_type
-}
-
-function hasActivity(message: ChatMessage): boolean {
-  return Boolean(message.activities?.length)
-}
+const sessionRows = computed(() => store.sessions.map(session => ({
+  session,
+  title: sessionTitle(session),
+  preview: sessionPreview(session),
+  time: timeLabel(session.updated_at),
+})))
 
 function submit(): void {
   const value = draft.value.trim()
@@ -74,6 +53,7 @@ function submit(): void {
   draft.value = ''
   resizeTextarea()
   void store.submit(value)
+  scrollToBottom(true)
 }
 
 function handleComposerKeydown(event: KeyboardEvent): void {
@@ -141,26 +121,42 @@ async function copyMessage(message: ChatMessage): Promise<void> {
   }
 }
 
-async function scrollToBottom(): Promise<void> {
-  await nextTick()
-  if (conversation.value) conversation.value.scrollTop = conversation.value.scrollHeight
+let scrollFrame: number | undefined
+let followLatest = true
+function trackScroll(): void {
+  const element = conversation.value
+  if (element) followLatest = element.scrollHeight - element.scrollTop - element.clientHeight < 80
+}
+function scrollToBottom(force = false): void {
+  if (force) followLatest = true
+  if (!followLatest || scrollFrame !== undefined) return
+  scrollFrame = requestAnimationFrame(() => {
+    scrollFrame = undefined
+    if (followLatest && conversation.value) conversation.value.scrollTop = conversation.value.scrollHeight
+  })
 }
 
 watch(draft, resizeTextarea)
 watch(
-  () => store.activeMessages.map((message) => `${message.content}:${message.activities?.length ?? 0}`),
-  scrollToBottom,
+  () => {
+    const last = store.activeMessages.at(-1)
+    return [store.activeMessages.length, last?.content, last?.activities?.length, last?.pending]
+  },
+  () => scrollToBottom(),
+  { flush: 'post' },
 )
-watch(() => store.activeSessionId, scrollToBottom)
+watch(() => store.activeSessionId, () => scrollToBottom(true), { flush: 'post' })
 
 onMounted(async () => {
   window.addEventListener('keydown', handleGlobalShortcut)
   await store.initialize()
-  await scrollToBottom()
+  if (!disposed) scrollToBottom(true)
 })
 onBeforeUnmount(() => {
+  disposed = true
   window.removeEventListener('keydown', handleGlobalShortcut)
   if (copyResetTimer) clearTimeout(copyResetTimer)
+  if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame)
 })
 </script>
 
@@ -192,7 +188,7 @@ onBeforeUnmount(() => {
 
       <nav class="session-list" :aria-label="t('Conversation list')">
         <div
-          v-for="session in store.sessions"
+          v-for="{ session, title, preview, time } in sessionRows"
           :key="session.id"
           class="session-item-shell"
           :class="{ active: store.activeSessionId === session.id }"
@@ -202,8 +198,8 @@ onBeforeUnmount(() => {
               <svg viewBox="0 0 24 24"><path d="M7 8h10M7 12h7m-7 8 3.2-3H18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h1v3Z" /></svg>
             </span>
             <span class="session-copy">
-              <strong>{{ sessionTitle(session) }}</strong>
-              <small>{{ sessionPreview(session) }}</small>
+              <strong>{{ title }}</strong>
+              <small>{{ preview }}</small>
             </span>
             <span
               v-if="store.runningSessionIds.includes(session.id)"
@@ -215,13 +211,13 @@ onBeforeUnmount(() => {
               class="mini-spinner"
               :aria-label="t('Deleting')"
             />
-            <time v-else>{{ timeLabel(session.updated_at) }}</time>
+            <time v-else>{{ time }}</time>
           </button>
           <button
             type="button"
             class="session-delete"
             :disabled="store.runningSessionIds.includes(session.id) || store.deletingSessionIds.includes(session.id)"
-            :aria-label="t('Delete conversation: {0}', { 0: sessionTitle(session) })"
+            :aria-label="t('Delete conversation: {0}', { 0: title })"
             :title="t('Delete conversation')"
             @click="removeConversation(session)"
           >
@@ -261,7 +257,7 @@ onBeforeUnmount(() => {
         </button>
       </header>
 
-      <section ref="conversation" class="conversation-scroll" aria-live="polite">
+      <section ref="conversation" class="conversation-scroll" aria-live="polite" @scroll.passive="trackScroll">
         <div v-if="store.activeMessages.length === 0" class="welcome-state">
           <div class="welcome-mark" aria-hidden="true">
             <span></span><span></span><span></span>
@@ -279,65 +275,14 @@ onBeforeUnmount(() => {
         </div>
 
         <div v-else class="message-thread">
-          <article
+          <ChatMessageRow
             v-for="message in store.activeMessages"
             :key="message.id"
-            class="message-row"
-            :class="[`role-${message.role}`, { failed: message.error }]"
-          >
-            <div v-if="message.role === 'assistant'" class="assistant-avatar" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </div>
-            <div class="message-body">
-              <div v-if="message.role === 'assistant'" class="message-author">
-                <strong>Brain Agent</strong>
-                <span v-if="message.pending" class="live-label"><i />{{ t('Working') }}</span>
-              </div>
-
-              <details v-if="hasActivity(message)" class="agent-activity" :open="message.pending">
-                <summary>
-                  <span v-if="message.pending" class="activity-spinner" />
-                  <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m7 12 3 3 7-7" /></svg>
-                  {{ message.pending ? t('{0} is processing', { 0: agentLabel(store.currentAgent) }) : t('View {0} execution records', { 0: message.activities?.length }) }}
-                  <svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 7 5 5-5 5" /></svg>
-                </summary>
-                <div class="activity-list">
-                  <div v-for="activity in message.activities" :key="activity.id" class="activity-item">
-                    <span class="activity-dot" />
-                    <div>
-                      <strong>{{ activityLabel(activity) }}</strong>
-                      <p>{{ activity.message }}</p>
-                      <pre v-if="activity.detail">{{ activity.detail }}</pre>
-                    </div>
-                  </div>
-                </div>
-              </details>
-
-              <PreprocessingCard v-for="(output, index) in preprocessingOutputs(message)" :key="index" :output="output" />
-
-              <div
-                v-if="message.content && message.role === 'assistant'"
-                class="message-content markdown-content"
-                v-html="renderMarkdown(message.content)"
-              />
-              <div v-else-if="message.content" class="message-content">{{ message.content }}</div>
-              <div v-else-if="message.pending && !hasActivity(message)" class="thinking-line">
-                <span></span><span></span><span></span>
-              </div>
-              <button
-                v-if="message.content"
-                type="button"
-                class="message-copy-button"
-                :class="{ copied: copiedMessageId === message.id }"
-                :aria-label="copiedMessageId === message.id ? t('Copied') : t('Copy message')"
-                @click="copyMessage(message)"
-              >
-                <svg v-if="copiedMessageId !== message.id" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 8h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2Z" /><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h2" /></svg>
-                <svg v-else viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
-                <span>{{ copiedMessageId === message.id ? t('Copied') : t('Copy') }}</span>
-              </button>
-            </div>
-          </article>
+            :message="message"
+            :copied="copiedMessageId === message.id"
+            :current-agent="message.pending ? store.currentAgent : null"
+            @copy="copyMessage"
+          />
         </div>
       </section>
 

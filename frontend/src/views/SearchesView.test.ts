@@ -897,7 +897,7 @@ describe('search entry and artifact links', () => {
     const workflow = { schema_version: '1', engine: 'diagnostic-policy-search-v2', id: 'source-1', status: 'completed', created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
       request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
       outputs: { data_delivery: { shape: [90, 64, 321] }, ...(collected ? { data_collection: { path: 'collection' } } : {}) } }
-    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
+    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path.split('?')[0] === '/api/workflows' ? [workflow] : workflow)
     const { wrapper } = await open('/workflows?id=source-1', WorkflowsView)
     const entry = wrapper.find('[aria-label="预算搜索入口"]')
     expect(entry.exists()).toBe(collected)
@@ -914,7 +914,7 @@ describe('search entry and artifact links', () => {
       request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
       outputs: { data_preprocessing: { search_id: 'other-search' }, data_evaluation: { selection_policy: 'development_score', quality_evaluated: true,
         search_id: 'other-search', score: .735, evaluation_scope: 'development', selected_method_ref: { id: 'selected-method', sha256: 'hash' } } } }
-    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
+    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path.split('?')[0] === '/api/workflows' ? [workflow] : workflow)
     const { wrapper, router } = await open('/workflows?id=source-1', WorkflowsView)
     const entry = wrapper.get('[aria-label="预算搜索入口"]')
     expect(entry.get('a').attributes('href')).toBe('/searches?id=linked-search')
@@ -930,7 +930,7 @@ describe('search entry and artifact links', () => {
     const workflow = { schema_version: '1', engine: 'diagnostic-policy-search-v2', id: 'source-1', status: 'completed', created_at: '2026-09-09T08:00:00Z', updated_at: '2026-09-09T08:00:00Z',
       request: { source_root: 'E:/data' }, stages: [], events: [], artifacts: [], error: null,
       outputs: { data_preprocessing: { search_id: 'preprocessing-search' } } }
-    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [workflow] : workflow)
+    apiRequest.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path.split('?')[0] === '/api/workflows' ? [workflow] : workflow)
     const { wrapper } = await open('/workflows?id=source-1', WorkflowsView)
     expect(wrapper.get('[aria-label="预算搜索入口"] a').attributes('href')).toBe('/searches?id=preprocessing-search')
     expect(apiRequest.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)

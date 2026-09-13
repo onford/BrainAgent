@@ -1226,7 +1226,7 @@ def evaluate_dataset_reconstruction(
             else "Full-factorial stress test: every subject is assigned every condition; failed/undefined cases remain in the declared denominator.",
             "Conclusions concern shared physical voltage preprocessing under the declared synthetic contamination cases.",
             "Engineering injection cases do not reproduce all natural artifacts.",
-            "Whole-record independent unlabeled fitting is offline/transductive.",
+            "Any algorithm fit scope must be read from the fixed method execution receipts; this stress test does not establish online or causal applicability.",
             "Undefined and failed observations remain in the denominator; no weighted total score.",
         ],
     }

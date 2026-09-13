@@ -2,7 +2,7 @@
 import { stageLabel } from '../i18n/domain'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { t, formatLocale } from '../i18n'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { apiRequest, apiUrl } from '../api/client'
 import { artifactDescription, type WorkflowArtifact } from '../utils/artifacts'
@@ -17,17 +17,27 @@ type Stage = { name: string; label: string; status: string; error?: string }
 type Workflow = { id: string; schema_version?: string; search_id?: string | null; search_summary?: WorkflowSearchSummary; engine?: string; execution_control?: { allowed: boolean }; status: string; created_at: string; updated_at: string; error: string | null; stages: Stage[]; request: { source_root: string }; outputs: { data_evaluation?: SavedWorkflowEvaluation; data_preprocessing?: { search_id?: string | null }; [key: string]: any }; events: {time:string;agent:string;message:string}[]; artifacts: WorkflowArtifact[] }
 type View = 'evidence' | 'reports' | 'files' | 'logs' | 'delivery'
 const route = useRoute(), router = useRouter()
-const jobs = ref<Workflow[]>([]), current = ref<Workflow | null>(null)
+type WorkflowSummary = Pick<Workflow, 'id' | 'status' | 'created_at' | 'updated_at'>
+const jobs = ref<WorkflowSummary[]>([]), current = shallowRef<Workflow | null>(null)
 const roots = ref<string[]>([]), source = ref(''), busy = ref(false), error = ref('')
 const selectedId = ref(''), view = ref<View>('evidence'), focused = ref(false)
 const files = ref<InstanceType<typeof ArtifactExplorer>>()
 const createDialog = ref<HTMLDialogElement>(), stageDialog = ref<HTMLDialogElement>()
 const stageName = ref(''), logQuery = ref('')
+const visitedViews = ref(new Set<View>(['evidence']))
+watch(selectedId, () => { visitedViews.value = new Set([view.value]) }, { flush: 'sync' })
+watch(view, value => {
+  visitedViews.value.add(value)
+  if (value === 'files' && selectedId.value) void refresh(selectedId.value)
+}, { flush: 'sync' })
+const logPage = ref(1), logPageSize = 100
+watch([logQuery, selectedId], () => { logPage.value = 1 })
 const budgetDefaults = ref<WorkflowBudgets>(), budgetFields = ref<InstanceType<typeof WorkflowBudgetFields>>()
 const labels: Record<string,string> = {get queued() { return t('Waiting to start') },get pending() { return t('Pending') },get running() { return t('Executing') },get completed() { return t('Completed') },get failed() { return t('Needs attention') },get interrupted() { return t('Awaiting recovery') }}
 const viewLabels: Record<View,string> = {get evidence() { return t('Workflow and evidence') },get reports() { return t('Read reports') },get files() { return t('Record files') },get logs() { return t('Execution logs') },get delivery() { return t('Training data') }}
 let timer: ReturnType<typeof setTimeout> | undefined
 let disposed = false
+let refreshSerial = 0
 const supportedWorkflow = computed(() => current.value?.schema_version === '1' && ['diagnostic-policy-search-v2', 'fixed-recommendation-v1'].includes(current.value.engine ?? ''))
 const active = computed(() => supportedWorkflow.value && current.value && ['queued','running','interrupted'].includes(current.value.status))
 const executableWorkflow = computed(() => supportedWorkflow.value && current.value?.execution_control?.allowed === true)
@@ -44,6 +54,10 @@ const completedCount = computed(() => current.value?.stages.filter(s => s.status
 const stage = computed(() => current.value?.stages.find(s=>s.name===stageName.value))
 const latest = computed(() => current.value?.events.at(-1))
 const events = computed(() => (current.value?.events ?? []).map((event,index)=>({...event,id:index})).reverse().filter(e=>`${e.agent} ${e.message}`.toLowerCase().includes(logQuery.value.trim().toLowerCase())))
+const logPages = computed(() => Math.max(1, Math.ceil(events.value.length / logPageSize)))
+const currentLogPage = computed(() => Math.min(logPage.value, logPages.value))
+const visibleEvents = computed(() => events.value.slice((currentLogPage.value - 1) * logPageSize, currentLogPage.value * logPageSize))
+const artifactIndex = computed(() => new Map(current.value?.artifacts.map(file => [file.name, file])))
 const reports = computed(() => {
   const titles: Record<string,string> = {
     get 'survey/reports/dataset-basic.html'() { return t('Dataset essentials') }, get 'survey/reports/data-information.html'() { return t('Data information and source cross-checks') },
@@ -52,18 +66,18 @@ const reports = computed(() => {
     get 'report/report.html'() { return t('Final processing report') },
   }
   const available = new Set(current.value?.artifacts.map(a=>a.name))
-  return Object.entries(titles).filter(([name])=>available.has(name)).map(([name,title])=>({name,title,description:current.value?.artifacts.find(file => file.name === name)?.description || artifactDescription(name)}))
+  return Object.entries(titles).filter(([name])=>available.has(name)).map(([name,title])=>({name,title,description:artifactIndex.value.get(name)?.description || artifactDescription(name)}))
 })
 const stageDescriptions: Record<string,string> = {
   get data_survey() { return t('Cross-check local files, official sources, and papers; gather statistics and references for subsequent steps.') },
   get data_collection() { return t('Check ingestion requirements and task labels, then create a standardized data copy.') },
-  get data_preprocessing() { return t('Run a diagnosis-driven budgeted search comparing shared preprocessing recipes.') },
+  get data_preprocessing() { return t('Execute the initially recommended shared recipes in their frozen order, then evaluate them.') },
   get data_evaluation() { return t('Select preprocessing using this run\'s fixed primary metric. See the linked search for the protocol, completeness, and selection rationale.') },
   get data_report() { return t('Organize verified process records into a readable report.') },
   get data_delivery() { return t('Export training arrays, labels, subject groups, and reproducibility records.') },
 }
 function fileUrl(name: string, download = true) {
-  const artifact = current.value?.artifacts.find(file => file.name === name)
+  const artifact = artifactIndex.value.get(name)
   if (artifact?.url) return searchArtifactUrl(current.value!.id, artifact, download)
   const hash = artifact?.sha256
   return apiUrl(`/api/workflows/${current.value!.id}/artifacts/${name.split('/').map(encodeURIComponent).join('/')}?download=${download}${hash ? `&v=${encodeURIComponent(hash)}` : ''}`)
@@ -72,20 +86,28 @@ function count(value: unknown) { return typeof value === 'number' && Number.isFi
 function stageDescription(name: string) { return supportedWorkflow.value ? stageDescriptions[name] ?? t('Processing status and records for this stage.') : t('Saved records contain this stage\'s status, process, and artifacts.') }
 function date(value: string) { return new Date(value).toLocaleString(formatLocale.value,{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) }
 async function showStage(item: Stage) { stageName.value=item.name; await nextTick(); stageDialog.value?.showModal() }
-function showStageFiles() {
+async function showStageFiles() {
   const mapping: Record<string,string> = {data_survey:'survey',data_collection:'collection',data_preprocessing:'preprocessing',data_evaluation:'evaluation',data_report:'report',data_delivery:'delivery'}
-  files.value?.selectGroup(mapping[stageName.value] ?? 'all'); view.value='files'; stageDialog.value?.close()
+  const group = mapping[stageName.value] ?? 'all'
+  view.value='files'; stageDialog.value?.close()
+  await nextTick()
+  files.value?.selectGroup(group)
 }
 function escapeFocus(event: KeyboardEvent) { if(event.key==='Escape') focused.value=false }
 async function refresh(id:string) {
   if(timer) clearTimeout(timer)
+  const serial = ++refreshSerial
+  const includeArtifacts = view.value === 'files'
   try {
-    const state=await apiRequest<Workflow>(`/api/workflows/${id}`)
-    if(disposed || selectedId.value!==id) return
+    const state=await apiRequest<Workflow>(`/api/workflows/${id}?include_artifacts=${includeArtifacts}`)
+    if(disposed || selectedId.value!==id || serial!==refreshSerial) return
+    if (!includeArtifacts && current.value?.id === id) {
+      state.artifacts = [...new Map([...current.value.artifacts, ...state.artifacts].map(file => [file.name, file])).values()]
+    }
     current.value=state; jobs.value=[state,...jobs.value.filter(j=>j.id!==id)]; error.value=''
     if(active.value) timer=setTimeout(()=>void refresh(id),2000)
   } catch(reason) {
-    if(!disposed && selectedId.value===id) {
+    if(!disposed && selectedId.value===id && serial===refreshSerial) {
       error.value=String(reason)
       timer=setTimeout(()=>void refresh(id),5000)
     }
@@ -115,7 +137,7 @@ async function retry() {
 onMounted(async()=>{
   document.addEventListener('keydown',escapeFocus)
   try {
-    const [settings,items]=await Promise.all([apiRequest<{allowed_roots:string[];budgets?:WorkflowBudgets}>('/api/workflows/sources'),apiRequest<Workflow[]>('/api/workflows')])
+    const [settings,items]=await Promise.all([apiRequest<{allowed_roots:string[];budgets?:WorkflowBudgets}>('/api/workflows/sources'),apiRequest<WorkflowSummary[]>('/api/workflows?summary=true')])
     if(disposed) return
     budgetDefaults.value=settings.budgets;roots.value=settings.allowed_roots;source.value=roots.value[0] ?? '';jobs.value=items
     const id=typeof route.query.id==='string' ? route.query.id : items[0]?.id
@@ -145,9 +167,9 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
         <nav v-show="!focused" class="workspace-tabs" :aria-label="t('Workspace views')"><button v-for="(label,key) in viewLabels" :key="key" :aria-pressed="view===key" @click="view=key">{{label}}<span v-if="key==='reports'">{{reports.length}}</span><span v-if="key==='files'">{{current.artifacts.length}}</span></button><span class="workspace-caption">{{view==='evidence'?t('Step evidence'):view==='reports'?t('Choose a report to read'):view==='files'?t('Find artifacts by module'):view==='logs'?t('Most recent records first'):t('Download and reproduce')}}</span></nav>
         <div class="workspace-body">
           <WorkflowEvidence :workflow-id="current.id" v-show="view==='evidence'" :search-id="searchId" :evaluation="evaluation" :report-count="reports.length" @reports="view='reports'" @files="view='files'" />
-          <ReportReader v-show="view==='reports'" :reports="reports" :workflow-id="current.id" :file-url="fileUrl" :focused="focused" @focus="focused=!focused" @exit-focus="focused=false" />
-          <ArtifactExplorer v-show="view==='files'" ref="files" :artifacts="current.artifacts" :workflow-id="current.id" :file-url="fileUrl" />
-          <section v-show="view==='logs'" class="logs-panel" :aria-label="t('Execution logs')"><header class="content-toolbar"><div><h2>{{ t('Execution logs') }}</h2><span>{{ t('{0} records · Newest first', { 0: current.events.length }) }}</span></div><input v-model="logQuery" type="search" :placeholder="t('Search execution records…')" :aria-label="t('Search execution records')" /></header><ol class="event-list"><li v-for="event in events" :key="`${current.id}-${event.id}`"><time>{{date(event.time)}}</time><div><span class="event-agent">{{stageLabel(event.agent, current.stages.find(s=>s.name===event.agent)?.label ?? event.agent)}}</span><p>{{event.message}}</p></div></li><li v-if="!events.length" class="empty-message">{{logQuery?t('No matching execution records.'):t('Execution records update here after the workflow starts.')}}</li></ol></section>
+          <ReportReader v-if="visitedViews.has('reports')" :key="`reports-${current.id}`" v-show="view==='reports'" :reports="reports" :workflow-id="current.id" :file-url="fileUrl" :focused="focused" @focus="focused=!focused" @exit-focus="focused=false" />
+          <ArtifactExplorer v-if="visitedViews.has('files')" :key="`files-${current.id}`" v-show="view==='files'" ref="files" :artifacts="current.artifacts" :workflow-id="current.id" :file-url="fileUrl" />
+          <section v-if="view==='logs'" class="logs-panel" :aria-label="t('Execution logs')"><header class="content-toolbar"><div><h2>{{ t('Execution logs') }}</h2><span>{{ t('{0} records · Newest first', { 0: current.events.length }) }}</span></div><input v-model="logQuery" type="search" :placeholder="t('Search execution records…')" :aria-label="t('Search execution records')" /></header><ol class="event-list"><li v-for="event in visibleEvents" :key="`${current.id}-${event.id}`"><time>{{date(event.time)}}</time><div><span class="event-agent">{{stageLabel(event.agent, current.stages.find(s=>s.name===event.agent)?.label ?? event.agent)}}</span><p>{{event.message}}</p></div></li><li v-if="!events.length" class="empty-message">{{logQuery?t('No matching execution records.'):t('Execution records update here after the workflow starts.')}}</li></ol><nav v-if="logPages > 1" class="log-pagination" :aria-label="t('Execution logs')"><button :disabled="currentLogPage === 1" @click="logPage = currentLogPage - 1">{{ t('Previous page') }}</button><span role="status">{{ currentLogPage }} / {{ logPages }}</span><button :disabled="currentLogPage === logPages" @click="logPage = currentLogPage + 1">{{ t('Next page') }}</button></nav></section>
           <section v-show="view==='delivery'" class="delivery-panel" :aria-label="t('Training data')"><div v-if="delivered" class="delivery-content"><p class="eyebrow">READY FOR TRAINING</p><h2>{{ t('Training data ready') }}</h2><p class="muted">{{ t('Data, labels, and reproducibility records are available.') }}</p><div class="stats"><div><strong>{{delivered.shape[0]}}</strong><span>Epoch</span></div><div><strong>{{delivered.shape[1]}}</strong><span>{{ t('EEG channels') }}</span></div><div><strong>{{delivered.shape[2]}}</strong><span>{{ t('Samples per epoch') }}</span></div></div><div class="download-actions"><a class="primary" :href="fileUrl('training-data.zip')">{{ t('↓ Download training package') }}</a><a :href="fileUrl('delivery/manifest.json')">{{ t('Data manifest ↗') }}</a></div><div class="delivery-notes"><h3>{{ t('Instructions') }}</h3><p v-if="measuredEvaluation">{{ t('The method was selected by development score. This score compares strategies; it is not an independent test result.') }}</p><p v-else>{{ t('Method and split information follow the saved delivery records.') }}</p><p v-if="measuredEvaluation">{{ t('Development BA: {0}', { 0: developmentScore }) }}</p><p v-if="evaluation?.selected_method_ref">{{ t('Selected method: {0}', { 0: evaluation.selected_method_ref.id }) }}</p><p>{{ t('The package includes X, y, splits, channel information, original event mappings, and reproducibility records.') }}<template v-if="measuredEvaluation">{{ t('Evaluation splits follow the subjects and folds in the search panel.') }}</template></p><p v-if="searchId"><RouterLink :to="{path:'/searches',query:{id:searchId}}">{{ t('View search records and selection rationale ↗') }}</RouterLink></p></div></div><div v-else class="empty-state"><h2>{{ t('Training data not ready yet') }}</h2><p>{{ t('Download the package here after processing and validation. Completed research reports are available now.') }}</p><button @click="view='reports'">{{ t('View available reports →') }}</button></div></section>
         </div>
       </section>
@@ -159,6 +181,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
 </template>
 
 <style scoped>
+.log-pagination{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;border-top:1px solid #e7ece9}
 .search-summary{font-size:12px;color:#60776a;margin-top:8px}.search-summary p{margin-top:4px;overflow-wrap:anywhere}
 .workflow-page{height:100dvh;min-height:480px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;padding:0 28px 20px;background:#f2f5f3;color:#263e31;font:14px/1.5 system-ui,-apple-system,'Segoe UI',sans-serif;overflow:hidden}
 .workflow-page *{box-sizing:border-box}button,input,select{font:inherit}button,a,summary{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:disabled{opacity:.55;cursor:wait}a{color:#356b4f;text-decoration:none}a:hover{text-decoration:underline}h1,h2,h3,p{margin:0}button{border:1px solid #d6e1d9;background:white;border-radius:7px;padding:8px 13px;color:#3e614b}button:hover{background:#edf4ef}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid #39845b;outline-offset:3px}

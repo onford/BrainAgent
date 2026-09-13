@@ -5,6 +5,31 @@ import { nextTick } from 'vue'
 import { setLocale } from '../../i18n'
 
 describe('ReportReader', () => {
+  it('batches scroll geometry reads and cancels pending work on unmount', async () => {
+    const frames: FrameRequestCallback[] = []
+    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation(callback => { frames.push(callback); return 23 })
+    const cancelFrame = vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined)
+    const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [{ name: 'report.html', title: 'Report', description: '' }] } })
+    try {
+      const doc = document.implementation.createHTMLDocument()
+      doc.body.innerHTML = '<main><h2>Section</h2></main>'
+      Object.defineProperty(wrapper.get('iframe').element, 'contentDocument', { value: doc })
+      const heading = doc.querySelector('h2')!
+      vi.spyOn(heading, 'getClientRects').mockReturnValue([{}] as unknown as DOMRectList)
+      const bounds = vi.spyOn(heading, 'getBoundingClientRect').mockReturnValue({ top: 50 } as DOMRect)
+      await wrapper.get('iframe').trigger('load')
+      bounds.mockClear()
+      for (let index = 0; index < 200; index++) doc.dispatchEvent(new Event('scroll'))
+      expect(bounds).not.toHaveBeenCalled()
+      expect(frames).toHaveLength(1)
+      frames.shift()!(0)
+      expect(bounds).toHaveBeenCalledOnce()
+      doc.dispatchEvent(new Event('scroll'))
+      wrapper.unmount()
+      expect(cancelFrame).toHaveBeenCalledWith(23)
+    } finally { wrapper.unmount(); requestFrame.mockRestore(); cancelFrame.mockRestore() }
+  })
+
   it('keeps the report document and reading position when localized titles change', async () => {
     const wrapper = mount(ReportReader, { props: { workflowId: 'run', focused: false, fileUrl: name => `/${name}`, reports: [
       { name: 'report/report.html', title: '处理报告', description: '说明' },

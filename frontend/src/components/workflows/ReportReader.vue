@@ -55,7 +55,12 @@ function loaded() {
       })
       activeHeading.value = index
     }
-    doc.addEventListener('scroll', updatePosition, { passive: true })
+    let scrollFrame: number | undefined
+    const schedulePosition = () => {
+      if (scrollFrame !== undefined) return
+      scrollFrame = requestAnimationFrame(() => { scrollFrame = undefined; updatePosition() })
+    }
+    doc.addEventListener('scroll', schedulePosition, { passive: true })
     updatePosition()
     const escape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
@@ -64,7 +69,7 @@ function loaded() {
       else emit('exitFocus')
     }
     doc.addEventListener('keydown', escape)
-    detach = () => { doc.removeEventListener('keydown', escape); doc.removeEventListener('scroll', updatePosition); removePagination(); style.remove() }
+    detach = () => { doc.removeEventListener('keydown', escape); doc.removeEventListener('scroll', schedulePosition); if (scrollFrame !== undefined) cancelAnimationFrame(scrollFrame); removePagination(); style.remove() }
   } catch { loadError.value = true }
 }
 function jump(index: number) {

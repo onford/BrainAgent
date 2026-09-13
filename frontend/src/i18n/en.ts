@@ -1143,7 +1143,7 @@ export const en = [
   "Final processing report",
   "Cross-check local files, official sources, and papers; gather statistics and references for subsequent steps.",
   "Check ingestion requirements and task labels, then create a standardized data copy.",
-  "Run a diagnosis-driven budgeted search comparing shared preprocessing recipes.",
+  "Execute the initially recommended shared recipes in their frozen order, then evaluate them.",
   "Select preprocessing using this run's fixed primary metric. See the linked search for the protocol, completeness, and selection rationale.",
   "Organize verified process records into a readable report.",
   "Export training arrays, labels, subject groups, and reproducibility records.",
