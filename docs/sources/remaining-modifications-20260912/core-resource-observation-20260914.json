@@ -1,0 +1,58 @@
+{
+  "status": "temporary_driver_priority_restored",
+  "adjustment": {
+    "pid": 19156,
+    "created": 1789294790.2709632,
+    "before": {
+      "cpu_priority": 32,
+      "io_priority": 2
+    },
+    "worker_pid": 40244,
+    "worker_priority": {
+      "cpu_priority": 32,
+      "io_priority": 2
+    },
+    "time": 1789324133.4978826,
+    "scope": "Lower only the workflow driver resource priority; already-running numerical worker priority, code, recipe and absolute budgets remain unchanged.",
+    "status": "applied",
+    "after": {
+      "cpu_priority": 16384,
+      "io_priority": 1
+    },
+    "protected_file_sha256": {
+      "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\protocol.json": "5ff19970495ecdd0cdf3dfa8aa787578a85fa5cac40b97529e7d6b124c445011",
+      "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\code\\backend\\scripts\\release_workflow_acceptance.py": "21dab1411af2894632d417c53d589c675899bbe6c1781d4de49f25b32daab83e"
+    }
+  },
+  "restoration": {
+    "status": "restored",
+    "pid": 19156,
+    "created": 1789294790.2709632,
+    "before": {
+      "cpu_priority": 16384,
+      "io_priority": 1
+    },
+    "after": {
+      "cpu_priority": 32,
+      "io_priority": 2
+    },
+    "time": 1789325049.8564305,
+    "reason": "Restore original resource scheduling before subsequent evaluation workers can inherit it. Existing numerical worker was not reprioritized.",
+    "protected_files_unchanged": true,
+    "previous_receipt": ".local\\core-release-20260914\\driver-priority-adjustment.json"
+  },
+  "snapshot_receipt": ".local\\core-release-20260914\\resource-snapshot-1.json",
+  "receipt_sha256": {
+    "driver-priority-adjustment.json": "807bfd8530dc7062474fd0886aeb8dc91df126b636671ae2f3ab57fe3aaebda2",
+    "driver-priority-restored.json": "8699b7f233a110d4cb6242114b1cfb29be55df33c327af19fbe6009fe2f01311",
+    "resource-snapshot-1.json": "62f69962114cc732630b497d9926b9a627ea0d93425a11b895ebbe1913cb92dc"
+  },
+  "limitations": [
+    "Shared-host elapsed times include live application, verification and driver polling overhead.",
+    "The temporary change affected only the controller process, not the already-running numerical worker.",
+    "No performance improvement is established by this one uncontrolled observation.",
+    "Live process I/O counters do not measure pure disk waiting or total resource use of exited workers."
+  ],
+  "numerical_parameters_or_budget_changed": false,
+  "final_core_acceptance": false
+}

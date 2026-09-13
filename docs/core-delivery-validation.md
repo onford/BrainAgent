@@ -51,4 +51,6 @@ GitHub 首次推送因连接失败未完成，第二次成功并读取远端确�
 
 前三个流程的重建回执另外完成只读汇总核验：各 109 人、10 个分配条件、1640 个试次条件组合；每人只分配一种条件，不能当作所有人都经历全部污染条件。检查冻结成员、逐窗口到被试再到条件的等权汇总、三个分析对照，以及 assessment 对应结果，全部通过。该审计不重新读取未落盘的物理探针数组，也不以原执行的重放回执冒充独立重算。第一次审计错误混同内部 `probe_hash` 与包含该字段的整体哈希，查明生产者合同后分别校验两个哈希及原冻结文件；失败日志保留。3 项缺测、错误加权及重复窗口反向测试通过。[重建回执核验](sources/remaining-modifications-20260912/core-reconstruction-audit-20260914.json)。
 
+原驱动持续轮询大量目录，2026-09-14 02:28:53 至 02:44:09（本机时区）曾将其 CPU/I/O 优先级从 Normal 调低，再恢复为原值；已运行的数值 Worker 保持 Normal。恢复发生在第四个流程预处理结束之前，避免后续评价进程继承临时设置。两次均核对进程身份及固定驱动、协议哈希，处理参数和期限未改。共享主机的墙钟时间包含轮询与验收负载，单次观测不能证明加速；进程 I/O 计数不能当作纯磁盘等待或全部退出进程的资源总量。[资源观测与恢复回执](sources/remaining-modifications-20260912/core-resource-observation-20260914.json)。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。
