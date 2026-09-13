@@ -129,7 +129,8 @@
     "evidence": {
       "browser-zh.json": "dd8849485eac29dab891663759f2eecbae08a9b6b3b64b81bacaf074b4eee073",
       "browser-en.json": "36001b62ab0f57804716943cc6c983929704009233b549b6a23e8b6f48a91ed7"
-    }
+    },
+    "agent_created_tab_closed": true
   },
   "numerical_run": {
     "commit": "722fe95640761fc36e5da176a9e34255208bc51a",
@@ -148,5 +149,13 @@
     "update-frontend.py": "ece1df686236acabb2ccc34d25be0b4da0403ec7c4205a708e2f1f04d65167f6"
   },
   "sites_published": false,
-  "final_core_acceptance": false
+  "final_core_acceptance": false,
+  "git_delivery": {
+    "status": "pushed_and_remote_verified",
+    "commit": "70f47d1a8d0cf00886973ce74d511acbe0008657",
+    "branch": "dev-xx",
+    "first_attempt_failed": true,
+    "second_attempt_succeeded": true,
+    "sites_published": false
+  }
 }

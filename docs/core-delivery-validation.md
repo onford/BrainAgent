@@ -45,4 +45,6 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 
 发布副本 `81e589e` 的全量回归随后完成：1437 项通过，109 条警告保留。8001 API/Worker 已共同更新到该固定 worktree，执行源码哈希为 `c501c5a707f50ac471e904930401008bfd604545bf7cc6b1d81b99d6040b3193`，依赖哈希与原数值运行相同。现有 5173 静态服务更新 19 个构建文件，逐个 HTTP 响应验签；旧静态资源有备份并保留。6 个实际 API 检查、双语创建表单、旧任务只读提示和浏览器错误/警告日志检查通过。旧失败工作流的 21 个文件哈希未变，原数值驱动及核验助手均保留。本轮结果尚未接入，未发布 Sites，也未创建额外数值任务。[统一版本接入回执](sources/remaining-modifications-20260912/core-release-20260914.json)。
 
+GitHub 首次推送因连接失败未完成，第二次成功并读取远端确认 `dev-xx` 为 `70f47d1`。前两个已完成流程另行从逐折预测文件重算 109 人的平衡准确率，再等权合并三个种子，结果分别为 `0.639556575987615` 和 `0.7641658680149755`，与 utility 及用于选择的 assessment 分数相符；CSP-LDA 对照也通过。各流程核对 19672 行预测、原始标签、折成员与概率对应关系，不重新拟合。5 项反向/加权专项通过，能拒绝标签、折成员、概率及重复预测错误。其余候选、最终选择及真正模型重载仍待完成。[分数复算回执](sources/remaining-modifications-20260912/core-scores-20260914.json)。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。

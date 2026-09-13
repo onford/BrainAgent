@@ -750,7 +750,10 @@
       },
       "delivery_priority": "core",
       "delivery_group": "C5",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-scores-20260914.json"
+      ]
     },
     {
       "id": "I28",
@@ -1177,7 +1180,10 @@
       "implementation_update": "检查点工具已验证历史完整基线15模型；ZIP工具已验证历史4人/12记录/180试次包的157成员、物理数组及实际训练示例，2项反向控制通过。正式赢家的两项核验仍待I27，不提升历史partial或旧失败验收。",
       "delivery_priority": "core",
       "delivery_group": "C5",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-scores-20260914.json"
+      ]
     },
     {
       "id": "I44",
@@ -1208,7 +1214,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一源码及可复现发布版本",
-      "current": "统一应用版本81e589e已部署到8001 API/Worker与5173前端；干净后端1437项、前端174项/类型/构建通过。原数值运行722fe95保持，其最终模型和ZIP仍待完成核验。当前Git远端连接已恢复，尚未登记本轮推送完成；Sites继续暂缓。",
+      "current": "统一应用版本81e589e已部署到8001 API/Worker与5173前端；干净后端1437项、前端174项/类型/构建通过。远端dev-xx已核对更新至70f47d1。原数值运行722fe95保持，其最终模型和ZIP仍待完成核验；Sites继续暂缓。",
       "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
       "dependencies": [],
       "sources": [
