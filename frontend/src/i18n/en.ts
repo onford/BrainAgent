@@ -1209,7 +1209,7 @@ export const en = [
   "Create a data workflow",
   "Start a data workflow",
   "Close new workflow dialog",
-  "Choose local data for research, diagnostic strategy search, development evaluation, and delivery.",
+  "Choose local data for research, an initial recommendation, fixed execution, evaluation, and delivery.",
   "Local data directory",
   "Choose a configured EEGMMIDB directory",
   "Scans all subjects and runs in the directory. Subject and record counts appear during data research.",
