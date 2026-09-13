@@ -6,6 +6,8 @@
   "members": 125,
   "project_id": "appgprj_6aa3fc339a3881918b9f7cbedaa9f13c",
   "published": false,
+  "publication_status": "deferred_by_user",
+  "user_instruction": "先不处理（Sites 项目访问和发布）；保留本地准备结果，不再尝试恢复访问或发布",
   "publication_blocker": "Sites get_site returned project_not_found (404) for the exact configured project ID; no replacement project created",
   "skill_status": "Catalog hosting skill path is absent; no Sites SKILL.md found across installed plugin cache",
   "local_receipt_sha256": "c1feaf645daa8327df5eec3784471398ce14720f409c272716bd62233141ec94"

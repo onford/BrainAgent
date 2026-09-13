@@ -1032,8 +1032,8 @@
         "E4"
       ],
       "historical_status": "尚未验证",
-      "status": "blocked_external_access",
-      "implementation_update": "配置的Sites项目ID经当前连接查询返回project_not_found/404，未创建替代站点或改公开受众。651367e前端源码ZIP已从Git固定子树准备，用户账号/工作区问题已提出，公开前端未更新。"
+      "status": "deferred_by_user",
+      "implementation_update": "用户于2026-09-13明确回复“先不处理”，暂缓Sites项目访问及发布。保留原项目ID、原站点与651367e源码包，不创建替代站点；继续本地实现与验收。"
     },
     {
       "id": "I50",
@@ -2152,6 +2152,11 @@
       "full_regression": "pending",
       "matrix": "pending",
       "audit": "service-runtime-audit-1.json"
+    },
+    "sites_publication": {
+      "status": "deferred_by_user",
+      "reason": "User requested not to address the Sites project access/publication now",
+      "published": false
     }
   }
 }
