@@ -80,6 +80,8 @@ def audit(search, output, allow_partial=False):
         root = search / 'candidates' / candidate['id']
         receipt = read(root / 'receipt.json')
         require(receipt == candidate['receipt'], 'Search and candidate receipt differ')
+        require(receipt['status'] == 'evaluated' and receipt['assessment']['status'] == 'complete',
+                'Complete multi-axis assessment is required')
         summary = receipt['assessment']['utility']
         require(summary['status'] == 'evaluated', 'Incomplete utility receipt')
         utility_ref = summary['receipt_artifact']
@@ -128,6 +130,8 @@ def audit(search, output, allow_partial=False):
     selected = None
     if not allow_partial:
         registry = {row['id']: row for row in state['registry']}
+        require(all(len(row.get('parameters', {}).get('operators', [])) == registry[row['id']]['operator_count']
+                    for row in completed), 'Tie-break operator counts differ from the frozen registry')
         ranked = sorted(completed, key=lambda row: (-row['receipt']['assessment']['selection_score'],
                         row['id'] != state['protocol']['baseline_id'], registry[row['id']]['operator_count'], row['id']))
         selected = ranked[0]['id']
