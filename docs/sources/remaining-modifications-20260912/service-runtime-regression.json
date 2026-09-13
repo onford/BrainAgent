@@ -1,0 +1,57 @@
+{
+  "source_commit": "f209b4063b94400dde6add4949f2fab2b95ed174",
+  "runtime": "backend/.venv-service-20260913",
+  "full_suite": {
+    "path": ".local\\remaining-modifications-20260912\\service-full-tests-1.xml",
+    "sha256": "bd4b276e6772708eb5a7e003123f7b0cec99c27ab00018afd2d4eea11c41a36c",
+    "tests": 1394,
+    "failures": 3,
+    "errors": 0,
+    "seconds": 2103.199,
+    "cases": [
+      {
+        "name": "tests.workflows.test_cognition::test_collection_uncertainty_triggers_read_and_recheck",
+        "seconds": 120.526,
+        "failed": true
+      },
+      {
+        "name": "tests.workflows.test_cognition::test_nonblocking_metadata_conflict_is_corrected_before_collection",
+        "seconds": 120.676,
+        "failed": true
+      },
+      {
+        "name": "tests.workflows.test_workflow::test_six_agents_retry_delivery_alignment_training_and_api",
+        "seconds": 120.48,
+        "failed": true
+      }
+    ]
+  },
+  "same_build_failed_case_recheck": {
+    "path": ".local\\remaining-modifications-20260912\\service-timeout-recheck-1.xml",
+    "sha256": "3d3ce3067aa0cf9d061f27f0a6b52cbbd0eeb1ee5170b79ed74c1cfb0e3441c0",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 136.632,
+    "cases": [
+      {
+        "name": "tests.workflows.test_cognition::test_collection_uncertainty_triggers_read_and_recheck",
+        "seconds": 33.665,
+        "failed": false
+      },
+      {
+        "name": "tests.workflows.test_cognition::test_nonblocking_metadata_conflict_is_corrected_before_collection",
+        "seconds": 33.647,
+        "failed": false
+      },
+      {
+        "name": "tests.workflows.test_workflow::test_six_agents_retry_delivery_alignment_training_and_api",
+        "seconds": 67.586,
+        "failed": false
+      }
+    ]
+  },
+  "test_timeout_seconds_unchanged": 120,
+  "observation": "All original failures were workflow waiting timeouts. Same frozen code and runtime passed all three on targeted rerun, without changing assertions or timeout. Host disk contention observed; first failure run retained.",
+  "public_runtime_switched": false
+}

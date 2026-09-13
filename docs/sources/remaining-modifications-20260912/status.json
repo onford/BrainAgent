@@ -951,7 +951,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "8001 API和Worker已加载651367e固定副本，版本与310配置能力接口可读。完整独立运行环境包缺项为0，20配置仍需显式资产；f209b40全回归进行到约87%时发现2项失败，详情待结束核查，暂不切换新环境。8000和全集正式运行保持。",
+      "current": "8001 API和Worker已加载651367e固定副本，版本与310配置能力接口可读。完整独立环境包缺项为0，20配置仍需显式资产。f209b40全回归1391通过、3项工作流120秒超时；同一冻结代码和环境保持原断言及超时复验3项均通过。新环境切换待进行；8000和全集正式运行保持。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -2169,6 +2169,28 @@
       },
       "current_matrix_audit": "pending_finished_run",
       "service_registry_updated": false
+    },
+    "complete_service_runtime_regression": {
+      "receipt": "docs/sources/remaining-modifications-20260912/service-runtime-regression.json",
+      "full_suite": {
+        "passed": 1391,
+        "failed": 3,
+        "warnings": 109,
+        "seconds": 2103.4
+      },
+      "same_build_failed_case_recheck": {
+        "passed": 3,
+        "warnings": 2,
+        "seconds": 136.63
+      },
+      "original_timeout_seconds": 120,
+      "all_cases_passed_across_full_and_targeted_runs": true,
+      "single_full_suite_all_passed": false,
+      "owned_thread_teardown_tests": {
+        "passed": 2,
+        "seconds": 2.07
+      },
+      "public_environment_switched": false
     }
   }
 }
