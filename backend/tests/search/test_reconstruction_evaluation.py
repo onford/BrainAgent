@@ -187,19 +187,20 @@ def test_real_bids_replay_all_cases_source_once_and_no_arrays_written(
     assert result["summary"]["status"] == "incomplete", result["summary"][
         "status_counts"
     ]
-    # v4 compares completed epochs. Short 0.7 s windows can miss an injected
-    # pulse entirely; continuous filter tails must not fabricate contamination.
-    assert result["summary"]["status_counts"] == {"evaluated": 14, 'not_applicable':6}
+    # Fixed pulse blocks cover these 0.7 s windows. Two EOG cases remain
+    # inapplicable; changing pulse placement must not relax that gate.
+    assert result["summary"]["status_counts"] == {"evaluated": 18, 'not_applicable':2}
     for subject, details in result['details']['subjects'].items():
         for case in details['cases']:
             if case['status']=='not_applicable':
                 detail=json.loads((out/case['path']).read_text(encoding='utf-8'))
                 assert detail['reason_code']=='NO_APPLICABLE_CONTAMINATION'
                 assert detail['inapplicable_trials']
+                assert detail['case']['kind'] == 'eog'
     assert reads == ["sub-01", "sub-02"]
-    assert calls.count("filter") == calls.count("epoch") == 16
+    assert calls.count("filter") == calls.count("epoch") == 20
     assert result["summary"]["resources"]["clean_replays"] == 2
-    assert result["summary"]["resources"]["corrupted_replays"] == 14
+    assert result["summary"]["resources"]["corrupted_replays"] == 18
     assert result["summary"]["scope"] == reval.SCOPE
     assert result["summary"]["trial_cases_expected"] == 10 * sum(
         t["eligible"] for t in panel["trials"]
@@ -337,8 +338,8 @@ def test_clean_replay_mismatch_keeps_failed_subject_denominator(
     )
     out = tmp_path / "out"
     value = run(completed, out, result=result)
-    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 8, 'not_applicable':2}
-    assert value["summary"]["resources"]["corrupted_replays"] == 8
+    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 10}
+    assert value["summary"]["resources"]["corrupted_replays"] == 10
     detail = case_file(value, out)
     assert detail["reason_code"] == "CLEAN_REPLAY_MISMATCH"
     metric = value["summary"]["by_case"]["line-r05"]["metrics"]["clean_retention_nrmse"]
@@ -359,7 +360,7 @@ def test_unsupported_dag_is_not_identity_cleaning(completed, tmp_path, damage):
         step["op"] = "not_implemented"
     result = rebind(plan, completed[1].model_dump(mode="json"))
     value = run(completed, tmp_path / "out", plan=plan, result=result)
-    assert value["summary"]["status_counts"] == {"not_applicable": 12, "evaluated": 8}
+    assert value["summary"]["status_counts"] == {"not_applicable": 10, "evaluated": 10}
     assert value["summary"]["resources"]["source_records_read"] == 1
     assert case_file(value, tmp_path / "out")["reason_code"] == "UNSUPPORTED_RECIPE"
 
@@ -368,7 +369,7 @@ def test_failed_existing_record_does_not_fall_back_or_drop_subject(completed, tm
     result = completed[1].model_dump(mode="json")
     result["records"][0].update(status="failed", result=None)
     value = run(completed, tmp_path / "out", result=result)
-    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 8, 'not_applicable':2}
+    assert value["summary"]["status_counts"] == {"failed": 10, "evaluated": 10}
     assert (
         case_file(value, tmp_path / "out")["reason_code"] == "CANDIDATE_RECORD_FAILED"
     )
@@ -395,6 +396,38 @@ def test_no_applicable_noise_retains_cases_and_null_reasons(
         value["summary"]["by_case"]["line-r05"]["metrics"]["input_nrmse"]["n_total"]
         == 2
     )
+
+
+def test_fixed_pulse_blocks_cover_all_half_second_offsets(completed):
+    # A continuous two-minute recording, with no event-informed placement or
+    # candidate output. Check every possible half-second window, including edges.
+    rng = np.random.default_rng(118)
+    sfreq = 160
+    values = rng.normal(0, 1e-5, (3, 120 * sfreq))
+    values[:, :sfreq] = 0  # Real files can contain flat intervals.
+    values[:, 30 * sfreq:31 * sfreq] = 0
+    raw = mne.io.RawArray(values.copy(), mne.create_info(['C3', 'C4', 'Cz'], sfreq, 'eeg'), verbose='ERROR')
+    probe = reval.freeze_probe_panel(completed[3])
+    corrupted, manifest = reval._noise(raw, {'kind': 'pulse', 'seed': 191, 'rms_ratio': 0.5}, 'record-owner', 'record', probe)
+    noise = corrupted.get_data() - values
+    noise -= noise.mean(axis=0, keepdims=True)
+    energy = np.sum(noise * noise, axis=0)
+    assert np.all(np.convolve(energy, np.ones(sfreq // 2), mode='valid') > 0)
+    assert len(manifest['blocks']) == 480
+    np.testing.assert_array_equal(raw.get_data(), values)
+
+
+def test_historical_probe_is_rejected_before_new_output(completed, tmp_path):
+    probe = reval.freeze_probe_panel(completed[3])
+    probe['schema_version'] = 'dataset-reconstruction-v4'
+    probe['injection'].pop('pulse_block_seconds')
+    probe['injection'].pop('pulse_placement')
+    probe['injection'].pop('pulse_template_strength')
+    probe['probe_hash'] = digest({k: v for k, v in probe.items() if k != 'probe_hash'})
+    out = tmp_path / 'historical-replay'
+    with pytest.raises(reval.ProbeError, match='deterministic frozen policy'):
+        run(completed, out, probe_panel=probe)
+    assert not out.exists()
 
 
 def test_noise_is_frozen_shared_by_amplitudes_and_leaves_auxiliary_untouched(completed):
@@ -426,7 +459,7 @@ def test_noise_is_frozen_shared_by_amplitudes_and_leaves_auxiliary_untouched(com
     np.testing.assert_array_equal(raw.get_data(), original)
 
 
-@pytest.mark.parametrize("kind", ["eog", "emg"])
+@pytest.mark.parametrize("kind", ["eog", "emg", "pulse"])
 @pytest.mark.parametrize("tail", [0, 1, 160])
 @pytest.mark.parametrize("count_type", [np.int32, np.int64])
 def test_block_noise_numpy_sample_count_has_json_manifest(
@@ -448,6 +481,7 @@ def test_block_noise_numpy_sample_count_has_json_manifest(
     probe = {
         "injection": {
             "eog_emg_block_seconds": 2.0,
+            "pulse_block_seconds": 0.25,
             "line_frequency": 50.0,
             "strength_scope": "whole_source_EEG_record_RMS_ratio",
         }
@@ -700,7 +734,7 @@ def test_one_corrupted_replay_failure_keeps_controls_and_other_cases(
 
     monkeypatch.setattr(reval, "_replay", fail_once)
     result = run(completed, tmp_path / "out")
-    assert result["summary"]["status_counts"] == {"failed": 1, "evaluated": 13, "not_applicable": 6}
+    assert result["summary"]["status_counts"] == {"failed": 1, "evaluated": 17, "not_applicable": 2}
     failed=[c for d in result['details']['subjects'].values() for c in d['cases'] if c['status']=='failed']
     assert len(failed)==1
     detail=json.loads((tmp_path/'out'/failed[0]['path']).read_text(encoding='utf-8'))
@@ -849,7 +883,7 @@ def test_unknown_design_is_not_silently_defaulted(completed):
 @pytest.mark.parametrize("design", ["balanced", "full_factorial"])
 def test_probe_condition_ids_are_safe_metric_path_segments(completed, design):
     probe = reval.freeze_probe_panel(completed[3], design=design)
-    assert probe["schema_version"] == "dataset-reconstruction-v4"
+    assert probe["schema_version"] == "dataset-reconstruction-v5"
     expected = {
         f"{kind}-{suffix}": ratio
         for kind in reval.KINDS

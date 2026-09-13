@@ -45,7 +45,10 @@ from .reconstruction import (
 )
 
 
-VERSION = "dataset-reconstruction-v4"
+VERSION = "dataset-reconstruction-v5"
+# Preserve the existing cohort assignment and case seeds when changing only
+# the pulse waveform. Historical v4 probe hashes still cannot be replayed here.
+ASSIGNMENT_VERSION = "dataset-reconstruction-v4"
 METRICS = (
     "input_nrmse",
     "paired_nrmse",
@@ -117,7 +120,10 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
     that subject remains unevaluable instead of falling back to a better record.
     EOG/EMG probes use fixed two-second blocks throughout the continuous record
     (one isolated blink/burst per record would miss most eligible trials).
-    Other probes are continuous record-wide waveforms. Strength is normalized
+    Pulses use fixed quarter-second blocks, avoiding the unbounded empty gaps
+    of record-wide random sampling. Very short windows may still be inapplicable;
+    the unchanged common-space applicability check retains every frozen trial.
+    Drift and line probes are continuous record-wide waveforms. Strength is normalized
     to the full source EEG record RMS, before the common comparison projection.
     """
     panel = _dump(panel)
@@ -132,7 +138,7 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
     subject_order = sorted(
         {r["subject"] for r in panel["records"].values()},
         key=lambda subject: (
-            digest([VERSION, "assignment", panel["seed"], subject]),
+            digest([ASSIGNMENT_VERSION, "assignment", panel["seed"], subject]),
             subject,
         ),
     )
@@ -166,7 +172,7 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
                 {
                     **condition,
                     "seed": int(
-                        digest([VERSION, panel["seed"], subject, condition["kind"]])[
+                        digest([ASSIGNMENT_VERSION, panel["seed"], subject, condition["kind"]])[
                             :16
                         ],
                         16,
@@ -212,6 +218,9 @@ def freeze_probe_panel(panel, *, design="balanced") -> dict:
         },
         "injection": {
             "eog_emg_block_seconds": 2.0,
+            "pulse_block_seconds": 0.25,
+            "pulse_placement": "independent_seeded_sparse_samples_in_each_fixed_block",
+            "pulse_template_strength": "unit_RMS_per_block_then_whole_source_record_scaling",
             "line_frequency": 50.0,
             "strength_scope": "whole_source_EEG_record_RMS_ratio",
             "model": "engineering_probes_not_physiological_head_model",
@@ -723,8 +732,9 @@ def _noise(raw, case, subject, record_id, probe):
     sfreq = float(raw.info["sfreq"])
     key = canonical([subject, record_id])
     block_manifests = []
-    if case["kind"] in ("eog", "emg"):
-        block = max(2, round(probe["injection"]["eog_emg_block_seconds"] * sfreq))
+    if case["kind"] in ("eog", "emg", "pulse"):
+        seconds_key = "pulse_block_seconds" if case["kind"] == "pulse" else "eog_emg_block_seconds"
+        block = max(2, round(probe["injection"][seconds_key] * sfreq))
         # Some readers expose a NumPy scalar; block boundaries enter strict JSON.
         n_times = int(raw.n_times)
         template = np.empty_like(x)
@@ -732,8 +742,14 @@ def _noise(raw, case, subject, record_id, probe):
             stop = min(start + block, n_times)
             # Include one preceding sample for a one-sample tail, without dropping it.
             origin = start if stop - start >= 2 else start - 1
+            # Pulse placement and block strength are independent of local EEG
+            # amplitude. Zero-valued source intervals still receive a probe;
+            # only the final whole-record normalization uses the source RMS.
+            block_reference = x[None, :, origin:stop]
+            if case["kind"] == "pulse":
+                block_reference = np.ones_like(block_reference)
             _, a, manifest = generate_contamination(
-                x[None, :, origin:stop],
+                block_reference,
                 sfreq,
                 kind=case["kind"],
                 seed=case["seed"],
