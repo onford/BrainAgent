@@ -1208,7 +1208,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一源码及可复现发布版本",
-      "current": "统一应用候选 81e589e 已整合已有性能修复和固定执行说明；干净副本前端174项/类型/构建通过，后端全量回归进行中。原数值运行继续使用722fe95；尚未切换8001或发布Sites。",
+      "current": "统一应用版本81e589e已部署到8001 API/Worker与5173前端；干净后端1437项、前端174项/类型/构建通过。原数值运行722fe95保持，其最终模型和ZIP仍待完成核验。当前Git远端连接已恢复，尚未登记本轮推送完成；Sites继续暂缓。",
       "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
       "dependencies": [],
       "sources": [
@@ -1224,14 +1224,17 @@
       "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。 最新再次推送失败为GitHub连接被重置，未确认新的远端提交。",
       "delivery_priority": "core",
       "delivery_group": "C1",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-release-20260914.json"
+      ]
     },
     {
       "id": "I46",
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "本轮发现8001服务离线，确认记录进程已退出、无数值任务及待恢复搜索后，API/Worker已恢复并更新到f8d2960。6个只读接口均200，7项旧自主请求返回422；一条失败工作流保持原文件哈希，未被重新执行。完整当前版本数值交付仍待验收。",
+      "current": "8001 API/Worker和5173前端均更新到81e589e，源码SHA256 c501c5a707f50ac471e904930401008bfd604545bf7cc6b1d81b99d6040b3193。6接口200，19前端在线资源验签，中英文创建和旧任务只读浏览通过，旧失败文件不变；本轮完整结果尚未接入。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -1249,7 +1252,10 @@
       "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。",
       "delivery_priority": "core",
       "delivery_group": "C1",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-release-20260914.json"
+      ]
     },
     {
       "id": "I47",
@@ -1282,7 +1288,10 @@
       },
       "delivery_priority": "core",
       "delivery_group": "C6",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-release-20260914.json"
+      ]
     },
     {
       "id": "I48",
@@ -1982,7 +1991,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "第三个固定流程评价中；统一版本全量回归进行中，完成结果迁移工具15项及固定计划独立核验已通过。待通过回归后更新现有服务，并在全量结果完成后接入验收。",
+  "active_step": "统一版本81e589e已安装并通过1437后端/174前端回归及入口核对；等待第三、第四固定流程完成，随后核对模型与ZIP、接入当前入口并验收完整结果。",
   "execution_order": [
     "I13",
     "I14",
@@ -2669,6 +2678,12 @@
       "new_process_started": false,
       "sites_published": false,
       "full_result_and_download_verified": false
+    },
+    "current_release_20260914": {
+      "backend_tests": 1437,
+      "frontend_tests": 174,
+      "receipt": "core-release-20260914.json",
+      "full_numeric_delivery_pending": true
     }
   },
   "scope_update_20260913": {
