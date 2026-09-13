@@ -106,3 +106,31 @@ def test_schema_requires_version_and_unknown_fields_are_closed():
         jsonschema.validate({'codec':'list', 'schema_version':VERSION,'items':[],'unrecognized':True}, document)
     with pytest.raises(ValueError, match='nonfinite'):
         validate_node({'codec':'nonfinite','value':'123'})
+
+
+@pytest.mark.parametrize('offset', [0, 1, 2])
+def test_offset_decimated_epoch_time_origin_is_lossless(tmp_path, offset):
+    sfreq = 400.
+    samples = np.arange(601)
+    epochs = mne.EpochsArray(np.tile(samples, (2, 2, 1)) * 1e-8,
+        mne.create_info(['C3', 'C4'], sfreq, 'eeg'), tmin=-.5,
+        events=np.array([[200, 0, 1], [1200, 0, 2]]), verbose='ERROR')
+    with epochs.info._unlock():
+        epochs.info['lowpass'] = 40.
+    epochs.decimate(3, offset=offset, verbose='ERROR')
+    before = fingerprint(epochs)
+    codec = Codec(tmp_path)
+    encoded = codec.verified_dump(epochs)
+    restored = codec.load(encoded)
+    assert fingerprint(restored) == before
+    np.testing.assert_array_equal(restored.times, epochs.times)
+    np.testing.assert_array_equal(restored.get_data(), epochs.get_data())
+    assert fingerprint(epochs) == before
+
+    for altered in (epochs.times + 1, epochs.times.copy()):
+        if altered[0] == epochs.times[0]:
+            altered[3] += .0001
+        invalid = deepcopy(encoded)
+        invalid['times'] = codec.dump(altered)
+        with pytest.raises(ValueError, match='sample/time'):
+            codec.load(invalid)

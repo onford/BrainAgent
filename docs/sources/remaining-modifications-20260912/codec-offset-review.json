@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "engine_sha256": "7f8ba3e5c2e5172eb92e6e5bf08a03cf596250ddf26954dcd89a14f90ff777a4",
+  "source_sha256": "9d73561addc9da287c5817a81678d55b10b3e3998913aeecc6ac565dc3918706",
+  "validation_script_sha256": "f3b132b1fec3b6c571cefa43c5af2114089ff8eec4c8d98f992079fc1c74c32a",
+  "profile": "EEG-RESAMPLE/decimate/source",
+  "max_abs_error": 0.0,
+  "elapsed_seconds": 98.4308226108551,
+  "initial_failure": "f209b40 matrix-current-1: signal sample/time axes differ",
+  "fix": "Validate exact epoch time grid plus FIF round(tmin*sfreq) origin; retain exact time payload and raw time checks.",
+  "targeted_tests": {
+    "passed": 44,
+    "warnings": 2,
+    "seconds": 170.45
+  },
+  "numerical_receipt_index": ".local\\remaining-modifications-20260912\\matrix-decimate-1\\profiles\\results.json",
+  "numerical_receipt_index_sha256": "c36b518a083825c18654b290d57949a8fa9a303c79c84d23e8dae5f66a8eee69",
+  "full_fixed_matrix_verified": false
+}

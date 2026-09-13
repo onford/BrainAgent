@@ -179,6 +179,7 @@ class Codec:
         if kind=='annotations':return mne.Annotations(**{k:self.load(value[k]) for k in ('onset','duration','description','ch_names','orig_time')})
         if kind in ('raw','epochs'):
             x=mne.io.read_raw_fif(p,preload=True,verbose='ERROR') if kind=='raw' else mne.read_epochs(p,preload=True,verbose='ERROR')
+            fif_first = int(round(x.tmin * x.info['sfreq'])) if kind == 'epochs' else None
             array=self.load(value['array'])
             if not isinstance(array,np.ndarray) or array.shape!=x.get_data().shape:
                 raise ValueError('signal array axes differ from saved signal geometry')
@@ -191,7 +192,20 @@ class Codec:
             if 'times' in value:
                 times=self.load(value['times'])
                 if (not isinstance(times,np.ndarray) or times.shape!=(array.shape[-1],)
-                        or not np.all(np.isfinite(times)) or not np.allclose(times,x.times,rtol=0,atol=1e-9)):
+                        or times.dtype.kind not in 'fiu' or not np.all(np.isfinite(times))):
+                    raise ValueError('signal sample/time axes differ')
+                if kind == 'epochs':
+                    # MNE FIF stores round(tmin * sfreq) as an integer. An
+                    # offset decimation can legitimately start between those
+                    # ticks. Validate the exact grid and its encoded origin,
+                    # then restore the hash-bound exact times below.
+                    sfreq = float(x.info['sfreq'])
+                    consistent = (int(round(times[0] * sfreq)) == fif_first
+                        and np.allclose(times - times[0], np.arange(len(times)) / sfreq,
+                                        rtol=0, atol=1e-9))
+                else:
+                    consistent = np.allclose(times, x.times, rtol=0, atol=1e-9)
+                if not consistent:
                     raise ValueError('signal sample/time axes differ')
             for ch,loc in zip(x.info['chs'],locations):ch['loc']=loc
             with x.info._unlock():

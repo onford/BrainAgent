@@ -796,7 +796,7 @@
       "historical_status": "尚未验证",
       "status": "in_progress",
       "historical_current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
-      "implementation_update": "新增audit_unit_matrix只读汇总器核对完整分母、结果索引、逐项回执、源码/引擎/运行环境、验证脚本与全部产物哈希，失败与未执行项保留；不写服务注册表，不借用历史真实EEG通过状态。11项专项测试通过。正式矩阵尚在运行，未发布通过结论。"
+      "implementation_update": "新增audit_unit_matrix只读汇总器核对完整分母、结果索引、逐项回执、源码/引擎/运行环境、验证脚本与全部产物哈希，失败与未执行项保留；不写服务注册表，不借用历史真实EEG通过状态。11项专项测试通过。正式矩阵尚在运行，未发布通过结论。 首轮矩阵发现decimate偏移时间轴在FIF整数起点量化后被Codec误拒绝；修复后44项测试通过，原失败配置实际复验最大数值差0、98.431秒。旧失败保留；修复版本的全矩阵仍待重新验证。"
     },
     {
       "id": "I39",
@@ -2191,6 +2191,10 @@
         "seconds": 2.07
       },
       "public_environment_switched": false
+    },
+    "codec_offset": {
+      "receipt": "docs/sources/remaining-modifications-20260912/codec-offset-review.json",
+      "full_fixed_matrix_verified": false
     }
   }
 }
