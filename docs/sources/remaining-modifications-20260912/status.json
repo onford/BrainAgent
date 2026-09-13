@@ -438,7 +438,8 @@
       "historical_status": "部分实现",
       "status": "partial",
       "historical_current": "已区分 EA 前后阶段并做配对可比性检查；通用图的原生视图/共同视图/被移除成分尚未贯通全部比较。",
-      "implementation_note": "见docs/physical-signal-comparison.md。裁剪拼接、重采样与缺少内部样本映射的原生整管线仍不可比；差值不作为纯伪迹或神经保护证据。"
+      "implementation_note": "见docs/physical-signal-comparison.md。裁剪拼接、重采样与缺少内部样本映射的原生整管线仍不可比；差值不作为纯伪迹或神经保护证据。",
+      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。"
     },
     {
       "id": "I22",
@@ -483,7 +484,8 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_note": "80项最终相关回归、156项前端测试与构建通过。三个真实回复关键数值/原因核对通过；仍为同模型复核，不能证明全部自由文本语义或主决策链忠实。详见docs/metric-claim-evidence.md。"
+      "implementation_note": "80项最终相关回归、156项前端测试与构建通过。三个真实回复关键数值/原因核对通过；仍为同模型复核，不能证明全部自由文本语义或主决策链忠实。详见docs/metric-claim-evidence.md。",
+      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。"
     },
     {
       "id": "I24",
@@ -944,7 +946,7 @@
       "historical_status": "未完成",
       "status": "in_progress",
       "historical_current": "起始工作区620文件已建立本地内容快照；共享处理范围已修订，服务版本快照接口已实现，整体回归及提交仍未完成。",
-      "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。"
+      "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。 最新再次推送失败为GitHub连接被重置，未确认新的远端提交。"
     },
     {
       "id": "I46",

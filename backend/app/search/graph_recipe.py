@@ -63,7 +63,8 @@ def graph_seed(method, ref, base, output):
                 parameter_sources={k:dict(origin='target_binding',evidence_indices=[],rationale='Explicit frozen output-grid adapter') for k in ('sfreq','events')})
             if adapter.id in by_id:raise ValueError('source node collides with shared resample adapter')
             steps.insert(steps.index(epoch),adapter);epoch.input=adapter.id
-            method.adaptations.append('Explicit synchronized output-grid resampling before the source epoch; all source windows/operations are retained.')
+            method.adaptations.append('Explicit synchronized output-grid resampling before the selected output epoch; '
+                'this insertion does not change epoch windows. Separate window adaptations remain declared in lineage.')
     if not has_epoch:
         for op, unit, params in [('resample','EEG-RESAMPLE', {'sfreq':output['sfreq'], 'events':'$events'}),
                                 ('epoch','EEG-EPOCH', {'tmin':output['tmin'], 'tmax':output['tmax'],
@@ -94,7 +95,8 @@ def graph_seed(method, ref, base, output):
                 'parameters':expanded,'parameter_sources':sources_}]))
         previous=s.id
     identity='paper-'+digest([ref,method.lineage])[:24]
-    value['methods'].append(dict(id=identity,title=method.title,origin='literature_adaptation' if method.evaluation_window else 'literature',
+    adapted = bool(method.evaluation_window) or method.lineage.get('fidelity') == 'engineering_adaptation'
+    value['methods'].append(dict(id=identity,title=method.title,origin='literature_adaptation' if adapted else 'literature',
         recipe={'nodes':nodes,'output':method.output,'evaluation_window':method.evaluation_window.model_dump() if method.evaluation_window else None,
                 'output_roles':method.output_roles},
         evidence_ids=evidence_ids,deviations=method.adaptations,lineage=[{**method.lineage,'method_ref':ref,'method_id':method.id,'version':method.version}],

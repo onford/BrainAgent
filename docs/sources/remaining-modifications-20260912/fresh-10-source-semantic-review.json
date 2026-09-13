@@ -1,0 +1,61 @@
+{
+  "scope": "Read-only semantic review before candidate evaluation. Original run, model input, registry and source artifacts unchanged. This is not final closed-loop acceptance.",
+  "files": {
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-10\\offline-search\\9bf10c0075a149fbba9d48e86524216c\\source-methods\\5e99f2cc2c21cfa62012f966.json": "b7ca47c0338956d59d3e1b0af1b2cc4a079cff03c1f2f31e86dec9def8f67c13",
+    "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\live-integrated-10\\offline-search\\9bf10c0075a149fbba9d48e86524216c\\method-compilation\\ac4521833d256853425fe30f.json": "7b019e5b25fd6f2fb3369f8fd365bcaa8e6baa6aedeb436b303d5d3eed84202e"
+  },
+  "source_method_id": "eegmmidb_bandpass7_30_epoch1_4",
+  "compiled_method_id": "paper-d90b421874afda673ee437a3",
+  "source_url": "https://api.github.com/repos/jacksangster03/eeg-motor-imagery-decoding/readme",
+  "source_type": "repository README; not a peer-reviewed paper or independent utility evidence",
+  "source_bandpass_Hz": [
+    7,
+    30
+  ],
+  "source_window_seconds": [
+    1,
+    4
+  ],
+  "evaluated_variant_window_seconds": [
+    0,
+    2
+  ],
+  "source_supported": [
+    "7-30 Hz bandpass",
+    "1-4 s after-cue epoch",
+    "EEGMMIDB runs 4,8,12; 64 EEG channels"
+  ],
+  "engineering_choices": [
+    "MNE FIR zero phase implementation and defaults; unspecified by README",
+    "shared 160 Hz output grid",
+    "replace terminal epoch with common 0-2 s window; source 1-4 s stored in lineage, not executed by this variant"
+  ],
+  "excluded_downstream": [
+    "CSP",
+    "LDA",
+    "source per-subject stratified CV and performance claims"
+  ],
+  "findings": [
+    {
+      "issue": "I21/I23",
+      "severity": "metadata_error",
+      "finding": "Graph entry uses ordinary literature origin when window is replaced without EvaluationWindow; resampling description incorrectly says all source windows retained. Existing lineage already declares engineering replacement.",
+      "resolution": "graph_recipe now derives adaptation origin from fidelity as well as EvaluationWindow and describes only what resampling insertion itself preserves; 2 focused composition tests passed in 6.69 s. Frozen run remains historical and unmodified."
+    },
+    {
+      "issue": "I05/I23",
+      "severity": "explanation_error",
+      "finding": "The generated engineering rationale calls MNE FIR phase=zero forward-backward. The pinned MNE documentation distinguishes delay-compensated FIR zero from zero-double and IIR forward-backward. Declared numeric method/phase remain FIR/zero; no numerical branch was changed.",
+      "resolution": "Retain as an interpretation limitation in this run; original rationale is not independent implementation proof."
+    }
+  ],
+  "remaining": [
+    "actual substantive candidate execution",
+    "three-axis evaluation",
+    "feedback affecting later decisions",
+    "final selected candidate comparison",
+    "fresh selected checkpoints and training ZIP audit"
+  ],
+  "source_data_modified": false,
+  "running_protocol_modified": false
+}

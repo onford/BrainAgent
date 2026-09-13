@@ -43,6 +43,33 @@ def test_csd_units_never_enter_voltage_panel(tmp_path):
         check_config(SimpleNamespace(steps=[s],output='csd'),r,OUTPUT)
 
 
+def test_noncontained_source_window_keeps_engineering_origin_after_graph_projection(tmp_path):
+    from app.preprocessing.schemas import Step, Evidence
+    data = make_dataset(tmp_path / 'bids', subjects=3)
+    method = MethodSpec(id='late-source-window', version='1', title='Late source window fixture',
+        source='survey_literature', mechanism='source terminal epoch',
+        evidence=[Evidence(source_url='fixture://late-window', source_version='1', locator='test',
+                           text='Fixture: source epoch 1 to 4 seconds; no empirical source claim.')],
+        recipe=[Step(id='late', unit_id='EEG-EPOCH', op='epoch', implementation_version='2',
+            evidence_indices=[0], params={'events':'$events', 'event_id':'$event_id',
+                                         'picks':'$eeg_channels', 'tmin':1., 'tmax':4.})],
+        output='late', lineage={'kind':'literature', 'branch_id':'late'})
+    before = method.model_dump(mode='json')
+    space, context, report = build_workflow_space(data, OUTPUT, refs([method]))
+    assert [r['status'] for r in report['methods']] == ['blocked', 'eligible'], report
+    entry = next(e for e in seed_entries(space, context) if e['origin'] == 'literature_adaptation')
+    compiled = compile_recipe(entry, space, {'output_contract':OUTPUT}, context)
+    assert compiled.evaluation_window is None  # A replaced window, not a scoring projection.
+    epoch = next(s for s in compiled.recipe if s.op == 'epoch')
+    assert {k:epoch.params[k] for k in ('tmin', 'tmax')} == {k:OUTPUT[k] for k in ('tmin', 'tmax')}
+    assert epoch.parameter_sources['tmin'].origin == 'target_binding'
+    assert any(t.get('fidelity') == 'engineering_adaptation' and
+               t['adaptation']['original'] == {'tmin':1., 'tmax':4.} for t in entry['lineage'])
+    assert any('不能称为论文窗口或忠实复现' in d for d in compiled.adaptations)
+    assert not any('all source windows/operations are retained' in d for d in compiled.adaptations)
+    assert method.model_dump(mode='json') == before
+
+
 def test_fitted_ica_diagnostic_ports_survive_three_axis_replay(tmp_path):
     from tests.search.test_integrated_operator_evaluation import _synthetic_bids, _execute, _assess
     from app.preprocessing.schemas import Step, Evidence, ArtifactPort, DecisionPolicy
