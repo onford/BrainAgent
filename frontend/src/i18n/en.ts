@@ -1,5 +1,17 @@
 // English is the source language. Message text also serves as its typed key.
 export const en = [
+  "New workflow",
+  "Run budgets",
+  "These limits are saved with the run. Retrying does not reset them.",
+  "Maximum candidates",
+  "Search time limit (hours)",
+  "Model deadline (hours)",
+  "Method research time (minutes)",
+  "Memory limit (MiB)",
+  "Disk limit (MiB)",
+  "The model deadline starts when the workflow is created and includes research, numerical execution and reporting.",
+  "Enter valid budgets before starting.",
+  "Budget settings are unavailable for this service version.",
   "This run is available for viewing. Create a new run to execute with this service version.",
   "Scoring definitions",
   "Scoring",

@@ -6,6 +6,8 @@ Sites 项目标识保存在 `frontend/.openai/hosting.json`。访问权限设为
 
 前端仍使用 Vue/Vite。`frontend/sites/build.mjs` 在现有构建后生成 Cloudflare Worker，提供所有页面、静态资源和同源 API 转发。构建命令为 `pnpm build`，转发验证为 `pnpm test:sites`。
 
+新建工作流页面从后端读取预算默认值，展示候选数、搜索/方法调研/模型调用时限和资源上限。模型调用总时限从工作流创建时开始，包含数值等待；重试不会续期。预算只影响新建运行，历史运行保留冻结值。部署时须同时提供带有预算默认值接口的后端；不兼容服务仍可查看已有运行，新建按钮保持禁用。
+
 ## 后端连接
 
 完整 Python、EEG 和训练运行环境仍需独立服务器或持续运行的本机服务。Sites 不承载 Python 科学计算进程。部署前在 Sites 设置：

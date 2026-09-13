@@ -24,3 +24,10 @@ def test_build_identity_is_public_stable_and_contains_no_settings(tmp_path):
         assert client.get("/api/build-info").json() == body
         assert "private-test-value" not in response.text
         assert "database_url" not in response.text
+        defaults = client.get("/api/workflows/sources").json()["budgets"]
+        from app.workflows.schemas import WorkflowRequest
+        request = WorkflowRequest(source_root=str(tmp_path), **defaults)
+        assert request.model_budget_seconds == 21600
+        assert request.search_budget.max_seconds == 86400
+        assert request.search_budget.max_memory_mb is None
+        assert request.method_research_budget.max_seconds == 900

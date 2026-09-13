@@ -8,6 +8,7 @@ import { apiRequest, apiUrl } from '../api/client'
 import { artifactDescription, type WorkflowArtifact } from '../utils/artifacts'
 import { searchArtifactUrl } from '../api/searches'
 import WorkflowEvidence from '../components/workflows/WorkflowEvidence.vue'
+import WorkflowBudgetFields, { type WorkflowBudgets } from '../components/workflows/WorkflowBudgetFields.vue'
 import ReportReader from '../components/workflows/ReportReader.vue'
 import ArtifactExplorer from '../components/workflows/ArtifactExplorer.vue'
 import type { SavedWorkflowEvaluation, WorkflowSearchSummary } from '../types/search'
@@ -22,6 +23,7 @@ const selectedId = ref(''), view = ref<View>('evidence'), focused = ref(false)
 const files = ref<InstanceType<typeof ArtifactExplorer>>()
 const createDialog = ref<HTMLDialogElement>(), stageDialog = ref<HTMLDialogElement>()
 const stageName = ref(''), logQuery = ref('')
+const budgetDefaults = ref<WorkflowBudgets>(), budgetFields = ref<InstanceType<typeof WorkflowBudgetFields>>()
 const labels: Record<string,string> = {get queued() { return t('Waiting to start') },get pending() { return t('Pending') },get running() { return t('Executing') },get completed() { return t('Completed') },get failed() { return t('Needs attention') },get interrupted() { return t('Awaiting recovery') }}
 const viewLabels: Record<View,string> = {get evidence() { return t('Workflow and evidence') },get reports() { return t('Read reports') },get files() { return t('Record files') },get logs() { return t('Execution logs') },get delivery() { return t('Training data') }}
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -97,10 +99,10 @@ async function select(id:string) {
   await refresh(id)
 }
 async function start() {
-  if(busy.value) return
+  if(busy.value || !budgetFields.value) return
   busy.value=true; error.value=''
   try {
-    const job=await apiRequest<Workflow>('/api/workflows',{method:'POST',body:JSON.stringify({source_root:source.value,adapter:'eegmmidb',seed:42,tmin:0,tmax:2})})
+    const job=await apiRequest<Workflow>('/api/workflows',{method:'POST',body:JSON.stringify({source_root:source.value,adapter:'eegmmidb',seed:42,tmin:0,tmax:2,...budgetFields.value.request()})})
     createDialog.value?.close(); await select(job.id)
   } catch(reason) {error.value=String(reason)} finally {busy.value=false}
 }
@@ -113,9 +115,9 @@ async function retry() {
 onMounted(async()=>{
   document.addEventListener('keydown',escapeFocus)
   try {
-    const [settings,items]=await Promise.all([apiRequest<{allowed_roots:string[]}>('/api/workflows/sources'),apiRequest<Workflow[]>('/api/workflows')])
+    const [settings,items]=await Promise.all([apiRequest<{allowed_roots:string[];budgets?:WorkflowBudgets}>('/api/workflows/sources'),apiRequest<Workflow[]>('/api/workflows')])
     if(disposed) return
-    roots.value=settings.allowed_roots;source.value=roots.value[0] ?? '';jobs.value=items
+    budgetDefaults.value=settings.budgets;roots.value=settings.allowed_roots;source.value=roots.value[0] ?? '';jobs.value=items
     const id=typeof route.query.id==='string' ? route.query.id : items[0]?.id
     if(id) await select(id)
     else {await nextTick();createDialog.value?.showModal()}
@@ -151,7 +153,7 @@ onBeforeUnmount(()=>{disposed=true;if(timer) clearTimeout(timer);document.remove
       </section>
     </template>
     <section v-else class="initial-state"><span class="initial-symbol">▤</span><h1>{{selectedId?t('Loading run…'):t('From local EEG to training data')}}</h1><p>{{ t('Research sources, verify data, preprocess signals, and inspect results in one workspace.') }}</p><button v-if="!selectedId" class="primary" @click="createDialog?.showModal()">{{ t('Create a data workflow') }}</button></section>
-    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">NEW WORKFLOW</p><h2 id="create-title">{{ t('Start a data workflow') }}</h2></div><button type="button" class="icon-button" :aria-label="t('Close new workflow dialog')" @click="createDialog?.close()">×</button></div><p class="muted">{{ t('Choose local data for research, diagnostic strategy search, development evaluation, and delivery.') }}</p><form @submit.prevent="start"><label>{{ t('Local data directory') }}<input v-model="source" list="source-roots" required :placeholder="t('Choose a configured EEGMMIDB directory')" :aria-label="t('Local data directory')" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><p class="muted">{{ t('Scans all subjects and runs in the directory. Subject and record counts appear during data research.') }}</p><div class="form-scope"><span>{{ t('Left/right hand motor imagery') }}</span><span>{{ t('All local runs') }}</span><span>{{ t('Training window: 0–2 s') }}</span></div><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source">{{busy?t('Submitting…'):t('Start full workflow →')}}</button></form></dialog>
+    <dialog ref="createDialog" class="create-dialog" aria-labelledby="create-title"><div class="dialog-heading"><div><p class="eyebrow">{{ t('New workflow') }}</p><h2 id="create-title">{{ t('Start a data workflow') }}</h2></div><button type="button" class="icon-button" :aria-label="t('Close new workflow dialog')" @click="createDialog?.close()">×</button></div><p class="muted">{{ t('Choose local data for research, diagnostic strategy search, development evaluation, and delivery.') }}</p><form @submit.prevent="start"><label>{{ t('Local data directory') }}<input v-model="source" list="source-roots" required :placeholder="t('Choose a configured EEGMMIDB directory')" :aria-label="t('Local data directory')" /></label><datalist id="source-roots"><option v-for="root in roots" :key="root" :value="root" /></datalist><p class="muted">{{ t('Scans all subjects and runs in the directory. Subject and record counts appear during data research.') }}</p><div class="form-scope"><span>{{ t('Left/right hand motor imagery') }}</span><span>{{ t('All local runs') }}</span><span>{{ t('Training window: 0–2 s') }}</span></div><WorkflowBudgetFields v-if="budgetDefaults" ref="budgetFields" :defaults="budgetDefaults" /><p v-else class="muted" role="status">{{ t('Budget settings are unavailable for this service version.') }}</p><p v-if="error" class="page-error" role="alert">{{error}}</p><button class="primary submit-run" :disabled="busy || !source || !budgetDefaults">{{busy?t('Submitting…'):t('Start full workflow →')}}</button></form></dialog>
     <dialog ref="stageDialog" class="stage-dialog" aria-labelledby="stage-title"><template v-if="stage"><div class="dialog-heading"><h2 id="stage-title">{{stageLabel(stage.name, stage.label)}}</h2><button class="icon-button" :aria-label="t('Close stage details')" @click="stageDialog?.close()">×</button></div><span class="badge" :class="stage.status">{{labels[stage.status]}}</span><p>{{stageDescription(stage.name)}}</p><details v-if="stage.error" class="stage-error" open><summary>{{ t('Error details') }}</summary><pre>{{stage.error}}</pre></details><p v-else class="muted">{{executableWorkflow && stage.status==='pending'?t('Starts automatically when preceding stages complete.'):t('Full process details and artifacts are saved in the module\'s record files.')}}</p><div class="dialog-actions"><button v-if="canRetry && stage.status==='failed'" class="primary" :disabled="busy" @click="retry">{{ t('Retry incomplete steps') }}</button><button @click="showStageFiles">{{ t('View stage files →') }}</button><button @click="view='logs';stageDialog?.close()">{{ t('Execution logs') }}</button></div></template></dialog>
   </main>
 </template>

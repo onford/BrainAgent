@@ -10,6 +10,14 @@ vi.mock('vue-router', () => ({
   RouterLink: { template: '<a><slot /></a>' },
 }))
 
+function sourceSettings(allowed_roots: string[]) {
+  return { allowed_roots, budgets: {
+    model_budget_seconds: 21600,
+    method_research_budget: { max_seconds: 900, max_recovery_actions: 6 },
+    search_budget: { max_candidates: 48, max_seconds: 86400, max_memory_mb: null, max_disk_mb: null, max_proposals: 128, max_evidence_reads: 32, max_retries: 4 },
+  } }
+}
+
 function workflow(status: string) {
   return {
     id: 'abc123', schema_version: '1', engine: 'diagnostic-policy-search-v2', execution_control: { allowed: true }, status, created_at: '2026-09-08T08:00:00Z', updated_at: '2026-09-08T08:00:00Z',
@@ -29,9 +37,37 @@ describe('WorkflowsView', () => {
     HTMLDialogElement.prototype.close = function() { this.removeAttribute('open') }
   })
 
+  it('submits explicit budgets while preserving server defaults and the full data scope', async () => {
+    request.mockImplementation(async (path: string, options?: RequestInit) => path.endsWith('/sources') ? sourceSettings(['E:/dataset/eeg/EEGMMIDB']) : path === '/api/workflows' ? options?.method === 'POST' ? workflow('completed') : [] : workflow('completed'))
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      const fields = wrapper.findAll('.workflow-budgets input')
+      for (const [index, value] of ['4', '12', '16', '20', '16384', '262144'].entries()) await fields[index].setValue(value)
+      await wrapper.get('form').trigger('submit'); await flushPromises()
+      const submitted = request.mock.calls.find(([, options]) => options?.method === 'POST')
+      const body = JSON.parse(submitted![1].body)
+      expect(body).toMatchObject({ model_budget_seconds: 57600, method_research_budget: { max_seconds: 1200, max_recovery_actions: 6 }, search_budget: { max_candidates: 4, max_seconds: 43200, max_memory_mb: 16384, max_disk_mb: 262144, max_proposals: 128 } })
+      expect(body).not.toHaveProperty('subjects')
+      expect(body).not.toHaveProperty('runs')
+    } finally { wrapper.unmount() }
+  })
+
+  it('rejects invalid budgets before creating a workflow', async () => {
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings(['E:/dataset/eeg/EEGMMIDB']) : [])
+    const wrapper = mount(WorkflowsView)
+    try {
+      await flushPromises()
+      await wrapper.get('.workflow-budgets input').setValue('0')
+      await wrapper.get('form').trigger('submit'); await flushPromises()
+      expect(request.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false)
+      expect(wrapper.text()).toContain('请填写有效预算')
+    } finally { wrapper.unmount() }
+  })
+
   it.each([undefined, { allowed: false }])('keeps another build readable without retry controls: %j', async execution_control => {
     const state = { ...workflow('failed'), execution_control }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -54,7 +90,7 @@ describe('WorkflowsView', () => {
       data_evaluation: { selection_policy: 'random', quality_evaluated: false, score: .99, selected_method_ref: { id: 'saved-method' } },
     }, artifacts: [{ name: 'evaluation/selection.json', bytes: 500, sha256: null }, { name: 'report/report.html', bytes: 500, sha256: null }],
       stages: [{ name: 'data_evaluation', label: '结果选择', status: 'failed' }] }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -80,7 +116,7 @@ describe('WorkflowsView', () => {
     { selection_policy: 'development_score', quality_evaluated: true, evaluation_scope: undefined },
   ])('does not infer measured evaluation from a numeric score alone: %j', async evaluation => {
     const state = { ...workflow('completed'), outputs: { data_delivery: { shape: [90, 64, 321] }, data_evaluation: { ...evaluation, score: .9 } } }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     expect(wrapper.get('.delivery-panel').text()).not.toContain('开发 BA')
@@ -94,7 +130,7 @@ describe('WorkflowsView', () => {
       { name: 'preprocessing/search/unsafe.html', bytes: 0, sha256: null, url: 'javascript:alert(1)' },
       { name: 'report/report.html', bytes: 500, sha256: null, url: 'https://reports.example.test/report.html?v=saved&download=true#summary', description: '保存的流程报告' },
     ] }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     const link = wrapper.findAll('.file-row a').find(a => a.text() === 'preprocessing/search/report.html')!
@@ -113,7 +149,7 @@ describe('WorkflowsView', () => {
       usage: { candidates: 2, proposals: 3, evidence_reads: 1, elapsed_seconds: 12.5 },
       budget: { max_candidates: 6, max_proposals: 8, max_evidence_reads: 2, max_seconds: 3600, max_memory_mb: null, max_disk_mb: null } }
     let state = { ...workflow('running'), search_id: 'search-1', search_summary: summary }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     try {
       await flushPromises()
@@ -137,7 +173,7 @@ describe('WorkflowsView', () => {
     const state = workflow('running')
     let reads = 0
     request.mockImplementation(async (path: string, options?: RequestInit) => {
-      if (path.endsWith('/sources')) return { allowed_roots: ['E:/dataset/eeg/EEGMMIDB'] }
+      if (path.endsWith('/sources')) return sourceSettings(['E:/dataset/eeg/EEGMMIDB'])
       if (path === '/api/workflows') return options?.method === 'POST' ? state : []
       if (path !== '/api/workflows/abc123') return []
       if (++reads === 1) throw new Error('Connection interrupted')
@@ -161,7 +197,7 @@ describe('WorkflowsView', () => {
     vi.useFakeTimers()
     const state = workflow('running')
     request.mockImplementation(async (path: string) => {
-      if (path.endsWith('/sources')) return { allowed_roots: [] }
+      if (path.endsWith('/sources')) return sourceSettings([])
       if (path === '/api/workflows') return [state]
       throw new Error('Connection interrupted')
     })
@@ -178,7 +214,7 @@ describe('WorkflowsView', () => {
   it('starts the configured training workflow and exposes completed downloads and report', async () => {
     const completed = workflow('completed')
     request.mockImplementation(async (path: string, options?: RequestInit) => {
-      if (path.endsWith('/sources')) return { allowed_roots: ['E:/dataset/eeg/EEGMMIDB'] }
+      if (path.endsWith('/sources')) return sourceSettings(['E:/dataset/eeg/EEGMMIDB'])
       if (path === '/api/workflows' && !options) return []
       return completed
     })
@@ -205,7 +241,7 @@ describe('WorkflowsView', () => {
   it('retries a failed stage and updates the result', async () => {
     let state = workflow('failed')
     request.mockImplementation(async (path: string) => {
-      if (path.endsWith('/sources')) return { allowed_roots: [] }
+      if (path.endsWith('/sources')) return sourceSettings([])
       if (path === '/api/workflows') return [state]
       if (path.endsWith('/retry')) state = workflow('completed')
       return state
@@ -224,7 +260,7 @@ describe('WorkflowsView', () => {
     const state = { ...workflow('failed'), artifacts: [
       'survey/reports/dataset-basic.html', 'survey/reports/literature-usage.html',
     ].map(name => ({ name, bytes: 500, sha256: 'abc' })) }
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     const choices = wrapper.findAll('nav[aria-label="选择报告"] button')
@@ -245,7 +281,7 @@ describe('WorkflowsView', () => {
     const state = workflow('failed')
     const message = 'quote must occur verbatim in its retrieved source; '.repeat(30)
     Object.assign(state.stages[4], { error: message })
-    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? { allowed_roots: [] } : path === '/api/workflows' ? [state] : state)
+    request.mockImplementation(async (path: string) => path.endsWith('/sources') ? sourceSettings([]) : path === '/api/workflows' ? [state] : state)
     const wrapper = mount(WorkflowsView)
     await flushPromises()
     expect(wrapper.get('.stage-dialog').attributes('open')).toBeUndefined()
@@ -266,7 +302,7 @@ describe('WorkflowsView', () => {
         'delivery/provenance/S001R04/delta.json', 'process/index.json'].map(name => ({name, bytes: 2048, sha256: 'abc'})),
     }
     request.mockImplementation(async (path: string) => {
-      if (path.endsWith('/sources')) return {allowed_roots: []}
+      if (path.endsWith('/sources')) return sourceSettings([])
       if (path === '/api/workflows') return [state]
       return state
     })
@@ -294,7 +330,7 @@ describe('WorkflowsView', () => {
     })
     let state = {...workflow('running'), artifacts: [file('04'), file('08')]}
     request.mockImplementation(async (path: string) => {
-      if (path.endsWith('/sources')) return {allowed_roots: []}
+      if (path.endsWith('/sources')) return sourceSettings([])
       if (path === '/api/workflows') return [state]
       return state
     })

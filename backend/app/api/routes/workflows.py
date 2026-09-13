@@ -19,9 +19,12 @@ def checked(fn, *args):
 @router.get("/sources")
 def sources(request: Request, user=Depends(get_current_user)):
     service = request.app.state.workflows
+    defaults = WorkflowRequest(source_root="").model_dump(mode="json")
     return {
         "allowed_roots": [str(p) for p in service.input_roots],
         "adapters": ["eegmmidb"],
+        "budgets": {key: defaults[key] for key in (
+            "search_budget", "method_research_budget", "model_budget_seconds")},
     }
 
 

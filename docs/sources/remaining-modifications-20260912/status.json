@@ -1009,7 +1009,8 @@
         "D13"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "in_progress",
+      "implementation_update": "新建页面读取服务默认预算并显式提交候选/时限/资源上限，保留其余冻结预算和全数据范围；模型总时限包含数值等待，重试不续期，中英文同步。23项前端及1项API测试、构建通过；实际页面和全部现行文档口径仍待最终核对。"
     },
     {
       "id": "I49",
@@ -2132,6 +2133,13 @@
       "api_worker_same_source_root": true,
       "public_frontend_updated": false,
       "audit": "service-build-update.json"
+    },
+    "workflow_budget_ui": {
+      "frontend_tests_passed": 23,
+      "api_tests_passed": 1,
+      "frontend_build": "passed",
+      "backend_defaults_unchanged": true,
+      "browser": "pending updated build"
     }
   }
 }

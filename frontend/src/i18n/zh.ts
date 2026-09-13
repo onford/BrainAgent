@@ -1,6 +1,18 @@
 import type { MessageKey } from './en'
 
 export const zh = {
+  "New workflow": "新建流程",
+  "Run budgets": "运行预算",
+  "These limits are saved with the run. Retrying does not reset them.": "预算随本次运行保存，重试不会重置。",
+  "Maximum candidates": "最多候选数",
+  "Search time limit (hours)": "搜索时限（小时）",
+  "Model deadline (hours)": "模型调用总时限（小时）",
+  "Method research time (minutes)": "方法调研时限（分钟）",
+  "Memory limit (MiB)": "内存上限（MiB）",
+  "Disk limit (MiB)": "磁盘上限（MiB）",
+  "The model deadline starts when the workflow is created and includes research, numerical execution and reporting.": "模型调用总时限从新建流程时开始计算，包含调研、数值执行和报告阶段。",
+  "Enter valid budgets before starting.": "请填写有效预算后再开始。",
+  "Budget settings are unavailable for this service version.": "当前服务版本未提供预算设置。",
   "This run is available for viewing. Create a new run to execute with this service version.": "此运行可查看；如需使用当前服务版本执行，请新建运行。",
   "Scoring definitions": "评分含义",
   "Scoring": "评分",
