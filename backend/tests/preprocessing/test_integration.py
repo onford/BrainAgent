@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 from fastapi.testclient import TestClient
@@ -10,7 +11,7 @@ from app.agents.orchestrator import Orchestrator
 from app.agents.planner.agent import PlannerAgent
 from app.core.config import Settings
 from app.main import create_app
-from app.preprocessing.methods import baseline_methods
+from app.preprocessing.methods import MethodLibrary, baseline_methods
 from app.preprocessing.schemas import (
     Evidence,
     Paper,
@@ -198,7 +199,11 @@ async def test_survey_bundle_to_extracted_draft_to_real_execution(service, datas
         'reason':'Simulated source reviewer for transport integration'} for step in draft['recipe']]}
     review['claims'].append({'claim_id':'fixture/__complete_source_branch','status':'supported','evidence_index':0,'quote':evidence.text,'reason':'Transport-only complete-branch test double'})
     service.methods.llm = ScriptedLLMClient([extraction,review])
-    result = await service.methods.intake(OWNER, bundle)
+    result, concurrent = await asyncio.gather(
+        service.methods.intake(OWNER, bundle),
+        MethodLibrary(service.store, service.methods.llm).intake(OWNER, bundle),
+    )
+    assert concurrent == result
     assert not result["supplement_requests"]
     extracted = service.store.get(OWNER, result["methods"][0], "method")
     assert extracted["source"] == "survey_literature" and extracted["status"] == "draft"

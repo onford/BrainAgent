@@ -286,6 +286,24 @@ class MethodLibrary:
         ]
 
     async def intake(self, owner, bundle: SurveyLiteratureBundle):
+        import asyncio
+        from .intake_state import intake_lock, bind, completed, finish, build_identity
+        from .storage import digest
+
+        root = self.store.root / 'intake' / digest([owner, bundle.model_dump(mode='json')])
+        async with intake_lock(root):
+            build = await asyncio.to_thread(build_identity)
+            identity = bind(root, bundle, build)
+            saved = completed(self.store, owner, bundle, root, identity)
+            if saved is not None:
+                return saved
+            result = await self._intake(owner, bundle)
+            if await asyncio.to_thread(build_identity) != build:
+                raise ValueError('Literature intake build changed during extraction; result not finalized')
+            finish(self.store, owner, root, identity, result)
+            return result
+
+    async def _intake(self, owner, bundle: SurveyLiteratureBundle):
         methods, supplements = [], []
         for paper in bundle.papers:
             missing = list(paper.missing_items) + [
