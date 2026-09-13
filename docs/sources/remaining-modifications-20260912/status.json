@@ -568,7 +568,7 @@
       ],
       "historical_status": "未完成",
       "status": "in_progress",
-      "implementation_update": "第10次从2906731独立快照真实运行，已完成调研、正在接入；第9次单输入上限失败不改写，预算上限及数值协议保持。尚无当前完整数值搜索或实质文献执行验收。"
+      "implementation_update": "第10次已完成真实调研与接入，进入109人/327记录/4918试次的数值搜索，当前基线执行中；完整文献候选与反馈闭环仍待验证。冻结代码2906731及预算、数值协议不变。"
     },
     {
       "id": "I28",
@@ -900,7 +900,7 @@
       "historical_status": "尚未验证",
       "status": "pending",
       "historical_current": "旧全集 CSP 交付与小型 EEGNet 重载已验证；当前整合版文献/图搜索赢家的全集 X/y、模型、推理与下载包尚未完整验收。",
-      "implementation_update": "只读检查点审计已用历史完整基线验证109人/327记录/4918试次/15模型、708文件不变。新赢家ZIP、导出数组与训练示例仍待I27正式结果，未提升历史partial。"
+      "implementation_update": "检查点工具已验证历史完整基线15模型；ZIP工具已验证历史4人/12记录/180试次包的157成员、物理数组及实际训练示例，2项反向控制通过。正式赢家的两项核验仍待I27，不提升历史partial或旧失败验收。"
     },
     {
       "id": "I44",
@@ -1649,7 +1649,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I27 第10次fresh（2906731，e1adc0309f114a3eb6406c8c7abd5094）已完成真实数据调研，正在数据接入。I43检查点核验工具已用历史完整基线验证，仍待正式赢家交付。",
+  "active_step": "I27 第10次fresh在2906731冻结副本上进入数值搜索，正在执行全量基线。I43检查点与ZIP核验工具已验证历史产物，正式赢家仍待产生。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -2089,7 +2089,11 @@
       "workflow_id": "e1adc0309f114a3eb6406c8c7abd5094",
       "acceptance_passed": false,
       "frozen_commit": "290673142c4251f91e76de30a309a8902fe1037b",
-      "status": "running_data_collection"
+      "status": "running_baseline",
+      "search_id": "9bf10c0075a149fbba9d48e86524216c",
+      "subjects": 109,
+      "records": 327,
+      "trials": 4918
     },
     "checkpoint_audit": {
       "status": "passed_on_historical_baseline",
@@ -2101,6 +2105,18 @@
       "read_files": 708,
       "trials": 4918,
       "models": 15
+    },
+    "training_archive_audit": {
+      "status": "passed_on_historical_delivery",
+      "subjects": 4,
+      "records": 12,
+      "trials": 180,
+      "zip_members": 157,
+      "seconds": 9.109652300016023,
+      "read_files_unchanged": true,
+      "negative_controls": "2 passed",
+      "final_delivery_accepted": false,
+      "audit": "training-archive-audit.json"
     }
   }
 }

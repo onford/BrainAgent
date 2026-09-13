@@ -1,0 +1,50 @@
+{
+  "driver_sha256": "cb25e539e6e40ac093a481a01721e10dc57c52ca80b242fa4b8539af73e102de",
+  "exact_float32_physical_match": true,
+  "final_agent_accepted": false,
+  "inference_files_portable": true,
+  "read_files_unchanged": true,
+  "records": 12,
+  "scope": "Delivery integrity and compatibility only; no independent test-set or scientific acceptance",
+  "search_id": "4f447b6874b34de78ea8690505b53bd1",
+  "selected_candidate_id": "paper-003932f0478b807d9dbd4c0f",
+  "status": "passed",
+  "subjects": 4,
+  "training_example_completed": true,
+  "training_smoke": {
+    "classes": [
+      0,
+      1
+    ],
+    "feature_count": 64,
+    "fit_subjects": [
+      "S001",
+      "S002",
+      "S003",
+      "S004"
+    ],
+    "model": "log-variance + StandardScaler + LogisticRegression",
+    "prediction_count": 180,
+    "quality_evaluated": false,
+    "training_trials": 180
+  },
+  "trials": 180,
+  "trusted_template_sha256": "14fb79f003558f886a3122bf946d8169b20ed3d6e2dc7270652bb4592f76e433",
+  "verified_zip_members": 157,
+  "wall_seconds": 9.109652300016023,
+  "workflow_id": "b59b4978d98347acb569f83e7b8fc35a",
+  "audit_path": ".local/remaining-modifications-20260912/archive-audit-1/audit.json",
+  "audit_sha256": "bbbb530b349c18d081df4a9d5326f39153deb6424d6e04d65c29d272c8c105e8",
+  "read_files": 31,
+  "negative_controls": {
+    "driver_sha256": "aa059d695a41d091e2100e722a85cc230f6955e6f061f4ea12ec1a2cdf067299",
+    "original_archive_unchanged": true,
+    "status": "passed",
+    "unsafe_member_audit_sha256": "41f78c5c0087c4671169c34a308275bdb5a4c6f5193a5873c8d6c6e03422bdb5",
+    "unsafe_member_rejected_before_extraction": true,
+    "wrong_template_audit_sha256": "f5ae1a2c256a76bab81a12a63b3915ad8a55afc1e99f8ac74fe9dc6d5ac605f0",
+    "wrong_template_rejected_before_execution": true,
+    "path": ".local/remaining-modifications-20260912/archive-negative-controls-1/controls.json",
+    "sha256": "5309a109fbe213afd436b4fb49cb0a8a93422de8f28b3329be143ba6799e0dbe"
+  }
+}
