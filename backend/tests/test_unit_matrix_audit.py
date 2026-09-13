@@ -98,3 +98,14 @@ def test_output_must_not_overlap_evidence(tmp_path, monkeypatch):
     profiles, script, _, _, _ = fixture(tmp_path, monkeypatch)
     with pytest.raises(ValueError, match='disjoint'):
         subject.audit(profiles, script, profiles / 'nested-audit')
+
+
+def test_native_helper_version_is_bound_to_receipts(tmp_path, monkeypatch):
+    profiles, script, receipt, _, save = fixture(tmp_path, monkeypatch)
+    helper = script.with_name('validate_native_profiles.py')
+    helper.write_text('# pinned helper', encoding='utf8')
+    receipt['validation_helpers'] = {helper.name: subject.file_hash(helper)}
+    save()
+    helper.write_text('# changed helper', encoding='utf8')
+    with pytest.raises(ValueError, match='Validation helper differs'):
+        subject.audit(profiles, script, tmp_path / 'review')

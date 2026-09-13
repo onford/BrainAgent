@@ -1,0 +1,52 @@
+{
+  "status": "updated_and_http_verified",
+  "source_commit": "b27fafbb5cbc9e0bb2b3a0a327957abd3cea3719",
+  "source_sha256": "203ce6f3c1606af59f1d46b7e20c8bef49f2426c996e880f3e4e9eedcd336ea0",
+  "python_executable": "E:\\work\\BrainAgent\\backend\\.venv-service-20260913\\Scripts\\python.exe",
+  "counts": {
+    "units": 54,
+    "operations": 91,
+    "profiles": 310
+  },
+  "missing_python_dependencies": 0,
+  "profiles_requiring_explicit_native_asset_bindings": 20,
+  "same_source_api_worker": true,
+  "persistent_runtime_config": ".local/sites-connection/runtime.json",
+  "empty_public_workflows_searches_sessions_and_jobs_before_update": true,
+  "sites_publication": "deferred_by_user",
+  "initial_http_probe": "connection_refused_during_startup_imports; later readiness and all four routes succeeded",
+  "route_statuses": {
+    "health": 200,
+    "build": 200,
+    "sources": 200,
+    "capabilities": 200
+  },
+  "evidence": {
+    "backend-state.json": {
+      "path": ".local\\remaining-modifications-20260912\\service-update-3\\backend-state.json",
+      "sha256": "7ba25977be65de590b7fe49e9683a9c4efcc05af4d45181303db02eaa9bf8ec5"
+    },
+    "capabilities.json": {
+      "path": ".local\\remaining-modifications-20260912\\service-update-3\\capabilities.json",
+      "sha256": "c8e4583c0bdcb7e323be1dc0e9807530c999a7681097059f0485cc24769197d2"
+    },
+    "http-after.json": {
+      "path": ".local\\remaining-modifications-20260912\\service-update-3\\http-after.json",
+      "sha256": "62aa40e8dbeaee459738f8d8062a5561e84b33715627df353dec28addd00b308"
+    },
+    "old-processes.json": {
+      "path": ".local\\remaining-modifications-20260912\\service-update-3\\old-processes.json",
+      "sha256": "3e5dc6585d3eb2243b8baf972327de980daa8045b9dc4b75a806121436da97e7"
+    }
+  },
+  "public_update_did_not_restart_formal_run": true,
+  "formal_run_followup": "Separate recovery initiated after the original acceptance monitor failed on a transient snapshot read; see formal_run_10_interrupt in status.json.",
+  "browser_check": {
+    "url": "http://127.0.0.1:8902/workflows",
+    "frontend_commit": "651367e1fa1f00a5835c58abd1b845dddaa96271",
+    "actual_api_commit": "b27fafbb5cbc9e0bb2b3a0a327957abd3cea3719",
+    "empty_workspace_and_budget_form": true,
+    "no_new_workflow_submitted": true,
+    "dom_sha256": "bf755eea3ca520ab4a424e16504c8d186b393bcc970b6efc518756591e684209"
+  }
+}

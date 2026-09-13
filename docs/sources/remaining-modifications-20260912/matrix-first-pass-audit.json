@@ -1,0 +1,1907 @@
+{
+  "counts": {
+    "attempted": 310,
+    "failed": 5,
+    "not_executed": 0,
+    "passed": 305,
+    "profiles": 310,
+    "real_data_verified": 0
+  },
+  "engine_sha256": "3920504d96407347da4a7800a93c4882b6311ea669294e62a95536770437a83f",
+  "environment": {
+    "PyWavelets": "1.8.0",
+    "PyWavelets.source_sha256": "82f602a4fdf008b5200965df30f3888be24542321e7aa7cac8d8f3ba36f80e63",
+    "asrpy": "0.0.8",
+    "asrpy.source_sha256": "c4a338d7aa1d90c1e89ac9cc304d519c95d8162d03c0f539f866b175937b2205",
+    "autoreject": "0.5.0",
+    "autoreject.source_sha256": "4f08e00ede7833aee5e9d8633948d666d89982c2463e1a3df623da519935ed97",
+    "h5io": "0.2.5",
+    "h5py": "3.13.0",
+    "mne": "1.10.2",
+    "mne-bids": "0.17.0",
+    "mne-faster": "1.2.2",
+    "mne-faster.source_sha256": "57d12eaa27a6eaaa2acfdc740c36c6f351abca8c819d54fa807e98e11c15ee6a",
+    "mne-icalabel": "0.8.1",
+    "mne-icalabel.source_sha256": "46e4faa46134cd4ffd84c83805245085bcdbf1c67b12f2d02fda0c5b360dfb8f",
+    "numpy": "1.26.4",
+    "onnxruntime": "1.22.1",
+    "pandas": "2.2.3",
+    "pybv": "0.7.6",
+    "pyprep": "0.7.1",
+    "pyprep.source_sha256": "8047fa0e08b47d5eaee5ca4442838288c3f8fa2c5c3727ed152ce1326695a823",
+    "python": "3.12.14",
+    "python-picard": "0.8.1",
+    "python-picard.source_sha256": "2cc8c291ceb1f8089035276b3344b7a8f945060ca941d6b3ec150844fd93f0f3",
+    "scikit-learn": "1.6.1",
+    "scipy": "1.15.3",
+    "threadpoolctl": "3.6.0",
+    "torch": "2.8.0+cpu"
+  },
+  "read_file_count": 47079,
+  "read_files_unchanged": true,
+  "receipts": [
+    {
+      "identity": "EEG-CROP/crop/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\000-crop\\receipt.json",
+      "sha256": "0bdf057291beba04eb1894d4363489f138a750859547b04a72cbd3b561c6ab07",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CROP/crop_join/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\001-crop_join\\receipt.json",
+      "sha256": "4f974f2c00757a7555792e7a7416ac9ff2000aa1954720b5b62bb6e50aef5715",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-DETREND/detrend/type=constant",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\002-detrend\\receipt.json",
+      "sha256": "b5972c6979d4783e16140f012946d4153890a248f24df934a0443425d7c3164e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-DETREND/detrend/type=linear",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\003-detrend\\receipt.json",
+      "sha256": "008486a051933032fe3c931776e294007e3b0dca0e6af86ceb7f34122c4eaa0f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\004-filter\\receipt.json",
+      "sha256": "ccd45c355b2da58807ef94c77298b767ec9711341969b6b6ca76ddbdbd251600",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\005-filter\\receipt.json",
+      "sha256": "00ed0f10e7d59ab0d76689998a35cb3184d1359cd181eb6712bd80feb3953b05",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\006-filter\\receipt.json",
+      "sha256": "ba379aee8bdc305912f9d12ebc409db3548f7ba50067205d58b3d566fa2dd9f8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\007-filter\\receipt.json",
+      "sha256": "96a7fade6c39997a268b5ce4d7d6c4b105aab4a6427c937772b5a200d42299b5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\008-filter\\receipt.json",
+      "sha256": "efa9bd268de4d6fd07eb7401640c84fbcd650f1efc631240ec384fca05987380",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\009-filter\\receipt.json",
+      "sha256": "bb8bbe2f8ed56a5380fa2d77bcf8aecd6ad8a80cb470a7da2d0eaf2defe771ef",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\010-filter\\receipt.json",
+      "sha256": "b639b908172fd77ea0b892bd346185a7c328cb34ac4217d670812c18e78bbc3c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\011-filter\\receipt.json",
+      "sha256": "f5413c53c12ed79c37eb8d3bbd5d24f73202fd7e4f56b73dd09692a6d361f4d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\012-filter\\receipt.json",
+      "sha256": "3f6e9e2d4458d4703c24547842bb033f660265d2f37a07e8d9c82ade61cfc2a0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\013-filter\\receipt.json",
+      "sha256": "75e6d4fdcab1933bd804232ba98d1ff43f54c8b39b8e4ee839f9fdbc8bc0dc53",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=forward,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\014-filter\\receipt.json",
+      "sha256": "e5aa0f3a16248cfd38f584455c6bd8dd6f95ae5ec2b66770ea719a79a8fce326",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=forward,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\015-filter\\receipt.json",
+      "sha256": "26f5a650ceecedb6c4d143a1f4f7f7a313adb3c090e00ed456826f39e88f1e45",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero-double,annotation_policy=raw",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\016-filter\\receipt.json",
+      "sha256": "a7e8d78b3997e84750301735003b77a0a738bf008200aa8820d4b9c26d421afe",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero-double,annotation_policy=array",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\017-filter\\receipt.json",
+      "sha256": "52399e862d791a7a94fa95eb095b39740e11d68a3bb1e5e5cb09fe60cb8db19b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\018-filter\\receipt.json",
+      "sha256": "3dba60c4d36fd4457fe3f4464f6a0de3265cf141bec1bcfd9321559dd0a30dfb",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\019-filter\\receipt.json",
+      "sha256": "427ecfa53192984b589f770d60c02ef195cabb29d017bccf64d8495f74d5a18b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\020-filter\\receipt.json",
+      "sha256": "91f447d1e28539064a33d0618d0e2d0fc9ac4a7549844c54a01926f4edf4b9ae",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\021-filter\\receipt.json",
+      "sha256": "0caeb148bb105c7c73f95a8ea8b1214f363bbc46265248eadada02a158644c29",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\022-filter\\receipt.json",
+      "sha256": "b31d5cdc217f887d1af0b031310c3bad133616380fb60006fb0efe3139dd6623",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\023-filter\\receipt.json",
+      "sha256": "4be8d1223cfe1355376e235e68b06ae17030f7edd85479173b4526969eac305b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\024-filter\\receipt.json",
+      "sha256": "e397b97b4b4f28bea404af986c75edcdc40b902a335e8d724745bafe2cf7cdd3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\025-filter\\receipt.json",
+      "sha256": "1649566ed2aaef6da4cdc1c22f1ce602167792f1743343b90dd695c0643910f8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=raw,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\026-filter\\receipt.json",
+      "sha256": "bffd02a8512d0458f7c32f1c0b7f13643616507ef2d3b50de5505935288393bc",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\027-filter\\receipt.json",
+      "sha256": "d6b3f6256c2aef50ef800b2ea33c02ea361db1c0ed0db5912b6936ca0ce548a1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\028-filter\\receipt.json",
+      "sha256": "326b05ccb95d611d0247f40389a809439e52acd4122c63f8305611b14807c1e1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\029-filter\\receipt.json",
+      "sha256": "d87405e558be5ef8df4e0ac76fac7221401324aff4449d44c57bcad6d8da7b07",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\030-filter\\receipt.json",
+      "sha256": "6f4270869445b58b77b14803c1f46879b2c83eb69448a4f7ea2adba2a1eb1100",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\031-filter\\receipt.json",
+      "sha256": "60cf5611789d086909c67f21454745de3d5d2dca1ec3a46c8a1836be099f0cd7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\032-filter\\receipt.json",
+      "sha256": "b0c7dc24b9717c251f153049fd2f2c61527cc3acc641b668d06133c601b327e6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\033-filter\\receipt.json",
+      "sha256": "81940e260b904386e87b6f376f0bd391a04338ad9b202456959be44237c1576c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\034-filter\\receipt.json",
+      "sha256": "0127c9a87cada4080ef220fb1a59895b06f1471ee1efefdb384570156b932c69",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\035-filter\\receipt.json",
+      "sha256": "a35b33b14f1af8edbea3118a1e53f9b0b25aaa4c827d453d22f28eef7cf3841c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=raw,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\036-filter\\receipt.json",
+      "sha256": "dcd75c894c3154cb373d7ca67b05374d84f7a2ef451eb328c42aab420a0dd5f2",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\037-filter\\receipt.json",
+      "sha256": "1b62eaf2002cd74cbe166b036dc672b16c06900ec41a3d991a8de441100cc999",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\038-filter\\receipt.json",
+      "sha256": "532b1ef9f71c808de009766377b8e1a38d5f3b757aab2397a257567c78b4a7d0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\039-filter\\receipt.json",
+      "sha256": "00b6810bc45df12465f57b1aa390f3f0b7421f02be0365c337f3fb568e5a5792",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\040-filter\\receipt.json",
+      "sha256": "caef06824c2bdd213c3ac9f1849d7cb07412a6f032b589f012211e947194612f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\041-filter\\receipt.json",
+      "sha256": "7b9928f8b4607629a196807ffefbb7c97aa48093f66814255667dc62f8476eff",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\042-filter\\receipt.json",
+      "sha256": "af855c0934bb4d860f9449a1a63cc8d3a15757e50255b444496a5ad0aeb1aec7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\043-filter\\receipt.json",
+      "sha256": "7e5a0940d1a54218191c0e6feed12316534f958e31079f310edd4be35afd57e4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\044-filter\\receipt.json",
+      "sha256": "b4bfc0a4bfc8781f139c5330cb5fb5a468911830085456c2d59f2cc90b75524f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\045-filter\\receipt.json",
+      "sha256": "41234083c882f1cbacef2e00dbc848d6942a66adf619bb60376493ca8cd2cad6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=raw,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\046-filter\\receipt.json",
+      "sha256": "a8862ec51400cc9624795c0fa53eeafcf84d6074117a496dba1e84cef6679a6a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\047-filter\\receipt.json",
+      "sha256": "91fdcd88e5159977539c1717076aed92ed29f307bb8c695699fdf604845fd727",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\048-filter\\receipt.json",
+      "sha256": "d233fc2fbfd55530fbc7a78a5bbd8c8d3aa177a29051a8ffae2be9f61727e39d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\049-filter\\receipt.json",
+      "sha256": "5e49fabd071976b3f109c0ccbf454c27dd9cb131e1590aaf87286d675088b38d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\050-filter\\receipt.json",
+      "sha256": "7d6c9685970ec947a69a2190e51350b62a43d5b72158fff01a6f60b26a54ac42",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\051-filter\\receipt.json",
+      "sha256": "7029b95a8eba84a01414454dc5a22f036aa09c3d24be32272c48f50c9c06d67e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\052-filter\\receipt.json",
+      "sha256": "40a63e64291274a312491980b5674143ed3f7fa3ba7fb340fb20655cb42f460b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=hamming",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\053-filter\\receipt.json",
+      "sha256": "969b93266158cdef5fe60e827f19ecad72665ea1f9fc0cb8430271cd46dfa6e6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\054-filter\\receipt.json",
+      "sha256": "873877af3d7ee8805ac29d1d5c87dc01d07dca10bd3f887578c266f968f6d862",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=hann",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\055-filter\\receipt.json",
+      "sha256": "38372fe869ef0a5f0531c36fcc4425a6959a2e844dcef0ebbc7027700bbccde1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=raw,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\056-filter\\receipt.json",
+      "sha256": "db9460e7c83aa6e2f415996c40a568a1157d2448d3c5bb63cbe82fa7ea5b2e80",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=blackman",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\057-filter\\receipt.json",
+      "sha256": "226843bfdc12b0c31d8d6d764d56221c538b99ce9a9cc2e4e622d08d5488f822",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\058-filter\\receipt.json",
+      "sha256": "7ecd8236cacaf0a7c446d360b16458f76f17c8f256e4891f675b773f595cee1b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\059-filter\\receipt.json",
+      "sha256": "bdeffe005d91ac079148381262f0970387ef2dede0ee057f683a7c947676a99c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\060-filter\\receipt.json",
+      "sha256": "ebf669b4e375b287684c30b64776dd1b5ac184b980acd114755e23f66316d421",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\061-filter\\receipt.json",
+      "sha256": "204bcea40f344fc315d41d874c39ba1bf362210ab39f80a14b3f5973511f719b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\062-filter\\receipt.json",
+      "sha256": "16513b7eda5e793c76acd655cf226b4d6cc8bfbf5c5f03a834d64bd9acf1baf3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=forward,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\063-filter\\receipt.json",
+      "sha256": "a40fc7d16d1d4a6b31b9da382b317190e90db65a50e3c68491f13f4716afa21c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=iir,phase=zero-double,annotation_policy=array,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\064-filter\\receipt.json",
+      "sha256": "36deacf39dedafc9d31318e0a5e0fdfab70ef9e1ea427d9da0ab4e4bf4a0ce86",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\065-filter\\receipt.json",
+      "sha256": "ca63dab94ef0acae84aa468bb107af23c279ba062bcb6d5eaeffeb1a790db2fa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\066-filter\\receipt.json",
+      "sha256": "4eb6cb24a897f3e022a61be888cacf2050005b05e1d2bfa4cf184315af1ac491",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=hamming,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\067-filter\\receipt.json",
+      "sha256": "746978e78ebc14feb36736359f072e76b9dc99539c4af947d3980c56f22b6ba4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\068-filter\\receipt.json",
+      "sha256": "88f1337bfd9836d61b885ad11fc4426732db76d78e2e4f2a12a917340eb9152d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero,annotation_policy=array,fir_design=firwin2,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\069-filter\\receipt.json",
+      "sha256": "00f63f2a8585dde41f636ddc60553f496bdc6894dead0e92e77483a1c64d25e5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\070-filter\\receipt.json",
+      "sha256": "70580ba87750e376aa13907e710933bc81e149ea084327c0c60a5dc1dfd01a77",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\071-filter\\receipt.json",
+      "sha256": "cd51fdf2d61d783824176b23dc35e1c98d93de4f59c19caf114b82f8434a4d39",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=hamming,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\072-filter\\receipt.json",
+      "sha256": "508cd4ae86fd77840d92f61341b1f870c8456ced203e47b3b24be5d5bcc5fdd3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\073-filter\\receipt.json",
+      "sha256": "07198d4dd40435828748106b0b11ad8fd91ef07453e4a0c0da2fa9286fce74e0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=zero-double,annotation_policy=array,fir_design=firwin2,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\074-filter\\receipt.json",
+      "sha256": "8feb9c54ccab1784bf7a6f5451f92ef5b5ae554c39804a4912d2a742878434f0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\075-filter\\receipt.json",
+      "sha256": "cbd016dcc75230bc8c76f3b1b9e0ebd74b446421bc6ab4e36e647a1e3048e33c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\076-filter\\receipt.json",
+      "sha256": "32fc7c5e97ee81d34d869c8987fa8f0cf4b8d1e716ebbd3706b056d38f777979",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=hamming,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\077-filter\\receipt.json",
+      "sha256": "cb35d07d6e3d6d86394e28d5caa6d772674f635492410d3426988afa7708516c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\078-filter\\receipt.json",
+      "sha256": "cdcdf56a8b8f6c222a17ff6997a1befb7e1b5b278a27b80cb11673c1d5484c8a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum,annotation_policy=array,fir_design=firwin2,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\079-filter\\receipt.json",
+      "sha256": "03e647e169781abbb7ae1373283c5452aa19f9f4c82861544fe04624e46bbc83",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\080-filter\\receipt.json",
+      "sha256": "cc6f68422904e3f18acc3857a6c7a920b9a34a741ce81b6ce024703f3d3c04ef",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\081-filter\\receipt.json",
+      "sha256": "fc2ca22303bbe77f7dac47b6bf86ff86de634dd4f38132aef98ec02621c5d3af",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=hamming,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\082-filter\\receipt.json",
+      "sha256": "056ae656d1c9309133a7cff40d92e407efd1d5be6581c7377ed94d2d1cc9f3b8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=hann,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\083-filter\\receipt.json",
+      "sha256": "4ed285d7c8ee24725e464c31e7d421ca70293df387c467e316d7f171765f294a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/filter/method=fir,phase=minimum-half,annotation_policy=array,fir_design=firwin2,fir_window=blackman,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\084-filter\\receipt.json",
+      "sha256": "b020439d6a12d3a7ecaf849ad3fa5a9acbc3d31a8031ebb7358c8b31291d9aaf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=highpass,phase=zero",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\085-butter\\receipt.json",
+      "sha256": "4fa00a1d285524837db3ed489391c6b8513c6cc4f40043362076abe900497ce3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=highpass,phase=forward",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\086-butter\\receipt.json",
+      "sha256": "9e5db06ca885cd7b6da1ac6eedc6b9998e2b25499ff7b390e8135cbe622df550",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=lowpass,phase=zero",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\087-butter\\receipt.json",
+      "sha256": "849aab42ff5595570b7203059b09606734d109ed763d4555ae783ce08f05132e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=lowpass,phase=forward",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\088-butter\\receipt.json",
+      "sha256": "6f33a15c668d280a8ec3ba4a9bcff6bd513389b5b624c57ac6209c7f1fa33a4d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=bandpass,phase=zero",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\089-butter\\receipt.json",
+      "sha256": "1dfc37946d69bfdcf7455c4142edf2316a2f3a4fe88bccb65c13923851bdc6cf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=bandpass,phase=forward",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\090-butter\\receipt.json",
+      "sha256": "006beadcc4213852310b3a7a574fa865fbe57da00047ab64117947759f4795d1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=bandstop,phase=zero",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\091-butter\\receipt.json",
+      "sha256": "4512e29529e887b07d2d9d8d80e931467cc8ff9daabbb31245b117d20be2967d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/butter/kind=bandstop,phase=forward",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\092-butter\\receipt.json",
+      "sha256": "90e129e3efd7397ca1c2b404fc290e16301131c7ea5587fa266edad2d101b4fa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FILTER/notch/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\093-notch\\receipt.json",
+      "sha256": "3d546f62da0a31ce5b4743e0f600efed23cddbe7a126900b5a93822edc30aea9",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SINE-REGRESSION/spectrum_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\094-spectrum_fit\\receipt.json",
+      "sha256": "71556ce828f1446b2690032eca7c518d1656dff9dc437a1a5eca88b4d52fa0e3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SINE-REGRESSION/spectrum_fit/nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\095-spectrum_fit\\receipt.json",
+      "sha256": "df2cd23deea6568161a119e928c1d0fe5533a4f081c4cc9f1d1869e5036d8479",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SINE-REGRESSION/cleanline/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\096-cleanline\\receipt.json",
+      "sha256": "7fc64d887a0b103b8aea52fdc4a0a2616a26dfbb7e86a37a7f3092a325a3a209",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SINE-REGRESSION/cleanline/scan_bandwidth=2.0",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\097-cleanline\\receipt.json",
+      "sha256": "9f8bf0263f5f87578e0a447691d3b099dd77e438904f0f60dc25d040b098ea61",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-RESAMPLE/resample/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\098-resample\\receipt.json",
+      "sha256": "b1c6135a204d915cffa89ef9ef02b74b429a38698327febd5a2a96a70e714e93",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-RESAMPLE/resample_fft/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\099-resample_fft\\receipt.json",
+      "sha256": "84e5368e2c6da61f81aff08295566d50ff6a20f083410a17e38179ce5b164a02",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-RESAMPLE/resample_fir/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\100-resample_fir\\receipt.json",
+      "sha256": "1ff78aae48bd0cc6afaf879a734f0396e18897ddc7ecad53ec4f8f72624545de",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-RESAMPLE/resample_eeglab/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\101-resample_eeglab\\receipt.json",
+      "sha256": "8a7cdaa2ff17f44e424f3d0b20078c0c102f71586a7de9903e106c2dd48659d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-RESAMPLE/decimate/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\102-decimate\\receipt.json",
+      "sha256": "a933f571b80392401dbdc7766aba1df6df8fc9321e0ca4ab46800979f2901510",
+      "status": "failed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\103-reference\\receipt.json",
+      "sha256": "b8bc9aeaf3896abfa290a06f31e0b0d5eb4088c17babf39f38c3e680c434243b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference/ref_channels=['Cz']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\104-reference\\receipt.json",
+      "sha256": "ca025c86b8e1c8dc132cbd7bee7803162d0a21b784047d59e9600c4d34cd9014",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference/ref_channels=['C3', 'C4']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\105-reference\\receipt.json",
+      "sha256": "11f961583f5d6ca961495e94c9d52938c7e864b090d548537ef491e05bf0e70c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/relax_car/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\106-relax_car\\receipt.json",
+      "sha256": "9bfea5ce2309a4cbea17e103d4a29397616b116ca38303a773370afca737a0ee",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_estimate/estimator=nanmean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\107-reference_estimate\\receipt.json",
+      "sha256": "c7aca84d0b4b8ed3907277fac960df9645d9da3e976068ec9fa9ea4ce0b5e424",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_estimate/estimator=nanmedian",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\108-reference_estimate\\receipt.json",
+      "sha256": "b6f4fcb9f6ee52b5c226fba569c86b27ded57f8871f74252eb9cc4054f4b8276",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_estimate/estimator=nanmean,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\109-reference_estimate\\receipt.json",
+      "sha256": "fa5cb4cb7f1386e373a129b2ecb84a9aceb4c5a691741d62a704bd0c2c48b70e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_estimate/estimator=nanmedian,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\110-reference_estimate\\receipt.json",
+      "sha256": "dcf7026822638af1abb2c2c6a9ea957d5655b343342944fa74d091d405efa995",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\111-reference_apply\\receipt.json",
+      "sha256": "7c0e45dc9440517faec293b3ccc5ad0290cea38601d001925d34c864dcf927aa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REREFERENCE/reference_apply/nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\112-reference_apply\\receipt.json",
+      "sha256": "a4ea31df54b7cd3b23edca36d8cd7e9c30fbc1bbe44e9de78929e9039ade7afb",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REST/rest/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\113-rest\\receipt.json",
+      "sha256": "f34a0362b203ccbd08b45a45f7af7add40f519563e7e8814b6d3ecd5e053c82f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CSD/csd/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\114-csd\\receipt.json",
+      "sha256": "594d4b4fcd7e595ed89175b82fc05e5c9539b3a869ceaf7931351140046cb909",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-LOF/lof_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\115-lof_detect\\receipt.json",
+      "sha256": "199198b97a5f3fa06fd9e9c50fb36a2c8930ef5d77b3fcf0a7df32f512f1b448",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AMPLITUDE-THRESHOLD/amplitude_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\116-amplitude_detect\\receipt.json",
+      "sha256": "f9d5fbda9dd5e899ede5c1644f87beb46abdb21d2086ef55a9b7f83c4b3de714",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AMPLITUDE-THRESHOLD/flat_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\117-flat_detect\\receipt.json",
+      "sha256": "414007538644c1ccff2ecd7c2db6dd77851fa6d8ec855cab64adda7df04d10b8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AMPLITUDE-THRESHOLD/amplitude_windows/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\118-amplitude_windows\\receipt.json",
+      "sha256": "daba01a201f15afbb9c38c9fb9d4937b5af260994865dcf7fae92c9c2f7146d7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AMPLITUDE-THRESHOLD/absolute_voltage/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\119-absolute_voltage\\receipt.json",
+      "sha256": "1fd84cf75e813d5ff4d09ab0136d5b3a04c028edd5fcbed1e3e06b3bbfc14786",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MUSCLE-DETECT/muscle_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\120-muscle_detect\\receipt.json",
+      "sha256": "aa3152426658b40340abac9c436e927698b496de18e062a507c5a501fbcd5e13",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-MARK/mark_channels/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\121-mark_channels\\receipt.json",
+      "sha256": "47904fd2b1b549894c4c644a576f477df8fff1dbeb946bc60739a5c814fec6ac",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-MARK/mark_repaired/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\122-mark_repaired\\receipt.json",
+      "sha256": "6d6533da7d6961bb28c51e52916499518fc34f68b0742540855a12fafd4e8e8f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-SEGMENT-MARK/mark_segments/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\123-mark_segments\\receipt.json",
+      "sha256": "4d7fcdd7b107f7260c768a549df1314795d0d30a1c992dc5e3a6695e78adef6d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DROP/drop/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\124-drop\\receipt.json",
+      "sha256": "c0ff7ba39a3a6b5a33c960c6cfec9b07ed1f34f5fb942be68d6fba6ee1422ff3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=fastica",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\125-ica_fit\\receipt.json",
+      "sha256": "124985f6f1b146ce283ab0fbf43a63ab93de0304d782fdc6bf5f4b613036a341",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=picard",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\126-ica_fit\\receipt.json",
+      "sha256": "428f56ee35925a9f910871f0ba2c7501992f69ce18f340dd6864c8ffaafa7d43",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=infomax",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\127-ica_fit\\receipt.json",
+      "sha256": "29b865d96a750954eaa35fd51f5156d2f06e59d29dda4343303b72f9d5f83925",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=picard,ortho=False,extended=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\128-ica_fit\\receipt.json",
+      "sha256": "cc545f966da5130046be4cabdddcf3e781b5748ef0fd2fd38e6467b2bba857d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=picard,ortho=False,extended=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\129-ica_fit\\receipt.json",
+      "sha256": "20bd2ad1e594f4fc0fbdfd6a692546faefdfe8fc3976c6a6df651c55392fa140",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=picard,ortho=True,extended=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\130-ica_fit\\receipt.json",
+      "sha256": "64f04dd1dbfd20fb1038cbae52744e6e93d75134be0a1960dc3b47313cc578b8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_fit/method=infomax,extended=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\131-ica_fit\\receipt.json",
+      "sha256": "b72f14382bdc44059c1418e6299e4eba72c583f54754dc08feec46fefcdaaa41",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/eog_assess/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\132-eog_assess\\receipt.json",
+      "sha256": "c4229495a75a13d3f80f572fa5b6c177fe48a18486fc8668cc8bbaa7e0e8663b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ecg_assess/method=ctps",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\133-ecg_assess\\receipt.json",
+      "sha256": "2c4d6ee865f64b2b2c9adcfa7de6021167237b0c22bd3e0bd20dafd5b4a40aba",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ecg_assess/method=correlation",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\134-ecg_assess\\receipt.json",
+      "sha256": "083dd962ebb116dd2d9e2977cf2fbcd84d2f75738bb9e32af98325681e10e99c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ecg_assess/method=correlation,measure=correlation",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\135-ecg_assess\\receipt.json",
+      "sha256": "313b8f599925343f281f4e994cc9ec83af53a85bdd854a362bd6a87a6d030e1e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/muscle_assess/mode=spatial",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\136-muscle_assess\\receipt.json",
+      "sha256": "2cfb85dd55c5358dcb81e69759ba77bec05d1eb0dd81b40a64de77e5f0f0602a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/muscle_assess/mode=slope",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\137-muscle_assess\\receipt.json",
+      "sha256": "7b6888d6215700729af04014f366a474fb1def3bdaa67700cf68d3eee5fa0ef4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICA/ica_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\138-ica_apply\\receipt.json",
+      "sha256": "50bf25ca1f6ba0d0fc056b4234c816f695f59677957be91faaf5dd9dc9554b75",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EOG-REGRESSION/eog_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\139-eog_fit\\receipt.json",
+      "sha256": "ad83d85e711ab5518bbea83c3508845447ecf19691abf6e0ce7c7289f924b3fa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EOG-REGRESSION/eog_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\140-eog_apply\\receipt.json",
+      "sha256": "3995a0745bce2dfcca56c4d56efee17d601c829757aacd87da34848e93035130",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SSP/ssp_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\141-ssp_apply\\receipt.json",
+      "sha256": "ec682467756148fd70db03d6818e7553c1e01fad14451dbd74aa6ea6773f156b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BRIDGE-DETECT/bridge_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\142-bridge_detect\\receipt.json",
+      "sha256": "f78d750f447a26f4913bb21ae6faf93103309d449be6a5ce576f5e34825daa7f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BRIDGE-REPAIR/bridge_repair/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\143-bridge_repair\\receipt.json",
+      "sha256": "b267d12082fec8cfe91959a64003d70a0d214333d3f5c4635c0178860264fefd",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/interpolate/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\144-interpolate\\receipt.json",
+      "sha256": "ebfab580016d334fbc0de12b26ba3af13fd194040f9982bf6ffc5f39e7a940bf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/spherical/kernel=perrin",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\145-spherical\\receipt.json",
+      "sha256": "bf8e411f0ab48c658c3e6ae78bfb3a8a9b2cdcc96286da1f27e095a94b928be6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/spherical/kernel=eeglab",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\146-spherical\\receipt.json",
+      "sha256": "989ca496654b73d6b3f8045f3846dc0b92d55baf36a19aba8db255be8db533e0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/interpolate_native/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\147-interpolate_native\\receipt.json",
+      "sha256": "50a96c733b1d6f17b955a98166b053b77611caa3da5c88ca5e53b618e121d228",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/interpolate_native/reset_bads=False,nonfinite=reject",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\148-interpolate_native\\receipt.json",
+      "sha256": "058ef2934c43015b390c74a95caa0b50f4eb45cdc0bcf0edb48618cfd445946f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/interpolate_native/reset_bads=False,nonfinite=propagate",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\149-interpolate_native\\receipt.json",
+      "sha256": "092376e2b72b0caeb55faab2f870517c84038b86a3513032e47ddb4fbdd51861",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/interpolate_native/reset_bads=True,nonfinite=reject",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\150-interpolate_native\\receipt.json",
+      "sha256": "a5f4564943e2d8088da65304ce2cb01bc1e6bc9b960e7daeb09858a3b3b9999c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-INTERPOLATE/trial_interpolate/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\151-trial_interpolate\\receipt.json",
+      "sha256": "8a67ab524a02c731bf78765b81e7b7356f70ddae76d0f5c241e598dcf26a5ea9",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EPOCH/epoch/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\152-epoch\\receipt.json",
+      "sha256": "694d6c0cc51dac8457029cdac6d36f1049311b9bf3ee2af7b6fb34f642015d99",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EPOCH/epoch_with_nonfinite/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\153-epoch_with_nonfinite\\receipt.json",
+      "sha256": "749e89b1731fb1cbf5c1f521b7d7daa1aa1d96c6466ef3cc116ffccf3bd0048a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-TRIAL-REJECT/reject_trials/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\154-reject_trials\\receipt.json",
+      "sha256": "72b75c47548276277f82da1fbd32382aef3efa2eeb9aa1162003c6a760210c5b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-TRIAL-REJECT/drop_mask/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\155-drop_mask\\receipt.json",
+      "sha256": "ea858bb1508aa2fb1e29c5e658bc09352245989a959b60f0d61ef44edd441aa4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BASELINE/baseline/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\156-baseline\\receipt.json",
+      "sha256": "7992ba10e75d2608fde213906b44fae48d0a8dc9470fb53b9a4c62b82eb3acd0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\157-zapline_plus\\receipt.json",
+      "sha256": "b7bc29426300c3aefb3ae25799d171ba191762457ac0b84574982914b06659ba",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[50.0],chunk_seconds=0,adaptive_sigma=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\158-zapline_plus\\receipt.json",
+      "sha256": "ee1d7f58b17bcfeb7f883d733b4ab5ce64261f602e6448f1cc41220490c69ced",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[50.0],chunk_seconds=0,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\159-zapline_plus\\receipt.json",
+      "sha256": "c8054d1beee0da0c4608bceb6fca39c069ad2a29eee628c38cbe55601cbdafce",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[50.0],chunk_seconds=20,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\160-zapline_plus\\receipt.json",
+      "sha256": "d9e6a650f3afd2add1cce9806679a66c84fa9882ff0787d720b797d50f2dc8c4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=line,chunk_seconds=0,adaptive_sigma=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\161-zapline_plus\\receipt.json",
+      "sha256": "a826d12ea0da8a708f34f4d01a0f17976d1a345a423292d583f1546030c6baac",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=line,chunk_seconds=0,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\162-zapline_plus\\receipt.json",
+      "sha256": "513b5c31db6d1c4941402074923a5c5927ef09c83b3c747514aef5727a6d85a8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=line,chunk_seconds=20,adaptive_sigma=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\163-zapline_plus\\receipt.json",
+      "sha256": "6a0d7f90fd6ae631238969f45ef26bb2e39dab7c7bc4e2d7b0f506b4b31f4bf7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=line,chunk_seconds=20,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\164-zapline_plus\\receipt.json",
+      "sha256": "31fa42771099b93a1b122558610c8fb23e3c7ee0d7b5bd4f1c552267320c57d0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[],chunk_seconds=0,adaptive_sigma=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\165-zapline_plus\\receipt.json",
+      "sha256": "f53a620455583bbbf3499258cfb318c7581aae5be5fcd136f43a82ba3f59def4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[],chunk_seconds=0,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\166-zapline_plus\\receipt.json",
+      "sha256": "1e23889d08239815950b06e64f5110524964553df63139ae23f8564c817e2037",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[],chunk_seconds=20,adaptive_sigma=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\167-zapline_plus\\receipt.json",
+      "sha256": "fbcc72127e098017c5b78346d63876a5737930f1fa24a777f66ad4adf6b18047",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ZAPLINE/zapline_plus/noise_frequencies=[],chunk_seconds=20,adaptive_sigma=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\168-zapline_plus\\receipt.json",
+      "sha256": "a45fcad9df7991745af79b9c41277a6263311bf077eebcbe7e182677c874c938",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\169-prep_detect\\receipt.json",
+      "sha256": "a90b8e55a515099375b4a82128050dae6a2d7159790fa96bb54ea6a42ab0e1a9",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\170-prep_detect\\receipt.json",
+      "sha256": "8003497eddc7b4b11d6c2d9dbe9bb605cd34096d31301336858234b85ff08129",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\171-prep_detect\\receipt.json",
+      "sha256": "9dc92d8bf934bf2ecbb60a3f3eb8de61e02616736f93880ace9cfc12d12eb75b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/do_detrend=False,matlab_strict=True,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\172-prep_detect\\receipt.json",
+      "sha256": "5115b4de0599715b7090a1d91e591153fc2a4f2b1e26854465bd40282e28fcb3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\173-prep_detect\\receipt.json",
+      "sha256": "720615b237af3f497977282f9875b04c05207165f2b60cc549e77c6325f1b037",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\174-prep_detect\\receipt.json",
+      "sha256": "c2d22785657b18681b0be8da003fc85d9d7ec4775429b1db2385dc715966e02d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/criteria={'deviation': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\175-prep_detect\\receipt.json",
+      "sha256": "89720e8e511bb4f1e9513bbea381e2204030a934105a1c3af5794e6b92417472",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/criteria={'hfnoise': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\176-prep_detect\\receipt.json",
+      "sha256": "55c1f1f938233047f7a744ed94e7b854259eb659bb83edc215eb75be66cef257",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/criteria={'correlation': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\177-prep_detect\\receipt.json",
+      "sha256": "1b354bd22fec0de7ad3844871778eeca88ac8c9b9e16df2b5f59785848a20478",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/criteria={'hfnoise': {}, 'correlation': {}, 'snr': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\178-prep_detect\\receipt.json",
+      "sha256": "8160ba1aaf8279cfdce11c901f672bde978c195d627ab86bce5feae47b5409d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/criteria={'deviation': {}, 'correlation': {}, 'ransac': {'channel_wise': True}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\179-prep_detect\\receipt.json",
+      "sha256": "a96cf9b7fea5e6a8b188a91287e7c4a3271ccf4036ffbe511fd85a60fce278d2",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect/retained_bandwidth_policy=author_attenuated",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\180-prep_detect\\receipt.json",
+      "sha256": "8a75a8d3d60d2fad363d5ee1dfb1dfa9ce7d3b8828eee7f78b999caa7b8efb97",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\181-prep_detect_native\\receipt.json",
+      "sha256": "f6e9451258e2bda88ca10cfc3745f3b98965560635d6feb6a611f5347a0de8d7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=True,ransac=True,correlation=True,channel_wise=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\182-prep_detect_native\\receipt.json",
+      "sha256": "3377fa038b47a170a29ec533e4d53f47722fd7c611a2e878cdc4bdd7477de275",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=True,ransac=True,correlation=False,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\183-prep_detect_native\\receipt.json",
+      "sha256": "885bf9489630f80d08cc497e91c8c1f6f4acf891b4754e49769f5b08b80b6213",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=True,ransac=True,correlation=False,channel_wise=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\184-prep_detect_native\\receipt.json",
+      "sha256": "01edb0f99ab44fc1cef6d8a6cceecd9af9e2316d5a928b0c72d470bd8af01bfa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=True,ransac=False,correlation=True,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\185-prep_detect_native\\receipt.json",
+      "sha256": "0bdecc6f4def1c69085f37a9203023af6200bc4124ee120d4246ac53766d94d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=True,ransac=False,correlation=False,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\186-prep_detect_native\\receipt.json",
+      "sha256": "0c35eb775b6927bc0863cf2ed4cea2ee5bfed386ac8cceac277dbaf222c5c083",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=True,correlation=True,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\187-prep_detect_native\\receipt.json",
+      "sha256": "e4b242f57e48427a4aadabb9bf0cf80d34f05623e2ad13c159d7d8097bb1ae29",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=True,correlation=True,channel_wise=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\188-prep_detect_native\\receipt.json",
+      "sha256": "d8dd70690055022d93d339dac9a915b8ccefcec4908c7400f85c8fd6abd66b97",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=True,correlation=False,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\189-prep_detect_native\\receipt.json",
+      "sha256": "259ebbde90cf7e012a07d01f9132f70de75ef83e347bf06e3d3004da467607d6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=True,correlation=False,channel_wise=True",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\190-prep_detect_native\\receipt.json",
+      "sha256": "74c9772763f1d2ed67983961c38ecc5d58e7404f514500e1bb5a2c578ff6f4c5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=False,correlation=True,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\191-prep_detect_native\\receipt.json",
+      "sha256": "b3a85bdee377c835fe96d0a78903131cf47d74e6e6a87162730685d3d8c87a70",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/do_detrend=False,ransac=False,correlation=False,channel_wise=False",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\192-prep_detect_native\\receipt.json",
+      "sha256": "ce32f6728a18970198c53c04f4117a13e4df1b8d8dd97e38860288a6df3bbfa3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-ENSEMBLE/prep_detect_native/reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\193-prep_detect_native\\receipt.json",
+      "sha256": "94e75712635265d4bfde14c6f10a2da2dd89cf2b884b55f94e2b35ba83f7f5a1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\194-deviation_detect\\receipt.json",
+      "sha256": "46a0424f13bb912bc36d3ecf564f023ef524a4e9e41605656a6f0004bc22a5fa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\195-deviation_detect\\receipt.json",
+      "sha256": "e3211efcc892cae19c82a5785b4943d6890d3e6f2532498f4e6a7be8eb697bf1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\196-deviation_detect\\receipt.json",
+      "sha256": "02e7996a4f3e842c1176580c61a62f7e64f333800541963f3b9a8cb42d02e0a5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/do_detrend=False,matlab_strict=True,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\197-deviation_detect\\receipt.json",
+      "sha256": "be7c89babae2f34050ad625ede3042880c63eb0f1a2f7fc26c867ab3e71c635c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\198-deviation_detect\\receipt.json",
+      "sha256": "20bddf8d15f0804fdedbaeb7690c7fd4cad5aa671ccf0ae2f2ec085693ce3f1f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-DEVIATION/deviation_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\199-deviation_detect\\receipt.json",
+      "sha256": "0f29ea4a629a143ba300591258c52517b949c33df77f865bba64055cb899d975",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\200-correlation_detect\\receipt.json",
+      "sha256": "3d1b0938a2648ad522d228f146e405e33b35a6c9712503a374487eafaca0c533",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\201-correlation_detect\\receipt.json",
+      "sha256": "5d44dd4c27367eb8d3e85fcaf2f45a406d32791f7cf94124b22fbb71e2b99fbb",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\202-correlation_detect\\receipt.json",
+      "sha256": "e41a4c360ea1d224c0d73511260a3edb64f7d1dad4ceba00db9f01d7e0ed73de",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/do_detrend=False,matlab_strict=True,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\203-correlation_detect\\receipt.json",
+      "sha256": "3fd603c896e356d6c96708846982c99a14f552e1bc2ce64a06737c0ca9296758",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\204-correlation_detect\\receipt.json",
+      "sha256": "40a27287473913698b691ddd993c8eb31a6f2d1aac75569e43edc8a27d67d0c0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-CORRELATION/correlation_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\205-correlation_detect\\receipt.json",
+      "sha256": "c7f46f992690a34be051a0403c718328f3aaff1dfcfe9b2537e86f990b445f47",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\206-hf_ratio_detect\\receipt.json",
+      "sha256": "ab5c0501ff9ecf1cb25bfb361e659f2b86af986b69e68acf5d8d0faef0131209",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\207-hf_ratio_detect\\receipt.json",
+      "sha256": "6e3126b874848e5f3d124ada3015c7ea8497b01d913b74745e697eb61a58f48f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/do_detrend=True,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\208-hf_ratio_detect\\receipt.json",
+      "sha256": "42131c637d32fceb6da7f119f34e6f9508b63fee0cd5c7f42ed6f37939e7f4b6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/do_detrend=False,matlab_strict=True,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\209-hf_ratio_detect\\receipt.json",
+      "sha256": "defd9707ec317fc793294f4d8746d639203ff5239c839bf7ad126a396896adeb",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\210-hf_ratio_detect\\receipt.json",
+      "sha256": "f3ea5f9a8f8554ba4667471b1db82d364028c353e8edafa895af72587da5627f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-HF-RATIO/hf_ratio_detect/do_detrend=False,matlab_strict=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\211-hf_ratio_detect\\receipt.json",
+      "sha256": "8f1e7a11514341df606df9d72d6a8ede057f9735fe6760695f44fb90d1916192",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BAD-CHANNEL-LINE-NOISE/line_noise_detect/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\212-line_noise_detect\\receipt.json",
+      "sha256": "3dcfd77e7bda563ef1c70160f3dfe6221d57fcaf0b7f68f52813be1cbf84c4df",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICLABEL/iclabel_assess/backend=torch",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\213-iclabel_assess\\receipt.json",
+      "sha256": "2c938f5a2292b24a12151f35f86d05f36d8702ac5b27aad3b3d34e4dc169abdf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ICLABEL/iclabel_assess/backend=onnx",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\214-iclabel_assess\\receipt.json",
+      "sha256": "d3ae7c40c23028667360f4f4cd3a4df321193f9832dfde09df9d7e08fc35ec1c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MARA/mara_assess/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\215-mara_assess\\receipt.json",
+      "sha256": "d907bd071abcd0ff92a96cfebe3cf64114151cc24502959286953ad4fdcbb707",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ADJUST/adjust_assess/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\216-adjust_assess\\receipt.json",
+      "sha256": "767868adb86cbfd4ec83ad37a505ab4dfe7dbfa70cee35ed9d6e6dcfa43f645a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\217-faster_ic_assess\\receipt.json",
+      "sha256": "de1c8e41e4308fa59df19c881eb3c11fb144c907dc54f37d9d2a16270b374537",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['eog_correlation']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\218-faster_ic_assess\\receipt.json",
+      "sha256": "f8150ebde6d28ed413c566fd60eff75ef8442f2680657e77376478d47f61ce81",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['kurtosis']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\219-faster_ic_assess\\receipt.json",
+      "sha256": "574dc1e7b786300e3febb14e7b93c7131be4b1f192455f65612a38c3550b3bf3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['power_gradient']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\220-faster_ic_assess\\receipt.json",
+      "sha256": "cb13d00ae024cc86299b6ff8ba788c6451704c0d007c9b9bf29df836f1cf074d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['hurst']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\221-faster_ic_assess\\receipt.json",
+      "sha256": "c77f8314983647b516c51996f6b4c9f85cb2bb007762b1e7b9606e386545950b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['median_gradient']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\222-faster_ic_assess\\receipt.json",
+      "sha256": "bb76481fd5671ac37a54e9f1571e17d2b224272d9f62d678426cd82495e33bbf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-FASTER-IC/faster_ic_assess/metrics=['line_noise']",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\223-faster_ic_assess\\receipt.json",
+      "sha256": "1999d1532cec69f76e3db9f49b090b3e86911935986e3875cf709fedcd6fc8e6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\224-sasica_assess\\receipt.json",
+      "sha256": "3f1eee9eb3271d5c8099323be09f0a6df11a5865bfc94539634cfc1f13ed9a58",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'autocorr': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\225-sasica_assess\\receipt.json",
+      "sha256": "5e617e81f20027b46a0fbe1f0f706ef10802a3ebc91b74269a583eab4e9eb113",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'focalcomp': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\226-sasica_assess\\receipt.json",
+      "sha256": "1749a2225e2326a9b2a25609bb34d02820fe02e643925909e5b4e52ca514cfb4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'trialfoc': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\227-sasica_assess\\receipt.json",
+      "sha256": "9b85dfb11d6a8d661b08719a11abb0d024a6bc829607e209e0ace2d9769232f1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'snr': {}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\228-sasica_assess\\receipt.json",
+      "sha256": "22ce312e7c941aa5ddacdaa3d097fb3a6dfb3ca8aaa47c32ffcdc9df80516560",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'eogcorr': {'vertical_channels': ['VEOG']}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\229-sasica_assess\\receipt.json",
+      "sha256": "75229a2e17e8fd31ae5458a11a3f2babe3de1163ce129eccab60778ef3fc364d",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SASICA/sasica_assess/criteria={'chancorr': {'channels': ['C3', 'C4']}}",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\230-sasica_assess\\receipt.json",
+      "sha256": "979552fb2aa3b5a0d9c41cd532f506f3e1b066b6741b365d64ab7377ba3aa382",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ASR/asr_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\231-asr_fit\\receipt.json",
+      "sha256": "45e03ba8e38c9b0ef3232f3a3234b6d3c66d88317e2ac0833bfd22c206294cce",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ASR/asr_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\232-asr_apply\\receipt.json",
+      "sha256": "829791957e5956627522cd09a3cb9781fb0926cf9012ee1e5bfc7e3b61971e29",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WICA/wica_apply/variant=ordinary",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\233-wica_apply\\receipt.json",
+      "sha256": "ee3205eecb7505f77cbeba99b45e34eefce74b0c7f4ec518feb507b2de9f8072",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WICA/wica_apply/variant=targeted",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\234-wica_apply\\receipt.json",
+      "sha256": "059aa51e60428c1615c3c2a015d9c03b401c2fd42d8b47190157a0aa8d9361ed",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WICA/wica_apply/variant=ordinary,clean_other=yes",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\235-wica_apply\\receipt.json",
+      "sha256": "fac531b0ea2f57aacf7a08d73fb4655565dd61c2ce4d617d84ecd02025e84287",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WICA/wica_apply/variant=targeted,clean_other=yes",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\236-wica_apply\\receipt.json",
+      "sha256": "68359f15ed26720f2d336185f2560d3b759a492a1d65ad95084abd7f16653266",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CCA/cca_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\237-cca_fit\\receipt.json",
+      "sha256": "03df0867421429f7b9180a14b45c5528c4200c5f9c5454faa547a302ce7b3e75",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CCA/cca_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\238-cca_apply\\receipt.json",
+      "sha256": "6d5326f7ed86f726f3637ad93d26b1873de77c94ac3745be9d52c255aaeaaf74",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\239-mwf_fit\\receipt.json",
+      "sha256": "e1c775eab83c9315ca0bbb5b02e43b7bb7d2ac99af4ab53d62a8b056b3ce419b",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\240-mwf_fit\\receipt.json",
+      "sha256": "36dc2a12b539c50d864cf8627c63c888ec7bba89dbc7852c6a91ebf19eff94f8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\241-mwf_fit\\receipt.json",
+      "sha256": "50a8c3423cb35601161b98b6fcdfe1092d578473834e01390b530e5805dcf896",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\242-mwf_fit\\receipt.json",
+      "sha256": "a3793626150e183bdc8e2ca9acf1b1e680f60615929119a4be34c02a001917df",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=False,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\243-mwf_fit\\receipt.json",
+      "sha256": "f97ccabab7b07ec9402390af6e539b111f6f19e4a80794f05b3092fbac1fddbd",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=False,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\244-mwf_fit\\receipt.json",
+      "sha256": "0aac405ed1acea801c041d66d8071f260e73cc57cf2a1430f8f376587f73392e",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=False,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\245-mwf_fit\\receipt.json",
+      "sha256": "825cc5bb3d2d1a70cd0add8602adb0e62aad637aa760098a9b5776baa5988da5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=True,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\246-mwf_fit\\receipt.json",
+      "sha256": "5e98d9b4d7c4107aa9ddc051c16ef85f2b2ff4d9512cdb62c64f28cef799fd73",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=True,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\247-mwf_fit\\receipt.json",
+      "sha256": "c0d3ff924e2247bd8163cdf1360e4eb2db2fd673d31943a770e0bb75b70147c3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=poseig,delay=1,singlesided=True,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\248-mwf_fit\\receipt.json",
+      "sha256": "775959dc46d2fc7789a4d8bc6da54528f47d996e5fc4f43065b81ac00463870f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=False,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\249-mwf_fit\\receipt.json",
+      "sha256": "e0577f7f255109331a459d8d93dda6bb954addd828281e7879e8f45c839b37b5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=False,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\250-mwf_fit\\receipt.json",
+      "sha256": "797b8f1ea39e0e9e5676860f54ce10f11a114c653245472a550bc63111fea551",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=False,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\251-mwf_fit\\receipt.json",
+      "sha256": "55ac521bbe2daeb702ae1673b6450b6820c35654c739320d1ae42b862a9b2386",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=True,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\252-mwf_fit\\receipt.json",
+      "sha256": "6c34a6d74676f51c6cbb0eee3d04031e48dce02a32f8a026d467a31d3d5f442a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=True,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\253-mwf_fit\\receipt.json",
+      "sha256": "73b216fa5eb8bdc7a89aec92f0c05a2c24d9d7266d775512c30b9e308fdcce56",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=full,delay=1,singlesided=True,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\254-mwf_fit\\receipt.json",
+      "sha256": "8bd2ff5356e479c466e3e5fcfd2e942bee8ea990f7e4c934d34425b47651d536",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=False,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\255-mwf_fit\\receipt.json",
+      "sha256": "c0e81f45d76030fc7ec7c348f2e8c9cdc27ef6c942546811a484309deba9ebc7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=False,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\256-mwf_fit\\receipt.json",
+      "sha256": "04193d9fba29e547eefd548ac6d75358b499b6931380ea897744d98fedd9dcb4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=False,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\257-mwf_fit\\receipt.json",
+      "sha256": "b6978eaeb99ab8d2f5678d13c30adadfa9829f175d30231dcce0bbdad77f6f88",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=True,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\258-mwf_fit\\receipt.json",
+      "sha256": "7fb5730c4ccf05de93371421ea9ee01003743bcdc12e9706ec9a8dae4ebd69d1",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=True,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\259-mwf_fit\\receipt.json",
+      "sha256": "8d481aa18563330d56c8c00f91033e2b0fb3ca586b16246d8e29c7ba81422834",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=pct,delay=1,singlesided=True,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\260-mwf_fit\\receipt.json",
+      "sha256": "ea2edfbfb161c1b787fc5a2be8bba5dde2444517493501a98c5866a39e2c6b34",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=False,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\261-mwf_fit\\receipt.json",
+      "sha256": "aeb18841747516278b1d1290bc2863302f41edad425a39017f10fcb471aa1caa",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=False,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\262-mwf_fit\\receipt.json",
+      "sha256": "0172e0eb1576bdeeda69a6e9ce8f3b329379fb791ca6f07ea2e15e7aaea6eaf3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=False,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\263-mwf_fit\\receipt.json",
+      "sha256": "a74518fea1d5b9b6cb7ab16ab97fb48ad7b59e00e9cc4e3252058a0224ad56e4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=True,treatnans=ignore",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\264-mwf_fit\\receipt.json",
+      "sha256": "24efd5636777fb752c0a2ed93cfcdc1c4c1e9e1f102249dd0a6982d611c6afdf",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=True,treatnans=artifact",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\265-mwf_fit\\receipt.json",
+      "sha256": "36af81d4a6a87a07a0e63c8b8a7997d42f8e4eed4dd92b4a4471ae91e41c5fd5",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_fit/rank=first,delay=1,singlesided=True,treatnans=clean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\266-mwf_fit\\receipt.json",
+      "sha256": "01cfb740996d5ea7ec955b96021426e80322bf7585b74323a3b26d74a3ae7c2a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MWF/mwf_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\267-mwf_apply\\receipt.json",
+      "sha256": "0f9b0e76c65d663f983ed6c1f976117cecf3d9872e11948b9d48f313cc4d75f6",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTOREJECT/autoreject_fit/mode=global",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\268-autoreject_fit\\receipt.json",
+      "sha256": "d8152651824690e9601e1631caac0802826b7e48a530e2215d8533942a1f4a60",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTOREJECT/autoreject_fit/mode=local,thresh_method=bayesian_optimization",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\269-autoreject_fit\\receipt.json",
+      "sha256": "0d3e9ad46a9a34d70c9ac333e03d273166fb6740b3a8cf3db3af83104faf4c63",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTOREJECT/autoreject_fit/mode=local,thresh_method=random_search",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\270-autoreject_fit\\receipt.json",
+      "sha256": "7a56832fd9a0e45159da1e8a866c518ac20724bb9865e50b74d676240777f597",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTOREJECT/autoreject_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\271-autoreject_apply\\receipt.json",
+      "sha256": "1aea49e36de10ecdfa2a7c5684be9e69945d0ea14ac06821aaea81c5de52abe4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REGRESSION-BASELINE/regression_baseline_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\272-regression_baseline_fit\\receipt.json",
+      "sha256": "af835c328539c95680403bb0e9ba57a300a82eba79749f151b189d86559cd20a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REGRESSION-BASELINE/regression_baseline_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\273-regression_baseline_apply\\receipt.json",
+      "sha256": "578a6ed4d541532db0d0aa85ee1419f11f375b5ba1fa77702552015797f323da",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REGRESSION-BASELINE/regression_baseline_epochs_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\274-regression_baseline_epochs_fit\\receipt.json",
+      "sha256": "76b08c90ee9d08a0f994cb0a0e449aaaa089930ec29ad748e332b096e7791f25",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-REGRESSION-BASELINE/regression_baseline_epochs_apply/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\275-regression_baseline_epochs_apply\\receipt.json",
+      "sha256": "a993181cb484426faa7accbc4542281c5390708c630e8467ad07fe47fb961aac",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WINDOW-MAD/window_mad/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\276-window_mad\\receipt.json",
+      "sha256": "2e31a19658c6967d872a4866bd2ab7061f091c3835f6ef8fe1ebbe4cc0e99071",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-WINDOW-MAD/blink_upper_bound/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\277-blink_upper_bound\\receipt.json",
+      "sha256": "191760d9f34b6b2bdc891579c729d7d36c10df8f6c712dbca16b645d24cff8a9",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SPECTRAL-SLOPE/spectral_slope/mode=fieldtrip_mtmfft,retained_bandwidth_policy=require",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\278-spectral_slope\\receipt.json",
+      "sha256": "55263f0f81e3912868882a25f0615dfec5c6dafcc64bad2d7033e7e03f83eb02",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SPECTRAL-SLOPE/spectral_slope/mode=fieldtrip_mtmfft,retained_bandwidth_policy=author_attenuated",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\279-spectral_slope\\receipt.json",
+      "sha256": "f00e085d2f923267beb874cb73a87e0e9efd97d506f40e42f76fe8b5431046f8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SPECTRAL-SLOPE/spectral_slope/mode=relax_ic_welch,retained_bandwidth_policy=require",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\280-spectral_slope\\receipt.json",
+      "sha256": "89f06c2b1bc3f8110a71b9c51b522d505745c4ae5e2051d0b499d029976c5bc2",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-SPECTRAL-SLOPE/spectral_slope/mode=relax_ic_welch,retained_bandwidth_policy=author_attenuated",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\281-spectral_slope\\receipt.json",
+      "sha256": "9a496c3d425ee368bf040250710af2612a0ace53793398703ac8dfdcd439da32",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EOG-STEP/eog_step/statistic=trimmean95",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\282-eog_step\\receipt.json",
+      "sha256": "8aa230aed7ad1a0621894f3f241939c9b24ab325327a1956246e4e0b4dc3c50a",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-EOG-STEP/eog_step/statistic=mean",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\283-eog_step\\receipt.json",
+      "sha256": "e5e4ef2b0758c80ceab05542825e0e84b7460153dbcdac3e24bc61459924b6d3",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-JOINT-PROBABILITY/joint_probability/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\284-joint_probability\\receipt.json",
+      "sha256": "a50575463ce2d589bccd89d54cbd69de7c3c1d5cbe3132d77a4918a5a1e823d7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-KURTOSIS/kurtosis/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\285-kurtosis\\receipt.json",
+      "sha256": "4a4baf77794d4a73fcda4e60caf615e402de957ab2cb456b6c0bebe010f704c9",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BLINK-IQR/blink_iqr/variant=relax_2_0_1",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\286-blink_iqr\\receipt.json",
+      "sha256": "5c1a466e02c10b4d4e43294bdbf881514e7ba1f79bb126b6f933830969fcbf4f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BLINK-IQR/blink_iqr/variant=repaired_indices",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\287-blink_iqr\\receipt.json",
+      "sha256": "267d2404c373318672fa2c95a17a8e2ca43840c2a336ff945efa59ad862606b8",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BLINK-IQR/blink_iqr/variant=relax_2_0_1,lowpass_Hz=6.0",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\288-blink_iqr\\receipt.json",
+      "sha256": "e73c98c7fe79880cada26dc19e9f03c665a56bfe9741a84390134c1e0fed98db",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-BLINK-IQR/blink_iqr/variant=repaired_indices,lowpass_Hz=6.0",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\289-blink_iqr\\receipt.json",
+      "sha256": "d549f0e2e417be32a9954b0ee56ddfe00f33cbd984507a58c30e6bc76c0c9bb4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\290-prep_reference_fit\\receipt.json",
+      "sha256": "3614f9fcb6bd63aa4465d5f011236df79b693fde68bc97ce7ff27a734f453d5f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/ransac=True,channel_wise=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\291-prep_reference_fit\\receipt.json",
+      "sha256": "2eba174082c104e15a3ea8b8df5cada87525f98343a5960474ae42a723a99c47",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/ransac=True,channel_wise=True,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\292-prep_reference_fit\\receipt.json",
+      "sha256": "ba45eb0ae3ae8cefe6d3a2246fbc841a8ca95753a9718aa1ca168e4846a37881",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/ransac=True,channel_wise=True,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\293-prep_reference_fit\\receipt.json",
+      "sha256": "adc76ce181bb8cf8189b0a5b4050e9c9271d3aa06e6a4e8e3c4bbf6ae7941c04",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/ransac=False,channel_wise=False,reject_by_annotation=None",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\294-prep_reference_fit\\receipt.json",
+      "sha256": "6c54552082b830fbf80e1bdd74718203feffdeed649a45de983589522db222b4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_fit/ransac=False,channel_wise=False,reject_by_annotation=omit",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\295-prep_reference_fit\\receipt.json",
+      "sha256": "0cd60d524ca5ea0f2ab272f43afa872bd5f1064c9e25d5fcd26421ad407f1502",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ROBUST-REFERENCE/prep_reference_finalize/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\296-prep_reference_finalize\\receipt.json",
+      "sha256": "0f60948ebcdb9720d2ee3ce89829a4742aa9879eb84ae14104128ec9319a7632",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-IC-BLINK-WEIGHTS/eye_weights/profile=relax_2_0_1",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\297-eye_weights\\receipt.json",
+      "sha256": "7c61d375cbed8fc2ee233ed8c551e83f118aa780a35913041953fde99a1dc27c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-IC-BLINK-WEIGHTS/eye_weights/profile=repaired_units_indices",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\298-eye_weights\\receipt.json",
+      "sha256": "be47582789c05e66f437e1b09d7ad05cd7c61a5c32e21fb5b1db5ecea34cceb0",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CHANNEL-REJECTION-BUDGET/relax_budget/profile=relax_2_0_1",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\299-relax_budget\\receipt.json",
+      "sha256": "c5b2408ae9d2d9c9540168c1a283dc37a72a2e4996beb29ac0032be7df94ec13",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CHANNEL-REJECTION-BUDGET/relax_budget/profile=repaired_units_indices",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\300-relax_budget\\receipt.json",
+      "sha256": "fe85503de30d2a77746651a8550b4688707bdd9047fbd5289aa176f21b195f44",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-MUSCLE-TRIAL-DECISION/relax_muscle_trials/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\301-relax_muscle_trials\\receipt.json",
+      "sha256": "0909101c820ae6c5c97c5a233649b4e93172e11ec38e71916653d6d4c8c11c42",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTO-BAD-CHANNEL/detect_bad_channels/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\302-detect_bad_channels\\receipt.json",
+      "sha256": "b636e94fadac4bb0297d169a1d88a54acabb8eeabb8ce6204e22d84c0170286f",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-AUTO-BAD-CHANNEL/interpolate_bad_channels/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\303-interpolate_bad_channels\\receipt.json",
+      "sha256": "b2223b61451d2bd84efa134e64ba72e3ae64a628241557aad143e5555479e1a7",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ASR-AUTO/asr_clean/on_insufficient_calibration=error",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\304-asr_clean\\receipt.json",
+      "sha256": "76cf6bd55a01dc958eb5b6abab06e1050a9ddd65c67011d48f04210d4b1a3de4",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-ASR-AUTO/asr_clean/on_insufficient_calibration=identity",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\305-asr_clean\\receipt.json",
+      "sha256": "774050fb52401231965b522db7835eb87efbe889c32130a2b99c7531a4482a3c",
+      "status": "passed"
+    },
+    {
+      "identity": "EEG-CLASSIC-NATIVE/prep_native/source",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\306-prep_native\\receipt.json",
+      "sha256": "58a6df01b6c8332ec85b3b53e5cca7e9637ca566f689aeb5bd1d9b2bb748b255",
+      "status": "failed"
+    },
+    {
+      "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=author_clock",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\307-automagic_native\\receipt.json",
+      "sha256": "33eadb41dec70876d62c643ad804e4237dcd716143f7e59b23f3296f4b5c8c8b",
+      "status": "failed"
+    },
+    {
+      "identity": "EEG-CLASSIC-NATIVE/automagic_native/ica_random_policy=fixed_loop_seed_zero",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\308-automagic_native\\receipt.json",
+      "sha256": "1d6aa0850bcbffe479ca15662904a7cef7c41658082f0369755354c560ffbadd",
+      "status": "failed"
+    },
+    {
+      "identity": "EEG-RELAX-NATIVE/relax_native/compatibility_policy=eegrej_scalar_row_bound",
+      "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\matrix-current-1\\profiles\\309-relax_native\\receipt.json",
+      "sha256": "d54d5932e62dc93de4d94d10fb941e7cc333fa8a907eb286e12a54896ab16cd8",
+      "status": "failed"
+    }
+  ],
+  "scope": "Pinned-source adapter equivalence only; no independent algorithm validity or real-EEG claim. All current identities retained; service registry untouched.",
+  "status": "partial",
+  "validation_script_sha256": "f3b132b1fec3b6c571cefa43c5af2114089ff8eec4c8d98f992079fc1c74c32a"
+}

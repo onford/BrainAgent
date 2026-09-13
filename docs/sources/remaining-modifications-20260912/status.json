@@ -552,7 +552,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "新协议全集搜索",
-      "current": "109 人、327 目标记录、4918 Trial 已有源一致性/清理证据；尚无当前 EEGNet 三种子＋实质文献主链的完整全集搜索。",
+      "current": "第10次全集流程完成数据调研/接入及基线15个EEGNet检查点，质量评价期间于14:07:58因轮询search.json短暂PermissionError返回422，验收驱动退出、流程中断；首轮acceptance=false，原数据/代码/驱动哈希不变。正在原冻结2906731环境下核对并恢复，原预算不续期。",
       "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。",
       "dependencies": [
         "I03",
@@ -568,7 +568,7 @@
       ],
       "historical_status": "未完成",
       "status": "in_progress",
-      "implementation_update": "第10次已完成真实调研与接入，进入109人/327记录/4918试次的数值搜索，当前基线执行中；完整文献候选与反馈闭环仍待验证。冻结代码2906731及预算、数值协议不变。"
+      "implementation_update": "新增独立恢复驱动，原失败result.json、检查点、预算起点/到期时间与既有调用账本保留；新的恢复证据目录单独记录。仅对状态轮询的已知控制文件PermissionError有界重试，无阶段/模型/数值覆盖。完整文献候选、反馈和赢家尚待执行。"
     },
     {
       "id": "I28",
@@ -781,7 +781,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "真实 EEG 的 profile 覆盖",
-      "current": "当前目录为310配置；冻结f209b40和完整独立环境正在重跑来源一致性矩阵。旧306配置及11项真实EEG证据仅为历史记录。本轮真实EEG覆盖尚未更新；新增4项完整原生流程仍需补充验证用例。",
+      "current": "首轮冻结f209b40完整310项矩阵结束：305通过、5失败。偏移降采样已修复并单项复验0差通过；另外4个完整原生流程此前缺少专门用例。已新增显式真实记录与资产绑定验证入口，实际原生执行待进行；修复版本完整矩阵仍待重跑。",
       "solution_and_acceptance": "按 EOG/ECG/几何/资产/任务适用性建立代表性数据矩阵，逐类验证；不强迫 EEGMMIDB 验证无 EOG 方法，也不要求无限连续参数笛卡尔积。",
       "dependencies": [
         "I09",
@@ -951,7 +951,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "8001 API和Worker已加载651367e固定副本，版本与310配置能力接口可读。完整独立环境包缺项为0，20配置仍需显式资产。f209b40全回归1391通过、3项工作流120秒超时；同一冻结代码和环境保持原断言及超时复验3项均通过。新环境切换待进行；8000和全集正式运行保持。",
+      "current": "8001 API与Worker已切换b27fafb固定副本及完整独立环境，健康/版本/数据源/能力接口均200。54单元/91操作/310配置，Python缺包为0，20配置需显式原生资产。完整回归1391通过、3项120秒超时在同版复验均通过；完整页面决定链仍待正式结果。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -965,7 +965,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。 发现原环境95配置缺包或资产；独立完整环境已安装，包缺项为0、20配置仍需显式原生资产。原活动EEG环境版本未变，7项保护测试通过，全回归及切换待完成。",
+      "implementation_update": "启动前核对公开工作流、搜索、会话、数值任务均为空；固定同版API/Worker与Python路径写入runtime.json。源码203ce6f3c1606af59f1d46b7e20c8bef49f2426c996e880f3e4e9eedcd336ea0。Sites访问和发布按用户要求暂缓。",
       "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
     },
     {
@@ -2195,6 +2195,52 @@
     "codec_offset": {
       "receipt": "docs/sources/remaining-modifications-20260912/codec-offset-review.json",
       "full_fixed_matrix_verified": false
+    },
+    "public_runtime_update_3": {
+      "receipt": "docs\\sources\\remaining-modifications-20260912\\service-build-update-3.json",
+      "source_commit": "b27fafbb5cbc9e0bb2b3a0a327957abd3cea3719",
+      "python_package_gaps": 0,
+      "explicit_asset_profiles": 20
+    },
+    "formal_run_10_interrupt": {
+      "failure": "HTTP 422: transient PermissionError reading search.json",
+      "first_result": "live-integrated-10/result.json",
+      "original_data_code_driver_unchanged": true,
+      "recovery": "live-integrated-10-recovery-1",
+      "status": "resumed_original_frozen_application; polling200; original deadlines and15checkpoint hashes recorded",
+      "budget_reset": false
+    },
+    "snapshot_read_retry": {
+      "tests_passed": 26,
+      "seconds": 1.34,
+      "native_exclusive_lock_test": true,
+      "first_test_run": {
+        "passed": 25,
+        "failed": 1,
+        "reason": "Windows CRT open reports errno13 without winerror; corrected and original failure retained"
+      },
+      "resume_poll_tests": {
+        "passed": 4,
+        "seconds": 0.9
+      }
+    },
+    "unit_matrix_first_pass": {
+      "source_commit": "f209b4063b94400dde6add4949f2fab2b95ed174",
+      "profiles": 310,
+      "passed": 305,
+      "failed": 5,
+      "audit_receipt": "docs\\sources\\remaining-modifications-20260912\\matrix-first-pass-audit.json",
+      "current_engine_all_passed": false
+    },
+    "native_profile_helper": {
+      "tests_passed": 14,
+      "seconds": 0.48,
+      "extra_helper_hash_test": {
+        "passed": 1,
+        "seconds": 0.09
+      },
+      "real_execution": "pending",
+      "comparison_scope": "all decoded native fields; only MAT header and temporary directory identifiers normalized"
     }
   }
 }

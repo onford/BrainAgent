@@ -247,18 +247,27 @@ def one(row,base,directory,fit_override=None,force_epochs=False):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True);parser.add_argument('--only',nargs='*');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--output',type=Path,required=True);parser.add_argument('--only',nargs='*')
+    parser.add_argument('--native-input',type=Path);parser.add_argument('--native-record');parser.add_argument('--native-bindings',type=Path)
+    args=parser.parse_args()
     args.output.mkdir(parents=True,exist_ok=True);mne.set_log_level('ERROR');base=fixture();rows=inventory();results=[]
     from app.preprocessing.units import engine_hash,environment
     import os
     from threadpoolctl import threadpool_info
     code_stamp={'engine_sha256':engine_hash(),'environment':environment(),'validation_script_sha256':file_hash(Path(__file__)),'runtime_context':{'platform':platform.platform(),'threadpools':threadpool_info(),'thread_environment':{k:os.environ.get(k) for k in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS')}}}
+    code_stamp['validation_helpers'] = {'validate_native_profiles.py': file_hash(Path(__file__).with_name('validate_native_profiles.py'))}
     for i,row in enumerate(rows):
         if args.only and row['op'] not in args.only:continue
         directory=args.output/f'{i:03}-{row["op"]}';directory.mkdir(exist_ok=True)
         receipt=dict(**code_stamp,identity=row['identity'],source_sha256=row['source']['source']['code_sha256'],started=time.time(),fixture_seed=719,python=platform.python_version(),status='failed')
         try:
-            with (directory/'runtime.log').open('w',encoding='utf-8') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):receipt.update(one(row,base,directory))
+            with (directory/'runtime.log').open('w',encoding='utf-8') as log,contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
+                from scripts.validate_native_profiles import OPERATIONS, one as native_one
+                if row['op'] in OPERATIONS:
+                    receipt.update(native_one(row,directory,input_path=args.native_input,
+                        record_id=args.native_record,bindings_path=args.native_bindings))
+                else:
+                    receipt.update(one(row,base,directory))
             receipt['status']='passed'
         except Exception as exc:
             receipt.update(error=str(exc),exception=type(exc).__name__,traceback=traceback.format_exc())

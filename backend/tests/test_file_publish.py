@@ -10,6 +10,77 @@ import pytest
 from app import file_publish
 
 
+@pytest.mark.parametrize('code', [5, 32, 33])
+def test_search_snapshot_read_retries_native_transient_lock(tmp_path, monkeypatch, code):
+    from app.search.io import read
+    target = tmp_path / 'search.json'
+    target.write_text('{"status":"running"}', encoding='utf8')
+    original = Path.read_text
+    calls = []
+
+    def locked(path, **kwargs):
+        calls.append(path)
+        if len(calls) < 3:
+            error = PermissionError('atomic replacement in progress')
+            error.winerror = code
+            raise error
+        return original(path, **kwargs)
+
+    monkeypatch.setattr(Path, 'read_text', locked)
+    monkeypatch.setattr(file_publish.time, 'sleep', lambda _: None)
+    assert read(target) == {'status': 'running'}
+    assert len(calls) == 3
+
+
+@pytest.mark.parametrize('code, attempts', [(5, 9), (32, 9), (33, 9), (2, 1), (None, 1)])
+def test_snapshot_read_does_not_hide_persistent_or_other_errors(tmp_path, monkeypatch, code, attempts):
+    calls = []
+    error = PermissionError('denied')
+    if code is not None:
+        error.winerror = code
+
+    def fail(*args, **kwargs):
+        calls.append(1)
+        raise error
+
+    monkeypatch.setattr(Path, 'read_text', fail)
+    monkeypatch.setattr(file_publish.time, 'sleep', lambda _: None)
+    with pytest.raises(PermissionError) as caught:
+        file_publish.read_text(tmp_path / 'search.json')
+    assert caught.value is error
+    assert len(calls) == attempts
+
+
+def test_snapshot_reader_preserves_json_integrity_errors(tmp_path):
+    from app.search.io import read
+    target = tmp_path / 'search.json'
+    target.write_text('{incomplete', encoding='utf8')
+    with pytest.raises(json.JSONDecodeError):
+        read(target)
+
+
+@pytest.mark.skipif(sys.platform != 'win32', reason='native Windows sharing semantics')
+def test_actual_windows_exclusive_lock_can_release_during_read(tmp_path):
+    from ctypes import wintypes
+    from app.search.io import read
+    target = tmp_path / 'search.json'
+    target.write_text('{"status":"running"}', encoding='utf8')
+    kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+    kernel.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD,
+        wintypes.LPVOID, wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    kernel.CreateFileW.restype = wintypes.HANDLE
+    kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+    kernel.CloseHandle.restype = wintypes.BOOL
+    handle = kernel.CreateFileW(str(target), 0x80000000, 0, None, 3, 0x80, None)
+    assert handle != wintypes.HANDLE(-1).value
+    timer = threading.Timer(.12, lambda: kernel.CloseHandle(handle))
+    timer.start()
+    try:
+        assert read(target) == {'status': 'running'}
+    finally:
+        timer.join()
+
+
 @pytest.mark.parametrize("code", [5, 32, 33])
 def test_transient_windows_lock_preserves_old_file_until_publish(
     tmp_path, monkeypatch, code

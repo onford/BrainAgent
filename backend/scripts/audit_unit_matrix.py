@@ -30,6 +30,10 @@ def audit(profiles, validation_script, output):
     current_engine, current_environment = engine_hash(), environment()
     script_sha = file_hash(validation_script)
     tracked = {validation_script: script_sha}
+    helper = validation_script.with_name('validate_native_profiles.py')
+    helpers = {helper.name: file_hash(helper)} if helper.exists() else {}
+    if helpers:
+        tracked[helper] = helpers[helper.name]
 
     def checked(path, expected=None, size=None):
         path = Path(path).resolve(strict=True)
@@ -60,6 +64,7 @@ def audit(profiles, validation_script, output):
         require(receipt['engine_sha256'] == current_engine, 'Stale engine evidence')
         require(receipt['environment'] == current_environment, 'Runtime differs from profile evidence')
         require(receipt['validation_script_sha256'] == script_sha, 'Validation script differs')
+        require(receipt.get('validation_helpers', {}) == helpers, 'Validation helper differs')
         source_sha = by_identity[identity]['source']['source']['code_sha256']
         require(receipt['source_sha256'] == source_sha, 'Stale source evidence')
         require(bool(receipt.get('files')), 'Profile receipt has no runtime artifacts')

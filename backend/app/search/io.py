@@ -4,11 +4,11 @@ from pathlib import Path
 import stat
 import tempfile
 
-from app.file_publish import replace_file
+from app.file_publish import read_text, replace_file
 
 
 def read(path):
-    return json.loads(Path(path).read_text(encoding="utf-8"))
+    return json.loads(read_text(Path(path), encoding="utf-8"))
 
 
 def write(path, value):
