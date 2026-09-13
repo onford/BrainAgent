@@ -1,0 +1,197 @@
+{
+  "complete_candidate": false,
+  "execution": {
+    "arrays_identical": true,
+    "cprofile_overhead_included": true,
+    "execution_seconds": 2482.142598700011,
+    "maximum_absolute_difference_V": 0.0,
+    "new_eegnet_fits": 0,
+    "participants": 109,
+    "records": 327,
+    "scope": "Graph execution, persistence and full-array comparison only; no complete new candidate or literature evaluation claim",
+    "shared_methods": 1,
+    "status": "passed",
+    "unchanged_source_recipe_parameters": true,
+    "verification_seconds": 138.72651330000372
+  },
+  "exit_code": 0,
+  "frozen_code_unchanged": true,
+  "output_bytes": 30297456930,
+  "resource_stages": [
+    {
+      "final_job_counters": {
+        "active_processes": 0,
+        "cpu_kernel_seconds": 769.734375,
+        "cpu_user_seconds": 729.875,
+        "other_bytes": 7592547794,
+        "other_operations": 104698225,
+        "page_faults": 136812296,
+        "read_bytes": 282390889125,
+        "read_operations": 10238768,
+        "rss_bytes": 0,
+        "total_processes": 3,
+        "wall_seconds": 2623.1736983000155,
+        "write_bytes": 30397547384,
+        "write_operations": 1073521
+      },
+      "io_scope": "Windows Job IO transfer counters include all current and exited members; not physical disk traffic",
+      "io_wait_seconds": null,
+      "io_wait_status": "not_measured; CPU idle/wall differences are not IO wait",
+      "launcher_pid": 31956,
+      "returncode": 0,
+      "sampled_peak_tree_rss_bytes": 783736832,
+      "sampling_errors": [],
+      "sampling_period_seconds": 0.25,
+      "stage": "graph",
+      "trace_path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\graph-cost-1\\resources-graph-31956.csv",
+      "trace_sha256": "82668f8bc90575c79a7d325426ba372abaecd20e19d1fd408eaafb3801d151d1",
+      "wall_seconds": 2623.173743600011
+    }
+  ],
+  "source_unchanged": true,
+  "status": "passed",
+  "storage_attribution": {
+    "class": 42,
+    "enabled": true,
+    "query_succeeded": true,
+    "raw_counters": {
+      "read": {
+        "bytes": 160362496,
+        "count": 19698,
+        "queue_time": 59819404,
+        "service_time": 55214068
+      },
+      "write": {
+        "bytes": 31510433792,
+        "count": 3866752,
+        "queue_time": 3695190614,
+        "service_time": 4237850219
+      }
+    },
+    "source": "https://github.com/microsoft/hcsshim/blob/main/internal/jobobject/jobobject.go",
+    "time_units": "not converted: primary source used does not document the unit; not process-wide IO-wait seconds"
+  },
+  "schema_version": "graph-resource-review-1",
+  "original_audit_sha256": "ea612b5f2e611cf701652df7af9fafb58073acf5f5e500c053de77b2614e03a3",
+  "measurement_notes": {
+    "scope": "Shared-host engineering graph probe, not an idle-host production benchmark",
+    "cprofile_overhead_included": true,
+    "activities": [
+      {
+        "time": "2026-09-12T22:52:16.308586+00:00",
+        "activity": "Read-only baseline audit processing, code/document edits and targeted workflow cognition/model-budget/protocol tests in independent output directories during the graph run. Those processes are not included in the graph Job CPU counters but may affect wall time."
+      },
+      {
+        "time": "2026-09-12T23:00:33.169675+00:00",
+        "activity": "Full backend regression of ad56f28 in the prepared, otherwise unused formal-code-9 worktree. No live formal workflow yet. Shared-host contention is included in graph wall time; no idle-host claim."
+      }
+    ]
+  },
+  "driver_sha256": "8dda3efe24cb7ba75978f0d394ec31a4735f0c8bf991acb32e5c69bbf852364a",
+  "profile": {
+    "scope": "Main-thread wall profiling; cumulative rows overlap and are not additive; not pure IO-wait seconds",
+    "profiling_overhead_included": true,
+    "top_cumulative": [
+      {
+        "cumulative_seconds": 2446.0955847,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\worker.py",
+        "function": "run_once",
+        "line": 34,
+        "own_seconds": 0.0054806,
+        "primitive_calls": 1,
+        "total_calls": 1
+      },
+      {
+        "cumulative_seconds": 2446.0854837,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\worker.py",
+        "function": "_next",
+        "line": 47,
+        "own_seconds": 0.10751010000000001,
+        "primitive_calls": 1,
+        "total_calls": 1
+      },
+      {
+        "cumulative_seconds": 2216.1480095,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\runner.py",
+        "function": "run_record",
+        "line": 194,
+        "own_seconds": 0.9880157,
+        "primitive_calls": 327,
+        "total_calls": 327
+      },
+      {
+        "cumulative_seconds": 2215.1466414,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\graph_runtime.py",
+        "function": "run_graph_record",
+        "line": 317,
+        "own_seconds": 4.3979949000000005,
+        "primitive_calls": 327,
+        "total_calls": 327
+      },
+      {
+        "cumulative_seconds": 1499.0580379,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\graph_runtime.py",
+        "function": "execute",
+        "line": 210,
+        "own_seconds": 1.6866262,
+        "primitive_calls": 1308,
+        "total_calls": 1308
+      },
+      {
+        "cumulative_seconds": 768.9321719000001,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\artifact_codec.py",
+        "function": "verified_dump",
+        "line": 234,
+        "own_seconds": 0.7791566000000001,
+        "primitive_calls": 1635,
+        "total_calls": 1635
+      },
+      {
+        "cumulative_seconds": 537.2712549,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\storage.py",
+        "function": "write_json",
+        "line": 48,
+        "own_seconds": 0.1443787,
+        "primitive_calls": 5559,
+        "total_calls": 5559
+      },
+      {
+        "cumulative_seconds": 529.5075381,
+        "file": "~",
+        "function": "<built-in method nt.fsync>",
+        "line": 0,
+        "own_seconds": 529.5075381,
+        "primitive_calls": 5559,
+        "total_calls": 5559
+      },
+      {
+        "cumulative_seconds": 486.18345280000005,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\artifact_codec.py",
+        "function": "dump",
+        "line": 68,
+        "own_seconds": 2.5662119000000003,
+        "primitive_calls": 2943,
+        "total_calls": 4160315
+      },
+      {
+        "cumulative_seconds": 486.15560530000005,
+        "file": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\supervisor-code-1\\app\\preprocessing\\artifact_codec.py",
+        "function": "_dump",
+        "line": 75,
+        "own_seconds": 10.7071343,
+        "primitive_calls": 2943,
+        "total_calls": 4160315
+      }
+    ],
+    "fsync_observation": {
+      "cumulative_seconds": 529.5075381,
+      "file": "~",
+      "function": "<built-in method nt.fsync>",
+      "line": 0,
+      "own_seconds": 529.5075381,
+      "primitive_calls": 5559,
+      "total_calls": 5559
+    }
+  },
+  "comparison_scope": "same numerical parameters and final arrays; baseline v1 uses 4 record workers, v2 serial execution plus profiling; wall difference cannot be attributed solely to persistence"
+}

@@ -671,8 +671,8 @@
         "D7"
       ],
       "historical_status": "未充分验证",
-      "status": "in_progress",
-      "implementation_update": "基础完整流程成本已取得，数据和冻结代码不变；重建 17 个脉冲案例保留不适用，不能冒充科学全项通过。图组件测量仍进行中，不能用外部观测差值填 I/O 等待。"
+      "status": "measured_with_limits",
+      "implementation_update": "基础协议过程 116.591 分钟，图执行 41.369 分钟加核对 2.312 分钟，全 327 数组最大差 0 V；保留重建17不适用及共享主机/剖析开销。纯I/O等待仍未测得，不能称全维度科学验收。"
     },
     {
       "id": "I33",
@@ -1648,7 +1648,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I32 基础候选按原预算结束：109 人/327 记录/4918 试次/15 次 EEGNet 训练；墙钟 6995.450 秒。质量完整，重建 92 可评价/17 不适用，三轴 partial 保留。共享 v2 图成本仍在测量。",
+  "active_step": "I32 全集基础与图成本观测完成，I27 正式全集流程准备中。基础三轴 partial（17 脉冲案例不适用）保留；1377 项完整回归通过，尚无新文献闭环验收。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -2012,6 +2012,16 @@
         "reconstruction_evaluated": 92,
         "reconstruction_not_applicable": 17,
         "audit": "full-cost-1-review.json"
+      },
+      "graph": {
+        "status": "passed",
+        "execution_seconds": 2482.142598700011,
+        "verification_seconds": 138.72651330000372,
+        "records": 327,
+        "maximum_absolute_difference_V": 0.0,
+        "output_bytes": 30297456930,
+        "audit": "graph-cost-1-review.json",
+        "complete_candidate": false
       }
     },
     "full_backend_instrumentation": {
@@ -2038,6 +2048,12 @@
         ],
         "historical_bytes_unchanged": true
       }
+    },
+    "full_backend_current": {
+      "commit": "ad56f28",
+      "passed": 1377,
+      "warnings": 109,
+      "seconds": 855.4
     }
   }
 }
