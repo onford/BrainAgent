@@ -11,8 +11,8 @@ from .cognition_contracts import (
 from .survey_contracts import SearchGoal, SurveyPlan, LITERATURE_TARGETS
 
 
-def verification_contract(local):
-    from .survey_contracts import Comparison, DatasetVerification, FIELDS, SourceStatement
+def verification_contract(local, paper_source_ids=None):
+    from .survey_contracts import Comparison, DatasetVerification, FIELDS, SourceStatement, OfficialPublication
 
     # Prompt guidance belongs to the model-facing contract. Keep the stored
     # artifact schema stable when only instructions (not data fields) change.
@@ -31,6 +31,21 @@ def verification_contract(local):
         local_fact_ids=(list[str], Field(max_length=0, description=(
             "Return []; code attaches every measured reference for this field."))),
     )
+    publication_fields = {}
+    if paper_source_ids is not None:
+        ids = tuple(dict.fromkeys(paper_source_ids))
+        unknown = create_model('UnidentifiedPublication', __base__=OfficialPublication,
+            role=(Literal['not_identified'], ...),
+            source_id=(None, Field(description='No matching actually read paper was identified; return null.')))
+        publication = unknown
+        if ids:
+            identified = create_model('ReadOfficialPublication', __base__=OfficialPublication,
+                role=(Literal['dataset_paper', 'acquisition_system'], ...),
+                source_id=(Literal[ids], Field(description=(
+                    'Exact ID of the actually read paper, not the website that cites it. '
+                    'If no read paper matches the official citation, use not_identified and null.'))))
+            publication = Annotated[Union[identified, unknown], Field(discriminator='role')]
+        publication_fields['official_publication'] = (publication, ...)
     return create_model(
         "DatasetVerification",
         __base__=DatasetVerification,
@@ -38,6 +53,7 @@ def verification_contract(local):
             list[row],
             Field(min_length=len(FIELDS), max_length=len(FIELDS)),
         ),
+        **publication_fields,
     )
 
 

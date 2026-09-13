@@ -494,7 +494,7 @@ async def research(agent, survey):
 
         verification = await agent.ask(
             "逐项对比本地、官网仓库与官方论文",
-            verification_contract(local),
+            verification_contract(local, [d.id for d in sources.documents if d.kind == 'paper']),
             {
                 **inputs,
                 "sources": agent.source_context(sources),
@@ -505,6 +505,8 @@ async def research(agent, survey):
             "Produce every fixed comparison row. Local observations group identical measured values and retain every record ID. Return local_fact_ids=[]; code attaches all measured references. Compare all groups, including minority values. Do not rewrite measurements, manufacture pointers, infer task identity from file names, or treat unperformed checks as absence. "
             "Each official-site/repository or official-paper statement requires cited exact quotes. Missing statements are null with no findings. "
             "Identify the official DATASET paper via official citation evidence. A related acquisition-system paper is role=acquisition_system and cannot fill the official dataset-paper column. "
+            "Both identified roles require the exact source_id of an actually read paper. A citation on a website alone does not establish that the cited paper was read. "
+            "When that paper has not been read, use role=not_identified and source_id=null; preserve the website's citation evidence in facts and explain the missing read in gaps. "
             "When identity cannot be confirmed use not_identified; do not substitute a usage/method paper. "
             'If official_publication.role is not dataset_paper, EVERY official_paper cell must be '
             '{"statement":null,"finding_ids":[]}. Do not write an absence explanation in statement, '
