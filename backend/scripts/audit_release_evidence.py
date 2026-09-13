@@ -12,6 +12,25 @@ from app.search.method_provenance import participation
 from app.search.source_evidence import source_objects
 
 
+def unassessed_candidate(candidate, directory):
+    """Keep failed/unexecuted candidates visible without inventing an assessment."""
+    receipt = candidate.get("receipt")
+    if candidate["status"] == "evaluated" or (receipt or {}).get("status") == "evaluated":
+        raise ValueError("An evaluated candidate must have its assessment")
+    path = directory / "receipt.json"
+    if receipt is not None:
+        assert path.is_file() and read(path) == receipt, "Failure receipt differs from search state"
+    else:
+        assert not path.exists(), "Unbound persisted receipt"
+    return {"id": candidate["id"], "title": candidate.get("title"), "status": candidate["status"],
+        "error": candidate.get("error") or (receipt or {}).get("error"),
+        "assessment_status": "not_produced", "score": None, "verified_assessment_artifacts": 0,
+        "verification_scope": "Failure/absence evidence only; not a scored or scientifically verified candidate",
+        "available_stage_files": {name: {"sha256": file_hash(directory / name), "bytes": (directory / name).stat().st_size}
+            for name in ("method.json", "plan.json", "result.json", "receipt.json", "execution.json")
+            if (directory / name).is_file()}}
+
+
 def audit(root):
     state, protocol = read(root / "search.json"), read(root / "protocol.json")
     entries_at(root)
@@ -21,7 +40,10 @@ def audit(root):
     rows = []
     for candidate in state["candidates"]:
         directory = root / "candidates" / candidate["id"]
-        receipt = candidate["receipt"]
+        receipt = candidate.get("receipt")
+        if not (receipt or {}).get("assessment"):
+            rows.append(unassessed_candidate(candidate, directory))
+            continue
         assert receipt == read(directory / "receipt.json")
         assessment = receipt.get("assessment") or {}
         count = 0
@@ -43,7 +65,7 @@ def audit(root):
             "score": assessment.get("selection_score"), "assessment_status": assessment.get("status"),
             "axes": {key: assessment[key]["status"] for key in ("utility", "quality", "reconstruction")},
             "coverage": assessment.get("coverage"), "seed_summary": assessment["utility"].get("seed_summary"),
-            "quality_metric_statuses": dict(Counter(v["status"] for v in assessment["quality"]["summary"]["metrics"].values())),
+            "quality_metric_statuses": dict(Counter(v["status"] for v in (assessment["quality"].get("summary") or {}).get("metrics", {}).values())),
             "verified_assessment_artifacts": count, "verified_source_objects": list(sources),
             "receipt_sha256": file_hash(directory / "receipt.json"), "plan_sha256": file_hash(directory / "plan.json"),
             "actual_record_steps": steps})
@@ -77,6 +99,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.output.exists():
         raise ValueError("Audit output already exists; preserve previous evidence")
+    if args.output.resolve().is_relative_to(args.search.resolve()):
+        raise ValueError("Audit output must be outside the historical search tree")
     result = audit(args.search)
     write(args.output, result)
     print("audit recorded; strict_minimum_met=", result["strict_minimum_met"])

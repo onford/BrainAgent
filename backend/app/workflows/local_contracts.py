@@ -267,8 +267,23 @@ class LocalObservation(Contract):
             meta=value['metadata_inspection']
             for f in meta['structured_files']:
                 f['stored_rows']=len(f.pop('rows'))
-            for comparison in meta['wfdb_comparisons'].values():
+            comparison_groups = {}
+            for record_id, comparison in meta.pop('wfdb_comparisons').items():
                 comparison.pop('annotations',None)
+                # Keep all record-specific provenance and every distinct result;
+                # repeated decoder/measurement fields need not be sent 1526 times.
+                provenance_keys = {'file', 'sha256', 'bytes'}
+                observed = {k: v for k, v in comparison.items() if k not in provenance_keys}
+                fingerprint = json.dumps(observed, sort_keys=True, ensure_ascii=False)
+                group = comparison_groups.setdefault(fingerprint, {'observed': observed, 'records': {}})
+                group['records'][record_id] = {k: v for k, v in comparison.items() if k in provenance_keys}
+            meta['wfdb_comparison_groups'] = list(comparison_groups.values())
+            meta['wfdb_context_format'] = (
+                'Every group observed object applies to ALL records in its records map. '
+                'Merge observed with each record file/sha256/bytes object to recover its exact comparison, '
+                'excluding raw annotations retained in survey/local-inspection.json. '
+                'All record IDs, distinct measurements, mismatches, errors and file provenance are retained; no sampling.'
+            )
         value["subjects"] = {
             "count": len(self.subjects),
             "metadata": {

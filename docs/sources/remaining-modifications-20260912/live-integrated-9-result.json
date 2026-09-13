@@ -1,0 +1,45 @@
+{
+  "status": "failed",
+  "acceptance_passed": false,
+  "workflow_id": "80c33ed4a18148428944b2536a42c839",
+  "stages": [
+    {
+      "error": "Persistent LLM budget exhausted: single request input bytes; split the source/context before retrying",
+      "label": "数据调研",
+      "name": "data_survey",
+      "started_at": "2026-09-13T03:14:00.512281+00:00",
+      "status": "failed"
+    },
+    {
+      "label": "数据接入",
+      "name": "data_collection",
+      "status": "pending"
+    },
+    {
+      "label": "数据预处理",
+      "name": "data_preprocessing",
+      "status": "pending"
+    },
+    {
+      "label": "结果选择",
+      "name": "data_evaluation",
+      "status": "pending"
+    },
+    {
+      "label": "数据报告",
+      "name": "data_report",
+      "status": "pending"
+    },
+    {
+      "label": "数据交付",
+      "name": "data_delivery",
+      "status": "pending"
+    }
+  ],
+  "error": "Persistent LLM budget exhausted: single request input bytes; split the source/context before retrying",
+  "search_id": null,
+  "original_data_unchanged": true,
+  "code_unchanged_during_run": true,
+  "driver_unchanged_during_run": true,
+  "code_digest_after": "3fab6e7a59d2a0a387c8bb8b52556c6d537970ae46c4ba1499b69e91682d22c8"
+}

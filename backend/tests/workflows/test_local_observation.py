@@ -1,5 +1,6 @@
 # ruff: noqa: F811
 import csv
+import json
 from copy import deepcopy
 
 import pytest
@@ -124,6 +125,35 @@ def test_runtime_schema_rejects_cross_field_and_invented_pointers(
         sampling["local_fact_ids"] = [pointer]
         with pytest.raises(ValidationError):
             model.model_validate(value)
+
+
+def test_full_cohort_wfdb_context_is_lossless_without_repeated_result_fields(source, tmp_path):
+    from app.workflows.local_metadata import MetadataInspection
+    from app.workflows.wfdb_annotations import WFDBComparison, WFDBEvent
+
+    folder = tmp_path / 'survey'
+    dataset.inspect(source, WorkflowRequest(source_root=str(source)), folder)
+    local = read_local(folder / 'local-inspection.json')
+    comparisons = {}
+    for i in range(1526):
+        comparisons[f'record-{i}'] = WFDBComparison(status='matched', file=f'S{i // 14 + 1:03d}/record-{i}.event',
+            sha256=f'{i:064x}', bytes=42, reader_version='4.3.1', decoder_source_sha256='d' * 64,
+            declared_sfreq=160, edf_count=15, wfdb_count=15,
+            annotations=[WFDBEvent(sample=0, label='T0', duration_s=4, original_note='T0 duration: 4')])
+    comparisons['record-1524'] = comparisons['record-1524'].model_copy(update={
+        'status': 'mismatch', 'reason': 'different_onset', 'maximum_onset_difference_samples': 1.25,
+        'discrepancies': [{'event_index': 1, 'edf_sample': 128, 'wfdb_sample': 129.25}]})
+    comparisons['record-1525'] = comparisons['record-1525'].model_copy(update={
+        'status': 'read_error', 'reason': 'malformed byte pairs', 'wfdb_count': 0})
+    local.metadata_inspection = MetadataInspection(wfdb_comparisons=comparisons)
+    before = local.model_dump(mode='json')
+    compact = local.research_context()['metadata_inspection']
+    restored = {rid: {**group['observed'], **provenance}
+        for group in compact['wfdb_comparison_groups'] for rid, provenance in group['records'].items()}
+    assert restored == {rid: row.model_dump(mode='json', exclude={'annotations'}) for rid, row in comparisons.items()}
+    assert len(compact['wfdb_comparison_groups']) == 3
+    assert local.model_dump(mode='json') == before
+    assert len(json.dumps(compact).encode()) < 0.5 * len(json.dumps(restored).encode())
 
 
 def test_fractional_event_samples_and_mixed_rates_are_preserved(source, tmp_path):  # noqa: F811

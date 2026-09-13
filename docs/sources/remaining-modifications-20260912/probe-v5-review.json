@@ -1,0 +1,1177 @@
+{
+  "assignment_comparison_threshold_unchanged": true,
+  "code_digest": "3fab6e7a59d2a0a387c8bb8b52556c6d537970ae46c4ba1499b69e91682d22c8",
+  "design_sha256": "2e7ca83a15d82e58d00379e513a088ce2d36bbbf9d372308564dac0298b2e81b",
+  "driver_sha256": "769f92d6ca7a0bedbd22e4fd5b4c0d302d703964401adab94d3b8ff7f3c710a9",
+  "elapsed_seconds": 111.40852559998166,
+  "final_acceptance": false,
+  "frozen_code_commit": "560f5ec8b7813ec3609f6e02c87ab679003abadc",
+  "historical_baseline_assessment_status": "partial; immutable v4 result",
+  "limits": [
+    "Engineering pulse coverage, not natural artifact prevalence or neural truth",
+    "109 first-MI-record probe cases / 1640 eligible probe trials; primary panel remains 109 participants / 327 records / 4918 trials",
+    "No new utility fitting, no complete new candidate or fresh literature acceptance",
+    "Shared-host concurrent audit IO; wall time is not an idle-host benchmark"
+  ],
+  "maximum_clean_replay_error_V": 1.0842021724855044E-19,
+  "negative_controls_verified_cases": 109,
+  "new_complete_candidate": false,
+  "new_utility_fits": 0,
+  "old_probe_hash": "870c40ac44f40995ff81e34e360520cf8f550a85ea5a361fbc32ac8fde56debc",
+  "original_audit_path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\probe-v5-2\\audit.json",
+  "original_audit_sha256": "da3c9832168637bc14de95b53cb4f930968328291e1bf26de29439944d8765a6",
+  "probe_hash": "d677dfc9c9dc93bbfc740ff4848e1cb514da7fe207fe48930f3bd93d2786a2f6",
+  "probe_version": "dataset-reconstruction-v5",
+  "prototype_graph_audit": {
+    "evaluated": 102,
+    "failed": 7,
+    "path": "E:\\work\\BrainAgent\\.local\\remaining-modifications-20260912\\probe-v5-1",
+    "post_run_integrity": "verified; source, graph, code, old probe and old search unchanged",
+    "reason": "Source-normalized short pulse blocks can have zero reference RMS; replaced by unit-RMS templates before whole-record scaling",
+    "unchanged": {
+      "code": true,
+      "graph": true,
+      "old_probe": true,
+      "old_search": true,
+      "source": true
+    },
+    "audit_sha256": "38c485ec1161b37444cd16d400f81b9d7d83d556bfdfa454de0f79ab976da141",
+    "code_patch_sha256": "4b38d215684bee32c1fb238fcdcc2f1e91c493939e378c234684e188dd0136b2",
+    "code_patch_base": "c563ae803a9aa9295b6b6d59eb731858004d2e88"
+  },
+  "status": "evaluated",
+  "summary": {
+    "aggregation": "equal_windows_within_subject_then_equal_assigned_subjects_per_frozen_condition",
+    "by_case": {
+      "drift-r05": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -4.553030025492006E-06
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.00044888541115800515
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5469058478394021
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.2900471503830434
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8177932778119787
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.4789460391753184
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.004067047644537521
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.9999999998646665
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.4805210637878987E-06
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 4.483026701096859E-06
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 210.24279658954944
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5469058378138062
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8177932852256509
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -47.79298434931455
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S001",
+          "S022",
+          "S035",
+          "S043",
+          "S048",
+          "S054",
+          "S067",
+          "S092",
+          "S093",
+          "S099",
+          "S104"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 169
+      },
+      "drift-r10": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.9897029315738177E-12
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 5.525709652566133E-12
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5316340323026014
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.2617157730186888
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8386905549087248
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.4656279135436074
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.008661897197346318
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.0
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 5.810619201361544E-14
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.3657520758199696E-13
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 229.98981327555293
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5316340323026009
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8386905549087249
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -42.218203118633404
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S012",
+          "S017",
+          "S024",
+          "S026",
+          "S034",
+          "S039",
+          "S056",
+          "S061",
+          "S064",
+          "S066",
+          "S077"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "emg-r05": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.17720268835886885
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.37346208668425274
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5710455044326523
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.2816053659709243
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8260365349945252
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.4890356370628801
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.4575432880475794
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.673165288521433
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.543891092217629
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.1499810994189972
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 8.558167389674711
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3910224497428824
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.0151923171690267
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.3515872627231995
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S010",
+          "S020",
+          "S041",
+          "S045",
+          "S047",
+          "S060",
+          "S081",
+          "S090",
+          "S103",
+          "S105",
+          "S108"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "emg-r10": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.17820029022155365
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.37543252973596763
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5864441344296254
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.308487963652046
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8047918945710917
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5076141800576462
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.553525933801031
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.4704803776197402
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.95877066720594
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.071517273993472
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 8.512813236019833
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.28794578526161746
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.268266559206979
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 5.780582831934346
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S030",
+          "S040",
+          "S046",
+          "S049",
+          "S052",
+          "S055",
+          "S069",
+          "S072",
+          "S074",
+          "S076",
+          "S079"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "eog-r05": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -1.9288144257846083E-07
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.4907570522191563E-05
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5775249302535721
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.29801583310688484
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8161440242245286
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5038678547738262
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.13182544722019718
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.9999999999595228
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 3.0003161460643946E-06
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 6.432787743263595E-06
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 92.60480366866312
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5775249166031036
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.816144028779217
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -17.648286949398724
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S018",
+          "S019",
+          "S031",
+          "S037",
+          "S050",
+          "S053",
+          "S058",
+          "S084",
+          "S091",
+          "S096",
+          "S098"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "eog-r10": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 7.797990236397512E-07
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 4.5008498515518166E-05
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.6088461266249612
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.32557001336786207
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.7982877569549818
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5288568396964334
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.25175037754137736
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.9999999980424318
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 1.0207039008033282E-05
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 2.356264666790079E-05
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 90.85633990312448
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.6088461532639494
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.7982877204173158
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -11.753002041520084
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S002",
+          "S016",
+          "S025",
+          "S038",
+          "S042",
+          "S075",
+          "S086",
+          "S088",
+          "S089",
+          "S094",
+          "S095"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 169
+      },
+      "line-r05": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.00026689942245266933
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.00026689942245266933
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.531491034602239
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.2269122610381441
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8631104238904642
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.43265709093004495
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3331634611333052
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.9999999591799819
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 8.892113535883613E-05
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.00021513813974539527
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 71.47304731974555
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5314909778894222
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8631104071746509
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -8.61518862270146
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S004",
+          "S021",
+          "S023",
+          "S032",
+          "S033",
+          "S057",
+          "S062",
+          "S063",
+          "S071",
+          "S078",
+          "S082"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "line-r10": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.0002668994224527388
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.0002668994224527388
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5595677491186741
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.28375267989515934
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8266696567599046
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.491702068077511
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8293354978570865
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.999999810174041
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.00022134916539669273
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.0004660550224055725
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 71.47304731974329
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.559566930301175
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8266701655724984
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -0.9113585434675748
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S003",
+          "S005",
+          "S011",
+          "S013",
+          "S014",
+          "S028",
+          "S044",
+          "S059",
+          "S080",
+          "S097",
+          "S106"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 165
+      },
+      "pulse-r05": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3322996422454633
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5507190118231585
+          },
+          "clean_retention_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5745794769926985
+          },
+          "clean_retention_gain": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3083732655618838
+          },
+          "clean_retention_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8113874480034476
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5192409772134107
+          },
+          "input_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3265649334349252
+          },
+          "paired_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.9138522082745792
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.17715449922282922
+          },
+          "paired_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.3498629524372866
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 5.225708256017233
+          },
+          "reconstruction_correlation": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.5279530731269159
+          },
+          "reconstruction_nrmse": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": 0.8331898703117531
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 11,
+            "n_valid": 11,
+            "status": "ok",
+            "value": -8.580401285779816
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 11
+        },
+        "subjects_assigned": [
+          "S007",
+          "S008",
+          "S009",
+          "S027",
+          "S029",
+          "S036",
+          "S070",
+          "S073",
+          "S085",
+          "S100",
+          "S109"
+        ],
+        "subjects_expected": 11,
+        "subjects_not_assigned": 98,
+        "trial_cases_expected": 162
+      },
+      "pulse-r10": {
+        "metrics": {
+          "artifact_residual_coefficient": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.3322801773314532
+          },
+          "artifact_residual_rms_ratio": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.5555764570268711
+          },
+          "clean_retention_correlation": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.6132094763793554
+          },
+          "clean_retention_gain": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.333587640923207
+          },
+          "clean_retention_nrmse": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.79280144105222
+          },
+          "clean_retention_rms_ratio": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.5384207846619048
+          },
+          "input_nrmse": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.7736559890698178
+          },
+          "paired_correlation": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.7492634515140414
+          },
+          "paired_error_cleanproxy_ratio": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.4273095333707983
+          },
+          "paired_nrmse": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.833293156686451
+          },
+          "paired_ser_improvement_db": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 5.126046479376294
+          },
+          "reconstruction_correlation": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.4668214337744806
+          },
+          "reconstruction_nrmse": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": 0.9090145995396879
+          },
+          "reconstruction_ser_improvement_db": {
+            "n_total": 10,
+            "n_valid": 10,
+            "status": "ok",
+            "value": -1.8479394763364698
+          }
+        },
+        "status": "evaluated",
+        "status_counts": {
+          "evaluated": 10
+        },
+        "subjects_assigned": [
+          "S006",
+          "S015",
+          "S051",
+          "S065",
+          "S068",
+          "S083",
+          "S087",
+          "S101",
+          "S102",
+          "S107"
+        ],
+        "subjects_expected": 10,
+        "subjects_not_assigned": 99,
+        "trial_cases_expected": 150
+      }
+    },
+    "candidate_entry_hash": "695b9e39880df7e10daca1cbd636b038969ea62b27ba144d8a9dc0b56b80b333",
+    "candidate_id": "bp8-30-average",
+    "cases_expected": 109,
+    "design": "balanced",
+    "limitations": [
+      "Real EEG cleanproxy, not neural truth.",
+      "One complete recording per subject is a reconstruction probe; primary evaluation retains all records.",
+      "Balanced partial stress test: each subject receives one condition only; each condition covers its assigned subset, not all subjects. Between-condition contrasts also involve different subjects.",
+      "Conclusions concern shared physical voltage preprocessing under the declared synthetic contamination cases.",
+      "Engineering injection cases do not reproduce all natural artifacts.",
+      "Whole-record independent unlabeled fitting is offline/transductive.",
+      "Undefined and failed observations remain in the denominator; no weighted total score."
+    ],
+    "physical_method_ref": {
+      "id": "e5406c7535b40e1c889c646b48b49566617418b91a1f58cbef5ab1d82650c388",
+      "sha256": "e5406c7535b40e1c889c646b48b49566617418b91a1f58cbef5ab1d82650c388"
+    },
+    "plan_hash": "8a1feaaef7af221ccd7795832911a15b8de4724c38f3bb3393750a3c609ea5ce",
+    "primary_evaluation_record_count": 327,
+    "primary_evaluation_subject_count": 109,
+    "probe_hash": "d677dfc9c9dc93bbfc740ff4848e1cb514da7fe207fe48930f3bd93d2786a2f6",
+    "resources": {
+      "clean_replays": 109,
+      "corrupted_replays": 109,
+      "detail_bytes": 17275483,
+      "largest_metric_input_arrays_bytes": 15613440,
+      "largest_source_array_bytes": 10240000,
+      "persisted_signal_array_count": 0,
+      "source_records_read": 109,
+      "wall_seconds": 111.22950210000272
+    },
+    "schema_version": "dataset-reconstruction-v5",
+    "scope": "shared_physical_preprocessing",
+    "status": "evaluated",
+    "status_counts": {
+      "evaluated": 109
+    },
+    "subjects_expected": 109,
+    "trial_cases_expected": 1640
+  },
+  "tests": {
+    "failed_candidate_audit_seconds": 0.19,
+    "failed_candidate_audit_tests_passed": 2,
+    "passed": 203,
+    "seconds": 34.72
+  },
+  "unchanged": {
+    "code": true,
+    "search": true,
+    "source": true
+  }
+}

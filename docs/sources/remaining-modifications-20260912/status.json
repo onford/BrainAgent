@@ -567,8 +567,8 @@
         "D7"
       ],
       "historical_status": "未完成",
-      "status": "pending",
-      "implementation_update": "正式入口驱动已核对实际参与者范围、文件增删和全部应用/驱动哈希，允许在新请求冻结内存/磁盘/研究时间预算。未开始第9次 fresh 全集流程。"
+      "status": "in_progress",
+      "implementation_update": "第9次全109人正式流程已保留失败证据，尚未进入数值搜索。v5重建完整专项通过；WFDB上下文9组/1526记录可精确还原，完整请求370089字节低于原750000上限。准备独立新流程，不提升旧验收状态。"
     },
     {
       "id": "I28",
@@ -657,7 +657,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "全集资源与耗时实测",
-      "current": "小面板成本已有；全集每候选五折×三种子共 15 次 EEGNet 训练及质量/重建、图存储成本未实测。旧运行发现明显 I/O 等待，具体原因未确认。",
+      "current": "全集基础过程116.591分钟，图组件执行41.369分钟、核对2.312分钟；保留基础重建17不适用及共享主机限制，未测纯I/O等待。新版完整重建专项另行通过，不提升旧基础三轴状态。",
       "solution_and_acceptance": "记录完整候选阶段 wall/CPU、峰值进程树内存、磁盘增长与 I/O 等待，按实测选择并发和预算。估算须给范围；资源不够应停止，不能削种子/被试凑完成。",
       "dependencies": [
         "I45"
@@ -1648,7 +1648,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I32 全集基础与图成本观测完成，I27 正式全集流程准备中。基础三轴 partial（17 脉冲案例不适用）保留；1377 项完整回归通过，尚无新文献闭环验收。",
+  "active_step": "I27：v5重建109人/109案例/1640试次已通过。第9次fresh在首个研究请求被原单次输入上限拦截；无损WFDB分组修正已通过预检，准备第10次。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -2054,6 +2054,35 @@
       "passed": 1377,
       "warnings": 109,
       "seconds": 855.4
+    },
+    "reconstruction_probe_v5": {
+      "seconds": 111.40852559998166,
+      "tests_passed": 203,
+      "cases": 109,
+      "audit": "probe-v5-review.json",
+      "full_candidate_accepted": false,
+      "subjects": 109,
+      "status": "passed",
+      "tests_seconds": 34.72,
+      "probe_trials": 1640,
+      "frozen_code_commit": "560f5ec8b7813ec3609f6e02c87ab679003abadc"
+    },
+    "formal_full_9": {
+      "frozen_commit": "560f5ec8b7813ec3609f6e02c87ab679003abadc",
+      "acceptance_passed": false,
+      "status": "failed",
+      "workflow_id": "80c33ed4a18148428944b2536a42c839",
+      "reason": "initial survey planning input exceeds unchanged per-request byte limit"
+    },
+    "wfdb_context": {
+      "tests_seconds": 2.56,
+      "tests_passed": 21,
+      "exact_roundtrip": true,
+      "audit": "wfdb-context-preflight.json",
+      "unchanged_limit": 750000,
+      "status": "preflight_passed",
+      "old_request_bytes": 1125408,
+      "new_request_bytes": 370089
     }
   }
 }
