@@ -781,7 +781,7 @@
       "priority": "P1",
       "scope": "能力扩展",
       "title": "真实 EEG 的 profile 覆盖",
-      "current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
+      "current": "当前目录为310配置；冻结f209b40和完整独立环境正在重跑来源一致性矩阵。旧306配置及11项真实EEG证据仅为历史记录。本轮真实EEG覆盖尚未更新；新增4项完整原生流程仍需补充验证用例。",
       "solution_and_acceptance": "按 EOG/ECG/几何/资产/任务适用性建立代表性数据矩阵，逐类验证；不强迫 EEGMMIDB 验证无 EOG 方法，也不要求无限连续参数笛卡尔积。",
       "dependencies": [
         "I09",
@@ -794,7 +794,9 @@
         "E2"
       ],
       "historical_status": "尚未验证",
-      "status": "pending"
+      "status": "in_progress",
+      "historical_current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
+      "implementation_update": "新增audit_unit_matrix只读汇总器核对完整分母、结果索引、逐项回执、源码/引擎/运行环境、验证脚本与全部产物哈希，失败与未执行项保留；不写服务注册表，不借用历史真实EEG通过状态。11项专项测试通过。正式矩阵尚在运行，未发布通过结论。"
     },
     {
       "id": "I39",
@@ -949,7 +951,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "运行服务未加载新能力",
-      "current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。",
+      "current": "8001 API和Worker已加载651367e固定副本，版本与310配置能力接口可读。完整独立运行环境包缺项为0，20配置仍需显式资产；f209b40全回归进行到约87%时发现2项失败，详情待结束核查，暂不切换新环境。8000和全集正式运行保持。",
       "solution_and_acceptance": "核对并保护现有任务后，以同一冻结构建更新 API/数值 Worker/前端，增加 build-info；从实际服务验证版本、能力目录、提交/取消/下载和报告。",
       "dependencies": [
         "I45",
@@ -963,7 +965,8 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。 发现原环境95配置缺包或资产；独立完整环境已安装，包缺项为0、20配置仍需显式原生资产。原活动EEG环境版本未变，7项保护测试通过，全回归及切换待完成。"
+      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。 发现原环境95配置缺包或资产；独立完整环境已安装，包缺项为0、20配置仍需显式原生资产。原活动EEG环境版本未变，7项保护测试通过，全回归及切换待完成。",
+      "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
     },
     {
       "id": "I47",
@@ -2157,6 +2160,15 @@
       "status": "deferred_by_user",
       "reason": "User requested not to address the Sites project access/publication now",
       "published": false
+    },
+    "unit_matrix_auditor": {
+      "script": "backend/scripts/audit_unit_matrix.py",
+      "tests": {
+        "passed": 11,
+        "seconds": 2.99
+      },
+      "current_matrix_audit": "pending_finished_run",
+      "service_registry_updated": false
     }
   }
 }
