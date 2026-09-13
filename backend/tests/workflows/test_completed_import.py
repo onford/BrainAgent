@@ -91,3 +91,48 @@ def test_source_change_during_copy_preserves_staging_without_publishing(importer
     assert not list((inputs['destination'] / 'offline-search').iterdir())
     assert importer.read(inputs['output'])['status'] == 'failed'
     assert (inputs['destination'] / ('.completed-import-' + '1' * 32)).is_dir()
+
+
+def test_explicit_owner_mapping_changes_only_access_state(importer, inputs):
+    before = importer.inventory(inputs['run'])
+    inputs['destination_owner'] = 'sites-public'
+    result = importer.import_completed(**inputs)
+    assert importer.inventory(inputs['run']) == before
+    assert result['source_owner'] == 'owner' and result['destination_owner'] == 'sites-public'
+    assert set(result['state_changes']) == {'workflow.json', 'search.json'}
+    for name, identity, state_name in [('workflows', '1' * 32, 'workflow'), ('offline-search', '2' * 32, 'search')]:
+        source = inputs['run'] / name / identity
+        target = inputs['destination'] / name / identity
+        assert importer.read(target / (state_name + '.json')) == {
+            **importer.read(source / (state_name + '.json')), 'owner': 'sites-public'}
+        original, copied = importer.inventory(source), importer.inventory(target)
+        original.pop(state_name + '.json')
+        copied.pop(state_name + '.json')
+        assert original == copied
+        assert result['state_changes'][state_name + '.json']['destination_sha256'] == importer.sha(target / (state_name + '.json'))
+
+
+def test_explicit_historical_import_preserves_original_build(importer, inputs):
+    original_build = inputs['expected_build']
+    inputs.update(expected_build={'source_sha256': 'new-service'}, allow_historical_build=True)
+    result = importer.import_completed(**inputs)
+    assert result['historical_build'] is True and result['execution_started'] is False
+    assert result['execution_build'] == original_build
+    state = importer.read(inputs['destination'] / 'workflows' / ('1' * 32) / 'workflow.json')
+    assert state['execution_build'] == original_build
+    assert state['execution_build'] != result['destination_execution_build']
+
+
+@pytest.mark.parametrize('owner', ['', ' ', ' padded ', 'x' * 192])
+def test_invalid_destination_owner_rejected(importer, inputs, owner):
+    with pytest.raises(ValueError, match='Invalid destination owner'):
+        importer.import_completed(**inputs, destination_owner=owner)
+    assert not list((inputs['destination'] / 'workflows').iterdir())
+
+
+def test_historical_mode_still_rejects_active_source(importer, inputs):
+    path = inputs['run'] / 'offline-search' / ('2' * 32) / 'search.json'
+    write(path, {**importer.read(path), 'status': 'running'})
+    with pytest.raises(ValueError, match='Source is still active'):
+        importer.import_completed(**inputs, allow_historical_build=True)
+    assert not list((inputs['destination'] / 'workflows').iterdir())

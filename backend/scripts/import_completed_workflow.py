@@ -1,7 +1,8 @@
 """Copy a completed, verified workflow into an existing local service store.
 
-No execution is started, no source paths/state are rewritten, and existing IDs
-are never overwritten. The source must remain available for provenance paths.
+No execution is started, no original paths/state are rewritten, and existing IDs
+are never overwritten. Explicit owner mapping affects only copied access state;
+historical builds keep their original identity. The source must remain available.
 The workflow is made visible only after both complete trees are verified.
 """
 import argparse
@@ -46,7 +47,7 @@ def inventory(root):
     return result
 
 
-def import_completed(run, destination, expected_build, owner, output):
+def import_completed(run, destination, expected_build, owner, output, *, destination_owner=None, allow_historical_build=False):
     run, destination = run.resolve(strict=True), destination.resolve(strict=True)
     require(not run.is_relative_to(destination) and not destination.is_relative_to(run), 'Source and destination must be disjoint')
     output = output.resolve()
@@ -66,8 +67,16 @@ def import_completed(run, destination, expected_build, owner, output):
     require(workflow['id'] == workflow_id and workflow['search_id'] == search_id and search['id'] == search_id
             and search['workflow_id'] == workflow_id, 'Workflow/search identity mismatch')
     require(workflow['status'] == search['status'] == 'completed', 'Source is still active')
-    require(workflow['owner'] == search['owner'] == owner, 'Destination owner mismatch')
-    require(workflow.get('execution_build') == expected_build, 'Destination execution build mismatch')
+    require(workflow['owner'] == search['owner'] == owner, 'Source owner mismatch')
+    destination_owner = owner if destination_owner is None else destination_owner
+    require(isinstance(destination_owner, str) and bool(destination_owner.strip())
+            and destination_owner == destination_owner.strip() and len(destination_owner) <= 191,
+            'Invalid destination owner')
+    source_build = workflow.get('execution_build')
+    require(isinstance(source_build, dict) and bool(source_build) and isinstance(expected_build, dict)
+            and bool(expected_build), 'Execution build identity missing')
+    build_matches = source_build == expected_build
+    require(build_matches or allow_historical_build, 'Destination execution build mismatch')
     target_workflow, target_search = destination / 'workflows' / workflow_id, destination / 'offline-search' / search_id
     for parent in (target_workflow.parent, target_search.parent):
         require(parent.is_dir() and parent.resolve().is_relative_to(destination)
@@ -80,7 +89,9 @@ def import_completed(run, destination, expected_build, owner, output):
     require(shutil.disk_usage(destination).free > required_bytes + 1024 ** 3, 'Insufficient free space for verified copies')
     staging.mkdir()
     receipt = {'status': 'copying', 'workflow_id': workflow_id, 'search_id': search_id,
-               'source': str(run), 'destination': str(destination), 'execution_build': expected_build,
+               'source': str(run), 'destination': str(destination), 'execution_build': source_build,
+               'destination_execution_build': expected_build, 'historical_build': not build_matches,
+               'source_owner': owner, 'destination_owner': destination_owner, 'state_changes': {},
                'original_paths_preserved': True, 'execution_started': False, 'final_core_acceptance': False,
                'inventory': before, 'published': []}
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -97,6 +108,25 @@ def import_completed(run, destination, expected_build, owner, output):
             require(inventory(staging / name) == before[name], 'Copied bytes differ: ' + name)
         require(inventory(source_workflow) == before['workflow'] and inventory(source_search) == before['search'],
                 'Source changed during copy; do not publish')
+        # An explicit local migration may change access ownership, never the
+        # executed build, protocol, artifact paths, numeric outputs or evidence.
+        for name, state in [('workflow', workflow), ('search', search)]:
+            if destination_owner != owner:
+                path = staging / name / (name + '.json')
+                projected = {**state, 'owner': destination_owner}
+                path.write_text(json.dumps(projected, ensure_ascii=False, indent=2), encoding='utf-8')
+                require(read(path) == projected, 'Migrated owner projection differs')
+                receipt['state_changes'][name + '.json'] = {
+                    'field': 'owner', 'before': owner, 'after': destination_owner,
+                    'original_sha256': before[name][name + '.json']['sha256'],
+                    'destination_sha256': sha(path),
+                }
+        receipt['destination_state_inventory'] = {
+            name: {name + '.json': {'bytes': (staging / name / (name + '.json')).stat().st_size,
+                                  'sha256': sha(staging / name / (name + '.json'))}}
+            for name in ('workflow', 'search')
+        }
+        save()
         require(not target_workflow.exists() and not target_search.exists(), 'Destination ID appeared during copy')
         # Publish dependency first. A failed second rename leaves an explicitly
         # recorded orphan search, never an incomplete visible workflow.
@@ -123,7 +153,11 @@ if __name__ == '__main__':
     parser.add_argument('--service-build-receipt', type=Path, required=True,
                         help='Fresh GET /api/build-info response from the actual destination')
     parser.add_argument('--owner', required=True)
+    parser.add_argument('--destination-owner', help='Explicit local access-owner mapping; original files remain unchanged')
+    parser.add_argument('--allow-historical-build', action='store_true',
+                        help='Import completed historical results without changing their original execution build')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    report = import_completed(args.run, args.destination, read(args.service_build_receipt)['execution_build'], args.owner, args.output)
+    report = import_completed(args.run, args.destination, read(args.service_build_receipt)['execution_build'], args.owner, args.output,
+                              destination_owner=args.destination_owner, allow_historical_build=args.allow_historical_build)
     print(report['status'], report['workflow_id'])

@@ -37,4 +37,6 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 
 统一交付候选 `81e589e` 已整合其他任务完成的加载修复，补齐阶段说明和模型提示里的固定执行边界，避免把“参考将首先执行”描述为已执行；重建限制改为依据实际执行回执读取拟合范围，不能凭通用模板声称本轮发生了逐记录拟合。该发布候选尚未替换正在计算的 `722fe95`。前端 174 项、类型检查及构建通过；后端相关 33 项通过，完整新版回归仍进行中。测试次数重叠，不累加为全量数。
 
+接入预检发现本轮执行身份为 `local-development-user`，现有入口使用 `sites-public`；同时发布构建与历史数值构建不同。完成结果接入工具现支持显式 `--destination-owner` 和 `--allow-historical-build`：只映射副本中两个状态文件的访问身份，保存修改前后哈希，原始树、协议、模型、物理数组及来源路径均保留。跨构建接入继续保留原执行构建，不伪装成新版重新计算。15 项专项测试通过，包含活动来源阻断、原始字节保持及身份变更范围核对。现阶段仅工具完成，原计算未结束，尚未执行结果接入或页面验收。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。
