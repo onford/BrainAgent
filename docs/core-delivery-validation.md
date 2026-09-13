@@ -39,4 +39,6 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 
 接入预检发现本轮执行身份为 `local-development-user`，现有入口使用 `sites-public`；同时发布构建与历史数值构建不同。完成结果接入工具现支持显式 `--destination-owner` 和 `--allow-historical-build`：只映射副本中两个状态文件的访问身份，保存修改前后哈希，原始树、协议、模型、物理数组及来源路径均保留。跨构建接入继续保留原执行构建，不伪装成新版重新计算。15 项专项测试通过，包含活动来源阻断、原始字节保持及身份变更范围核对。现阶段仅工具完成，原计算未结束，尚未执行结果接入或页面验收。
 
+首次推荐与实际执行计划另行只读核验：模型只收到完整冻结目录，没有测量反馈；唯一推荐完成并落盘后才创建数值任务。前三个流程各 327 条记录的处理步骤、参数、来源、拟合和决定配置相同，无预处理拟合节点或逐被试适配。严格比较仅排除记录编号及按数据大小计算的内存/磁盘估算；初次比较将资源估算也纳入而失败，查明原因后作上述明确限定。复制出的四个反向控制分别修改单条记录参数、加入拟合域、交换执行顺序、伪造提前执行时间，全部被拒绝；原运行未修改。第四个计划及完整执行顺序仍待其实际产生后复核。[固定计划回执](sources/remaining-modifications-20260912/core-fixed-plan-20260914.json)。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。

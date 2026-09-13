@@ -1,0 +1,93 @@
+{
+  "status": "passed",
+  "search_id": "ea876b4c46b142a29f0cb0aba9228f34",
+  "search_status_observed": "running",
+  "final_core_acceptance": false,
+  "expected_order": [
+    "bp8-30-average",
+    "basic-broadband",
+    "basic-acquisition-reference",
+    "paper-668bf4f9eac0ff4849811e6f"
+  ],
+  "executed_prefix": [
+    "bp8-30-average",
+    "basic-broadband",
+    "basic-acquisition-reference"
+  ],
+  "one_initial_call_before_all_numerical_jobs": true,
+  "complete_catalog_presented": true,
+  "plans": [
+    {
+      "candidate_id": "bp8-30-average",
+      "records": 327,
+      "shared_configuration_sha256": "8d7ed72318b4e6442ab7f2d38e36609f52c8077890ccc656455d5f3d533874d5",
+      "fitted_preprocessing_nodes": 0,
+      "excluded_comparison_fields": [
+        "record_id",
+        "estimated_disk_bytes",
+        "estimated_memory_bytes"
+      ]
+    },
+    {
+      "candidate_id": "basic-broadband",
+      "records": 327,
+      "shared_configuration_sha256": "212b654892ada9e3522239d67459896479e5295a5aad398a70aa429b885d9f0e",
+      "fitted_preprocessing_nodes": 0,
+      "excluded_comparison_fields": [
+        "record_id",
+        "estimated_disk_bytes",
+        "estimated_memory_bytes"
+      ]
+    },
+    {
+      "candidate_id": "basic-acquisition-reference",
+      "records": 327,
+      "shared_configuration_sha256": "8eac8eabd94232a0ddf90943d48bdf3532f384dbf7e75147f3ac297cac3b2b38",
+      "fitted_preprocessing_nodes": 0,
+      "excluded_comparison_fields": [
+        "record_id",
+        "estimated_disk_bytes",
+        "estimated_memory_bytes"
+      ]
+    }
+  ],
+  "evidence_sha256": {
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\protocol.json": "5ff19970495ecdd0cdf3dfa8aa787578a85fa5cac40b97529e7d6b124c445011",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\initial-recommendation.json": "7559af1798bb90d28a7b94c42de75515e79c9aa3ca62a3eb5306288a1c0b650a",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\registry.json": "ad71b4dbd36b994dbdabf0cf9d2f660ce2a9f6330a62242204f3772754cf5ca6",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\llm-calls.json": "07106b1a5b692e40691729ee9dbd8cd50ea41287f9bb98f95264498c55853e41",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\decisions\\001\\request.json": "ac983d23524a550c4958e0e9c5b7e5f48b27c03c1b5b4536b37c362a0e3c648a",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\panel.json": "5ced4c0f0097c3493305f308290a229969ee97acd98cee7333939c6825fd0372",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\candidates\\bp8-30-average\\plan.json": "fba5473453e0dd3922ec9f8a99a3a7c44b09d5cfdc311caf0971de862ba097da",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\candidates\\basic-broadband\\plan.json": "25d136f1e9e38f7c99c6cd4fff3aef007c98042abfae255674581ed439c9956e",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\candidates\\basic-acquisition-reference\\plan.json": "6dc0657d27d8d7bef474866c541fa952d3b87f6c2d430d53c1e2b350fdc1943d"
+  },
+  "limits": "Checks this fixed four-operation family and saved execution prefix; classification training remains grouped across subjects. Final numeric completion and all other methods require separate verification.",
+  "driver_sha256": "03c9fc848d2b5bcb6e02ddf52c3f921252d1d08ae5dbaf798186fcb4aed576f1",
+  "negative_controls": {
+    "status": "passed",
+    "cases": [
+      {
+        "case": "one_record_parameter",
+        "rejected": true,
+        "reason": "Record-specific preprocessing configuration found"
+      },
+      {
+        "case": "all_record_fit_scope",
+        "rejected": true,
+        "reason": "Unexpected fit or individual adaptation"
+      },
+      {
+        "case": "reordered_execution",
+        "rejected": true,
+        "reason": "Execution departed from the frozen order"
+      },
+      {
+        "case": "numerics_before_freeze",
+        "rejected": true,
+        "reason": "Numerical job exists before recommendation freeze"
+      }
+    ],
+    "original_modified": false
+  }
+}

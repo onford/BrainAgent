@@ -71,7 +71,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "实质文献方法参与首次推荐与固定评价",
-      "current": "保留真实来源提取、首次推荐和固定文献流程数值执行；反馈推动派生候选的验收撤回。",
+      "current": "真实仓库来源的7–30 Hz分支以明确的0–2秒工程适配进入首次冻结推荐，位于第四个固定执行位置，尚未完成实际评价。原始1–4秒分支保留阻塞。",
       "solution_and_acceptance": "保留真实来源提取、首次推荐和固定文献流程数值执行；反馈推动派生候选的验收撤回。",
       "dependencies": [
         "I01",
@@ -360,7 +360,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "上下文、调用成本和搜索调度",
-      "current": "工作流决策与搜索决策已接入持久化模型调用账本：请求前预留、重试次数、返回 token 用量和耗时。未配置价格表及失败尝试计费保留未知。跨全部研究入口的总 token/金额预算与上下文调度仍待完成。",
+      "current": "真实调研及首次推荐共41次模型尝试，累计15985994/16000000输入字节；首次推荐成功且仅调用一次。原16小时绝对期限不重置，最终报告可能转为确定性已测数据表；费用仍因未配置价格表保留未知。",
       "solution_and_acceptance": "分层摘要＋按需原证据读取；逐调用记录 token/时延/成本并预留输出，持久化总预算。用有效新证据、候选差异、真实成本及未执行理由校准调度，保持完整分数账本，不固定方法比例。",
       "dependencies": [
         "I10",
@@ -711,7 +711,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "首次推荐后固定流程全集评价",
-      "current": "旧第10次自主运行已请求停止；后续只按首次冻结推荐验收，旧结果不改写。",
+      "current": "首次推荐冻结四个候选。当前前两个完整评价完成，第三个执行中；全109人/327记录/4918试次、三种子五折保持，未重试或改动预算。最终候选和交付核验待完成。",
       "solution_and_acceptance": "旧第10次自主运行已请求停止；后续只按首次冻结推荐验收，旧结果不改写。",
       "dependencies": [
         "I03",
@@ -943,7 +943,16 @@
       "status": "implemented_targeted_validation_passed",
       "delivery_priority": "core",
       "delivery_group": "C4",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-fixed-plan-20260914.json",
+        "core-regression-20260913.json"
+      ],
+      "core_acceptance": {
+        "status": "pending_fourth_fixed_plan",
+        "scope": "前三个实际计划各327条记录的科学及执行设置完全相同、无预处理拟合；记录标识和资源估算单列。已有分区泄漏边界回归保留，新版本全量回归进行中。",
+        "remaining_broad_scope": "本轮不执行拟合预处理，不用其结果冒充全部状态化分区组合的实际数值验证。"
+      }
     },
     {
       "id": "I37",
@@ -1053,7 +1062,16 @@
       "implementation": "docs/local-metadata-checks.md",
       "delivery_priority": "core",
       "delivery_group": "C2",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-upstream-20260914.json",
+        "core-data-gate-20260913.json"
+      ],
+      "core_acceptance": {
+        "status": "passed",
+        "scope": "完整EEGMMIDB本地结构和1526组WFDB/EDF核对；尚未检查的元数据显式保留，不能补成事实。",
+        "remaining_broad_scope": "BIDS继承及其他格式的进一步元数据检查仍在原条目中保留。"
+      }
     },
     {
       "id": "I41",
@@ -1108,7 +1126,16 @@
       "implementation": "docs/exclusion-object-evidence.md",
       "delivery_priority": "core",
       "delivery_group": "C2",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-upstream-20260914.json",
+        "core-data-gate-20260913.json"
+      ],
+      "core_acceptance": {
+        "status": "passed",
+        "scope": "本轮未基于文献标记或分数排除对象；109人及全部目标试次保留，pre/post/原始文件完整性可追溯。",
+        "remaining_broad_scope": "额外科学质量排除规则及跨数据集对象语义仍需独立证据，本次没有实施。"
+      }
     },
     {
       "id": "I43",
@@ -1167,7 +1194,7 @@
       "priority": "P0",
       "scope": "正式版",
       "title": "统一源码及可复现发布版本",
-      "current": "本次新增daa5619恢复账本与f8d2960论文身份修复；8001 API/Worker运行同一干净f8d2960固定副本。其他对话未提交改动保留，远端后续提交仍未确认同步，Sites仍暂缓。",
+      "current": "统一应用候选 81e589e 已整合已有性能修复和固定执行说明；干净副本前端174项/类型/构建通过，后端全量回归进行中。原数值运行继续使用722fe95；尚未切换8001或发布Sites。",
       "solution_and_acceptance": "保留所有现有工作，按文件归属整合为同一候选提交，冻结源码/依赖/模板/模型配置与资产哈希；跑相称的全链回归，按项目约定提交推送，输出一个可复现发布清单。",
       "dependencies": [],
       "sources": [
@@ -1941,7 +1968,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "恢复核心任务：当前第三个固定流程评价中；先前两个流程质量回执独立核验通过；统一发布候选81e589e全量回归中。",
+  "active_step": "第三个固定流程评价中；统一版本全量回归进行中，完成结果迁移工具15项及固定计划独立核验已通过。待通过回归后更新现有服务，并在全量结果完成后接入验收。",
   "execution_order": [
     "I13",
     "I14",
