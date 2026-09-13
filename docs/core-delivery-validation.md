@@ -23,4 +23,8 @@
 
 I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 的原生中断已结合原实测证据和本轮全量回归收口。原生验证限本机 Windows/MATLAB/RELAX；检索中断是受控真实 HTTP 和进程故障，不声称测过所有外部供应商故障。更广方法和科学验证仍按后续范围保留。
 
+结果接入工具 `backend/scripts/import_completed_workflow.py` 已通过 8 项校验。它要求工作流已完成且机械验收、原始数据和代码完整性均通过，核对目标服务的执行构建和 owner，逐文件验签后先发布完整搜索目录、再发布完整工作流目录。已有 ID、活动状态、SQLite 侧文件、路径链接或复制期间的来源变化均不能作为正常结果接入。原运行保留，绝对来源路径不改写；接入回执不等于最终科学或页面验收。本轮尚未接入，待模型与 ZIP 独立核验通过后执行。
+
+现有 8001 服务与本轮数值执行的 `execution_build` 完全相同。新的前端预览进程曾被自动审批审查拒绝，仅返回 `blocked by policy`；没有重复启动该进程。当前仍使用现有 5173 页面核对，不能把源文件创建说明已修正说成在线页面已更新。另一任务的性能优化保留在工作区，尚未并入本轮固定构建；另一任务的截图使用历史只读回放，也不能替代本轮真实交付验收。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。
