@@ -21,7 +21,7 @@
         "C2"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression",
+      "status": "completed",
       "historical_current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。",
       "delivery_priority": "core",
       "delivery_group": "C3",
@@ -29,7 +29,18 @@
       "core_evidence": [
         "core-direct-intake-20260913.json",
         "core-dual-entry-20260913.json"
-      ]
+      ],
+      "status_before_core_closure": "previously_verified_requires_regression",
+      "closure": {
+        "as_of": "2026-09-14",
+        "scope": "共同完整提取合同、真实双入口来源参数/数据端口核对及幂等复用；附加有限性复核差异明确保留。",
+        "receipts": [
+          "core-upstream-20260914.json",
+          "core-dual-entry-20260913.json",
+          "core-direct-intake-20260913.json"
+        ],
+        "not_claimed": "不表示所有后续模型输出语义正确，也不代表完整数值交付通过。"
+      }
     },
     {
       "id": "I02",
@@ -156,11 +167,22 @@
         "D1"
       ],
       "historical_status": "部分实现",
-      "status": "previously_verified_requires_regression",
+      "status": "completed",
       "historical_current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。",
       "delivery_priority": "core",
       "delivery_group": "C2",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "status_before_core_closure": "previously_verified_requires_regression",
+      "closure": {
+        "as_of": "2026-09-14",
+        "scope": "全327目标记录的结构化前提核验；虚构EOG/ECG/校准/平均参考和错误事件映射均拒绝。",
+        "receipts": [
+          "core-upstream-20260914.json",
+          "core-dual-entry-20260913.json",
+          "core-direct-intake-20260913.json"
+        ],
+        "not_claimed": "不表示所有后续模型输出语义正确，也不代表完整数值交付通过。"
+      }
     },
     {
       "id": "I07",
@@ -537,7 +559,16 @@
       "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。",
       "delivery_priority": "core",
       "delivery_group": "C4",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-quality-audit-20260914.json",
+        "core-signal-invariants-20260913.json"
+      ],
+      "core_acceptance": {
+        "status": "pending_remaining_fixed_candidates",
+        "scope": "前两个完成流程：327记录质量回执、318记录精确差值、9记录采样网格不同比对缺失；注册FIR/IIR、参考、重采样、分段解析信号检查通过。",
+        "remaining_broad_scope": "更广高风险算法的独立验证、不同采样网格的比较适配均未在此关闭。"
+      }
     },
     {
       "id": "I22",
@@ -989,7 +1020,16 @@
       "status": "pending",
       "delivery_priority": "core",
       "delivery_group": "C4",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-quality-audit-20260914.json",
+        "core-signal-invariants-20260913.json"
+      ],
+      "core_acceptance": {
+        "status": "pending_remaining_fixed_candidates",
+        "scope": "前两个完成流程：327记录质量回执、318记录精确差值、9记录采样网格不同比对缺失；注册FIR/IIR、参考、重采样、分段解析信号检查通过。",
+        "remaining_broad_scope": "更广高风险算法的独立验证、不同采样网格的比较适配均未在此关闭。"
+      }
     },
     {
       "id": "I40",
@@ -1901,7 +1941,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "按用户要求，当前前端小任务完成后暂停后续修改；保留当前全量计算及已挂接的模型/ZIP核验。最终结果接入与页面验收尚未执行。",
+  "active_step": "恢复核心任务：当前第三个固定流程评价中；先前两个流程质量回执独立核验通过；统一发布候选81e589e全量回归中。",
   "execution_order": [
     "I13",
     "I14",
@@ -2743,36 +2783,31 @@
     "progress": {
       "core_total_at_prioritization": 34,
       "core_formally_closed": [
+        "I01",
+        "I06",
         "I13",
         "I19",
         "I22",
         "I37",
         "I41"
       ],
-      "core_remaining": 29,
-      "all_unclosed_remaining": 45,
-      "numerical_status": "reference_eegnet_evaluation_running",
+      "core_remaining": 27,
+      "all_unclosed_remaining": 43,
+      "numerical_status": "two_candidates_evaluated_third_running",
       "source_parameter_review": "passed_with_two_archived_narrative_corrections; numerical_effect_pending",
       "data_gate": "passed",
       "signal_invariants": "passed",
       "frontend_creation_description": "completed; c5a6b4b; 168 frozen frontend tests, typecheck/build and actual 5173 zh/en browser checks passed",
       "backend_full_regression": "1426 passed; 109 warnings; 2457.44 s",
-      "direct_intake": "real extraction and idempotent replay passed; target-bound numerical equivalence with review differences recorded"
+      "direct_intake": "real extraction and idempotent replay passed; target-bound numerical equivalence with review differences recorded",
+      "quality_receipt_audit": "first two candidates passed full 327-record checks"
     },
-    "pause": {
-      "requested_by_user": "在完成当前小任务后暂停并报告完成情况；保留当前计算，仅暂停后续修改",
-      "current_small_task": "completed_frontend_creation_description_release",
-      "further_modifications": "paused",
-      "numerical_run": "continues_under_original_frozen_scope_and_budgets",
-      "existing_checkpoint_and_zip_audits": "continue",
-      "new_import_or_release_work": "not_started",
-      "snapshot": {
-        "search_status": "running",
-        "phase": "candidate",
-        "candidate_message": "执行并评价：基本运动频带 · 平均参考",
-        "reference_saved_eegnet_checkpoints": 13,
-        "reference_expected_eegnet_checkpoints": 15
-      }
+    "resumed": {
+      "as_of": "2026-09-14",
+      "source": "用户：继续完成核心任务",
+      "fixed_numerical_run_preserved": true,
+      "release_candidate_commit": "81e589ebe3ccc684c7760cff05da2fe4076f890b",
+      "release_full_regression": "in_progress"
     }
   }
 }

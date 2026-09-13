@@ -31,4 +31,10 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 
 用户随后要求“完成当前小任务后暂停”，并确认“保留当前计算，仅暂停后续修改”。上述前端小任务已完成，后续修改暂停；原全量计算及已经挂接的选中模型/ZIP 核验继续按原预算执行。结果接入工具尚未用于本轮，不将进行中的计算登记为核心交付完成。
 
+2026-09-14 已按用户新指令恢复。原始固定运行正常推进，前两个流程的 assessment 均为 complete，EEGNet 与 CSP-LDA 均覆盖 109 人、4918 试次。逐记录独立核对 327 个质量回执及文件哈希，318 条记录的共同视图差值逐值等于原始共同视图减处理后共同视图；9 条记录（S088/S092/S100 的 R04/R08/R12）原采样率为 128 Hz，分类评价保留，而同采样点配对比较明确不支持，因此只有 4768/4918 试次生成差值。这是比较适配的限制，不是排除数据或将缺测填零。详见[质量核验](sources/remaining-modifications-20260912/core-quality-audit-20260914.json)。
+
+上游核验确认本轮输入、前后筛选及原始文件校验记录相符；9 组结构化前提在全部 327 目标记录上核对，虚构 EOG、ECG、校准分区、平均参考或颠倒事件映射均为 missing。未检查的元数据仍保留原状态；知识目录中只有部分谓词/建议绑定，不把全部 65 条研究意见声称为已执行。来源原始窗口阻塞与工程适配分支允许分别保留。I01/I06 据此及双入口实测收口。[上游回执](sources/remaining-modifications-20260912/core-upstream-20260914.json)。
+
+统一交付候选 `81e589e` 已整合其他任务完成的加载修复，补齐阶段说明和模型提示里的固定执行边界，避免把“参考将首先执行”描述为已执行；重建限制改为依据实际执行回执读取拟合范围，不能凭通用模板声称本轮发生了逐记录拟合。该发布候选尚未替换正在计算的 `722fe95`。前端 174 项、类型检查及构建通过；后端相关 33 项通过，完整新版回归仍进行中。测试次数重叠，不累加为全量数。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。

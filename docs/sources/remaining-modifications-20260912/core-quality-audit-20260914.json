@@ -1,0 +1,5266 @@
+{
+  "status": "passed",
+  "scope": "First two completed candidates only; remaining fixed candidates and selected delivery pending",
+  "audits": [
+    {
+      "status": "passed",
+      "candidate_id": "bp8-30-average",
+      "records": 327,
+      "subjects": 109,
+      "eligible_trials": 4918,
+      "paired_records": 318,
+      "paired_trials": 4768,
+      "unavailable_contrasts": {
+        "source_and_processed_sample_rates_differ": 9
+      },
+      "read_files_unchanged": true,
+      "completed_candidate_state_unchanged": true,
+      "wall_seconds": 105.85503049998078,
+      "neural_preservation_validated": false,
+      "final_core_acceptance": false,
+      "driver_sha256": "dfdcd4ca0e75c1f20d71a83a418672453855c02f3a164d2033ad3b7f2a537241",
+      "full_receipt_path": "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\quality-audit-reference-1.json",
+      "full_receipt_sha256": "002fdc40db867e2e0ebe6a0d2f3e82cdc580238615bb3b9e89cfe1432514f138",
+      "verified_file_count": 1285,
+      "record_results": [
+        {
+          "record_id": "S001R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S001R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S001R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S088R04",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S088R08",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S088R12",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S089R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S089R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S089R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S092R04",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S092R08",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S092R12",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S093R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S093R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S093R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S100R04",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S100R08",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S100R12",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S101R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S101R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S101R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R08",
+          "source_sfreq": 160.0,
+          "trials": 13,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        }
+      ]
+    },
+    {
+      "status": "passed",
+      "candidate_id": "basic-broadband",
+      "records": 327,
+      "subjects": 109,
+      "eligible_trials": 4918,
+      "paired_records": 318,
+      "paired_trials": 4768,
+      "unavailable_contrasts": {
+        "source_and_processed_sample_rates_differ": 9
+      },
+      "read_files_unchanged": true,
+      "completed_candidate_state_unchanged": true,
+      "wall_seconds": 72.72014180000406,
+      "neural_preservation_validated": false,
+      "final_core_acceptance": false,
+      "driver_sha256": "dfdcd4ca0e75c1f20d71a83a418672453855c02f3a164d2033ad3b7f2a537241",
+      "full_receipt_path": "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\quality-audit-broadband-1.json",
+      "full_receipt_sha256": "fbecee8ea513c1ef48d52465479dc15596de4855f2fcc91cd41d1cd731ca603a",
+      "verified_file_count": 1285,
+      "record_results": [
+        {
+          "record_id": "S001R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S001R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S001R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S002R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S003R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S004R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S005R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S006R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S007R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S008R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S009R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S010R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S011R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S012R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S013R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S014R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S015R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S016R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S017R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S018R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S019R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S020R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S021R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S022R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S023R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S024R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S025R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S026R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S027R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S028R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S029R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S030R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S031R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S032R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S033R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S034R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S035R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S036R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S037R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S038R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S039R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S040R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S041R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S042R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S043R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S044R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S045R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S046R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S047R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S048R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S049R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S050R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S051R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S052R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S053R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S054R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S055R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S056R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S057R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S058R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S059R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S060R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S061R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S062R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S063R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S064R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S065R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S066R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S067R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S068R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S069R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S070R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S071R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S072R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S073R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S074R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S075R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S076R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S077R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S078R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S079R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S080R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S081R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S082R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S083R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S084R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S085R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S086R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S087R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S088R04",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S088R08",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S088R12",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S089R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S089R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S089R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S090R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S091R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S092R04",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S092R08",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S092R12",
+          "source_sfreq": 128.0,
+          "trials": 19,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S093R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S093R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S093R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S094R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S095R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S096R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S097R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S098R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S099R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S100R04",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S100R08",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S100R12",
+          "source_sfreq": 128.0,
+          "trials": 12,
+          "contrast_status": "not_comparable",
+          "reason": "source_and_processed_sample_rates_differ"
+        },
+        {
+          "record_id": "S101R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S101R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S101R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S102R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S103R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R08",
+          "source_sfreq": 160.0,
+          "trials": 13,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S104R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S105R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S106R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S107R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S108R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R04",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R08",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        },
+        {
+          "record_id": "S109R12",
+          "source_sfreq": 160.0,
+          "trials": 15,
+          "contrast_status": "evaluated",
+          "reason": null,
+          "exact_signed_difference_verified": true
+        }
+      ]
+    }
+  ]
+}

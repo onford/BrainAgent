@@ -1,0 +1,193 @@
+{
+  "status": "passed",
+  "scope": "Fresh upstream facts, missing prerequisites, frozen source/engineering branch separation and knowledge coverage declarations",
+  "runtime_source": "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\code\\backend\\app",
+  "local_scope": {
+    "subjects": 109,
+    "records": 1526,
+    "selected_records": 327
+  },
+  "pre_post_identical": true,
+  "no_model_based_exclusions": true,
+  "target_predicates": [
+    {
+      "kind": "channel_type",
+      "value": "eeg",
+      "status": "satisfied",
+      "record_count": 327
+    },
+    {
+      "kind": "channels",
+      "value": [
+        "C3",
+        "Cz",
+        "C4"
+      ],
+      "status": "satisfied",
+      "record_count": 327
+    },
+    {
+      "kind": "events",
+      "value": {
+        "left_hand": 1,
+        "right_hand": 2
+      },
+      "status": "satisfied",
+      "record_count": 327
+    },
+    {
+      "kind": "duration",
+      "value": 2.0,
+      "status": "satisfied",
+      "record_count": 327
+    },
+    {
+      "kind": "channel_type",
+      "value": "eog",
+      "status": "missing",
+      "record_count": 327
+    },
+    {
+      "kind": "channel_type",
+      "value": "ecg",
+      "status": "missing",
+      "record_count": 327
+    },
+    {
+      "kind": "partition",
+      "value": {
+        "id": "invented-calibration",
+        "role": "calibration",
+        "min_seconds": 1.0
+      },
+      "status": "missing",
+      "record_count": 327
+    },
+    {
+      "kind": "reference",
+      "value": "average",
+      "status": "missing",
+      "record_count": 327
+    },
+    {
+      "kind": "events",
+      "value": {
+        "left_hand": 2,
+        "right_hand": 1
+      },
+      "status": "missing",
+      "record_count": 327
+    }
+  ],
+  "knowledge_counts": {
+    "sources": 42,
+    "operators": 24,
+    "rules": 65,
+    "operator_pairs": 276,
+    "relation_gaps": 121,
+    "parameter_topics": 29,
+    "binding_status": {
+      "catalog_only": 56,
+      "partial_predicate_binding": 5,
+      "conditional_advisory_binding": 4
+    },
+    "complete_claims_enforced": 0
+  },
+  "source_branch_blocked_and_engineering_branch_recommended": true,
+  "missing_observation_categories": {
+    "organization.entities": {
+      "group": "organization",
+      "label": "Session / Task / Condition / Acquisition",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "尚未从本地元数据确认，Run 和被试仅按文件名解析",
+      "refs": []
+    },
+    "organization.bids": {
+      "group": "organization",
+      "label": "源 BIDS 根信息",
+      "status": "not_found",
+      "checked": 1,
+      "total": 1,
+      "reason": "在完整文件清单发现 0 个 dataset_description.json；不是官方标准验证",
+      "refs": [
+        "#/metadata_inspection/discovered_bids_roots"
+      ]
+    },
+    "signal.acquisition": {
+      "group": "signal",
+      "label": "设备 / 参考 / 接地 / 电极介质 / 电源频率",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "EDF 自由文本保留原值；上述含义尚未解析确认",
+      "refs": []
+    },
+    "signal.coordinates": {
+      "group": "signal",
+      "label": "电极布局与实测坐标",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "目录中的电极图和 PDF 尚未提取核对",
+      "refs": []
+    },
+    "events.protocol": {
+      "group": "events",
+      "label": "刺激 / 任务 / 间隔的完整流程",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "本地事件时间不能直接推定实验语义；需来源解释后核对",
+      "refs": []
+    },
+    "metadata.subjects": {
+      "group": "metadata",
+      "label": "年龄 / 性别 / 健康 / 惯用手 / 分组",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "原始患者标识保存在文件头；尚未解析人口学表",
+      "refs": []
+    },
+    "metadata.dataset": {
+      "group": "metadata",
+      "label": "本地名称 / 版本 / 许可声明",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "未执行本地说明文档的语义提取，不能断言不存在",
+      "refs": []
+    },
+    "metadata.behavior": {
+      "group": "metadata",
+      "label": "行为 / 刺激 / 同步记录",
+      "status": "not_checked",
+      "checked": 0,
+      "total": 1526,
+      "reason": "尚未实现对应本地检查器",
+      "refs": []
+    }
+  },
+  "inputs_unchanged": true,
+  "file_hashes": {
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\input.json": "b322b216c40cf7cbda7cf13b99390b86aa2f4170c8acab442ba9c4b7e4d04484",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\local-inspection.json": "33decf66495a2e36eefe0dbc91bb973de2d992296d57b1b249474693bc7ad144",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\pre-screen.json": "7e959f5ce59a2b9f536631e1843812d10dac5e712087d7035cf51769958bcca1",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\post-screen.json": "7e959f5ce59a2b9f536631e1843812d10dac5e712087d7035cf51769958bcca1",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\collection\\source-integrity.json": "285269fd63df1f1dcdbd3495c7598335b0144be1c2440bb851681dc7794d0cf2",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\initial-recommendation.json": "7559af1798bb90d28a7b94c42de75515e79c9aa3ca62a3eb5306288a1c0b650a",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\registry.json": "ad71b4dbd36b994dbdabf0cf9d2f660ce2a9f6330a62242204f3772754cf5ca6",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\protocol.json": "5ff19970495ecdd0cdf3dfa8aa787578a85fa5cac40b97529e7d6b124c445011",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\knowledge-revision.json": "e377210db3a486d84ec1818e8ddf1d9947b948c87d3db99a0e2e6a58abd0bcc8",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\knowledge-coverage.json": "bcd9a1ff39c7ec4536fd8905e24a9e14b61371e898d6fb0d7b9b6656b8a53609",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\offline-search\\ea876b4c46b142a29f0cb0aba9228f34\\method-intake.json": "4e3b89de12b7d6de08b34d5ebf450d918565bf9ec46ecca715e086d81d3f48c6"
+  },
+  "limits": [
+    "Metadata not checked remains unknown; template geometry is not individual digitization.",
+    "Catalog/advisory rules are not certified as fully enforced research conclusions.",
+    "No new model call, numerical execution or source exclusion.",
+    "The selected literature branch still requires full numerical and delivery acceptance."
+  ]
+}
