@@ -568,7 +568,7 @@
       ],
       "historical_status": "未完成",
       "status": "in_progress",
-      "implementation_update": "第9次全109人正式流程已保留失败证据，尚未进入数值搜索。v5重建完整专项通过；WFDB上下文9组/1526记录可精确还原，完整请求370089字节低于原750000上限。准备独立新流程，不提升旧验收状态。"
+      "implementation_update": "第10次从2906731独立快照真实运行，已完成调研、正在接入；第9次单输入上限失败不改写，预算上限及数值协议保持。尚无当前完整数值搜索或实质文献执行验收。"
     },
     {
       "id": "I28",
@@ -899,7 +899,8 @@
       ],
       "historical_status": "尚未验证",
       "status": "pending",
-      "historical_current": "旧全集 CSP 交付与小型 EEGNet 重载已验证；当前整合版文献/图搜索赢家的全集 X/y、模型、推理与下载包尚未完整验收。"
+      "historical_current": "旧全集 CSP 交付与小型 EEGNet 重载已验证；当前整合版文献/图搜索赢家的全集 X/y、模型、推理与下载包尚未完整验收。",
+      "implementation_update": "只读检查点审计已用历史完整基线验证109人/327记录/4918试次/15模型、708文件不变。新赢家ZIP、导出数组与训练示例仍待I27正式结果，未提升历史partial。"
     },
     {
       "id": "I44",
@@ -1648,7 +1649,7 @@
     }
   },
   "scope_revision": "2026-09-12 user withdrawal",
-  "active_step": "I27：v5重建109人/109案例/1640试次已通过。第9次fresh在首个研究请求被原单次输入上限拦截；无损WFDB分组修正已通过预检，准备第10次。",
+  "active_step": "I27 第10次fresh（2906731，e1adc0309f114a3eb6406c8c7abd5094）已完成真实数据调研，正在数据接入。I43检查点核验工具已用历史完整基线验证，仍待正式赢家交付。",
   "execution_order": [
     "scope_removal",
     "I45",
@@ -1980,7 +1981,7 @@
       "seconds": 910.3
     },
     "remote_sync": {
-      "verified_commit": "a5af55d",
+      "verified_commit": "290673142c4251f91e76de30a309a8902fe1037b",
       "branch": "dev-xx"
     },
     "resource_driver": {
@@ -2083,6 +2084,23 @@
       "status": "preflight_passed",
       "old_request_bytes": 1125408,
       "new_request_bytes": 370089
+    },
+    "formal_full_10": {
+      "workflow_id": "e1adc0309f114a3eb6406c8c7abd5094",
+      "acceptance_passed": false,
+      "frozen_commit": "290673142c4251f91e76de30a309a8902fe1037b",
+      "status": "running_data_collection"
+    },
+    "checkpoint_audit": {
+      "status": "passed_on_historical_baseline",
+      "records": 327,
+      "subjects": 109,
+      "seconds": 27.756570600002306,
+      "final_delivery_accepted": false,
+      "audit": "eegnet-checkpoint-audit.json",
+      "read_files": 708,
+      "trials": 4918,
+      "models": 15
     }
   }
 }
