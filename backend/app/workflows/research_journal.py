@@ -77,7 +77,11 @@ class ResearchJournal:
             for action in actions:
                 sequence += 1
                 key = action_key(action)
-                previous = next((r for r in reversed(saved["actions"]) if r["key"] == key), None)
+                # Reuse rows record what was known at that moment, not a new
+                # transport attempt. A concurrent caller's "unknown" snapshot
+                # must not hide the original request after it completes.
+                previous = next((r for r in reversed(saved["actions"])
+                                 if r["key"] == key and 'reused_sequence' not in r), None)
                 row = dict(sequence=sequence, key=key, action=action.model_dump(),
                     reserved_at=time(), status="reserved", result=None)
                 if previous:
@@ -103,6 +107,15 @@ class ResearchJournal:
             row = next(r for r in saved["actions"] if r["sequence"] == ticket["sequence"])
             if row["key"] != ticket["key"] or row["status"] != "reserved":
                 raise ValueError("research reservation already completed or changed")
+            if len(result.observations) != 1:
+                raise ValueError('Research result must contain exactly one reserved observation')
+            observation = result.observations[0]
+            if observation.sequence != row['sequence'] or action_key(observation.action) != row['key']:
+                raise ValueError('Research result does not match its reserved action')
+            if observation.success and observation.action.action == 'read':
+                source_id = (observation.output or {}).get('source_id')
+                if not source_id or sum(d.id == source_id for d in result.documents) != 1:
+                    raise ValueError('Successful read has no unique saved source document')
             row.update(status="completed", completed_at=time(), result=result.model_dump(mode="json"))
             write_json(self.path, saved)
 

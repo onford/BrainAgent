@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from app.workflows.cognition_contracts import ResearchSources
+from app.workflows.cognition_contracts import ResearchSources, ToolObservation
 from app.workflows.research_journal import ResearchJournal
 from tests.workflows.test_parallel_research import actions, make_cognition
 from tests.workflows.fakes import Reader
@@ -81,3 +81,50 @@ def test_batch_reservation_is_atomic(tmp_path):
         journal.reserve([a.model_copy(update={"purpose": purpose}) for a in actions(2)])
     assert journal.remaining(purpose) == 1
     assert journal.read()["actions"] == []
+
+
+@pytest.mark.asyncio
+async def test_late_completion_is_not_hidden_by_concurrent_unknown_reuse(tmp_path):
+    journal = ResearchJournal(tmp_path / 'journal.json', empty())
+    action = actions(1)[0]
+    ticket = journal.reserve([action])[0]
+    for _ in range(2):
+        assert journal.reserve([action])[0]['uncertain'] is True
+    document = await Reader().read(action.url, action.kind)
+    result = ResearchSources(documents=[document], observations=[ToolObservation(
+        sequence=ticket['sequence'], action=action, success=True,
+        output={'source_id': document.id}, error=None)])
+    journal.complete(ticket, result)
+    restored = ResearchJournal(journal.path, empty())
+    reused = restored.reserve([action])[0]
+    assert reused['result'] == result.model_dump(mode='json')
+    assert reused['reused_sequence'] == ticket['sequence']
+    assert reused['uncertain'] is False
+    # Historical unknown observations remain as they were originally reported.
+    assert all(r['uncertain'] for r in restored.read()['actions'][1:3])
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('change', ['sequence', 'action', 'missing_document', 'duplicate_document', 'observations'])
+async def test_completed_result_must_belong_to_its_reservation(tmp_path, change):
+    journal = ResearchJournal(tmp_path / 'journal.json', empty())
+    action = actions(1)[0]
+    ticket = journal.reserve([action])[0]
+    document = await Reader().read(action.url, action.kind)
+    result = ResearchSources(documents=[document], observations=[ToolObservation(
+        sequence=ticket['sequence'], action=action, success=True,
+        output={'source_id': document.id}, error=None)])
+    if change == 'sequence':
+        result.observations[0].sequence += 1
+    elif change == 'action':
+        result.observations[0].action = action.model_copy(update={'url': 'https://example.org/other'})
+    elif change == 'missing_document':
+        result.documents = []
+    elif change == 'duplicate_document':
+        result.documents.append(document)
+    else:
+        result.observations = []
+    before = journal.path.read_bytes()
+    with pytest.raises(ValueError):
+        journal.complete(ticket, result)
+    assert journal.path.read_bytes() == before
