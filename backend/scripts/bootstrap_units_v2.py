@@ -4,11 +4,11 @@ import argparse,subprocess,sys,json,hashlib
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--environment',type=Path,required=True);p.add_argument('--assets',type=Path);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--environment',type=Path,required=True);p.add_argument('--assets',type=Path);p.add_argument('--lock',type=Path);args=p.parse_args()
     target=args.environment.resolve()
     if target.exists():raise ValueError('choose a new environment directory; existing environments are preserved')
     if sys.version_info[:2]!=(3,12):raise ValueError('run with Python 3.12; audited patch version is 3.12.14')
-    backend=Path(__file__).resolve().parents[1];lock=backend/'requirements-units-v2.lock.txt'
+    backend=Path(__file__).resolve().parents[1];lock=(args.lock or backend/'requirements-units-v2.lock.txt').resolve(strict=True)
     subprocess.run([sys.executable,'-m','venv',str(target)],check=True)
     python=target/('Scripts/python.exe' if sys.platform=='win32' else 'bin/python')
     commands=[[str(python),'-m','pip','install','-r',str(lock)],[str(python),'-m','pip','check']]

@@ -28,7 +28,7 @@ Sites 项目标识保存在 `frontend/.openai/hosting.json`。访问权限设为
 - 公开站点使用 `127.0.0.1:8001` 的独立 API 和 EEG Worker，数据库为 `.local/sites-connection/public.db`，任务目录为该目录下的 `workflows`、`preprocessing` 和 `offline-search`。原本 8000 端口的开发服务及其数据库保持独立。
 - 连接网关监听 `127.0.0.1:8788`，只允许持有服务间密钥的 Sites Worker 访问；匿名直接访问隧道会返回 401。网关始终固定 owner 为 `sites-public`。
 - `scripts/start-sites-connection.ps1` 启动网关和隧道，必要时调用 `scripts/start-sites-backend.ps1` 启动公开后端。连接前需准备官方 cloudflared Windows 可执行文件至 `.local/sites-connection/cloudflared.exe`。
-- 后端启动脚本将本地提交检出至 `.local/service-builds/<完整提交>`，API 与 Worker 显式从同一干净副本导入；默认使用 HEAD，也可传入 `-Commit`。凭据继续在原本的本地环境文件读取，不复制进构建。构建目录不可在运行期间编辑，状态文件保存实际提交和路径。
+- 后端启动脚本将本地提交检出至 `.local/service-builds/<完整提交>`，API 与 Worker 显式从同一干净副本导入。首次默认使用HEAD；成功启动后，`runtime.json`保存源提交与Python解释器，后续启动沿用，可用`-Commit`及`-PythonExecutable`显式更新。凭据继续在原本的本地环境文件读取，不复制进构建。构建目录及正在使用的Python环境不可在运行期间修改。
 - 新工作流记录执行构建绑定：全部登记应用源码/模板、登记依赖版本及 Python 平台。其他构建或缺少绑定的历史流程只读；开始、重试、自动恢复及直接阶段执行均在写锁前核对，阶段间再次检查。Git 文档提交和进程启动时间不单独改变执行身份；运行时配置、第三方原生工具和数据仍由各自原有合同约束。这不支持把活动进程热升级到另一构建。
 - `scripts/stop-sites-connection.ps1` 只停止网关和隧道。公开后端进程记录在 `.local/sites-connection/backend-state.json`；停止前核对 PID、创建时间和可执行路径，避免终止复用 PID 的其他进程。
 - 密钥保存在被 Git 忽略的 `.local/sites-connection/secret.json`，并保存为 Sites secret。不要把该文件或日志提交到源码。
@@ -36,6 +36,8 @@ Sites 项目标识保存在 `frontend/.openai/hosting.json`。访问权限设为
 - 电脑重启后，旧状态文件中的 PID 可能已失效；先核对并归档旧状态，再运行启动脚本。脚本遇到已有状态会停止，避免重复启动或误停其他服务。
 
 Cloudflare [Quick Tunnel 文档](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/)说明临时隧道不保证可用性，且不支持直接 SSE。聊天通过经过认证的 WebSocket 桥传输，Sites Worker 再输出浏览器原本使用的 SSE 格式；普通 API 与文件仍走 HTTP 转发。
+
+完整图计算与数据接入使用`backend/requirements-service.lock.txt`，它包含既有完整单元锁及已验证的WFDB/官方BIDS校验依赖。用Python 3.12在新目录创建环境，不能对活动实验环境原地安装。`bootstrap_units_v2.py --lock requirements-service.lock.txt --environment <新目录>`会保留安装回执并运行依赖一致性检查；完整环境也不能替代方法所需的原生源码、模型资产、路径绑定和许可证。实际数值与矩阵回归通过后，再把该解释器传给启动脚本。
 
 ## 连接验证
 

@@ -1,4 +1,4 @@
-当前范围与修改进度以 [实施状态](current-implementation-status.md) 为准；带日期的审计和实验报告保留历史语义。
+当前能力与验收范围见 [现行入口](current-capabilities.md)，逐项修改进度见 [实施台账](sources/remaining-modifications-20260912/status.json)。带日期的审计和实验报告保留历史语义。
 
 # 文档导航
 
@@ -21,7 +21,9 @@
 | [神经先验实施路线](neural-prior-implementation-plan.md) | 知识与规则合同、工作包、依赖、决策闭环与验收计划 |
 | [神经先验实现与实测](neural-prior-implementation-review.md) | 已落地闭环、真实模型 API 与 EEG 实测、发现并修复的问题和剩余缺口 |
 | [验收记录](offline-search-acceptance.md) | 已验证范围、测试记录与未完成实验 |
-| [全量预处理图执行系统](preprocessing-integration-v2.md) | 52 单元、88 op、306 profile 的实际执行、参数与产物分支、全量矩阵及验证边界 |
+| [全量预处理图执行系统](preprocessing-integration-v2.md) | 历史52单元、88操作、306配置的执行和验证记录；当前目录与证据状态见现行入口 |
+| [当前模型与交付核验](checkpoint-audit.md) | 保存模型、物理数组、事件、ZIP及训练示例的独立审计工具与实际验证边界 |
+| [实际服务与发布](sites-deployment.md) | 固定构建、预算入口、公开站点和本机持续运行的配置与限制 |
 | [版本管理](version-control.md) | 源码、运行产物及本地历史的管理边界 |
 | [离线展示](../exports/README.md) | 已保存运行的单文件导出与验证 |
 

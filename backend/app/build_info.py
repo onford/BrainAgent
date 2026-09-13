@@ -1,17 +1,13 @@
 """Identify the source and dependency snapshot loaded by a service process."""
 from datetime import datetime, timezone
-from importlib.metadata import PackageNotFoundError, version
+from importlib.metadata import distributions
 from pathlib import Path
 import subprocess
 from functools import lru_cache
 import platform
+import re
 
 SOURCE_SUFFIXES = {".py", ".json", ".html", ".txt", ".css", ".js", ".m", ".yaml", ".yml"}
-DEPENDENCIES = (
-    "fastapi", "pydantic", "numpy", "scipy", "mne", "mne-bids", "torch",
-    "scikit-learn", "asrpy", "pandas", "h5io", "h5py", "pybv", "httpx",
-    "sqlalchemy", "aiosqlite", "portalocker", "psutil", "jinja2",
-)
 
 from app.preprocessing.storage import digest, file_hash
 
@@ -25,11 +21,15 @@ def runtime_snapshot():
         if p.is_file() and p.suffix in SOURCE_SUFFIXES
     }
     dependencies = {}
-    for name in DEPENDENCIES:
-        try:
-            dependencies[name] = version(name)
-        except PackageNotFoundError:
-            dependencies[name] = None
+    for package in distributions():
+        name = package.metadata.get("Name")
+        if not name:
+            raise ValueError("Installed package metadata is missing its name")
+        name = re.sub(r"[-_.]+", "-", name).lower()
+        if name in dependencies and dependencies[name] != package.version:
+            raise ValueError(f"Conflicting installed versions for {name}")
+        dependencies[name] = package.version
+    dependencies = dict(sorted(dependencies.items()))
     return {
         "source_sha256": digest(source_files),
         "dependencies": dependencies,

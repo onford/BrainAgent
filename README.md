@@ -1,6 +1,6 @@
 # Brain Agent
 
-[文档导航](docs/README.md) · [评价与验收](docs/offline-search-acceptance.md) · [图表阅读指南](docs/visualization-and-interpretation.md)
+[当前能力与验收范围](docs/current-capabilities.md) · [文档导航](docs/README.md) · [图表阅读指南](docs/visualization-and-interpretation.md)
 
 EEGMMIDB 工作流将本地调研、资料核对、标准化接入、诊断驱动的预处理策略搜索、报告与训练交付连接起来。LLM 根据实测诊断提出共享策略及实验预测；数值工具按被试隔离计算开发效用，选择规则确定胜者。页面入口为 `/workflows`，见[运行说明](docs/training-workflow.md)。
 

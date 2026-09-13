@@ -589,7 +589,8 @@
         "D7"
       ],
       "historical_status": "未完成",
-      "status": "pending"
+      "status": "pending",
+      "implementation_update": "文件名与元数据只读核查发现BCICIV_2b已有预处理、分类汇总/逐人结果，未读取结果内容。其未参与开发的资格不明，不能作为未使用测试集；目前仍只报告开发结果。"
     },
     {
       "id": "I29",
@@ -962,7 +963,7 @@
       ],
       "historical_status": "实测未接入",
       "status": "in_progress",
-      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。"
+      "implementation_update": "公开8001已从固定8d99111副本更新API/Worker，health/build-info/capabilities均200，54单元/91操作/310配置目录可读；此前工作流、搜索、会话和数值任务均为空，8000及正式第10次未中断。同版完整提交/取消/交付仍待验收。 发现原环境95配置缺包或资产；独立完整环境已安装，包缺项为0、20配置仍需显式原生资产。原活动EEG环境版本未变，7项保护测试通过，全回归及切换待完成。"
     },
     {
       "id": "I47",
@@ -1031,7 +1032,8 @@
         "E4"
       ],
       "historical_status": "尚未验证",
-      "status": "pending"
+      "status": "blocked_external_access",
+      "implementation_update": "配置的Sites项目ID经当前连接查询返回project_not_found/404，未创建替代站点或改公开受众。651367e前端源码ZIP已从Git固定子树准备，用户账号/工作区问题已提出，公开前端未更新。"
     },
     {
       "id": "I50",
@@ -2139,7 +2141,17 @@
       "api_tests_passed": 1,
       "frontend_build": "passed",
       "backend_defaults_unchanged": true,
-      "browser": "pending updated build"
+      "browser": "English and Chinese fields, edited budgets and 390x844 scrolling verified; no duplicate workflow submitted"
+    },
+    "service_runtime": {
+      "status": "new_environment_installed",
+      "guard_tests_passed": 7,
+      "guard_seconds": 17.25,
+      "missing_python_packages": 0,
+      "profiles_with_unbound_assets": 20,
+      "full_regression": "pending",
+      "matrix": "pending",
+      "audit": "service-runtime-audit-1.json"
     }
   }
 }

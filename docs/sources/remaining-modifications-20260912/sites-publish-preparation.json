@@ -1,0 +1,12 @@
+{
+  "source_commit": "651367e1fa1f00a5835c58abd1b845dddaa96271",
+  "git_tree": "frontend",
+  "archive": ".local\\remaining-modifications-20260912\\sites-source-651367e.zip",
+  "archive_sha256": "72d901f8823ad0a209e4586bef11ca279d8f7116310d396aeb6157032d95dcb5",
+  "members": 125,
+  "project_id": "appgprj_6aa3fc339a3881918b9f7cbedaa9f13c",
+  "published": false,
+  "publication_blocker": "Sites get_site returned project_not_found (404) for the exact configured project ID; no replacement project created",
+  "skill_status": "Catalog hosting skill path is absent; no Sites SKILL.md found across installed plugin cache",
+  "local_receipt_sha256": "c1feaf645daa8327df5eec3784471398ce14720f409c272716bd62233141ec94"
+}

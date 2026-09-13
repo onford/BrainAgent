@@ -1,0 +1,20 @@
+# Combined service environment: full graph kernels plus verified data inspection.
+# Numerical versions come from the existing full-unit lock; active environments
+# must not be updated in place. Create a new Python 3.12 environment.
+-r requirements-units-v2.lock.txt
+aiohappyeyeballs==2.7.1
+aiohttp==3.14.3
+aiosignal==1.4.0
+attrs==26.1.0
+bids-validator-deno==3.0.1
+deno==2.9.6
+frozenlist==1.8.0
+jsonschema==4.25.1
+jsonschema-specifications==2025.9.1
+multidict==6.8.0
+propcache==0.5.2
+referencing==0.37.0
+rpds-py==2026.6.3
+soundfile==0.13.1
+wfdb==4.3.1
+yarl==1.24.5

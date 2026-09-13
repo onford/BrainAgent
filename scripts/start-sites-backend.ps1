@@ -1,10 +1,14 @@
 [CmdletBinding()]
-param([string]$Commit = 'HEAD')
+param([string]$Commit, [string]$PythonExecutable)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = Join-Path $projectRoot '.local/sites-connection'
 $statePath = Join-Path $runtimeRoot 'backend-state.json'
-$pythonExecutable = Join-Path $projectRoot 'backend/.venv-eeg/Scripts/python.exe'
+$runtimeConfigPath = Join-Path $runtimeRoot 'runtime.json'
+$runtimeConfig = if (Test-Path -LiteralPath $runtimeConfigPath) { Get-Content -LiteralPath $runtimeConfigPath -Raw | ConvertFrom-Json } else { $null }
+if (-not $Commit) { $Commit = if ($runtimeConfig.source_commit) { $runtimeConfig.source_commit } else { 'HEAD' } }
+if (-not $PythonExecutable) { $PythonExecutable = if ($runtimeConfig.python_executable) { $runtimeConfig.python_executable } else { Join-Path $projectRoot 'backend/.venv-eeg/Scripts/python.exe' } }
+$pythonExecutable = (Resolve-Path -LiteralPath $PythonExecutable).Path
 if (Test-Path -LiteralPath $statePath) { throw 'A public backend state already exists; inspect it before restarting.' }
 if (Get-NetTCPConnection -State Listen -LocalPort 8001 -ErrorAction SilentlyContinue) { throw 'Public backend port 8001 is in use.' }
 New-Item -ItemType Directory -Force -Path $runtimeRoot | Out-Null
@@ -45,7 +49,8 @@ try {
         $info = Get-CimInstance Win32_Process -Filter "ProcessId = $($server.Id)"
         @{process_id=$info.ProcessId; created=$info.CreationDate.ToUniversalTime().ToString('o'); executable=$info.ExecutablePath}
     }
-    @{processes=@($records); source_commit=$buildCommit; source_root=$buildRoot} | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statePath -Encoding utf8
+    @{processes=@($records); source_commit=$buildCommit; source_root=$buildRoot; python_executable=$pythonExecutable} | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $statePath -Encoding utf8
+    @{source_commit=$buildCommit; python_executable=$pythonExecutable} | ConvertTo-Json | Set-Content -LiteralPath $runtimeConfigPath -Encoding utf8
     Write-Output 'Public backend and EEG worker started from one fixed source build with a separate database and output workspace.'
 } catch {
     foreach ($server in $started) { if (-not $server.HasExited) { Stop-Process -Id $server.Id } }
