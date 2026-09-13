@@ -2616,6 +2616,13 @@
       "I37",
       "I41"
     ],
-    "policy": "先完成当前运动想象核心交付切片；保留原状态和历史失败；切片通过不自动关闭整项；后置扩展不充当核心前置条件。"
+    "policy": "先完成当前运动想象核心交付切片；保留原状态和历史失败；切片通过不自动关闭整项；后置扩展不充当核心前置条件。",
+    "current_execution": {
+      "workflow_id": "ea709a3bf4ad48a7af3373494cde6957",
+      "commit": "722fe95640761fc36e5da176a9e34255208bc51a",
+      "status": "core_delivery_in_progress",
+      "receipt": "docs/sources/remaining-modifications-20260912/core-delivery-start-20260913.json",
+      "accepted": false
+    }
   }
 }
