@@ -41,4 +41,6 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 
 首次推荐与实际执行计划另行只读核验：模型只收到完整冻结目录，没有测量反馈；唯一推荐完成并落盘后才创建数值任务。前三个流程各 327 条记录的处理步骤、参数、来源、拟合和决定配置相同，无预处理拟合节点或逐被试适配。严格比较仅排除记录编号及按数据大小计算的内存/磁盘估算；初次比较将资源估算也纳入而失败，查明原因后作上述明确限定。复制出的四个反向控制分别修改单条记录参数、加入拟合域、交换执行顺序、伪造提前执行时间，全部被拒绝；原运行未修改。第四个计划及完整执行顺序仍待其实际产生后复核。[固定计划回执](sources/remaining-modifications-20260912/core-fixed-plan-20260914.json)。
 
+当前检索记录共 44 个动作、14 个保留文档。Semantic Scholar 两次失败，OpenAlex、Europe PMC、Crossref、GitHub 返回的成功请求及空结果均有记录；12 次数据核对与 32 次文献动作预算耗尽后停止，`systematic_review_complete=false`。补读后仍失败或缺参数的来源继续阻塞。PubMed cookie 响应虽然被访问层标成 `abstract`，实际核对报告明确没有获得正文或摘要，官方论文保持 `not_identified`；标签缺陷登记在后置 I11，不拿访问标签证明论文已读。上述不重新发请求或修改固定运行。[检索与缺口记录](sources/remaining-modifications-20260912/core-retrieval-20260914.json)。
+
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。

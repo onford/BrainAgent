@@ -208,7 +208,11 @@
       "historical_current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。",
       "delivery_priority": "core",
       "delivery_group": "C3",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-retrieval-20260914.json",
+        "intake-recovery-20260913.json"
+      ]
     },
     {
       "id": "I08",
@@ -306,7 +310,8 @@
       "implementation_update": "文献筛选新增可定位来源访问等级、原文哈希/跨度和重复跨度歧义；访问、参数语义核验、执行、独立复现分开。引用量/星数单列，不提升证据等级。等级文件绑定文献清单哈希并在报告显示，方法执行等级仍由下游回执证明。",
       "delivery_priority": "later_optimization",
       "delivery_group": "later_optimization",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "latest_observation": "本轮真实PubMed cookie响应的reading_scope标签误写为abstract；语义核对报告明确未读到正文/摘要且官方论文not_identified。该访问标签缺陷保留为后置优化，不改变原始证据。见core-retrieval-20260914.json。"
     },
     {
       "id": "I12",
@@ -325,7 +330,16 @@
       "implementation_update": "provider-live-2 在代码不变的情况下验证：Crossref/Europe PMC/OpenAlex 第二次请求缓存命中且传输尝试0；GitHub/arXiv遵守响应过期条件而再次实际请求；Semantic Scholar第二次被共享冷却阻断。Europe PMC正文读取到80000字符并明确truncated=true。已请求用户提供Unpaywall所需联系邮箱。",
       "delivery_priority": "core",
       "delivery_group": "C3",
-      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md",
+      "core_evidence": [
+        "core-retrieval-20260914.json",
+        "provider-live-2-summary.json"
+      ],
+      "core_acceptance": {
+        "status": "passed",
+        "scope": "当前运行Semantic Scholar两次失败保留；OpenAlex/Europe PMC/Crossref/GitHub检索实际返回，空结果与相关性不混同；全文读取及失败保留。",
+        "remaining_broad_scope": "未配置或本轮未使用的供应商不宣称可用；检索覆盖优化保持后置。"
+      }
     },
     {
       "id": "I13",

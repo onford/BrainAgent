@@ -1,0 +1,360 @@
+{
+  "status": "reviewed_with_retained_limits",
+  "workflow_id": "ea709a3bf4ad48a7af3373494cde6957",
+  "new_external_requests": 0,
+  "observations": 44,
+  "retained_documents": 14,
+  "providers": {
+    "semantic_scholar": [
+      {
+        "sequence": 2,
+        "success": false,
+        "result_count": 0,
+        "error": "外部服务请求过于频繁，请稍后重试。",
+        "retrieval": {
+          "cache": "not_used",
+          "cooldown_until": 1789294884.9873471,
+          "request_outcome": "response_received",
+          "status_code": 429,
+          "transport_attempts": 3
+        }
+      },
+      {
+        "sequence": 32,
+        "success": false,
+        "result_count": 0,
+        "error": "外部服务请求过于频繁，请稍后重试。",
+        "retrieval": {
+          "cache": "not_used",
+          "cooldown_until": 1789295187.63388,
+          "request_outcome": "response_received",
+          "status_code": 429,
+          "transport_attempts": 3
+        }
+      }
+    ],
+    "openalex": [
+      {
+        "sequence": 4,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295489.6939347,
+          "fetched_at": 1789294892.5569544,
+          "output_sha256": "d1a66b8e57723de9ef452cc213c99a357cd7caee2718545c6c442e3c03b8637c",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 13,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295680.0103292,
+          "fetched_at": 1789295082.288124,
+          "output_sha256": "9a3b8410876e924188421c5d08f21d717cb874255b1baa2415ac1effd4304f46",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 16,
+        "success": true,
+        "result_count": 3,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295680.033966,
+          "fetched_at": 1789295081.9686594,
+          "output_sha256": "dc1ec527b2da38ef75e1a703172e2d04b67e777e946476ee663696676b888f76",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 23,
+        "success": true,
+        "result_count": 0,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295721.27456,
+          "fetched_at": 1789295122.5546572,
+          "output_sha256": "b2d0471f4905911536f16f6596eec3d61bdfbb9366dde9401b334992add3c2bf",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      }
+    ],
+    "europe_pmc": [
+      {
+        "sequence": 5,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295504.8761096,
+          "fetched_at": 1789294908.6160617,
+          "output_sha256": "fde75eff17059c6c3e2733c6b6dca8fc020a6c801e5095722209b8201744184b",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 15,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295679.992582,
+          "fetched_at": 1789295083.5794623,
+          "output_sha256": "60f538847b0941f8307e6eb69a3abad9c93a4ccde6ce7ef93ec8899c7be506bf",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 33,
+        "success": true,
+        "result_count": 0,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295801.714007,
+          "fetched_at": 1789295204.7714698,
+          "output_sha256": "1b4304336425b9e3a03ce6ae680645e2a7eb33f7379527010971cbdb4d733d45",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      }
+    ],
+    "crossref": [
+      {
+        "sequence": 9,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295521.8905125,
+          "fetched_at": 1789294923.9998624,
+          "output_sha256": "57e259b8f7d286597192fee930f9848af0d89f0c289bcdbca7b1154eceb2f79d",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 38,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": 1789295817.8029444,
+          "fetched_at": 1789295221.1326494,
+          "output_sha256": "bee27e103e5778da38db61e4c2bcbbc8a2393bb609e7ca0c9c78bf0a96381ec5",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      }
+    ],
+    "github": [
+      {
+        "sequence": 14,
+        "success": true,
+        "result_count": 0,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": null,
+          "fetched_at": 1789295080.9819543,
+          "output_sha256": "f3a6e0655028f9c56c17ea6962460f7a6d4ad9fa24a3ff98245afb95c6329975",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 20,
+        "success": true,
+        "result_count": 0,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": null,
+          "fetched_at": 1789295100.1753962,
+          "output_sha256": "f3a6e0655028f9c56c17ea6962460f7a6d4ad9fa24a3ff98245afb95c6329975",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 24,
+        "success": true,
+        "result_count": 4,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": null,
+          "fetched_at": 1789295122.8918147,
+          "output_sha256": "5e1d1269b8dc840b85ccd1f8d6867c96f12d74542854ffc841448705bbcad614",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      },
+      {
+        "sequence": 28,
+        "success": true,
+        "result_count": 10,
+        "error": null,
+        "retrieval": {
+          "cache": "miss",
+          "expires_at": null,
+          "fetched_at": 1789295154.091734,
+          "output_sha256": "357db050a7af86de1a519f2a217ff012bb5549f35f57194b4cbcca2db1fa5f84",
+          "request_outcome": "response_received",
+          "snapshot_age_seconds": 0,
+          "status_code": 200,
+          "transport_attempts": 1
+        }
+      }
+    ]
+  },
+  "progress": {
+    "dataset_verification": {
+      "max_actions": 12,
+      "reserved_actions": 12,
+      "remaining_actions": 0,
+      "unique_document_contents": 5,
+      "unique_search_urls": 47,
+      "stop_reason": "action_budget_exhausted",
+      "systematic_review_complete": false,
+      "missing_requirements": [
+        "official_publication/paper: read a relevant returned source; no substantive text read yet; try full text or another candidate, retain access gaps"
+      ]
+    },
+    "literature_review": {
+      "max_actions": 32,
+      "reserved_actions": 32,
+      "remaining_actions": 0,
+      "unique_document_contents": 9,
+      "unique_search_urls": 62,
+      "stop_reason": "action_budget_exhausted",
+      "systematic_review_complete": false,
+      "missing_requirements": [
+        "usage_analysis/repository: no results; try another provider or broader alias query; retain gap if exhausted",
+        "preprocessing_methods/repository: no results; try another provider or broader alias query; retain gap if exhausted"
+      ]
+    }
+  },
+  "source_recovery": [
+    {
+      "entry_directory": "1669fbb70eb4aab397cf",
+      "statuses": [
+        "budget_exhausted"
+      ],
+      "actions": [
+        null
+      ]
+    },
+    {
+      "entry_directory": "7a2f9c5c9b91a5b25c68",
+      "statuses": [
+        "retained_blocked"
+      ],
+      "actions": [
+        "retain_blocked"
+      ]
+    },
+    {
+      "entry_directory": "82c32d374c0eb0305871",
+      "statuses": [
+        "retained_blocked"
+      ],
+      "actions": [
+        "retain_blocked"
+      ]
+    },
+    {
+      "entry_directory": "85f8f7f6736fb31a4017",
+      "statuses": [
+        "reextracted",
+        "failed",
+        "failed",
+        "budget_exhausted"
+      ],
+      "actions": [
+        "read_source",
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "entry_directory": "c5474f38dc56feb95e20",
+      "statuses": [
+        "retained_blocked"
+      ],
+      "actions": [
+        "retain_blocked"
+      ]
+    },
+    {
+      "entry_directory": "ff7366b8380594467b65",
+      "statuses": [
+        "budget_exhausted"
+      ],
+      "actions": [
+        null
+      ]
+    }
+  ],
+  "official_publication_access": "Cookie response retained as an access failure in the verification report; no official paper substantive text obtained.",
+  "known_later_optimization": {
+    "issue": "I11",
+    "finding": "The reading_scope access label says abstract for a PubMed cookie response; this does not establish an abstract was read. The semantic verification explicitly denies obtaining paper text. Original evidence is preserved."
+  },
+  "evidence_sha256": {
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\sources.json": "89b435cffcc386fa7d3888627670780c315d52a505ca9e2edc129e1edb6a5e66",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\dataset_verification-progress.json": "1e82b336ed0a3f9e1063a9861db8335f1f68c8d41fa473f81225fba8f5d1bb85",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\literature_review-progress.json": "b5688db95ae937b3e4280186897e6684ddf3500b4da78b7b4a36c2b36d0c49b5",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\survey\\verification.json": "64ee7615a2ab8785de5abcbac76f554b6f024ca7b315f59a576d822f7ab6636c",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\1669fbb70eb4aab397cf\\recovery.json": "44a0a02c19c352a3ba56c1b3c91397aac1e393d803f9bfc60ea86270f3b82a38",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\7a2f9c5c9b91a5b25c68\\recovery.json": "b33577a0fbfef2298a4b5bf9dbed143241981be330f8a38445083b6c3be9b7c9",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\82c32d374c0eb0305871\\recovery.json": "30e234ac3805152db0c1f9b02b8f9017ce82962cfa691022234fe99d3b6ad05c",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\85f8f7f6736fb31a4017\\recovery.json": "0f4b93688f08c3a52e8cdf8f104a2724cc2d88543bb7cd97f3246a6a72686663",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\c5474f38dc56feb95e20\\recovery.json": "310d6f5252bb3856a21b783ee8140ff8d5c385f908cd01b15a93ef42eb3ac26b",
+    "E:\\work\\BrainAgent\\.local\\core-delivery-20260913\\run-1\\workflows\\ea709a3bf4ad48a7af3373494cde6957\\preprocessing\\literature-methods\\ff7366b8380594467b65\\recovery.json": "ac2a6493e20d8d4ef24faa6c6022a4182f5ec67adad6c2c3b9aa24bb3eb6db20"
+  },
+  "final_core_acceptance": false
+}
