@@ -1,6 +1,6 @@
 # 核心交付验证记录
 
-当前数值运行使用固定副本 `722fe95`，工作流 `ea709a3bf4ad48a7af3373494cde6957`，固定评价记录 `ea876b4c46b142a29f0cb0aba9228f34`。本页记录已取得的证据；最终模型、ZIP 和完整用户入口仍待本轮运行结束核验。
+当前数值运行使用固定副本 `722fe95`，工作流 `ea709a3bf4ad48a7af3373494cde6957`，固定评价记录 `ea876b4c46b142a29f0cb0aba9228f34`。本页按阶段保留验证经过，后文早期的“进行中”“相同版本”和“暂停”描述属于当时状态；请以[当前状态](core-delivery-status.md)为准。最终模型、ZIP 和完整结果页面仍待本轮运行结束核验。
 
 | 检查 | 结果与范围 |
 | --- | --- |
@@ -48,5 +48,7 @@ I13 的检索恢复、I19 的只读测量、I22 的手动检查点入口及 I37 
 GitHub 首次推送因连接失败未完成，第二次成功并读取远端确认 `dev-xx` 为 `70f47d1`。前两个已完成流程另行从逐折预测文件重算 109 人的平衡准确率，再等权合并三个种子，结果分别为 `0.639556575987615` 和 `0.7641658680149755`，与 utility 及用于选择的 assessment 分数相符；CSP-LDA 对照也通过。各流程核对 19672 行预测、原始标签、折成员与概率对应关系，不重新拟合。5 项反向/加权专项通过，能拒绝标签、折成员、概率及重复预测错误。其余候选、最终选择及真正模型重载仍待完成。[分数复算回执](sources/remaining-modifications-20260912/core-scores-20260914.json)。
 
 第三个固定流程 `basic-acquisition-reference` 随后完成，EEGNet 三种子分数复算为 `0.6571669921820534`，CSP-LDA 为 `0.6302790191477728`，与保存回执相符。全 327 条质量记录及 318 条配对差值独立核验通过，用时 71.05 秒，9 条不可比原因保留。第四个来源流程已经开始执行，其真实编译计划也通过全 327 记录共享配置、无预处理拟合的核对。因此所有四个计划已核验，前三个完整数值流程已核验；最终来源流程、选中模型重载、ZIP 及结果页面仍未完成验收。
+
+前三个流程的重建回执另外完成只读汇总核验：各 109 人、10 个分配条件、1640 个试次条件组合；每人只分配一种条件，不能当作所有人都经历全部污染条件。检查冻结成员、逐窗口到被试再到条件的等权汇总、三个分析对照，以及 assessment 对应结果，全部通过。该审计不重新读取未落盘的物理探针数组，也不以原执行的重放回执冒充独立重算。第一次审计错误混同内部 `probe_hash` 与包含该字段的整体哈希，查明生产者合同后分别校验两个哈希及原冻结文件；失败日志保留。3 项缺测、错误加权及重复窗口反向测试通过。[重建回执核验](sources/remaining-modifications-20260912/core-reconstruction-audit-20260914.json)。
 
 证据：[全量回归与条目收口](sources/remaining-modifications-20260912/core-regression-20260913.json)、[独立入口实测](sources/remaining-modifications-20260912/core-direct-intake-20260913.json)、[两入口数值及差异复核](sources/remaining-modifications-20260912/core-dual-entry-20260913.json)、[数据门检](sources/remaining-modifications-20260912/core-data-gate-20260913.json)、[解析信号检查](sources/remaining-modifications-20260912/core-signal-invariants-20260913.json)、[来源参数及文字更正](sources/remaining-modifications-20260912/core-source-review-20260913.json)。

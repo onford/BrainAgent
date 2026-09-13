@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "as_of": "2026-09-13",
+  "as_of": "2026-09-14",
   "purpose": "当前实施台账；取代原审计中的已撤回目标",
   "issues": [
     {
@@ -2855,21 +2855,23 @@
       ],
       "core_remaining": 27,
       "all_unclosed_remaining": 43,
-      "numerical_status": "two_candidates_evaluated_third_running",
+      "numerical_status": "three_candidates_evaluated_fourth_running",
       "source_parameter_review": "passed_with_two_archived_narrative_corrections; numerical_effect_pending",
       "data_gate": "passed",
       "signal_invariants": "passed",
-      "frontend_creation_description": "completed; c5a6b4b; 168 frozen frontend tests, typecheck/build and actual 5173 zh/en browser checks passed",
-      "backend_full_regression": "1426 passed; 109 warnings; 2457.44 s",
+      "frontend_creation_description": "Application 81e589e installed at existing 5173: 174 tests, typecheck/build, zh/en browser and HTTP asset hash checks passed.",
+      "backend_full_regression": "Application 81e589e: 1437 passed; 109 warnings; 2128.25 s. Original numerical 722fe95: 1426 passed, retained separately.",
       "direct_intake": "real extraction and idempotent replay passed; target-bound numerical equivalence with review differences recorded",
-      "quality_receipt_audit": "first two candidates passed full 327-record checks"
+      "quality_receipt_audit": "first three candidates passed full 327-record checks",
+      "fixed_plan_audit": "all four actual 327-record plans passed shared configuration and no preprocessing-fit checks"
     },
     "resumed": {
       "as_of": "2026-09-14",
       "source": "用户：继续完成核心任务",
       "fixed_numerical_run_preserved": true,
       "release_candidate_commit": "81e589ebe3ccc684c7760cff05da2fe4076f890b",
-      "release_full_regression": "in_progress"
-    }
+      "release_full_regression": "passed_1437_backend_174_frontend"
+    },
+    "current_status_reference": "docs/core-delivery-status.md"
   }
 }

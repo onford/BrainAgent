@@ -1,0 +1,61 @@
+{
+  "status": "first_three_candidates_passed_fourth_pending",
+  "candidate_audits": [
+    {
+      "status": "passed",
+      "candidate_id": "bp8-30-average",
+      "subjects": 109,
+      "conditions": 10,
+      "trial_cases": 1640,
+      "control_receipts": 327,
+      "source_unchanged": true,
+      "scope": "Frozen membership, saved window-to-subject-to-condition arithmetic, control identities and assessment projection.",
+      "limitations": [
+        "No saved physical probe arrays were independently reloaded by this audit.",
+        "Paired execution evidence comes from the original frozen run.",
+        "Balanced conditions cover assigned subsets; cleanproxy is not neural truth."
+      ],
+      "receipt_path": ".local\\core-delivery-20260913\\reconstruction-audit-reference-1.json",
+      "receipt_sha256": "3c14cee156f4373cb4a72f0bca4f6bdc0bbd96fe85033da16aa92c79144b2ab0"
+    },
+    {
+      "status": "passed",
+      "candidate_id": "basic-broadband",
+      "subjects": 109,
+      "conditions": 10,
+      "trial_cases": 1640,
+      "control_receipts": 327,
+      "source_unchanged": true,
+      "scope": "Frozen membership, saved window-to-subject-to-condition arithmetic, control identities and assessment projection.",
+      "limitations": [
+        "No saved physical probe arrays were independently reloaded by this audit.",
+        "Paired execution evidence comes from the original frozen run.",
+        "Balanced conditions cover assigned subsets; cleanproxy is not neural truth."
+      ],
+      "receipt_path": ".local\\core-delivery-20260913\\reconstruction-audit-broadband-2.json",
+      "receipt_sha256": "243e73e6c2b4d5c44e0469b6ecbae496b38caeb958c5814a9a855e12e61ebe0d"
+    },
+    {
+      "status": "passed",
+      "candidate_id": "basic-acquisition-reference",
+      "subjects": 109,
+      "conditions": 10,
+      "trial_cases": 1640,
+      "control_receipts": 327,
+      "source_unchanged": true,
+      "scope": "Frozen membership, saved window-to-subject-to-condition arithmetic, control identities and assessment projection.",
+      "limitations": [
+        "No saved physical probe arrays were independently reloaded by this audit.",
+        "Paired execution evidence comes from the original frozen run.",
+        "Balanced conditions cover assigned subsets; cleanproxy is not neural truth."
+      ],
+      "receipt_path": ".local\\core-delivery-20260913\\reconstruction-audit-acquisition-1.json",
+      "receipt_sha256": "a74865d67ebd8ba87152c4faca6587d59d4f460428ca8e1a8feb90378759f673"
+    }
+  ],
+  "driver": "backend\\scripts\\audit_core_reconstruction_receipts.py",
+  "driver_sha256": "299fe83f3709e7832c86ad7c8d2a15f1a1769f657092e6fb24592d6b14aa903a",
+  "setup_correction": "First audit incorrectly equated embedded probe_hash (content excluding its own field) with assessment probe_panel_hash (whole object). After checking the producer, both independent digests and equality with the frozen search probe are verified separately. Original failed log retained; numerical source untouched.",
+  "setup_failure_log": ".local/core-release-20260914/reconstruction-audit-broadband-1.log",
+  "full_core_acceptance": false
+}
