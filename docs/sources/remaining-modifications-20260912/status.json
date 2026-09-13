@@ -22,7 +22,10 @@
       ],
       "historical_status": "部分实现",
       "status": "previously_verified_requires_regression",
-      "historical_current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。"
+      "historical_current": "workflow 的 extraction_inputs() 仍调用默认 14 op 合同；独立 MethodLibrary 已可提供 88 op/306 profile。多分支提取、恢复与 v2 能力没有成为一个共同入口。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I02",
@@ -43,7 +46,10 @@
       ],
       "historical_status": "未实现",
       "status": "previously_verified_requires_regression",
-      "historical_current": "literature_space 拒绝非 v1；recipe_compiler 明确拒绝把 unit_graph_v2 送入冻结面板。图可以执行，却不能参加正式三轴评价与统一选优。"
+      "historical_current": "literature_space 拒绝非 v1；recipe_compiler 明确拒绝把 unit_graph_v2 送入冻结面板。图可以执行，却不能参加正式三轴评价与统一选优。",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I03",
@@ -76,7 +82,10 @@
         "status": "partial",
         "current": "第7/8次fresh流程已结束且实质文献验收失败，旧结果保留。第10次覆盖109人/327目标记录/4918试次，已自然接入7–30Hz与1–4秒窗的来源分支；状态文件锁导致中断后在原冻结版本、原预算下恢复，尚未完成实质文献评价、反馈与赢家核验。",
         "solution_and_acceptance": "事前冻结预算，从 fresh 调研经正式入口自然形成至少一个非预设、含实质来源处理操作的候选；真实三轴评价、影响后续动作、进入最终比较。无需获胜；不指定必跑论文、不加固定配额。"
-      }
+      },
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I04",
@@ -122,7 +131,10 @@
       "historical_status": "部分实现",
       "status": "partial",
       "historical_current": "编号存在、引文出现在正文、JSON 合法不保证支持结论；已出现跨分支参数风险、工程值被误称作者值。",
-      "implementation_update": "由真实失败记录补齐论文身份模型合同：已识别角色必须给出实际读过的论文ID；仅有官网引用且未读到论文时保留未确认。原逐字引文及联合证据校验保持，25项相关回归及干净版本复验通过。并非独立科学语义验收全部完成。"
+      "implementation_update": "由真实失败记录补齐论文身份模型合同：已识别角色必须给出实际读过的论文ID；仅有官网引用且未读到论文时保留未确认。原逐字引文及联合证据校验保持，25项相关回归及干净版本复验通过。并非独立科学语义验收全部完成。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I06",
@@ -141,7 +153,10 @@
       ],
       "historical_status": "部分实现",
       "status": "previously_verified_requires_regression",
-      "historical_current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。"
+      "historical_current": "Prerequisite 的 satisfied 和 target_basis 仍有自然语言判断；部分算子检查确定性，但没有覆盖所有文献前提的事实谓词。",
+      "delivery_priority": "core",
+      "delivery_group": "C2",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I07",
@@ -164,7 +179,10 @@
       ],
       "historical_status": "部分实现",
       "status": "previously_verified_requires_regression",
-      "historical_current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。"
+      "historical_current": "已实现定向补读、重新解析、显式仓库文件路径解析；复杂依赖、全文替代和适配仍受限，部分最新修复未走 fresh 全流程。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I08",
@@ -184,7 +202,10 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "partially_implemented"
+      "status": "partially_implemented",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I09",
@@ -206,7 +227,10 @@
       "historical_status": "尚未验证",
       "status": "partial",
       "historical_current": "52 单元集成并不证明 PREP、RELAX、HAPPE、Automagic 等完整作者流程均已复现；已有部分完整组合验收。",
-      "implementation_note": "RELAX Picard/FieldTrip/MWF/PREP 源码逐文件固定；兼容改动只在运行副本且记录派生哈希；原依赖未变。验收见 native-relax-graph-2-verification.json。"
+      "implementation_note": "RELAX Picard/FieldTrip/MWF/PREP 源码逐文件固定；兼容改动只在运行副本且记录派生哈希；原依赖未变。验收见 native-relax-graph-2-verification.json。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I10",
@@ -229,7 +253,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_update": "检索记录新增逐动作新增来源内容/URL/摘录计数、持久预算余量、明确停止原因和未完成目标。计数不等同科学新颖性或调研充分，不设置论文数量目标；方法覆盖充分性仍需最终来源/方法空间验收。"
+      "implementation_update": "检索记录新增逐动作新增来源内容/URL/摘录计数、持久预算余量、明确停止原因和未完成目标。计数不等同科学新颖性或调研充分，不设置论文数量目标；方法覆盖充分性仍需最终来源/方法空间验收。",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I11",
@@ -250,7 +277,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_update": "文献筛选新增可定位来源访问等级、原文哈希/跨度和重复跨度歧义；访问、参数语义核验、执行、独立复现分开。引用量/星数单列，不提升证据等级。等级文件绑定文献清单哈希并在报告显示，方法执行等级仍由下游回执证明。"
+      "implementation_update": "文献筛选新增可定位来源访问等级、原文哈希/跨度和重复跨度歧义；访问、参数语义核验、执行、独立复现分开。引用量/星数单列，不提升证据等级。等级文件绑定文献清单哈希并在报告显示，方法执行等级仍由下游回执证明。",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I12",
@@ -266,7 +296,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_update": "provider-live-2 在代码不变的情况下验证：Crossref/Europe PMC/OpenAlex 第二次请求缓存命中且传输尝试0；GitHub/arXiv遵守响应过期条件而再次实际请求；Semantic Scholar第二次被共享冷却阻断。Europe PMC正文读取到80000字符并明确truncated=true。已请求用户提供Unpaywall所需联系邮箱。"
+      "implementation_update": "provider-live-2 在代码不变的情况下验证：Crossref/Europe PMC/OpenAlex 第二次请求缓存命中且传输尝试0；GitHub/arXiv遵守响应过期条件而再次实际请求；Semantic Scholar第二次被共享冷却阻断。Europe PMC正文读取到80000字符并明确truncated=true。已请求用户提供Unpaywall所需联系邮箱。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I13",
@@ -284,7 +317,10 @@
       "status": "implemented_targeted_process_recovery_passed",
       "historical_current": "历史子任务复现过预算重置与重复成功查询。当前 retrieve 仍从 remaining=budget 开始；筛选失败跳过重复检索已有修复，但检索中途崩溃后的全局计费与幂等未充分证明。",
       "implementation_update": "Workflow 与 MethodLibrary 共用补读结果日志；完成结果跨重启复用，明确失败可显式重试，不确定请求不自动重发。Collection 补充核对也纳入持久动作预算。",
-      "implementation": "docs/research-request-recovery.md"
+      "implementation": "docs/research-request-recovery.md",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I14",
@@ -308,7 +344,10 @@
       "status": "partial",
       "historical_current": "历史决策输入曾达 249230 tokens；已压缩重复恢复日志。全集、88 op 合同及长历史仍无全局上下文保证；候选信息价值/成本与停止判断主要依赖模型文字。",
       "implementation_update": "工作流各阶段、MethodLibrary、关联搜索和指标解读共用持久模型预算；逐传输尝试预留请求/输入字节/输出 token 容量，失败不退款，绝对截止时间不重置。记录逐尝试 token 及未知费用。上下文压缩、旧聊天入口全覆盖与可配置费用上限待补齐。",
-      "implementation_note": "live5暴露重复上下文耗尽累计输入预算；无损合同合并节省约30%，导航预览保留全部URL/查询/来源哈希而不宣称全文阅读。BudgetExceeded不作为传输重试或非法提案；已完成测量可保留，模型报告叙述可省略，结论资格仍强制校验。尚待fresh正式验收。"
+      "implementation_note": "live5暴露重复上下文耗尽累计输入预算；无损合同合并节省约30%，导航预览保留全部URL/查询/来源哈希而不宣称全文阅读。BudgetExceeded不作为传输重试或非法提案；已完成测量可保留，模型报告叙述可省略，结论资格仍强制校验。尚待fresh正式验收。",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I15",
@@ -327,7 +366,10 @@
         "D6"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I16",
@@ -347,7 +389,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_note": "同一规则引擎审计普通配方与直接 v2 图；真实祖先次序、前置依赖、条件未知及显式版本选择器。未绑定变体留下覆盖缺口；研究知识全量机器谓词尚未完成。"
+      "implementation_note": "同一规则引擎审计普通配方与直接 v2 图；真实祖先次序、前置依赖、条件未知及显式版本选择器。未绑定变体留下覆盖缺口；研究知识全量机器谓词尚未完成。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I17",
@@ -365,7 +410,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation_note": "相反且适用的 before 规则同时记录；硬约束阻止执行，软冲突保留。复杂条件冲突/全局一致性分析待完善。"
+      "implementation_note": "相反且适用的 before 规则同时记录；硬约束阻止执行，软冲突保留。复杂条件冲突/全局一致性分析待完善。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I18",
@@ -385,7 +433,10 @@
       ],
       "historical_status": "未完成",
       "status": "partial",
-      "implementation_note": "见docs/knowledge-revisions.md。新配方/普通计划/提交/重试/发布阻塞失效依据，独立硬约束保留；旧搜索及子进程使用冻结修订。111项最终回归通过，另52项相关回归重叠。自动发现现实勘误/撤稿、独立科学复核和图形编辑界面未完成。"
+      "implementation_note": "见docs/knowledge-revisions.md。新配方/普通计划/提交/重试/发布阻塞失效依据，独立硬约束保留；旧搜索及子进程使用冻结修订。111项最终回归通过，另52项相关回归重叠。自动发现现实勘误/撤稿、独立科学复核和图形编辑界面未完成。",
+      "delivery_priority": "core",
+      "delivery_group": "C3",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I19",
@@ -412,7 +463,10 @@
         "status": "implemented_targeted_validation_passed",
         "current": "冻结注册表包含输入域、标签权限、成本、数值合同和产物；三项内核含新增PSD频谱分布。竞争假设和三分支执行前登记，后续模型决定校验遵循或显式修订。质量缺测索引避免加载无关波形。真实12记录/180试次历史汇总复核先因输入预算失败，修复后沿用模型预算通过；实际只验证诊断与下一动作提案，科学推断及后续候选效用另行验证。",
         "solution_and_acceptance": "为新诊断注册输入域、标签权限、成本、数值合同和产物；让模型按竞争假设选择，有预算地执行并改变下一步动作。"
-      }
+      },
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I20",
@@ -434,7 +488,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation": "docs/sensor-lateralization.md"
+      "implementation": "docs/sensor-lateralization.md",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I21",
@@ -459,7 +516,10 @@
       "status": "partial",
       "historical_current": "已区分 EA 前后阶段并做配对可比性检查；通用图的原生视图/共同视图/被移除成分尚未贯通全部比较。",
       "implementation_note": "见docs/physical-signal-comparison.md。裁剪拼接、重采样与缺少内部样本映射的原生整管线仍不可比；差值不作为纯伪迹或神经保护证据。",
-      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。"
+      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I22",
@@ -488,7 +548,10 @@
         "status": "implemented_targeted_validation_passed",
         "current": "v2每步不可变检查点、5类工程条件与先保存后暂停已实现；API/agent支持绑定原检查点、保留条件与全部原始记录的共享局部替代计划，当前知识和全图适用性重编译，旧状态/产物不变。88项后端及12真实记录恢复验收通过。恢复采用从原数据完整重执行，不移植中间拟合状态。",
         "solution_and_acceptance": "保存步骤后条件和不可变检查点，显式重编译局部替代分支；原失败和决定不改写，回退本身也须验证适用性。"
-      }
+      },
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I23",
@@ -511,7 +574,10 @@
       "historical_status": "部分实现",
       "status": "partial",
       "implementation_note": "80项最终相关回归、156项前端测试与构建通过。三个真实回复关键数值/原因核对通过；仍为同模型复核，不能证明全部自由文本语义或主决策链忠实。详见docs/metric-claim-evidence.md。",
-      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。"
+      "implementation_update": " 第10次文献审查发现非包含窗口的工程替换被v2投影误标普通文献，且重采样说明过度声称保留源窗口；已修正元数据，2项回归通过。原冻结运行保留并在fresh-10-source-semantic-review.json记录其解释限制。",
+      "delivery_priority": "core",
+      "delivery_group": "C5",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I24",
@@ -533,7 +599,10 @@
       ],
       "historical_status": "部分实现",
       "status": "implemented_pending_independent_scientific_validation",
-      "implementation_note": "确定性结论资格绑定选中 assessment/协议，报告与交付拒绝篡改和科学主张提升；146 项专项回归通过。真实独立确认仍未执行。"
+      "implementation_note": "确定性结论资格绑定选中 assessment/协议，报告与交付拒绝篡改和科学主张提升；146 项专项回归通过。真实独立确认仍未执行。",
+      "delivery_priority": "core",
+      "delivery_group": "C5",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I25",
@@ -554,7 +623,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation": "docs/known-source-validation.md"
+      "implementation": "docs/known-source-validation.md",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I26",
@@ -573,7 +645,10 @@
         "D5"
       ],
       "historical_status": "未充分验证",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I27",
@@ -602,7 +677,10 @@
         "status": "in_progress",
         "current": "第10次全集流程在14:07:58因状态轮询search.json短暂PermissionError中断，首轮acceptance=false，原数据/代码/驱动哈希不变。现已在原冻结2906731环境下恢复，仍处于基线评价；保留原15个检查点，恢复创建独立a2评价尝试，预算不续期。",
         "solution_and_acceptance": "先测全集单候选成本，冻结共同范围、分组外折、种子和预算，再新建完整搜索；保留所有排除/失败，不能续写旧 b10 成绩。"
-      }
+      },
+      "delivery_priority": "core",
+      "delivery_group": "C5",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I28",
@@ -624,7 +702,10 @@
       ],
       "historical_status": "未完成",
       "status": "pending",
-      "implementation_update": "文件名与元数据只读核查发现BCICIV_2b已有预处理、分类汇总/逐人结果，未读取结果内容。其未参与开发的资格不明，不能作为未使用测试集；目前仍只报告开发结果。"
+      "implementation_update": "文件名与元数据只读核查发现BCICIV_2b已有预处理、分类汇总/逐人结果，未读取结果内容。其未参与开发的资格不明，不能作为未使用测试集；目前仍只报告开发结果。",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I29",
@@ -691,7 +772,10 @@
         "D7"
       ],
       "historical_status": "未充分验证",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I32",
@@ -713,7 +797,10 @@
       ],
       "historical_status": "未充分验证",
       "status": "measured_with_limits",
-      "implementation_update": "基础协议过程 116.591 分钟，图执行 41.369 分钟加核对 2.312 分钟，全 327 数组最大差 0 V；保留重建17不适用及共享主机/剖析开销。纯I/O等待仍未测得，不能称全维度科学验收。"
+      "implementation_update": "基础协议过程 116.591 分钟，图执行 41.369 分钟加核对 2.312 分钟，全 327 数组最大差 0 V；保留重建17不适用及共享主机/剖析开销。纯I/O等待仍未测得，不能称全维度科学验收。",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I33",
@@ -738,7 +825,10 @@
       ],
       "historical_status": "待系统验收",
       "status": "partial",
-      "recovery_update": "跨后端工作流/搜索互斥、持久取消与恢复代次、阻塞写入线程排空已实现，独立 Windows 多进程专项通过；54 项相关回归通过，部署服务联动/断网资源压力/跨平台仍待系统验收。"
+      "recovery_update": "跨后端工作流/搜索互斥、持久取消与恢复代次、阻塞写入线程排空已实现，独立 Windows 多进程专项通过；54 项相关回归通过，部署服务联动/断网资源压力/跨平台仍待系统验收。",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I34",
@@ -794,7 +884,10 @@
         "D2"
       ],
       "historical_status": "部分实现",
-      "status": "implemented_targeted_validation_passed"
+      "status": "implemented_targeted_validation_passed",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I37",
@@ -814,7 +907,10 @@
       "historical_status": "部分实现",
       "status": "implemented_targeted_native_lifecycle_passed",
       "historical_current": "图取消在步骤边界生效，长时间作者调用仅靠自身 timeout；已有搜索进程树控制不等于每个 v2 原生调用可立即停止。",
-      "implementation": "docs/native-lifecycle-and-recovery.md"
+      "implementation": "docs/native-lifecycle-and-recovery.md",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I38",
@@ -836,7 +932,10 @@
       "historical_status": "尚未验证",
       "status": "in_progress",
       "historical_current": "306 个 profile 有运行与来源一致性证据，真实 EEG 只覆盖 11 个，尚有 295 个无真实数据验收。",
-      "implementation_update": "audit_unit_matrix已完成首轮证据汇总并保留全部失败；原生专项证据见native-profile-pilot-1.json。固定种子失败已定位核验器的MATLAB v7.3读取支持；新HDF读取器10项专项测试通过，真实容器与重新执行待核验。原有数值容差与作者时钟失败不变，服务注册表尚未发布本轮通过状态。"
+      "implementation_update": "audit_unit_matrix已完成首轮证据汇总并保留全部失败；原生专项证据见native-profile-pilot-1.json。固定种子失败已定位核验器的MATLAB v7.3读取支持；新HDF读取器10项专项测试通过，真实容器与重新执行待核验。原有数值容差与作者时钟失败不变，服务注册表尚未发布本轮通过状态。",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I39",
@@ -855,7 +954,10 @@
         "E2"
       ],
       "historical_status": "尚未验证",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "core",
+      "delivery_group": "C4",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I40",
@@ -876,7 +978,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation": "docs/local-metadata-checks.md"
+      "implementation": "docs/local-metadata-checks.md",
+      "delivery_priority": "core",
+      "delivery_group": "C2",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I41",
@@ -896,7 +1001,10 @@
       ],
       "historical_status": "未完成",
       "status": "implemented_full_eegmmidb_validation_passed",
-      "implementation": "docs/official-bids-validation.md"
+      "implementation": "docs/official-bids-validation.md",
+      "delivery_priority": "core",
+      "delivery_group": "C2",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I42",
@@ -918,7 +1026,10 @@
       "historical_status": "部分实现",
       "status": "partial",
       "implementation_update": "第二次 fresh 验收发现 eliminated 与英文 Oxford comma 名单解析缺口，已补齐。次要来源对象主张核对失败保留 proposed/effective 审计，将有效编号清空为 unspecified；不授权剔除，不阻止结构/标签本身已核对的接入。未知引文 ID 与任务/运行/标签矛盾仍阻塞。新回归 36 项通过，待正式恢复复验。",
-      "implementation": "docs/exclusion-object-evidence.md"
+      "implementation": "docs/exclusion-object-evidence.md",
+      "delivery_priority": "core",
+      "delivery_group": "C2",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I43",
@@ -943,7 +1054,10 @@
       "historical_status": "尚未验证",
       "status": "pending",
       "historical_current": "旧全集 CSP 交付与小型 EEGNet 重载已验证；当前整合版文献/图搜索赢家的全集 X/y、模型、推理与下载包尚未完整验收。",
-      "implementation_update": "检查点工具已验证历史完整基线15模型；ZIP工具已验证历史4人/12记录/180试次包的157成员、物理数组及实际训练示例，2项反向控制通过。正式赢家的两项核验仍待I27，不提升历史partial或旧失败验收。"
+      "implementation_update": "检查点工具已验证历史完整基线15模型；ZIP工具已验证历史4人/12记录/180试次包的157成员、物理数组及实际训练示例，2项反向控制通过。正式赢家的两项核验仍待I27，不提升历史partial或旧失败验收。",
+      "delivery_priority": "core",
+      "delivery_group": "C5",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I44",
@@ -964,7 +1078,10 @@
       ],
       "historical_status": "部分实现",
       "status": "partial",
-      "implementation": "docs/codec-contracts.md"
+      "implementation": "docs/codec-contracts.md",
+      "delivery_priority": "core",
+      "delivery_group": "C5",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I45",
@@ -984,7 +1101,10 @@
       "historical_status": "未完成",
       "status": "in_progress",
       "historical_current": "起始工作区620文件已建立本地内容快照；共享处理范围已修订，服务版本快照接口已实现，整体回归及提交仍未完成。",
-      "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。 最新再次推送失败为GitHub连接被重置，未确认新的远端提交。"
+      "implementation_update": "新的数值/恢复运行不读工作区实时修改；并行对话的未提交页面和性能修改保留。固定版本全矩阵、最终赢家及发布验收仍待完成；不把本地提交等同远端或Sites已更新。 最新再次推送失败为GitHub连接被重置，未确认新的远端提交。",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I46",
@@ -1006,7 +1126,10 @@
       "historical_status": "实测未接入",
       "status": "in_progress",
       "implementation_update": "最新服务源码SHA256为ca32addc59be32c7230c64e5ea68e54d93af3f39be2592ba7e34d6a95658f81e；见service-build-update-6.json。Sites继续暂缓。",
-      "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。"
+      "historical_current": "本轮 8000、8001 /health 均 200；两者 /api/preprocessing/capabilities 均 404。5173 与8900可访问；预览成功不代表业务服务有新代码。",
+      "delivery_priority": "core",
+      "delivery_group": "C1",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I47",
@@ -1036,7 +1159,10 @@
         "status": "in_progress",
         "current": "图表和解读在独立真实数据实例已多轮验证；统一发布工作流、图候选与全部来源/失败状态尚无同版浏览器验收。",
         "solution_and_acceptance": "在正式服务逐项走来源→分支→配方→决定→执行→三轴→赢家→包，覆盖失败/缺失/等待决定、窄屏、双语和下载；字段必须与账本一致。"
-      }
+      },
+      "delivery_priority": "core",
+      "delivery_group": "C6",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I48",
@@ -1060,7 +1186,10 @@
       ],
       "historical_status": "部分实现",
       "status": "in_progress",
-      "implementation_update": "新建页面读取服务默认预算并显式提交候选/时限/资源上限，保留其余冻结预算和全数据范围；模型总时限包含数值等待，重试不续期，中英文同步。23项前端及1项API测试、构建通过；实际页面和全部现行文档口径仍待最终核对。"
+      "implementation_update": "新建页面读取服务默认预算并显式提交候选/时限/资源上限，保留其余冻结预算和全数据范围；模型总时限包含数值等待，重试不续期，中英文同步。23项前端及1项API测试、构建通过；实际页面和全部现行文档口径仍待最终核对。",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I49",
@@ -1082,7 +1211,10 @@
       ],
       "historical_status": "尚未验证",
       "status": "deferred_by_user",
-      "implementation_update": "用户于2026-09-13明确回复“先不处理”，暂缓Sites项目访问及发布。保留原项目ID、原站点与651367e源码包，不创建替代站点；继续本地实现与验收。"
+      "implementation_update": "用户于2026-09-13明确回复“先不处理”，暂缓Sites项目访问及发布。保留原项目ID、原站点与651367e源码包，不创建替代站点；继续本地实现与验收。",
+      "delivery_priority": "deferred_by_user",
+      "delivery_group": "deferred_by_user",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I50",
@@ -1101,7 +1233,10 @@
         "D8"
       ],
       "historical_status": "部分实现",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I51",
@@ -1120,7 +1255,10 @@
         "D8"
       ],
       "historical_status": "待产品定界",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I52",
@@ -1139,7 +1277,10 @@
         "D14"
       ],
       "historical_status": "交付待更新",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_optimization",
+      "delivery_group": "later_optimization",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I53",
@@ -1236,7 +1377,10 @@
         "D5"
       ],
       "historical_status": "未实现",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I58",
@@ -1257,7 +1401,10 @@
         "D9"
       ],
       "historical_status": "未实现",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I59",
@@ -1278,7 +1425,10 @@
         "D15"
       ],
       "historical_status": "未展开",
-      "status": "pending"
+      "status": "pending",
+      "delivery_priority": "later_extension",
+      "delivery_group": "later_extension",
+      "delivery_acceptance_reference": "docs/core-delivery-plan.md"
     },
     {
       "id": "I60",
@@ -1714,50 +1864,40 @@
   "scope_revision": "2026-09-12 user withdrawal",
   "active_step": "继续完成检索迟到结果恢复与论文身份合同修复；29项恢复、51项相关集成、25项论文身份测试通过（覆盖有重叠），恢复及论文身份在干净提交上分别复验通过。8001 API/Worker已恢复到f8d2960，旧失败工作流未重试且文件未变。外部供应商故障、当前版本全集评价和正式交付继续待验收。",
   "execution_order": [
-    "R01",
-    "scope_removal",
-    "I45",
-    "I09",
-    "I12",
     "I13",
-    "I10",
-    "I11",
-    "I15",
-    "I16",
-    "I17",
-    "I18",
-    "I36",
-    "I21",
-    "I23",
-    "I24",
-    "I19",
-    "I20",
-    "I22",
-    "I25",
+    "I14",
+    "I32",
+    "I33",
+    "I37",
+    "I45",
+    "I46",
+    "I06",
     "I40",
     "I41",
     "I42",
-    "I44",
-    "I37",
-    "I33",
-    "I32",
-    "I27",
-    "I43",
-    "I46",
-    "I47",
-    "I48",
-    "I49",
-    "I50",
-    "I51",
-    "I52",
-    "I28",
-    "I26",
-    "I31",
-    "I57",
-    "I58",
+    "I01",
+    "I03",
+    "I05",
+    "I07",
+    "I09",
+    "I12",
+    "I16",
+    "I17",
+    "I18",
+    "I02",
+    "I08",
+    "I19",
+    "I21",
+    "I22",
+    "I36",
     "I38",
     "I39",
-    "I59"
+    "I23",
+    "I24",
+    "I27",
+    "I43",
+    "I44",
+    "I47"
   ],
   "validation": {
     "frontend_tests": "153 passed",
@@ -2343,5 +2483,139 @@
     "status": "completed",
     "code_commit": "67b2564db5d0c4cbb719b7a0f6519eef8d37b696",
     "validation": "autonomy-retirement.json"
+  },
+  "execution_order_before_core_prioritization": [
+    "R01",
+    "scope_removal",
+    "I45",
+    "I09",
+    "I12",
+    "I13",
+    "I10",
+    "I11",
+    "I15",
+    "I16",
+    "I17",
+    "I18",
+    "I36",
+    "I21",
+    "I23",
+    "I24",
+    "I19",
+    "I20",
+    "I22",
+    "I25",
+    "I40",
+    "I41",
+    "I42",
+    "I44",
+    "I37",
+    "I33",
+    "I32",
+    "I27",
+    "I43",
+    "I46",
+    "I47",
+    "I48",
+    "I49",
+    "I50",
+    "I51",
+    "I52",
+    "I28",
+    "I26",
+    "I31",
+    "I57",
+    "I58",
+    "I38",
+    "I39",
+    "I59"
+  ],
+  "delivery_plan": {
+    "as_of": "2026-09-13",
+    "source": "用户：将目前的待完成项分为核心内容和细节优化。先完成核心内容。",
+    "reference": "docs/core-delivery-plan.md",
+    "groups": {
+      "C1": [
+        "I13",
+        "I14",
+        "I32",
+        "I33",
+        "I37",
+        "I45",
+        "I46"
+      ],
+      "C2": [
+        "I06",
+        "I40",
+        "I41",
+        "I42"
+      ],
+      "C3": [
+        "I01",
+        "I03",
+        "I05",
+        "I07",
+        "I09",
+        "I12",
+        "I16",
+        "I17",
+        "I18"
+      ],
+      "C4": [
+        "I02",
+        "I08",
+        "I19",
+        "I21",
+        "I22",
+        "I36",
+        "I38",
+        "I39"
+      ],
+      "C5": [
+        "I23",
+        "I24",
+        "I27",
+        "I43",
+        "I44"
+      ],
+      "C6": [
+        "I47"
+      ],
+      "later_optimization": [
+        "I10",
+        "I11",
+        "I48",
+        "I50",
+        "I51",
+        "I52"
+      ],
+      "later_extension": [
+        "I15",
+        "I20",
+        "I25",
+        "I26",
+        "I28",
+        "I31",
+        "I57",
+        "I58",
+        "I59"
+      ],
+      "deferred_by_user": [
+        "I49"
+      ]
+    },
+    "counts": {
+      "core": 34,
+      "later_optimization": 6,
+      "later_extension": 9,
+      "deferred_by_user": 1
+    },
+    "core_implemented_needing_evidence_closure": [
+      "I19",
+      "I22",
+      "I37",
+      "I41"
+    ],
+    "policy": "先完成当前运动想象核心交付切片；保留原状态和历史失败；切片通过不自动关闭整项；后置扩展不充当核心前置条件。"
   }
 }

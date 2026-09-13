@@ -1,4 +1,6 @@
 # 当前能力与验收入口
+
+执行顺序已按用户要求调整为[核心交付计划](core-delivery-plan.md)：34 个核心条目优先，15 个优化与扩展后置，Sites 1 项暂缓；原验收状态不因排序而改变。
 > 2026-09-13 范围更新：保留首次推荐，移除后续模型自主调整。当前规则见[首次推荐与固定执行](fixed-initial-recommendation.md)。本文中的历史自主调整验收不再作为当前目标。
 
 截至2026-09-13，本页区分已实现接口、实际服务和完整实验验收。逐项缺口以[实施台账](sources/remaining-modifications-20260912/status.json)为准；历次修改记录见[实施状态](current-implementation-status.md)。

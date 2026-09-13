@@ -17,6 +17,7 @@ from app.main import create_app
 from app.preprocessing.storage import file_hash, digest
 from app.search.io import read, write
 from app.search.method_provenance import participation
+from app.search.catalog import BASELINE_ID
 
 
 def hashes(paths, root):
@@ -25,6 +26,30 @@ def hashes(paths, root):
 
 def code_hashes(root):
     return hashes([p for p in root.rglob("*") if "__pycache__" not in p.parts], root)
+
+
+def fixed_execution_audit(state, recommendation):
+    """Audit persisted execution against the initial recommendation, not a new plan."""
+    frozen = state.get("recommendation") or {}
+    ids = frozen.get("candidate_ids", [])
+    actions = state.get("actions", [])
+    completed = [a for a in actions if a.get("status") == "completed"]
+    expected = [BASELINE_ID, *ids]
+    executed = [c["id"] for c in state.get("candidates", [])]
+    checks = {
+        "current_protocol": state.get("protocol", {}).get("version") == "4",
+        "saved_recommendation_matches": bool(frozen) and recommendation == frozen,
+        "registry_unchanged": bool(frozen) and digest(state.get("registry", [])) == frozen.get("registry_hash")
+            == state.get("protocol", {}).get("registry_hash"),
+        "schedule_unchanged": state.get("schedule") == ids and len(ids) == len(set(ids)) and BASELINE_ID not in ids,
+        "only_initial_recommendation_actions": bool(actions) and all(a.get("action") == "initial_recommendation" for a in actions),
+        "one_completed_recommendation": len(completed) == 1 and
+            [i for i in (completed[0].get("result") or {}).get("candidate_ids", []) if i != BASELINE_ID] == ids,
+        "fixed_order_completed": state.get("status") == "completed" and executed == expected,
+    }
+    return {"passed": all(checks.values()), "checks": checks,
+            "expected_order": expected, "executed_order": executed,
+            "scope": "Persisted fixed execution contract; source semantics, numerical correctness and scientific benefit require separate review."}
 
 
 def source_scope(source, output, subjects):
@@ -126,6 +151,8 @@ async def main(args):
                     stages=state["stages"], error=state.get("error"), search_id=state.get("search_id"))
                 if state.get("search_id"):
                     search = (await client.get(f"/api/searches/{state['search_id']}")).json()
+                    result["fixed_execution_audit"] = fixed_execution_audit(search,
+                        read(root / "offline-search" / state["search_id"] / "initial-recommendation.json"))
                     result["literature_participation"] = participation(search)
                     result["selected_candidate_id"] = search["selected_candidate_id"]
                     result["candidates"] = [{"id": c["id"], "status": c["status"], "error": c.get("error"),
@@ -133,8 +160,9 @@ async def main(args):
                         for c in search["candidates"]]
                     distinct = result["literature_participation"]["substantive_literature_evaluated_ids"]
                     # This mechanical gate is necessary, not a substitute for source/parameter and actual effect review.
-                    result["mechanical_gate_passed"] = bool(distinct and state["status"] == "completed")
-                    result["review_required"] = "Verify source parameters, non-preset semantics, subsequent model use and final selection accounting."
+                    result["mechanical_gate_passed"] = bool(distinct and state["status"] == "completed"
+                        and result["fixed_execution_audit"]["passed"])
+                    result["review_required"] = "Verify source parameters, non-preset semantics, actual fixed processing effects and final model/delivery accounting. No subsequent model adjustment is permitted."
     except Exception as exc:
         result["failure"] = f"{type(exc).__name__}: {exc}"
         if isinstance(exc, httpx.HTTPStatusError):
