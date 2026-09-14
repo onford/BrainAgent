@@ -80,3 +80,23 @@ async def test_orchestrator_logs_failure_context_without_exposing_it_to_client(
     assert failure.iteration == 1
     assert context.error == "规划阶段失败，请查看后端日志。"
     assert "No scripted LLM response remains" not in context.error
+
+
+@pytest.mark.asyncio
+async def test_orchestrator_reports_repeated_non_executable_decisions() -> None:
+    invalid = {
+        "action": "delegate",
+        "rationale": "缺少可路由字段",
+        "inputs": {},
+    }
+    llm = ScriptedLLMClient([invalid, invalid])
+    registry = build_agent_registry()
+    registry.register(PlannerAgent(llm))
+
+    context = await Orchestrator(registry).execute(
+        AgentContext(owner_id="test-user", session_id="test-session", user_message="处理数据")
+    )
+
+    assert context.status is RunStatus.FAILED
+    assert context.error == "规划器两次返回的决策均不可执行，请重试该请求。"
+    assert len(llm.messages_seen) == 2

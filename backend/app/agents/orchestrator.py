@@ -1,9 +1,10 @@
 from collections.abc import AsyncIterator
 import logging
 from time import perf_counter
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 from app.agents.registry import AgentRegistry
+from app.agents.planner.agent import PlannerDecisionError
 from app.core.logging import log_context, log_scope
 from app.runtime.context import AgentContext, AgentTask, Plan, PlanStep
 from app.runtime.decision import AgentDecision, DecisionAction
@@ -19,7 +20,7 @@ class ReActPlanner(Protocol):
     name: str
 
     async def decide(
-        self, context: AgentContext, available_agents: list[dict[str, str]]
+        self, context: AgentContext, available_agents: list[dict[str, Any]]
     ) -> AgentDecision: ...
 
 
@@ -57,7 +58,11 @@ class Orchestrator:
             {"run_id": context.run_id, "session_id": context.session_id},
         )
         available_agents = [
-            {"name": agent.name, "description": agent.description}
+            {
+                "name": agent.name,
+                "description": agent.description,
+                "actions": list(agent.supported_actions),
+            }
             for agent in self.registry.list()
             if agent.name != self.planner.name
         ]
@@ -76,6 +81,11 @@ class Orchestrator:
             try:
                 with log_scope(**log_extra):
                     decision = await self.planner.decide(context, available_agents)
+            except PlannerDecisionError:
+                logger.exception("planner_decision_invalid_after_retry", extra=log_extra)
+                self._fail(context, "规划器两次返回的决策均不可执行，请重试该请求。")
+                yield context.emit("run_failed", context.error or "规划决策不可执行", self.planner.name)
+                return
             except Exception:
                 logger.exception("planner_decision_failed", extra=log_extra)
                 self._fail(context, "规划阶段失败，请查看后端日志。")

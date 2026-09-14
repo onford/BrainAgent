@@ -3,6 +3,8 @@ from app.runtime.result import AgentResult
 
 
 class WorkflowAgent(BaseAgent):
+    supported_actions = ("workflow_stage",)
+
     def __init__(self, workflow=None):
         self.workflow = workflow
 

@@ -1,10 +1,11 @@
 from functools import lru_cache
+import json
 from pathlib import Path
 from urllib.parse import quote_plus
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import Field, computed_field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, computed_field, field_validator
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -39,9 +40,25 @@ class Settings(BaseSettings):
     log_max_bytes: int = 10 * 1024 * 1024
     log_backup_count: int = 5
     preprocessing_root: str = "workspace/preprocessing"
-    preprocessing_input_roots: list[str] = []
+    preprocessing_input_roots: Annotated[list[str], NoDecode] = []
     workflow_root: str = "workspace/workflows"
-    workflow_input_roots: list[str] = []
+    workflow_input_roots: Annotated[list[str], NoDecode] = []
+
+    @field_validator("preprocessing_input_roots", "workflow_input_roots", mode="before")
+    @classmethod
+    def input_root_list(cls, value):
+        """Accept a JSON list or one plain path from .env without ambiguity."""
+        if not isinstance(value, str):
+            return value
+        value = value.strip()
+        if not value:
+            return []
+        if value.startswith("["):
+            parsed = json.loads(value)
+            if not isinstance(parsed, list):
+                raise ValueError("input roots must be a JSON list or one path")
+            return parsed
+        return [value]
 
     @computed_field
     @property

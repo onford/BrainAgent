@@ -104,7 +104,7 @@ export function createWorker(assets, fetchUpstream = fetch) {
         }
       }
       if (!['GET', 'HEAD'].includes(request.method)) return new Response('Method not allowed', { status: 405 })
-      const routes = ['/', '/agents', '/workflows', '/searches', '/settings/integrations']
+      const routes = ['/', '/agents', '/workflows', '/invasive', '/searches', '/settings/integrations']
       const asset = Object.hasOwn(assets, url.pathname) ? assets[url.pathname]
         : routes.includes(url.pathname.replace(/\/$/, '') || '/') ? assets['/index.html'] : null
       if (!asset) return new Response('Not found', { status: 404 })

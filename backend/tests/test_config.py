@@ -53,6 +53,14 @@ def test_invalid_llm_timeout_is_rejected(value):
         Settings(llm_timeout_seconds=value)
 
 
+def test_input_roots_accept_one_plain_env_path(monkeypatch):
+    monkeypatch.setenv("PREPROCESSING_INPUT_ROOTS", "/data/falcon")
+    monkeypatch.setenv("WORKFLOW_INPUT_ROOTS", '["/data/a", "/data/b"]')
+    settings = Settings(_env_file=None)
+    assert settings.preprocessing_input_roots == ["/data/falcon"]
+    assert settings.workflow_input_roots == ["/data/a", "/data/b"]
+
+
 @pytest.mark.asyncio
 async def test_workflow_reasoning_setting_is_separate_from_chat(monkeypatch, tmp_path):
     import json

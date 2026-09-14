@@ -7,6 +7,7 @@ from app.runtime.result import AgentResult
 class BaseAgent(ABC):
     name: str
     description: str
+    supported_actions: tuple[str, ...] = ()
 
     @abstractmethod
     async def run(self, task: AgentTask, context: AgentContext) -> AgentResult:

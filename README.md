@@ -8,6 +8,8 @@ EEGMMIDB 工作流将本地调研、资料核对、标准化接入、诊断驱�
 
 Data Preprocess 首版已接入真实 EEG 执行。功能范围、上游协议、独立 Worker 和验收脚本见 [实现与运行说明](docs/data-preprocessing-implementation.md)。完整 EEG 工作流使用 Python 3.12，并安装 `--extra eeg --extra inspection`；原有对话开发环境可单独使用。新接入工作副本必须通过固定官方 BIDS 校验，缺少校验依赖时会保留失败回执并停止注册输入。
 
+侵入式神经数据首版支持 NWB 中的 extracellular electrophysiology、Neuropixels 与 intracortical array 元数据，以及发布方已经提供的 `Units/spike_times`。它按输入 processing state 决定跳过或执行步骤，输出 unit QC、时间对齐、模型张量、验证和可复现报告；raw voltage 只生成证据约束的计划，不会自动选择通用 sorter。接口与边界见 [侵入式数据预处理](docs/invasive-data-preprocessing.md)，依赖使用 `--extra invasive`。
+
 ## 1. 开发环境要求
 
 日常开发不需要 Docker，也不需要本机安装 MySQL。开发环境使用 SQLite，运行时会自动创建 `backend/brain_agent_dev.db`。

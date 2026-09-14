@@ -320,6 +320,10 @@ inspection = [
     { name = "soundfile" },
     { name = "wfdb" },
 ]
+invasive = [
+    { name = "h5py" },
+    { name = "numpy" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -332,11 +336,13 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.115,<1" },
     { name = "h5io", marker = "extra == 'eeg'", specifier = "==0.2.5" },
     { name = "h5py", marker = "extra == 'eeg'", specifier = "==3.13.0" },
+    { name = "h5py", marker = "extra == 'invasive'", specifier = "==3.13.0" },
     { name = "httpx", specifier = ">=0.27,<1" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = "==4.25.1" },
     { name = "mne", marker = "extra == 'eeg'", specifier = "==1.10.2" },
     { name = "mne-bids", marker = "extra == 'eeg'", specifier = "==0.17.0" },
     { name = "numpy", marker = "extra == 'eeg'", specifier = "==1.26.4" },
+    { name = "numpy", marker = "extra == 'invasive'", specifier = "==1.26.4" },
     { name = "pandas", marker = "extra == 'eeg'", specifier = "==2.2.3" },
     { name = "portalocker", marker = "extra == 'eeg'", specifier = "==3.2.0" },
     { name = "pybv", marker = "extra == 'eeg'", specifier = "==0.7.6" },
@@ -353,7 +359,7 @@ requires-dist = [
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.30,<1" },
     { name = "wfdb", marker = "extra == 'inspection'", specifier = "==4.3.1" },
 ]
-provides-extras = ["inspection", "eeg", "dev"]
+provides-extras = ["inspection", "invasive", "eeg", "dev"]
 
 [[package]]
 name = "certifi"

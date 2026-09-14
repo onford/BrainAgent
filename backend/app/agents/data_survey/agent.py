@@ -44,6 +44,7 @@ class SurveyDecision(BaseModel):
 class DataSurveyAgent(BaseAgent):
     name = "data_survey"
     description = "Collects dataset facts, statistics, papers, code, and preprocessing literature."
+    supported_actions = ("start_workflow", "workflow_stage")
 
     def __init__(
         self,

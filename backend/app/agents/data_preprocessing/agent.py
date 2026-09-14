@@ -8,7 +8,18 @@ from app.runtime.result import AgentResult, Artifact
 
 class DataPreprocessingAgent(BaseAgent):
     name = "data_preprocessing"
-    description = "Plans/submits shared EEG preprocessing, reports durable status, reviews immutable step checkpoints."
+    description = "Plans/submits shared EEG preprocessing and modality-aware NWB invasive preprocessing; reports durable status and immutable review evidence."
+    supported_actions = (
+        "plan",
+        "submit",
+        "status",
+        "literature",
+        "step_reviews",
+        "invasive_inspect",
+        "invasive_plan",
+        "invasive_run",
+        "workflow_stage",
+    )
 
     def __init__(self, service=None, workflow=None):
         self.service = service
@@ -67,6 +78,64 @@ class DataPreprocessingAgent(BaseAgent):
                     "record_count": len(plan.records),
                     "plan_url": f"/api/preprocessing/plans/{ref.id}",
                 }
+            elif action == "invasive_inspect":
+                from app.preprocessing.invasive.schemas import NWBInspectRequest
+
+                ref, snapshot = await asyncio.to_thread(
+                    self.service.inspect_invasive,
+                    owner,
+                    NWBInspectRequest.model_validate(inputs["request"]),
+                )
+                output = {
+                    "execution_status": "surveyed",
+                    "snapshot_ref": ref.model_dump(),
+                    "snapshot": snapshot.model_dump(mode="json"),
+                }
+            elif action == "invasive_plan":
+                from app.preprocessing.invasive.schemas import InvasivePlanRequest
+
+                request = inputs.get("request")
+                if isinstance(request, dict) and "task" not in request:
+                    request = {**request, "task": task.instruction}
+                ref, plan = await asyncio.to_thread(
+                    self.service.plan_invasive,
+                    owner,
+                    InvasivePlanRequest.model_validate(request),
+                )
+                output = {
+                    "execution_status": "invasive_plan_ready" if plan.executable else "research_required",
+                    "plan_ref": ref.model_dump(),
+                    "plan": plan.model_dump(mode="json"),
+                    "missing_dependencies": [
+                        item
+                        for step in plan.steps
+                        if step.status == "blocked"
+                        for item in step.evidence_needed
+                    ],
+                    "supplement_requests": [
+                        {
+                            "target_agent": "data_survey",
+                            "missing_fields": step.evidence_needed,
+                            "query": f"{plan.modality} {plan.task} official preprocessing methods and code",
+                        }
+                        for step in plan.steps
+                        if step.status == "blocked" and step.evidence_needed
+                    ],
+                }
+            elif action == "invasive_run":
+                from app.preprocessing.invasive.schemas import InvasiveRunRequest
+
+                ref, result = await asyncio.to_thread(
+                    self.service.run_invasive,
+                    owner,
+                    InvasiveRunRequest.model_validate(inputs["request"]),
+                )
+                output = {
+                    **result,
+                    "result_ref": ref.model_dump(),
+                    "invasive_url": f"/invasive?id={ref.id}",
+                    "execution_status": result["status"],
+                }
             elif action == "submit":
                 result = await asyncio.to_thread(
                     self.service.submit, owner, Ref.model_validate(inputs["plan_ref"])
@@ -106,7 +175,7 @@ class DataPreprocessingAgent(BaseAgent):
                     "supplement_requests": result["supplement_requests"],
                 }
             else:
-                raise ValueError("action must be plan, submit, status, literature, or step_reviews")
+                raise ValueError("action must be plan, submit, status, literature, step_reviews, invasive_inspect, invasive_plan, or invasive_run")
             return AgentResult(
                 agent_name=self.name,
                 success=True,

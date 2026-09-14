@@ -13,6 +13,11 @@ from app.preprocessing.schemas import (
 )
 from app.preprocessing.service import PreprocessingService
 from app.preprocessing.assets import AssetRegistration
+from app.preprocessing.invasive.schemas import (
+    InvasivePlanRequest,
+    InvasiveRunRequest,
+    NWBInspectRequest,
+)
 from app.preprocessing.units import catalog
 from app.runtime.context import AgentContext
 
@@ -69,6 +74,78 @@ def create_shadow_plan(job_id:str,body:ShadowRequest,svc=Depends(service),user=D
 @router.get("/units")
 def units():
     return catalog()
+
+
+@router.post("/invasive/inspect", status_code=201)
+def inspect_invasive_nwb(
+    body: NWBInspectRequest, svc=Depends(service), user=Depends(get_current_user)
+):
+    ref, snapshot = checked(svc.inspect_invasive, user.owner_id, body)
+    return {"snapshot_ref": ref, "snapshot": snapshot}
+
+
+@router.post("/invasive/plans", status_code=201)
+def plan_invasive_data(
+    body: InvasivePlanRequest, svc=Depends(service), user=Depends(get_current_user)
+):
+    ref, plan = checked(svc.plan_invasive, user.owner_id, body)
+    return {"plan_ref": ref, "plan": plan}
+
+
+@router.post("/invasive/runs", status_code=201)
+def run_invasive_data(
+    body: InvasiveRunRequest, svc=Depends(service), user=Depends(get_current_user)
+):
+    ref, result = checked(svc.run_invasive, user.owner_id, body)
+    return {"result_ref": ref, "result": result}
+
+
+@router.get("/invasive/sources")
+def invasive_sources(svc=Depends(service), user=Depends(get_current_user)):
+    return {"allowed_roots": [str(path) for path in svc.allowed_roots]}
+
+
+@router.get("/invasive/results")
+def invasive_results(svc=Depends(service), user=Depends(get_current_user)):
+    return checked(svc.list_invasive_results, user.owner_id)
+
+
+@router.get("/invasive/results/{identity}")
+def invasive_result(
+    identity: str, svc=Depends(service), user=Depends(get_current_user)
+):
+    return checked(
+        svc.invasive_result,
+        user.owner_id,
+        Ref(id=identity, sha256=identity),
+    )
+
+
+@router.get("/invasive/results/{identity}/detail")
+def invasive_result_detail(
+    identity: str, svc=Depends(service), user=Depends(get_current_user)
+):
+    return checked(
+        svc.invasive_result_bundle,
+        user.owner_id,
+        Ref(id=identity, sha256=identity),
+    )
+
+
+@router.get("/invasive/results/{identity}/artifacts/{name:path}")
+def invasive_artifact(
+    identity: str,
+    name: str,
+    svc=Depends(service),
+    user=Depends(get_current_user),
+):
+    path = checked(
+        svc.invasive_artifact,
+        user.owner_id,
+        Ref(id=identity, sha256=identity),
+        name,
+    )
+    return FileResponse(path)
 
 
 @router.post('/assets',status_code=201)

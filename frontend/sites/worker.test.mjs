@@ -5,7 +5,7 @@ import { createWorker } from './worker.mjs'
 const assets = { '/index.html': { body: btoa('<title>Brain Agent</title>'), type: 'text/html' } }
 test('public routes serve the application without a login redirect', async () => {
   const worker = createWorker(assets)
-  for (const path of ['/', '/workflows', '/searches', '/settings/integrations']) {
+  for (const path of ['/', '/workflows', '/invasive', '/searches', '/settings/integrations']) {
     const response = await worker.fetch(new Request(`https://site.example${path}`), {})
     assert.equal(response.status, 200)
     assert.match(await response.text(), /Brain Agent/)

@@ -39,5 +39,16 @@ def capabilities(data=None):
             'source_sha256':current,'source_fields':item['source']['source']['fields']})
     from .codec_contract import VERSION, schema
     return {'schema_version':'2','counts':{'units':len({r['unit_id'] for r in rows}),'operations':len({(r['unit_id'],r['op']) for r in rows}),'profiles':len(rows)},'rows':rows,
+            'invasive': {
+                'schema_version': '1',
+                'adapters': [{'id': 'nwb', 'inspection': 'bounded_metadata', 'read_policy': 'read_only_lazy'}],
+                'modalities': ['extracellular_ephys', 'neuropixels', 'intracortical_array'],
+                'recognized_future_modalities': ['ophys'],
+                'recognized_representations': ['raw_voltage', 'lfp', 'spike_times', 'threshold_crossings', 'behavior', 'stimulus', 'mask', 'trials'],
+                'executable_representations': ['spike_times'],
+                'planned_only_representations': ['raw_voltage', 'lfp', 'threshold_crossings', 'ophys'],
+                'workflow': ['survey', 'plan', 'qc', 'alignment', 'transform', 'validate', 'report'],
+                'policy': 'Consume released Units derivatives when present; raw voltage requires a validated dataset/probe-specific profile.',
+            },
             'artifact_codec': {'version': VERSION, 'schema': schema(),
                                'legacy': 'Unversioned known descriptors are read-only; unknown fields and versions are rejected.'}}

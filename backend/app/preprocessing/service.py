@@ -1,3 +1,5 @@
+import json
+import re
 from pathlib import Path
 
 from .inputs import validate_input
@@ -30,6 +32,166 @@ class PreprocessingService:
     def register_input(self, owner, data: PreprocessInput):
         validate_input(data, self.allowed_roots, self.store.root)
         return self.store.put(owner, "input", data.model_dump(mode="json"))
+
+    def _invasive_source(self, value: str) -> Path:
+        path = Path(value).resolve(strict=True)
+        if not any(path.is_relative_to(root) for root in self.allowed_roots):
+            raise ValueError("NWB source is not in PREPROCESSING_INPUT_ROOTS")
+        if path.is_relative_to(self.store.root) or self.store.root.is_relative_to(path):
+            raise ValueError("input and output roots must be disjoint")
+        return path
+
+    def inspect_invasive(self, owner, request):
+        from .invasive.nwb import inspect_nwb
+        from .invasive.schemas import NWBInspectRequest
+
+        request = NWBInspectRequest.model_validate(request)
+        snapshot = inspect_nwb(
+            self._invasive_source(request.path),
+            hash_source=request.hash_source,
+            max_scalar_reads=request.max_scalar_reads,
+        )
+        ref = self.store.put(owner, "invasive_snapshot", snapshot.model_dump(mode="json"))
+        return ref, snapshot
+
+    def plan_invasive(self, owner, request):
+        from .invasive.planner import create_invasive_plan
+        from .invasive.schemas import InvasivePlanRequest, NeuroDatasetSnapshot
+
+        request = InvasivePlanRequest.model_validate(request)
+        snapshot = NeuroDatasetSnapshot.model_validate(
+            self.store.get(owner, request.snapshot_ref, "invasive_snapshot")
+        )
+        self._invasive_source(snapshot.source.path)
+        for ref in [*request.literature_evidence_refs, *request.code_evidence_refs]:
+            found = False
+            for kind in ("evidence", "literature"):
+                try:
+                    self.store.get(owner, ref, kind)
+                    found = True
+                    break
+                except KeyError:
+                    pass
+            if not found:
+                raise KeyError("invasive method evidence resource not found")
+        plan = create_invasive_plan(snapshot, request)
+        ref = self.store.put(owner, "invasive_plan", plan.model_dump(mode="json"))
+        return ref, plan
+
+    def run_invasive(self, owner, request):
+        from .invasive.executor import execute_invasive
+        from .invasive.schemas import InvasiveExecutionPlan, InvasiveRunRequest, NeuroDatasetSnapshot
+
+        request = InvasiveRunRequest.model_validate(request)
+        plan = InvasiveExecutionPlan.model_validate(
+            self.store.get(owner, request.plan_ref, "invasive_plan")
+        )
+        snapshot = NeuroDatasetSnapshot.model_validate(
+            self.store.get(owner, plan.snapshot_ref, "invasive_snapshot")
+        )
+        self._invasive_source(snapshot.source.path)
+        owner_key = digest({"owner": owner})[:20]
+        output_key = request.plan_ref.id if request.output_name is None else f"{request.output_name}-{request.plan_ref.id}"
+        output = self.store.root / "invasive" / owner_key / output_key
+        result = {
+            **execute_invasive(snapshot, plan, output),
+            "plan_ref": request.plan_ref.model_dump(mode="json"),
+            "snapshot_ref": plan.snapshot_ref.model_dump(mode="json"),
+        }
+        result_ref = self.store.put(owner, "invasive_result", result)
+        return result_ref, result
+
+    def invasive_result(self, owner, ref: Ref):
+        return self.store.get(owner, ref, "invasive_result")
+
+    def _invasive_result_refs(self, owner, result):
+        plan_value = result.get("plan_ref")
+        if plan_value is None:
+            match = re.search(r"([a-f0-9]{64})$", Path(result["output_dir"]).name)
+            if match:
+                plan_value = {"id": match.group(1), "sha256": match.group(1)}
+        plan_ref = Ref.model_validate(plan_value)
+        plan = self.store.get(owner, plan_ref, "invasive_plan")
+        snapshot_ref = Ref.model_validate(
+            result.get("snapshot_ref") or plan["snapshot_ref"]
+        )
+        return plan_ref, plan, snapshot_ref
+
+    def invasive_result_bundle(self, owner, ref: Ref):
+        result = self.invasive_result(owner, ref)
+        plan_ref, plan, snapshot_ref = self._invasive_result_refs(owner, result)
+        snapshot = self.store.get(owner, snapshot_ref, "invasive_snapshot")
+        output = Path(result["output_dir"]).resolve(strict=True)
+        manifest_path = self.invasive_artifact(owner, ref, "manifest.json")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        indexed = manifest.get("files", {})
+        artifacts = []
+        for path in sorted(item for item in output.iterdir() if item.is_file()):
+            saved = indexed.get(path.name, {})
+            artifacts.append(
+                {
+                    "name": path.name,
+                    "bytes": saved.get("size_bytes", path.stat().st_size),
+                    "sha256": saved.get("sha256"),
+                }
+            )
+        return {
+            "result_ref": ref.model_dump(mode="json"),
+            "result": result,
+            "plan_ref": plan_ref.model_dump(mode="json"),
+            "plan": plan,
+            "snapshot_ref": snapshot_ref.model_dump(mode="json"),
+            "snapshot": snapshot,
+            "artifacts": artifacts,
+        }
+
+    def list_invasive_results(self, owner):
+        summaries = []
+        for item in self.store.list_objects(owner, "invasive_result"):
+            try:
+                bundle = self.invasive_result_bundle(
+                    owner, Ref.model_validate(item["ref"])
+                )
+            except (KeyError, ValueError, OSError):
+                continue
+            result, plan, snapshot = (
+                bundle["result"],
+                bundle["plan"],
+                bundle["snapshot"],
+            )
+            summaries.append(
+                {
+                    "result_ref": bundle["result_ref"],
+                    "status": result.get("status"),
+                    "created_at": result.get("created_at"),
+                    "dataset_id": snapshot.get("dataset_id"),
+                    "session_id": snapshot.get("session_id"),
+                    "subject_id": snapshot.get("subject_id"),
+                    "modality": snapshot.get("modality"),
+                    "task": plan.get("task"),
+                    "strategy": plan.get("strategy"),
+                    "final_shapes": result.get("final_shapes", {}),
+                    "unit_retention_ratio": result.get("unit_retention_ratio"),
+                }
+            )
+        return sorted(
+            summaries,
+            key=lambda item: (item.get("created_at") or "", item["result_ref"]["id"]),
+            reverse=True,
+        )
+
+    def invasive_artifact(self, owner, ref: Ref, name: str) -> Path:
+        from .storage import within
+
+        result = self.invasive_result(owner, ref)
+        output = Path(result["output_dir"]).resolve(strict=True)
+        invasive_root = (self.store.root / "invasive").resolve()
+        if not output.is_relative_to(invasive_root):
+            raise ValueError("invasive result points outside the artifact root")
+        path = within(output, name)
+        if not path.is_file():
+            raise KeyError("invasive artifact not found")
+        return path
 
     def register_method(self, owner, method: MethodSpec):
         # Publication is exclusively backed by this service's validation receipts.
